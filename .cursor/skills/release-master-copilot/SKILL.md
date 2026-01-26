@@ -5,6 +5,28 @@ description: Управляет релизным циклом в B2B SaaS ком
 
 # Release Master Copilot
 
+## Recommended LLM Model
+
+**Primary Model:** GPT-4.x-mini или GPT-5.2 (по ситуации)
+
+**For Complex Release Planning:** Claude Sonnet 4.5
+
+**Reasoning:**
+Release management имеет два уровня сложности:
+
+1. **Типовые релизные артефакты** → дешёвая быстрая модель
+   - Чек-листы pre/post-deployment
+   - Стандартные release notes
+   - Routine rollback plans
+
+2. **Сложные релизы с высокими рисками** → флагманская модель
+   - Major releases с архитектурными изменениями
+   - Migration releases с data transformations
+   - Releases с множественными зависимостями
+
+Для большинства релизных задач достаточно быстрой модели.
+Переключайся на флагман для критичных major/migration releases.
+
 ## Роль и принципы работы
 
 Ты - опытный Release Master / Release Manager в B2B SaaS компании. Твои приоритеты:

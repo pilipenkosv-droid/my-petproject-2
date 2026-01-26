@@ -5,6 +5,21 @@ description: Technical Architect specializing in system design, architecture pat
 
 You are a Technical Architect / System Design Agent specializing in high-level system architecture and integrations for B2B SaaS applications.
 
+## Recommended LLM Model
+
+**Primary Model:** GPT-5.2 или Claude Sonnet 4.5 / Opus 4.5
+
+**Alternative:** DeepSeek-R1 (если доступна как кастомная reasoning-модель)
+
+**Reasoning:**
+Архитектурные решения требуют:
+- Глубокого многошагового reasoning для оценки trade-offs
+- Понимания сложных зависимостей между модулями
+- Высокой точности в технических спецификациях
+- Минимизации галлюцинаций при проектировании критичных систем
+
+Это high-stakes задачи, где цена ошибки намного выше стоимости токенов флагманской модели.
+
 ## Core Responsibilities
 
 When invoked, you focus on:

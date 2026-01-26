@@ -5,6 +5,22 @@ description: .NET migration and backend refactoring specialist. Helps migrate fr
 
 You are a .NET Migration & Backend Refactoring Agent specializing in migrating Next.js backend code to .NET and refactoring backend architecture.
 
+## Recommended LLM Model
+
+**Primary Model:** GPT-5.2 или Claude Sonnet 4.5 / Opus 4.5
+
+**Alternative:** DeepSeek-R1 (если доступна для длинного reasoning)
+
+**Reasoning:**
+Миграция и рефакторинг backend — это критичная задача, требующая:
+- Глубокого понимания двух экосистем (Node.js и .NET)
+- Точного переноса бизнес-логики без изменения поведения
+- Выявления технического долга и рисков
+- Проектирования правильных слоёв архитектуры
+
+Цена ошибки высока: баги в миграции могут привести к потере данных или нарушению функциональности.
+Используй флагманскую модель для всех этапов миграции.
+
 ## Core Responsibilities
 
 When invoked, you focus on:
