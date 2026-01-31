@@ -4,21 +4,20 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type ProcessingStep =
-  | "uploading"
-  | "extracting_text"
-  | "parsing_rules"
-  | "analyzing"
-  | "formatting"
-  | "completed";
-
-interface ProcessingStatusProps {
-  currentStep: ProcessingStep | null;
-  progress: number;
-  error?: string;
+export interface StepDefinition {
+  id: string;
+  label: string;
 }
 
-const STEPS: { id: ProcessingStep; label: string }[] = [
+interface ProcessingStatusProps {
+  currentStep: string | null;
+  progress: number;
+  error?: string;
+  /** Custom steps list. If not provided, uses default full pipeline steps. */
+  steps?: StepDefinition[];
+}
+
+const DEFAULT_STEPS: StepDefinition[] = [
   { id: "uploading", label: "Загрузка файлов" },
   { id: "extracting_text", label: "Извлечение текста" },
   { id: "parsing_rules", label: "Анализ требований" },
@@ -31,12 +30,15 @@ export function ProcessingStatus({
   currentStep,
   progress,
   error,
+  steps,
 }: ProcessingStatusProps) {
+  const activeSteps = steps || DEFAULT_STEPS;
+
   const currentStepIndex = currentStep
-    ? STEPS.findIndex((s) => s.id === currentStep)
+    ? activeSteps.findIndex((s) => s.id === currentStep)
     : -1;
 
-  const getStepIcon = (step: ProcessingStep, index: number) => {
+  const getStepIcon = (index: number) => {
     if (error && index === currentStepIndex) {
       return (
         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
@@ -79,7 +81,7 @@ export function ProcessingStatus({
       </div>
 
       <div className="space-y-3">
-        {STEPS.map((step, index) => (
+        {activeSteps.map((step, index) => (
           <div
             key={step.id}
             className={cn(
@@ -89,7 +91,7 @@ export function ProcessingStatus({
                 : "text-white/40"
             )}
           >
-            {getStepIcon(step.id, index)}
+            {getStepIcon(index)}
             <span
               className={cn(
                 "transition-all duration-300",

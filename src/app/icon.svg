@@ -1,4 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#3b82f6"/>
-  <text x="16" y="22" font-family="system-ui" font-size="18" font-weight="bold" fill="white" text-anchor="middle">S</text>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="32" height="32" rx="7" fill="url(#bg)"/>
+  <!-- Document shape -->
+  <path d="M9 5h10l5 5v17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" fill="white" fill-opacity="0.95"/>
+  <!-- Document fold corner -->
+  <path d="M19 5v5h5" fill="none" stroke="white" stroke-opacity="0.5" stroke-width="0.5"/>
+  <path d="M19 5l5 5h-4a1 1 0 0 1-1-1V5z" fill="#e0e7ff"/>
+  <!-- Lightning bolt -->
+  <path d="M17.5 12L13 19h3.5l-1 6L21 17h-3.5l1-5z" fill="url(#bolt)" stroke="#d97706" stroke-width="0.3" stroke-linejoin="round"/>
+  <!-- Text lines (subtle) -->
+  <rect x="10" y="13" width="3" height="1" rx="0.5" fill="#c7d2fe" opacity="0.7"/>
+  <rect x="10" y="15.5" width="4" height="1" rx="0.5" fill="#c7d2fe" opacity="0.5"/>
+  <rect x="10" y="18" width="2.5" height="1" rx="0.5" fill="#c7d2fe" opacity="0.5"/>
+  <rect x="10" y="22" width="5" height="1" rx="0.5" fill="#c7d2fe" opacity="0.4"/>
+  <rect x="10" y="24.5" width="3.5" height="1" rx="0.5" fill="#c7d2fe" opacity="0.3"/>
 </svg>

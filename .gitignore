@@ -38,12 +38,22 @@ Thumbs.db
 
 # Uploads (local development)
 uploads/
-/tmp/smartformatter/
+/tmp/smartformat/
 .data/
 
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# MCP / AI tooling
+.mcp.json
+.playwright-mcp/
+CLAUDE.md
+plan.md
+
+# Test documents (local)
+docs/*.docx
+docs/*.pdf
 
 # Misc
 *.log

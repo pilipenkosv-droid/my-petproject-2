@@ -134,7 +134,7 @@ const message = formatViolationMessage(
 
 ## Авторы
 
-SmartFormatter Team
+SmartFormat Team
 
 ## Дата обновления
 

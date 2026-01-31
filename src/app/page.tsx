@@ -50,7 +50,7 @@ export default function LandingPage() {
               <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
                 Smart
               </AuroraText>
-              <span className="text-white">Formatter</span>
+              <span className="text-white">Format</span>
             </h1>
           </BlurFade>
           
@@ -225,7 +225,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/10 py-8 px-6">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold gradient-text">SmartFormatter</span>
+            <span className="font-bold gradient-text">SmartFormat</span>
           </div>
           <p className="text-sm text-white/40">
             Сервис автоматического форматирования научных работ

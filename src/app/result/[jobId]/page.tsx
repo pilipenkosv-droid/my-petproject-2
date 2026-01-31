@@ -1,15 +1,14 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useJobStatus } from "@/features/result/hooks/useJobStatus";
-import { DualDocumentView } from "@/features/result/components/DualDocumentView";
 import { StatisticsPanel } from "@/features/result/components/StatisticsPanel";
 import { CSATWidget } from "@/features/result/components/CSATWidget";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Download, RefreshCw, Sparkles, CheckCircle } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck } from "lucide-react";
 
 interface ResultPageProps {
   params: Promise<{ jobId: string }>;
@@ -18,46 +17,6 @@ interface ResultPageProps {
 export default function ResultPage({ params }: ResultPageProps) {
   const { jobId } = use(params);
   const { job, isLoading, error } = useJobStatus({ jobId });
-  
-  const [originalHtml, setOriginalHtml] = useState("");
-  const [formattedHtml, setFormattedHtml] = useState("");
-  const [documentsLoading, setDocumentsLoading] = useState(false);
-
-  // Загружаем HTML-превью документов после завершения обработки
-  useEffect(() => {
-    if (job?.status === "completed") {
-      setDocumentsLoading(true);
-      
-      // Загружаем реальное превью документов
-      const loadPreviews = async () => {
-        try {
-          const [originalRes, formattedRes] = await Promise.all([
-            fetch(`/api/preview/${jobId}/original`),
-            fetch(`/api/preview/${jobId}/formatted`),
-          ]);
-
-          if (originalRes.ok) {
-            const originalData = await originalRes.json();
-            setOriginalHtml(originalData.html);
-          }
-          
-          if (formattedRes.ok) {
-            const formattedData = await formattedRes.json();
-            setFormattedHtml(formattedData.html);
-          }
-        } catch (error) {
-          console.error("Error loading previews:", error);
-          // Fallback на заглушку при ошибке
-          setOriginalHtml(`<p>Не удалось загрузить превью. Скачайте документ для просмотра.</p>`);
-          setFormattedHtml(`<p>Не удалось загрузить превью. Скачайте документ для просмотра.</p>`);
-        } finally {
-          setDocumentsLoading(false);
-        }
-      };
-
-      loadPreviews();
-    }
-  }, [job?.status, jobId]);
 
   const handleDownload = (type: "original" | "formatted") => {
     const fileId = `${jobId}_${type}`;
@@ -89,7 +48,7 @@ export default function ResultPage({ params }: ResultPageProps) {
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
         <Header />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
+        <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="text-red-400">Ошибка</CardTitle>
@@ -115,7 +74,7 @@ export default function ResultPage({ params }: ResultPageProps) {
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
         <Header />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
+        <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
@@ -147,7 +106,7 @@ export default function ResultPage({ params }: ResultPageProps) {
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
         <Header />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
+        <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="text-red-400">Ошибка обработки</CardTitle>
@@ -171,46 +130,28 @@ export default function ResultPage({ params }: ResultPageProps) {
   return (
     <main className="min-h-screen relative">
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-      
+
       {/* Floating decorative elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] animate-pulse-glow" />
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
-      
+
       <Header />
-      
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-8">
+
+      <div className="relative z-10 mx-auto max-w-2xl px-6 py-8">
         <div className="space-y-6">
-          {/* Заголовок и кнопки */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                <CheckCircle className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">Результат обработки</h2>
-                <p className="text-white/50">
-                  Документ успешно проанализирован и отформатирован
-                </p>
-              </div>
+          {/* Success header */}
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => handleDownload("original")}
-              >
-                <Download className="h-4 w-4" />
-                Скачать с пометками
-              </Button>
-              <Button 
-                variant="glow"
-                onClick={() => handleDownload("formatted")}
-              >
-                <Download className="h-4 w-4" />
-                Скачать исправленный
-              </Button>
-            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Документ успешно обработан
+            </h2>
+            <p className="text-white/50">
+              Проанализирован и отформатирован в соответствии с требованиями
+            </p>
           </div>
 
           {/* Статистика */}
@@ -222,12 +163,58 @@ export default function ResultPage({ params }: ResultPageProps) {
             />
           )}
 
-          {/* Просмотр документов */}
-          <DualDocumentView
-            originalHtml={originalHtml}
-            formattedHtml={formattedHtml}
-            isLoading={documentsLoading}
-          />
+          {/* Download section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Скачать результаты</CardTitle>
+              <CardDescription>
+                Выберите нужную версию документа для скачивания
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Marked original */}
+                <button
+                  onClick={() => handleDownload("original")}
+                  className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:bg-white/10 hover:border-white/20 text-left"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-white">С пометками</p>
+                    <p className="text-xs text-white/40 mt-1">
+                      Исходный документ с выделенными нарушениями и комментариями
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-white/50">
+                    <Download className="h-3 w-3" />
+                    <span>.docx</span>
+                  </div>
+                </button>
+
+                {/* Formatted */}
+                <button
+                  onClick={() => handleDownload("formatted")}
+                  className="flex flex-col items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 transition-all duration-200 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-left ring-1 ring-emerald-500/20"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                    <FileCheck className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-white">Исправленный</p>
+                    <p className="text-xs text-white/40 mt-1">
+                      Автоматически отформатированный документ, готовый к сдаче
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-emerald-400/70">
+                    <Download className="h-3 w-3" />
+                    <span>.docx</span>
+                  </div>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* CSAT виджет */}
           <CSATWidget jobId={jobId} />
@@ -250,22 +237,22 @@ export default function ResultPage({ params }: ResultPageProps) {
 function Header() {
   return (
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="mx-auto max-w-7xl px-6 py-4 flex items-center gap-4">
-        <Link 
-          href="/constructor" 
+      <div className="mx-auto max-w-2xl px-6 py-4 flex items-center gap-4">
+        <Link
+          href="/constructor"
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
+        <Link href="/" className="group">
           <h1 className="text-lg font-bold">
-            <span className="gradient-text">Smart</span>
-            <span className="text-white">Formatter</span>
+            <span className="gradient-text group-hover:opacity-80 transition-opacity">Smart</span>
+            <span className="text-white group-hover:opacity-80 transition-opacity">Format</span>
           </h1>
           <p className="text-sm text-white/50">
             Результат обработки
           </p>
-        </div>
+        </Link>
       </div>
     </header>
   );

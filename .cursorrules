@@ -39,7 +39,7 @@ alwaysApply: true
 
 Используй эту иерархию как основу:
 
-- **CPO-copilot / head-of-product-dept-copilot**
+- **CPO-copilot**
   - Стратегия, ценность для бизнеса, приоритизация, формулировка фич и KPI.
 
 - **head-of-product-design-copilot**
@@ -74,7 +74,7 @@ alwaysApply: true
 Когда меняется **поведение продукта**, фичи, метрики, тарифы, сценарии общения с клиниками:
 
 1. Сначала подключай:
-   - `@cpo-copilot` (или `@head-of-product-dept-copilot`)  
+   - `@cpo-copilot` 
      → формулировка цели, KPI, success-criteria, ограничения.
 2. Затем при необходимости:
    - `@head-of-product-design-copilot`  
@@ -172,7 +172,7 @@ alwaysApply: true
 Для новой значимой фичи действуй так:
 
 1. **Формулировка**:
-   - `@cpo-copilot` / `@head-of-product-dept-copilot`  
+   - `@cpo-copilot` 
      → описание фичи, цели, KPI, ограничения.
 
 2. **UX и визуальная концепция**:
@@ -290,7 +290,6 @@ Cursor поддерживает модели от OpenAI, Anthropic, Gemini, xAI
 **Агенты:**
 - `cto-copilot`
 - `cpo-copilot`
-- `head-of-product-dept-copilot`
 - `head-of-product-design-copilot`
 - `release-master-copilot`
 

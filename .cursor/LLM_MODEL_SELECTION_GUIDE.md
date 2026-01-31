@@ -102,7 +102,6 @@
 |-------|----------------|--------------|-----------|
 | **cto-copilot** | GPT-5.2 / Claude Sonnet 4.5 | DeepSeek-R1 | Критичные технические решения |
 | **cpo-copilot** | GPT-5.2 / Claude Sonnet 4.5 | Claude Opus 4.5 | Продуктовая стратегия C-level |
-| **head-of-product-dept** | GPT-5.2 / Claude Sonnet 4.5 | Claude Opus 4.5 | Управление продуктом |
 | **head-of-product-design** | Claude Sonnet 4.5 / GPT-5.2 | Claude Opus 4.5 | UX стратегия, дизайн-системы |
 | **release-master** | GPT-4.x-mini | Claude Sonnet 4.5 | Routine → mini, Major → флагман |
 

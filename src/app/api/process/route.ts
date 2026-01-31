@@ -4,7 +4,7 @@ import { saveFile, saveResultFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
-import { analyzeDocument } from "@/lib/pipeline/document-analyzer";
+import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 
 export const maxDuration = 60; // Максимальное время выполнения для Vercel
@@ -89,15 +89,21 @@ export async function POST(request: NextRequest) {
     const aiResponse = await parseFormattingRules(requirementsText);
     const rules = mergeWithDefaults(aiResponse.rules);
 
-    updateJobProgress(jobId, "analyzing", 55, "Проверка документа на соответствие требованиям");
+    updateJobProgress(jobId, "analyzing", 50, "AI-разметка блоков документа");
+
+    // Парсим структуру и размечаем блоки через AI
+    const docxStructure = await parseDocxStructure(sourceBuffer);
+    const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
+
+    updateJobProgress(jobId, "analyzing", 60, "Проверка документа на соответствие требованиям");
 
     // Анализируем документ
     const analysisResult = await analyzeDocument(sourceBuffer, rules);
 
-    updateJobProgress(jobId, "formatting", 75, "Применение форматирования");
+    updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
-    // Форматируем документ
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations);
+    // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
+    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
 
     updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 

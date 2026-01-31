@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SmartFormatter — Автоформатирование научных работ",
+  title: "SmartFormat — Автоформатирование научных работ",
   description:
     "Автоматически приводим курсовые, дипломы и научные работы к требованиям форматирования вашего ВУЗа",
 };

@@ -13,18 +13,29 @@ import {
 } from "@/types/formatting-rules";
 import { extractFromDocx } from "../documents/docx-reader";
 import JSZip from "jszip";
-import { parseStringPromise } from "xml2js";
-import { 
-  PROHIBITED_ABBREVIATIONS, 
+import {
+  PROHIBITED_ABBREVIATIONS,
   NON_BREAKING_SPACE_RULES,
-  VALIDATION_PATTERNS 
+  VALIDATION_PATTERNS
 } from "../constants/reference-data";
+import { BlockType } from "../ai/block-markup-schemas";
+import { parseDocumentBlocks } from "../ai/document-block-markup";
+import {
+  type OrderedXmlNode,
+  parseDocxXml,
+  getBody,
+  children,
+  findChild,
+  findChildren,
+  getAttr,
+  getText,
+} from "../xml/docx-xml";
 
 // Константы для конвертации единиц
 const TWIPS_PER_MM = 56.7; // 1 мм ≈ 56.7 twips
 const HALF_POINTS_PER_PT = 2; // размер шрифта в half-points
 
-interface DocxParagraph {
+export interface DocxParagraph {
   index: number;
   text: string;
   style?: string;
@@ -37,9 +48,15 @@ interface DocxParagraph {
     indent?: number;
     lineSpacing?: number;
   };
+  blockType?: BlockType;
+  blockMetadata?: {
+    language?: "ru" | "en" | "mixed";
+    headingLevel?: number;
+    listLevel?: number;
+  };
 }
 
-interface DocxDocument {
+export interface DocxDocument {
   paragraphs: DocxParagraph[];
   sections: {
     margins: { top: number; bottom: number; left: number; right: number };
@@ -49,17 +66,19 @@ interface DocxDocument {
 
 /**
  * Парсинг .docx файла для извлечения структуры
+ * Использует fast-xml-parser с preserveOrder для корректной обработки
+ * смешанных элементов (w:p, w:tbl и т.д.)
  */
-async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> {
+export async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> {
   const zip = await JSZip.loadAsync(buffer);
   const documentXml = await zip.file("word/document.xml")?.async("string");
-  
+
   if (!documentXml) {
     throw new Error("Не удалось прочитать document.xml из .docx файла");
   }
 
-  const parsed = await parseStringPromise(documentXml, { explicitArray: false });
-  const body = parsed["w:document"]?.["w:body"];
+  const parsed = parseDocxXml(documentXml);
+  const body = getBody(parsed);
 
   if (!body) {
     throw new Error("Не удалось найти тело документа");
@@ -68,59 +87,80 @@ async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> {
   const paragraphs: DocxParagraph[] = [];
   const sections: DocxDocument["sections"] = [];
 
-  // Извлекаем параграфы
-  const pElements = Array.isArray(body["w:p"]) ? body["w:p"] : body["w:p"] ? [body["w:p"]] : [];
+  // Извлекаем параграфы из body children (сохраняя правильный порядок)
+  const bodyChildren = children(body);
+  let pIndex = 0;
 
-  pElements.forEach((p: any, index: number) => {
-    const textRuns = Array.isArray(p["w:r"]) ? p["w:r"] : p["w:r"] ? [p["w:r"]] : [];
-    const text = textRuns
-      .map((r: any) => r["w:t"]?._ || r["w:t"] || "")
-      .join("");
+  for (const child of bodyChildren) {
+    if ("w:p" in child) {
+      // Это параграф
+      const runs = findChildren(child, "w:r");
+      const text = runs
+        .map((r) => {
+          const tNodes = findChildren(r, "w:t");
+          return tNodes.map((t) => getText(t)).join("");
+        })
+        .join("");
 
-    const pPr = p["w:pPr"] || {};
-    const rPr = textRuns[0]?.["w:rPr"] || {};
+      const pPr = findChild(child, "w:pPr");
+      const firstRunRPr = runs.length > 0 ? findChild(runs[0], "w:rPr") : undefined;
 
-    paragraphs.push({
-      index,
-      text,
-      style: pPr["w:pStyle"]?.["$"]?.["w:val"],
-      properties: {
-        fontFamily: rPr["w:rFonts"]?.["$"]?.["w:ascii"],
-        fontSize: rPr["w:sz"]?.["$"]?.["w:val"] 
-          ? parseInt(rPr["w:sz"]["$"]["w:val"]) / HALF_POINTS_PER_PT 
-          : undefined,
-        bold: !!rPr["w:b"],
-        italic: !!rPr["w:i"],
-        alignment: pPr["w:jc"]?.["$"]?.["w:val"],
-        indent: pPr["w:ind"]?.["$"]?.["w:firstLine"]
-          ? parseInt(pPr["w:ind"]["$"]["w:firstLine"]) / TWIPS_PER_MM
-          : undefined,
-        lineSpacing: pPr["w:spacing"]?.["$"]?.["w:line"]
-          ? parseInt(pPr["w:spacing"]["$"]["w:line"]) / 240 // 240 twips = 1 строка
-          : undefined,
-      },
-    });
+      // Извлекаем стиль
+      const pStyleNode = pPr ? findChild(pPr, "w:pStyle") : undefined;
+      const style = pStyleNode ? getAttr(pStyleNode, "w:val") : undefined;
 
-    // Извлекаем секцию (последний параграф может содержать sectPr)
-    const sectPr = pPr["w:sectPr"] || body["w:sectPr"];
-    if (sectPr) {
-      const pgMar = sectPr["w:pgMar"]?.["$"] || {};
-      const pgSz = sectPr["w:pgSz"]?.["$"] || {};
-      
-      sections.push({
-        margins: {
-          top: pgMar["w:top"] ? parseInt(pgMar["w:top"]) / TWIPS_PER_MM : 20,
-          bottom: pgMar["w:bottom"] ? parseInt(pgMar["w:bottom"]) / TWIPS_PER_MM : 20,
-          left: pgMar["w:left"] ? parseInt(pgMar["w:left"]) / TWIPS_PER_MM : 30,
-          right: pgMar["w:right"] ? parseInt(pgMar["w:right"]) / TWIPS_PER_MM : 15,
-        },
-        pageSize: {
-          width: pgSz["w:w"] ? parseInt(pgSz["w:w"]) / TWIPS_PER_MM : 210,
-          height: pgSz["w:h"] ? parseInt(pgSz["w:h"]) / TWIPS_PER_MM : 297,
+      // Извлекаем свойства run
+      const fontFamilyNode = firstRunRPr ? findChild(firstRunRPr, "w:rFonts") : undefined;
+      const fontFamily = fontFamilyNode ? getAttr(fontFamilyNode, "w:ascii") : undefined;
+
+      const szNode = firstRunRPr ? findChild(firstRunRPr, "w:sz") : undefined;
+      const szVal = szNode ? getAttr(szNode, "w:val") : undefined;
+      const fontSize = szVal ? parseInt(szVal) / HALF_POINTS_PER_PT : undefined;
+
+      const bold = firstRunRPr ? !!findChild(firstRunRPr, "w:b") : false;
+      const italic = firstRunRPr ? !!findChild(firstRunRPr, "w:i") : false;
+
+      // Извлекаем свойства параграфа
+      const jcNode = pPr ? findChild(pPr, "w:jc") : undefined;
+      const alignment = jcNode ? getAttr(jcNode, "w:val") : undefined;
+
+      const indNode = pPr ? findChild(pPr, "w:ind") : undefined;
+      const firstLineVal = indNode ? getAttr(indNode, "w:firstLine") : undefined;
+      const indent = firstLineVal ? parseInt(firstLineVal) / TWIPS_PER_MM : undefined;
+
+      const spacingNode = pPr ? findChild(pPr, "w:spacing") : undefined;
+      const lineVal = spacingNode ? getAttr(spacingNode, "w:line") : undefined;
+      const lineSpacing = lineVal ? parseInt(lineVal) / 240 : undefined;
+
+      paragraphs.push({
+        index: pIndex,
+        text,
+        style,
+        properties: {
+          fontFamily,
+          fontSize,
+          bold,
+          italic,
+          alignment,
+          indent,
+          lineSpacing,
         },
       });
+
+      // Проверяем sectPr внутри pPr
+      if (pPr) {
+        const sectPr = findChild(pPr, "w:sectPr");
+        if (sectPr) {
+          sections.push(extractSectionFromNode(sectPr));
+        }
+      }
+
+      pIndex++;
+    } else if ("w:sectPr" in child) {
+      // sectPr на уровне body
+      sections.push(extractSectionFromNode(child));
     }
-  });
+  }
 
   // Если секций нет, добавляем дефолтную
   if (sections.length === 0) {
@@ -131,6 +171,27 @@ async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> {
   }
 
   return { paragraphs, sections };
+}
+
+/**
+ * Извлекает данные секции из ordered-узла w:sectPr
+ */
+function extractSectionFromNode(sectPr: OrderedXmlNode): DocxDocument["sections"][0] {
+  const pgMar = findChild(sectPr, "w:pgMar");
+  const pgSz = findChild(sectPr, "w:pgSz");
+
+  return {
+    margins: {
+      top: pgMar ? parseFloat(getAttr(pgMar, "w:top") || "0") / TWIPS_PER_MM : 20,
+      bottom: pgMar ? parseFloat(getAttr(pgMar, "w:bottom") || "0") / TWIPS_PER_MM : 20,
+      left: pgMar ? parseFloat(getAttr(pgMar, "w:left") || "0") / TWIPS_PER_MM : 30,
+      right: pgMar ? parseFloat(getAttr(pgMar, "w:right") || "0") / TWIPS_PER_MM : 15,
+    },
+    pageSize: {
+      width: pgSz ? parseFloat(getAttr(pgSz, "w:w") || "0") / TWIPS_PER_MM : 210,
+      height: pgSz ? parseFloat(getAttr(pgSz, "w:h") || "0") / TWIPS_PER_MM : 297,
+    },
+  };
 }
 
 /**
@@ -553,6 +614,43 @@ function checkDashes(
   });
 
   return violations;
+}
+
+/**
+ * Обогащает параграфы AI-разметкой блоков
+ */
+export async function enrichWithBlockMarkup(
+  paragraphs: DocxParagraph[]
+): Promise<DocxParagraph[]> {
+  const input = paragraphs.map((p) => ({
+    index: p.index,
+    text: p.text,
+    style: p.style,
+  }));
+
+  const markup = await parseDocumentBlocks(input);
+
+  // Создаём map для быстрого поиска
+  const blockMap = new Map(
+    markup.blocks.map((b) => [b.paragraphIndex, b])
+  );
+
+  return paragraphs.map((p) => {
+    const block = blockMap.get(p.index);
+    if (!block) return p;
+
+    return {
+      ...p,
+      blockType: block.blockType,
+      blockMetadata: block.metadata
+        ? {
+            language: block.metadata.language,
+            headingLevel: block.metadata.headingLevel,
+            listLevel: block.metadata.listLevel,
+          }
+        : undefined,
+    };
+  });
 }
 
 /**

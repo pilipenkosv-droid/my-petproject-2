@@ -44,7 +44,6 @@
 
 **Обновлённые skills:**
 - ✅ `cpo-copilot/SKILL.md` → GPT-5.2 / Claude Sonnet 4.5 / Opus
-- ✅ `head-of-product-dept-copilot/SKILL.md` → GPT-5.2 / Claude Sonnet 4.5
 - ✅ `head-of-product-design-copilot/SKILL.md` → Claude Sonnet 4.5 / GPT-5.2
 - ✅ `release-master-copilot/SKILL.md` → GPT-4.x-mini + флагман для major
 - ✅ `~/.cursor/skills/cto-copilot/SKILL.md` → GPT-5.2 / Claude Sonnet / Opus

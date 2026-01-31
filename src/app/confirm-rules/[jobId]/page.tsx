@@ -1,19 +1,21 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormattingRules } from "@/types/formatting-rules";
 import { RulesEditor } from "@/features/confirm-rules/components/RulesEditor";
+import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
+import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/hooks/useAnimatedProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  Sparkles, 
-  Zap, 
+import {
+  ArrowLeft,
+  CheckCircle,
+  Sparkles,
+  Zap,
   RefreshCw,
   Loader2
 } from "lucide-react";
@@ -31,22 +33,35 @@ interface JobData {
   missingRules?: string[];
 }
 
+const PHASE2_STEPS: AnimatedStep[] = [
+  { id: "analyzing", label: "AI-разметка и проверка документа", rangeStart: 0, rangeEnd: 55 },
+  { id: "formatting", label: "Применение форматирования", rangeStart: 55, rangeEnd: 90 },
+  { id: "saving", label: "Сохранение результатов", rangeStart: 90, rangeEnd: 100 },
+];
+
+const PHASE2_STEP_DEFS = PHASE2_STEPS.map(s => ({ id: s.id, label: s.label }));
+
 export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
   const { jobId } = use(params);
   const router = useRouter();
-  
+
   const [job, setJob] = useState<JobData | null>(null);
   const [rules, setRules] = useState<FormattingRules | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const animatedProgress = useAnimatedProgress({
+    steps: PHASE2_STEPS,
+    minStepDuration: 1500,
+  });
+
   // Загружаем данные задачи
   useEffect(() => {
     async function fetchJob() {
       try {
         const response = await fetch(`/api/status/${jobId}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             setError("Задача не найдена");
@@ -56,21 +71,17 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
         }
 
         const data = await response.json();
-        
-        // Если задача уже завершена, редирект на результат
+
         if (data.status === "completed") {
           router.replace(`/result/${jobId}`);
           return;
         }
 
-        // Если не в статусе ожидания подтверждения
         if (data.status !== "awaiting_confirmation") {
-          // Может быть ещё обрабатывается, или ошибка
           if (data.status === "failed") {
             setError(data.error || "Ошибка обработки");
             return;
           }
-          // Редирект на результат для отслеживания прогресса
           router.replace(`/result/${jobId}`);
           return;
         }
@@ -87,11 +98,12 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     fetchJob();
   }, [jobId, router]);
 
-  const handleConfirm = async () => {
+  const handleConfirm = useCallback(async () => {
     if (!rules) return;
 
     setIsProcessing(true);
     setError(null);
+    animatedProgress.start();
 
     try {
       const response = await fetch("/api/confirm-rules", {
@@ -110,13 +122,16 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
         throw new Error(errorData.error || "Ошибка при обработке");
       }
 
-      // Редирект на страницу результата
-      router.push(`/result/${jobId}`);
+      // Let animation finish, then redirect
+      animatedProgress.complete(() => {
+        router.push(`/result/${jobId}`);
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Неизвестная ошибка");
+      const msg = err instanceof Error ? err.message : "Неизвестная ошибка";
+      animatedProgress.fail(msg);
       setIsProcessing(false);
     }
-  };
+  }, [rules, jobId, animatedProgress, router]);
 
   const handleRulesChange = (newRules: FormattingRules) => {
     setRules(newRules);
@@ -140,8 +155,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     );
   }
 
-  // Ошибка
-  if (error) {
+  // Ошибка (только если не в режиме обработки — ошибки обработки показываются в ProcessingStatus)
+  if (error && !isProcessing) {
     return (
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
@@ -190,19 +205,62 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     );
   }
 
+  // Processing state — full-screen progress view
+  if (isProcessing) {
+    return (
+      <main className="min-h-screen relative">
+        <div className="fixed inset-0 mesh-gradient pointer-events-none" />
+        <Header />
+        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                Форматирование документа
+              </CardTitle>
+              <CardDescription>
+                Применяем правила к вашему документу...
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProcessingStatus
+                currentStep={animatedProgress.displayStep}
+                progress={animatedProgress.displayProgress}
+                error={animatedProgress.error}
+                steps={PHASE2_STEP_DEFS}
+              />
+              {animatedProgress.error && (
+                <div className="mt-6 flex justify-center">
+                  <Button variant="outline" onClick={() => {
+                    setIsProcessing(false);
+                    setError(null);
+                  }}>
+                    Попробовать снова
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen relative">
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-      
+
       {/* Floating decorative elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse-glow" />
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
-      
+
       <Header />
-      
+
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-8">
         <div className="space-y-6">
           {/* Заголовок */}
@@ -236,28 +294,17 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           <BlurFade delay={0.3} inView>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Link href="/constructor">
-                <Button variant="secondary" disabled={isProcessing}>
+                <Button variant="secondary">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Загрузить другие документы
                 </Button>
               </Link>
-              
+
               <ShimmerButton
                 onClick={handleConfirm}
-                disabled={isProcessing}
-                className={isProcessing ? "opacity-70" : ""}
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Обработка...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-5 h-5 mr-2" />
-                    Подтвердить и обработать
-                  </>
-                )}
+                <Zap className="w-5 h-5 mr-2" />
+                Подтвердить и обработать
               </ShimmerButton>
             </div>
           </BlurFade>
@@ -271,21 +318,21 @@ function Header() {
   return (
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
-        <Link 
-          href="/constructor" 
+        <Link
+          href="/constructor"
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
+        <Link href="/" className="group">
           <h1 className="text-lg font-bold">
-            <span className="gradient-text">Smart</span>
-            <span className="text-white">Formatter</span>
+            <span className="gradient-text group-hover:opacity-80 transition-opacity">Smart</span>
+            <span className="text-white group-hover:opacity-80 transition-opacity">Format</span>
           </h1>
           <p className="text-sm text-white/50">
             Подтверждение требований
           </p>
-        </div>
+        </Link>
       </div>
     </header>
   );

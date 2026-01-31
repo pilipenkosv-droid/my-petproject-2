@@ -1,5 +1,5 @@
 {
-  "name": "smart-formatter",
+  "name": "smart-format",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -20,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "docx": "^9.2.0",
+    "fast-xml-parser": "^5.3.4",
     "jszip": "^3.10.1",
     "lucide-react": "^0.469.0",
     "mammoth": "^1.8.0",

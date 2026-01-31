@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Design tokens для SmartFormatter — Glassmorphism Theme */
+/* Design tokens для SmartFormat — Glassmorphism Theme */
 :root {
   /* Градиенты */
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
@@ -10,42 +10,50 @@ import {
   SOURCE_DOCUMENT_CONFIG,
   REQUIREMENTS_DOCUMENT_CONFIG,
 } from "@/features/constructor/hooks/useDocumentUpload";
+import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/hooks/useAnimatedProgress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { ArrowLeft, FileText, Sparkles, Zap } from "lucide-react";
 
 type PageState = "upload" | "processing";
 
+const PHASE1_STEPS: AnimatedStep[] = [
+  { id: "uploading", label: "Загрузка файлов", rangeStart: 0, rangeEnd: 20 },
+  { id: "extracting_text", label: "Извлечение текста", rangeStart: 20, rangeEnd: 55 },
+  { id: "parsing_rules", label: "Анализ требований с помощью AI", rangeStart: 55, rangeEnd: 100 },
+];
+
+const PHASE1_STEP_DEFS = PHASE1_STEPS.map(s => ({ id: s.id, label: s.label }));
+
 export default function ConstructorPage() {
   const router = useRouter();
   const [pageState, setPageState] = useState<PageState>("upload");
-  const [processingStep, setProcessingStep] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | undefined>();
 
   const sourceDoc = useDocumentUpload(SOURCE_DOCUMENT_CONFIG);
   const requirementsDoc = useDocumentUpload(REQUIREMENTS_DOCUMENT_CONFIG);
 
   const canProcess = sourceDoc.isValid && requirementsDoc.isValid;
 
-  const handleProcess = async () => {
+  const animatedProgress = useAnimatedProgress({
+    steps: PHASE1_STEPS,
+    minStepDuration: 1500,
+  });
+
+  const handleProcess = useCallback(async () => {
     if (!canProcess || !sourceDoc.uploadedFile || !requirementsDoc.uploadedFile) {
       return;
     }
 
     setPageState("processing");
-    setProcessingStep("Извлечение требований из методички...");
-    setError(undefined);
+    animatedProgress.start();
 
     try {
       const formData = new FormData();
       formData.append("sourceDocument", sourceDoc.uploadedFile.file);
       formData.append("requirementsDocument", requirementsDoc.uploadedFile.file);
 
-      // Используем новый API для извлечения правил
       const response = await fetch("/api/extract-rules", {
         method: "POST",
         body: formData,
@@ -57,53 +65,52 @@ export default function ConstructorPage() {
       }
 
       const data = await response.json();
-      
-      // Перенаправляем на страницу подтверждения правил
-      router.push(`/confirm-rules/${data.jobId}`);
+
+      // Let animation finish walking through steps, then redirect
+      animatedProgress.complete(() => {
+        router.push(`/confirm-rules/${data.jobId}`);
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Неизвестная ошибка");
-      setPageState("upload");
+      const msg = err instanceof Error ? err.message : "Неизвестная ошибка";
+      animatedProgress.fail(msg);
     }
-  };
+  }, [canProcess, sourceDoc.uploadedFile, requirementsDoc.uploadedFile, animatedProgress, router]);
 
   const handleReset = () => {
     sourceDoc.reset();
     requirementsDoc.reset();
     setPageState("upload");
-    setError(undefined);
-    setProgress(0);
-    setProcessingStep(null);
   };
 
   return (
     <main className="min-h-screen relative">
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-      
+
       {/* Floating decorative elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 w-64 h-64 bg-violet-500/20 rounded-full blur-[100px] animate-pulse-glow" />
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
-      
+
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div>
+          <Link href="/" className="group">
             <h1 className="text-lg font-bold">
-              <span className="gradient-text">Smart</span>
-              <span className="text-white">Formatter</span>
+              <span className="gradient-text group-hover:opacity-80 transition-opacity">Smart</span>
+              <span className="text-white group-hover:opacity-80 transition-opacity">Format</span>
             </h1>
             <p className="text-sm text-white/50">
               Конструктор документов
             </p>
-          </div>
+          </Link>
         </div>
       </header>
 
@@ -125,12 +132,6 @@ export default function ConstructorPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <BlurFade delay={0.2} inView>
                 <Card className="group relative overflow-hidden">
-                  <BorderBeam 
-                    size={120} 
-                    duration={8} 
-                    colorFrom="#8b5cf6" 
-                    colorTo="#a855f7"
-                  />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
@@ -159,13 +160,6 @@ export default function ConstructorPage() {
 
               <BlurFade delay={0.3} inView>
                 <Card className="group relative overflow-hidden">
-                  <BorderBeam 
-                    size={120} 
-                    duration={8} 
-                    delay={4}
-                    colorFrom="#6366f1" 
-                    colorTo="#3b82f6"
-                  />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg shadow-indigo-500/25">
@@ -193,13 +187,6 @@ export default function ConstructorPage() {
               </BlurFade>
             </div>
 
-            {/* Ошибка */}
-            {error && (
-              <div className="rounded-2xl bg-red-500/10 border border-red-500/20 backdrop-blur-sm p-4 text-center">
-                <p className="text-sm text-red-400">{error}</p>
-              </div>
-            )}
-
             {/* Кнопка обработки */}
             <BlurFade delay={0.4} inView>
               <div className="flex flex-col items-center gap-4">
@@ -211,7 +198,7 @@ export default function ConstructorPage() {
                   <Zap className="w-5 h-5 mr-2" />
                   Обработать документ
                 </ShimmerButton>
-                
+
                 {/* Подсказка */}
                 {!canProcess && (sourceDoc.uploadedFile || requirementsDoc.uploadedFile) && (
                   <p className="text-sm text-white/40">
@@ -228,19 +215,20 @@ export default function ConstructorPage() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                Обработка документа
+                Извлечение требований
               </CardTitle>
               <CardDescription>
-                Пожалуйста, подождите...
+                Анализируем методичку с помощью AI...
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ProcessingStatus
-                currentStep={processingStep as any}
-                progress={progress}
-                error={error}
+                currentStep={animatedProgress.displayStep}
+                progress={animatedProgress.displayProgress}
+                error={animatedProgress.error}
+                steps={PHASE1_STEP_DEFS}
               />
-              {error && (
+              {animatedProgress.error && (
                 <div className="mt-6 flex justify-center">
                   <Button variant="outline" onClick={handleReset}>
                     Попробовать снова

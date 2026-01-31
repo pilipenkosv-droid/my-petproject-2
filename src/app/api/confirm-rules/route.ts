@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
 import { getFile } from "@/lib/storage/file-storage";
 import { saveResultFile } from "@/lib/storage/file-storage";
-import { analyzeDocument } from "@/lib/pipeline/document-analyzer";
+import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    updateJobProgress(jobId, "analyzing", 55, "Проверка документа на соответствие требованиям");
+    updateJobProgress(jobId, "analyzing", 50, "Получение исходного документа");
 
     // Получаем исходный документ из хранилища
     const sourceBuffer = await getFile(job.sourceDocumentId);
@@ -70,13 +70,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Парсим структуру и размечаем блоки через AI
+    updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
+    const docxStructure = await parseDocxStructure(sourceBuffer);
+    const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
+
     // Анализируем документ
+    updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");
     const analysisResult = await analyzeDocument(sourceBuffer, rules);
 
-    updateJobProgress(jobId, "formatting", 75, "Применение форматирования");
+    updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
-    // Форматируем документ
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations);
+    // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
+    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
 
     updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 

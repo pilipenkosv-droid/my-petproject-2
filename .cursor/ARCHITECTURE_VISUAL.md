@@ -31,9 +31,6 @@
     ├─► cpo-copilot (GPT-5.2 / Claude Sonnet/Opus)
     │   └─ Продуктовая стратегия, roadmaps, prioritization
     │
-    ├─► head-of-product-dept (GPT-5.2 / Claude Sonnet)
-    │   └─ Управление продуктовой организацией
-    │
     ├─► head-of-product-design (Claude Sonnet 4.5 / GPT-5.2)
     │   └─ UX стратегия, дизайн-системы, дашборды
     │
@@ -255,7 +252,6 @@
 │   │
 │   └── skills/ (ALL UPDATED)
 │       ├── cpo-copilot/SKILL.md
-│       ├── head-of-product-dept-copilot/SKILL.md
 │       ├── head-of-product-design-copilot/SKILL.md
 │       └── release-master-copilot/SKILL.md
 │

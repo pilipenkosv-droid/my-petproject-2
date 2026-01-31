@@ -10,7 +10,7 @@ import { nanoid } from "nanoid";
 
 // Определяем базовую директорию в зависимости от окружения
 const isProduction = process.env.NODE_ENV === "production";
-const BASE_DIR = isProduction ? "/tmp/smartformatter" : "./uploads";
+const BASE_DIR = isProduction ? "/tmp/smartformat" : "./uploads";
 
 export interface StoredFile {
   id: string;
