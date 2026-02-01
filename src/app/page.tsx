@@ -71,14 +71,14 @@ export default function LandingPage() {
           </BlurFade>
           
           <BlurFade delay={0.5} inView>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/create">
-                <ShimmerButton className="text-lg">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/create" className="w-full sm:w-auto">
+                <ShimmerButton className="text-lg w-full sm:w-auto">
                   <Zap className="w-5 h-5 mr-2" />
                   Начать форматирование
                 </ShimmerButton>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-7" asChild>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-7 w-full sm:w-auto" asChild>
                 <a href="#how-it-works">Как это работает</a>
               </Button>
             </div>
@@ -213,8 +213,8 @@ export default function LandingPage() {
               <p className="text-white/60 mb-8 max-w-md mx-auto">
                 Загрузите документ и получите результат за несколько минут
               </p>
-              <Link href="/create">
-                <Button size="lg" variant="glow">
+              <Link href="/create" className="w-full sm:w-auto">
+                <Button size="lg" variant="glow" className="w-full sm:w-auto">
                   <Zap className="w-5 h-5" />
                   Начать форматирование
                 </Button>
