@@ -78,15 +78,17 @@ export async function POST(request: NextRequest) {
 
     const [requirementsText, warmup] = await Promise.all([
       extractText(requirementsBuffer, requirementsMimeType),
-      warmupModels(),
+      warmupModels().catch((err) => {
+        console.warn("[extract-rules] Warmup failed, proceeding anyway:", err);
+        return { total: 0, alive: [] as string[], dead: [] as string[] };
+      }),
     ]);
 
-    if (warmup.alive.length === 0) {
-      await failJob(jobId, "Нет доступных AI-моделей. Попробуйте позже.");
-      return NextResponse.json(
-        { error: "Нет доступных AI-моделей. Попробуйте позже." },
-        { status: 503 }
-      );
+    // Warmup информационный — логируем, но НЕ блокируем.
+    // Пинг может не пройти из-за сетевых ограничений Vercel,
+    // но реальные AI-запросы при этом работают.
+    if (warmup.alive.length === 0 && warmup.total > 0) {
+      console.warn("[extract-rules] Warmup: no providers responded to ping, but will try AI call anyway");
     }
 
     if (!requirementsText || requirementsText.trim().length < 50) {

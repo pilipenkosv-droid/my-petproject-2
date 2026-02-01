@@ -137,14 +137,15 @@ export async function recordUsage(modelId: string): Promise<void> {
 }
 
 /**
- * Помечает модель как «сломанную» на 5 минут (429, 500, etc.)
- * Реализуется через исчерпание минутного лимита
+ * Помечает модель как «сломанную» до конца текущей минуты.
+ * Устанавливает minuteRequests = 100 (достаточно чтобы превысить любой RPM лимит,
+ * но автоматически сбросится при следующей минуте через resetIfNeeded).
  */
 export async function markModelFailed(modelId: string): Promise<void> {
   const raw = await loadUsage(modelId);
   const usage = resetIfNeeded(raw);
 
-  usage.minuteRequests = 999;
+  usage.minuteRequests = 100;
   usage.lastRequestAt = Date.now();
 
   await saveUsage(modelId, usage);

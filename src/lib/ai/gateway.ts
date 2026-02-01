@@ -162,7 +162,10 @@ async function checkProviderReachable(model: ModelConfig): Promise<boolean> {
 /**
  * Прогрев моделей — параллельно проверяет доступность API провайдеров
  * через лёгкие HTTP-запросы (без AI-вызовов, без расхода лимитов).
- * Недоступные провайдеры помечаются как failed.
+ *
+ * ВАЖНО: Warmup только информационный — НЕ помечает модели как failed.
+ * Если пинг не прошёл — это не значит, что AI-запрос не пройдёт
+ * (DNS/firewall на Vercel может блокировать GET /models).
  */
 export async function warmupModels(): Promise<{
   total: number;
@@ -206,7 +209,8 @@ export async function warmupModels(): Promise<{
         alive.push(model.displayName);
       } else {
         dead.push(model.displayName);
-        await markModelFailed(model.id);
+        // НЕ вызываем markModelFailed — warmup не должен блокировать модели.
+        // callAI сам пометит модель как failed если реальный запрос упадёт.
       }
     }
   }

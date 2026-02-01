@@ -60,8 +60,21 @@ export default function ConstructorPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Ошибка при обработке документа");
+        // Читаем тело как текст, потом пробуем распарсить как JSON
+        const responseText = await response.text().catch(() => "");
+        let errorMessage = "Ошибка при обработке документа";
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Vercel может вернуть не-JSON ответ (таймаут, 502, etc.)
+          if (responseText) {
+            errorMessage = `Ошибка сервера (${response.status}). Попробуйте ещё раз.`;
+          } else {
+            errorMessage = `Ошибка сервера (${response.status})`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
