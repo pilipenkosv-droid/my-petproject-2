@@ -6,13 +6,33 @@ import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMim
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { getUserAccess, consumeUse } from "@/lib/payment/access";
 
 export const maxDuration = 60; // Максимальное время выполнения для Vercel
 
 export async function POST(request: NextRequest) {
   const jobId = nanoid();
-  
+
   try {
+    // Проверяем доступ пользователя
+    const supabase = await createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user?.id) {
+      const access = await getUserAccess(user.id);
+      if (!access.hasAccess) {
+        return NextResponse.json(
+          { error: "Лимит обработок исчерпан. Приобретите тариф.", redirectTo: "/pricing" },
+          { status: 402 }
+        );
+      }
+      // Списываем использование (для разовых/триала)
+      if (access.accessType !== "subscription") {
+        await consumeUse(user.id);
+      }
+    }
+    // Анонимные пользователи: пропускаем (1 бесплатная обработка контролируется фронтом/cookies)
     // Создаём задачу
     await createJob(jobId);
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");

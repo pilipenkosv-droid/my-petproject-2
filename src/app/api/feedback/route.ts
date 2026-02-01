@@ -1,24 +1,21 @@
 /**
  * API endpoint для сбора обратной связи (CSAT)
+ * Сохраняет оценки в Supabase (таблица feedback)
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
-interface FeedbackData {
+interface FeedbackPayload {
   jobId: string;
   rating: number;
   feedback?: string;
-  timestamp: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const data: FeedbackData = await request.json();
+    const data: FeedbackPayload = await request.json();
 
-    // Валидация
     if (!data.jobId || !data.rating || data.rating < 1 || data.rating > 5) {
       return NextResponse.json(
         { error: "Invalid feedback data" },
@@ -26,29 +23,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Сохраняем feedback в файл (простое решение для MVP)
-    // В продакшене можно использовать БД или аналитический сервис
-    const feedbackDir = path.join(process.cwd(), ".data", "feedback");
-    
-    if (!existsSync(feedbackDir)) {
-      await mkdir(feedbackDir, { recursive: true });
+    const supabase = getSupabaseAdmin();
+
+    // Пытаемся получить user_id из сессии (необязательно)
+    let userId: string | null = null;
+    try {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        userId = user?.id ?? null;
+      }
+    } catch {
+      // Анонимный фидбек — тоже ок
     }
 
-    const feedbackFile = path.join(
-      feedbackDir,
-      `feedback-${Date.now()}-${data.jobId}.json`
-    );
+    const { error } = await supabase.from("feedback").insert({
+      job_id: data.jobId,
+      user_id: userId,
+      rating: data.rating,
+      comment: data.feedback?.trim() || null,
+    });
 
-    await writeFile(feedbackFile, JSON.stringify(data, null, 2));
-
-    console.log(`📊 CSAT Feedback received: ${data.rating}/5 for job ${data.jobId}`);
-    if (data.feedback) {
-      console.log(`   Comment: ${data.feedback.substring(0, 100)}${data.feedback.length > 100 ? '...' : ''}`);
+    if (error) {
+      console.error("Error saving feedback to Supabase:", error);
+      return NextResponse.json(
+        { error: "Failed to save feedback" },
+        { status: 500 }
+      );
     }
+
+    console.log(`📊 CSAT: ${data.rating}/5 for job ${data.jobId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error saving feedback:", error);
+    console.error("Error in feedback endpoint:", error);
     return NextResponse.json(
       { error: "Failed to save feedback" },
       { status: 500 }
