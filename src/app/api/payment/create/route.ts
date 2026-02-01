@@ -63,9 +63,10 @@ export async function POST(request: NextRequest) {
       invoiceId: invoice.id,
     });
   } catch (error) {
-    console.error("Payment create error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Payment create error:", message, error);
     return NextResponse.json(
-      { error: "Не удалось создать платёж" },
+      { error: `Не удалось создать платёж: ${message}` },
       { status: 500 }
     );
   }
