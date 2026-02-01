@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +20,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus } from "lucide-react";
+import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, CreditCard } from "lucide-react";
 
 interface HeaderProps {
-  /** Show back button */
   showBack?: boolean;
-  /** URL for back button */
   backHref?: string;
 }
 
@@ -26,6 +31,7 @@ type AccessType = "trial" | "one_time" | "subscription" | "none";
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading, signOut } = useAuth();
   const [accessType, setAccessType] = useState<AccessType | null>(null);
 
@@ -54,24 +60,24 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
     : "??";
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-
   const isPro = accessType === "subscription";
+  const isLanding = pathname === "/";
 
   return (
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
+      <div className="mx-auto max-w-5xl px-6 py-3 flex items-center justify-between">
         {/* Left: Back + Logo */}
         <div className="flex items-center gap-4">
           {showBack && (
             <Link
               href={backHref}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           )}
-          <Link href="/" className="group">
-            <h1 className="text-lg font-bold">
+          <Link href="/" className="group flex items-center gap-2">
+            <h1 className="text-lg font-bold leading-tight">
               <span className="gradient-text group-hover:opacity-80 transition-opacity">
                 Smart
               </span>
@@ -79,19 +85,49 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                 Format
               </span>
             </h1>
-            <p className="text-sm text-white/50">Конструктор документов</p>
           </Link>
         </div>
 
+        {/* Center: Navigation */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/">Главная</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            {isLanding ? (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <a href="#how-it-works">Как это работает</a>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ) : (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/#how-it-works">Как это работает</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/pricing">
+                  <CreditCard className="h-4 w-4 mr-1.5" />
+                  Тарифы
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+
         {/* Right: Auth UI */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {isLoading ? (
             <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
           ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 transition-colors">
-                  {/* Pro badge */}
                   {isPro && (
                     <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
                       <Crown className="h-3 w-3" />
