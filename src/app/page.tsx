@@ -4,11 +4,14 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { Header } from "@/components/Header";
 import { FileText, Sparkles, Zap, Download } from "lucide-react";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-hidden">
+      <Header />
+
       {/* Hero Section with Animated Grid */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-6 py-24 sm:py-32">
         {/* Animated Grid Pattern */}
@@ -75,8 +78,8 @@ export default function LandingPage() {
                   Начать форматирование
                 </ShimmerButton>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-7">
-                Как это работает
+              <Button size="lg" variant="outline" className="text-lg px-8 py-7" asChild>
+                <a href="#how-it-works">Как это работает</a>
               </Button>
             </div>
           </BlurFade>
@@ -84,7 +87,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="relative py-24 px-6">
+      <section id="how-it-works" className="relative py-24 px-6 scroll-mt-20">
         <div className="mx-auto max-w-5xl">
           <BlurFade delay={0.1} inView>
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">

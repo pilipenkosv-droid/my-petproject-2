@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -12,18 +13,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, LogIn, User, LogOut } from "lucide-react";
+import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus } from "lucide-react";
 
 interface HeaderProps {
-  /** Показать кнопку "назад" */
+  /** Show back button */
   showBack?: boolean;
-  /** URL для кнопки "назад" */
+  /** URL for back button */
   backHref?: string;
 }
+
+type AccessType = "trial" | "one_time" | "subscription" | "none";
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const router = useRouter();
   const { user, isLoading, signOut } = useAuth();
+  const [accessType, setAccessType] = useState<AccessType | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setAccessType(null);
+      return;
+    }
+
+    fetch("/api/user/access")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.accessType) setAccessType(data.accessType);
+      })
+      .catch(() => {});
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,13 +49,13 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
     router.refresh();
   };
 
-  // Инициалы для аватара
   const initials = user?.email
     ? user.email.substring(0, 2).toUpperCase()
     : "??";
 
-  // Avatar URL от Google OAuth
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+
+  const isPro = accessType === "subscription";
 
   return (
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
@@ -73,9 +91,16 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 transition-colors">
-                  <Avatar className="h-8 w-8">
+                  {/* Pro badge */}
+                  {isPro && (
+                    <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
+                      <Crown className="h-3 w-3" />
+                      PRO
+                    </span>
+                  )}
+                  <Avatar className={`h-8 w-8 ${isPro ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-transparent" : ""}`}>
                     {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                    <AvatarFallback className="bg-violet-600 text-white text-xs">
+                    <AvatarFallback className={`text-white text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -97,12 +122,20 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/login">
-              <Button variant="outline" size="sm">
-                <LogIn className="mr-2 h-4 w-4" />
-                Войти
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/login?mode=signup">
+                <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">
+                  <UserPlus className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">Регистрация</span>
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="outline" size="sm">
+                  <LogIn className="mr-1.5 h-4 w-4" />
+                  Войти
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>

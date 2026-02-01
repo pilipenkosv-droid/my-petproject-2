@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getJobsByUser } from "@/lib/storage/job-store";
+import { getUserAccess } from "@/lib/payment/access";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
+import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard } from "lucide-react";
 
 export default async function ProfilePage() {
   const supabase = await createSupabaseServer();
@@ -17,9 +18,11 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const jobs = await getJobsByUser(user.id);
+  const [jobs, access] = await Promise.all([
+    getJobsByUser(user.id),
+    getUserAccess(user.id),
+  ]);
 
-  // Статистика
   const completedJobs = jobs.filter((j) => j.status === "completed");
   const totalJobs = jobs.length;
 
@@ -33,11 +36,86 @@ export default async function ProfilePage() {
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
         {/* User info */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">
-            <span className="gradient-text">Профиль</span>
-          </h2>
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-3xl font-bold">
+              <span className="gradient-text">Профиль</span>
+            </h2>
+            {access.accessType === "subscription" && (
+              <span className="pro-badge flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold">
+                <Crown className="h-3.5 w-3.5" />
+                PRO
+              </span>
+            )}
+          </div>
           <p className="text-white/50">{user.email}</p>
         </div>
+
+        {/* Access info card */}
+        <Card className={`mb-8 ${access.accessType === "subscription" ? "border-violet-500/30 bg-violet-500/5" : ""}`}>
+          <CardContent className="pt-6">
+            {access.accessType === "subscription" ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Подписка Pro</p>
+                    <p className="text-sm text-white/50">
+                      Безлимитные обработки до{" "}
+                      {access.subscriptionActiveUntil
+                        ? new Date(access.subscriptionActiveUntil).toLocaleDateString("ru-RU", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-sm text-violet-400 font-medium">Активна</span>
+              </div>
+            ) : access.accessType === "one_time" ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-white/60" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Разовые обработки</p>
+                    <p className="text-sm text-white/50">
+                      Осталось: {access.remainingUses}{" "}
+                      {access.remainingUses === 1 ? "обработка" : access.remainingUses >= 2 && access.remainingUses <= 4 ? "обработки" : "обработок"}
+                    </p>
+                  </div>
+                </div>
+                <Link href="/pricing">
+                  <Button variant="outline" size="sm">
+                    <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                    Купить ещё
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-white/60" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Нет активного тарифа</p>
+                    <p className="text-sm text-white/50">Выберите подходящий план</p>
+                  </div>
+                </div>
+                <Link href="/pricing">
+                  <Button variant="glow" size="sm">
+                    Выбрать тариф
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
