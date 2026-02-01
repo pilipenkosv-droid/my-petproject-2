@@ -8,7 +8,8 @@ import { CSATWidget } from "@/features/result/components/CSATWidget";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck } from "lucide-react";
+import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck } from "lucide-react";
+import { Header } from "@/components/Header";
 
 interface ResultPageProps {
   params: Promise<{ jobId: string }>;
@@ -47,7 +48,7 @@ export default function ResultPage({ params }: ResultPageProps) {
     return (
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header />
+        <Header showBack backHref="/create" />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
@@ -73,7 +74,7 @@ export default function ResultPage({ params }: ResultPageProps) {
     return (
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header />
+        <Header showBack backHref="/create" />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
@@ -105,7 +106,7 @@ export default function ResultPage({ params }: ResultPageProps) {
     return (
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header />
+        <Header showBack backHref="/create" />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
@@ -137,7 +138,7 @@ export default function ResultPage({ params }: ResultPageProps) {
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
 
-      <Header />
+      <Header showBack backHref="/create" />
 
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-8">
         <div className="space-y-6">
@@ -234,26 +235,3 @@ export default function ResultPage({ params }: ResultPageProps) {
   );
 }
 
-function Header() {
-  return (
-    <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="mx-auto max-w-2xl px-6 py-4 flex items-center gap-4">
-        <Link
-          href="/create"
-          className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <Link href="/" className="group">
-          <h1 className="text-lg font-bold">
-            <span className="gradient-text group-hover:opacity-80 transition-opacity">Smart</span>
-            <span className="text-white group-hover:opacity-80 transition-opacity">Format</span>
-          </h1>
-          <p className="text-sm text-white/50">
-            Результат обработки
-          </p>
-        </Link>
-      </div>
-    </header>
-  );
-}

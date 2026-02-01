@@ -9,7 +9,7 @@
  * - results: результаты обработки (marked original + formatted)
  */
 
-import { getSupabase } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { nanoid } from "nanoid";
 
 export interface StoredFile {
@@ -53,7 +53,7 @@ function getExtFromName(name: string): string {
  * Сохранить файл в хранилище (bucket: documents)
  */
 export async function saveFile(fileData: UploadedFileData): Promise<StoredFile> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const id = nanoid();
   const ext =
     getExtensionByMimeType(fileData.mimeType) ||
@@ -87,7 +87,7 @@ export async function saveFile(fileData: UploadedFileData): Promise<StoredFile> 
  * Получить файл из хранилища (bucket: documents)
  */
 export async function getFile(fileId: string): Promise<Buffer | null> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   // Пробуем распространённые расширения
   const extensions = [".docx", ".pdf", ".txt", ""];
@@ -112,7 +112,7 @@ export async function getFile(fileId: string): Promise<Buffer | null> {
  * Получить путь к файлу по ID (для Supabase — возвращает storage path)
  */
 export async function getFilePath(fileId: string): Promise<string | null> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const extensions = [".docx", ".pdf", ".txt", ""];
 
@@ -134,7 +134,7 @@ export async function getFilePath(fileId: string): Promise<string | null> {
  * Удалить файл из хранилища
  */
 export async function deleteFile(fileId: string): Promise<boolean> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const extensions = [".docx", ".pdf", ".txt", ""];
 
@@ -167,7 +167,7 @@ export async function saveResultFile(
   type: "original" | "formatted",
   buffer: Buffer
 ): Promise<string> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const storagePath = `${jobId}/${type}.docx`;
 
   const { error } = await supabase.storage
@@ -193,7 +193,7 @@ export async function getResultFile(
   jobId: string,
   type: "original" | "formatted"
 ): Promise<Buffer | null> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const storagePath = `${jobId}/${type}.docx`;
 
   const { data, error } = await supabase.storage

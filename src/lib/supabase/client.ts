@@ -1,12 +1,12 @@
 /**
  * Браузерный Supabase-клиент (anon key)
- * Для будущей авторизации (Phase 2)
+ * Используется для авторизации на клиенте
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 export function getSupabaseBrowser() {
-  return createClient(
+  return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );

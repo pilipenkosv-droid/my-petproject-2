@@ -5,7 +5,7 @@
  * Состояние хранится в Supabase PostgreSQL для устойчивости на Vercel serverless.
  */
 
-import { getSupabase } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 interface ModelUsage {
   minuteRequests: number;
@@ -31,7 +31,7 @@ function getMinuteStart(): number {
  * Загрузить usage из БД (или создать новую запись)
  */
 async function loadUsage(modelId: string): Promise<ModelUsage> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("rate_limits")
@@ -64,7 +64,7 @@ async function loadUsage(modelId: string): Promise<ModelUsage> {
  * Сохранить usage в БД (upsert)
  */
 async function saveUsage(modelId: string, usage: ModelUsage): Promise<void> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const { error } = await supabase.from("rate_limits").upsert(
     {

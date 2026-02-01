@@ -5,6 +5,8 @@ import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { warmupModels } from "@/lib/ai/gateway";
+import { checkProcessingAccess } from "@/lib/auth/api-auth";
+import { markTrialUsed } from "@/lib/auth/trial";
 
 export const maxDuration = 60;
 
@@ -13,10 +15,22 @@ export const maxDuration = 60;
  * После этого пользователь может просмотреть и отредактировать правила
  */
 export async function POST(request: NextRequest) {
+  // Проверка авторизации / триала
+  const auth = await checkProcessingAccess();
+
+  if (auth.type === "blocked") {
+    return NextResponse.json(
+      { error: auth.reason, requiresAuth: true },
+      { status: 403 }
+    );
+  }
+
+  const userId = auth.type === "authenticated" ? auth.userId : undefined;
+  const isAnonymous = auth.type === "anonymous";
   const jobId = nanoid();
-  
+
   try {
-    await createJob(jobId);
+    await createJob(jobId, userId);
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     const formData = await request.formData();
@@ -67,10 +81,12 @@ export async function POST(request: NextRequest) {
       mimeType: requirementsMimeType,
     });
 
-    // Сохраняем ID файлов в job для последующей обработки
+    // Сохраняем ID файлов в job
     await updateJob(jobId, {
       sourceDocumentId: savedSource.id,
       requirementsDocumentId: savedRequirements.id,
+      sourceOriginalName: sourceFile.name,
+      requirementsOriginalName: requirementsFile.name,
     });
 
     // Прогрев AI-моделей параллельно с извлечением текста
@@ -84,9 +100,7 @@ export async function POST(request: NextRequest) {
       }),
     ]);
 
-    // Warmup информационный — логируем, но НЕ блокируем.
-    // Пинг может не пройти из-за сетевых ограничений Vercel,
-    // но реальные AI-запросы при этом работают.
+    // Warmup информационный — логируем, но НЕ блокируем
     if (warmup.alive.length === 0 && warmup.total > 0) {
       console.warn("[extract-rules] Warmup: no providers responded to ping, but will try AI call anyway");
     }
@@ -104,7 +118,7 @@ export async function POST(request: NextRequest) {
     const aiResponse = await parseFormattingRules(requirementsText);
     const rules = mergeWithDefaults(aiResponse.rules);
 
-    // Сохраняем правила в job и переводим в статус ожидания подтверждения
+    // Сохраняем правила и переводим в статус ожидания подтверждения
     await updateJob(jobId, {
       status: "awaiting_confirmation",
       progress: 100,
@@ -112,7 +126,8 @@ export async function POST(request: NextRequest) {
       rules,
     });
 
-    return NextResponse.json({
+    // Для анонимных — помечаем триал как использованный
+    const response = NextResponse.json({
       jobId,
       status: "awaiting_confirmation",
       rules,
@@ -120,6 +135,12 @@ export async function POST(request: NextRequest) {
       warnings: aiResponse.warnings,
       missingRules: aiResponse.missingRules,
     });
+
+    if (isAnonymous) {
+      markTrialUsed(response);
+    }
+
+    return response;
 
   } catch (error) {
     console.error("Extract rules error:", error);

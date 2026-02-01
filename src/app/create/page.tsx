@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import {
@@ -15,7 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { ArrowLeft, FileText, Sparkles, Zap } from "lucide-react";
+import { FileText, Sparkles, Zap, LogIn } from "lucide-react";
+import { Header } from "@/components/Header";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 type PageState = "upload" | "processing";
 
@@ -29,7 +30,9 @@ const PHASE1_STEP_DEFS = PHASE1_STEPS.map(s => ({ id: s.id, label: s.label }));
 
 export default function ConstructorPage() {
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const [pageState, setPageState] = useState<PageState>("upload");
+  const [trialBlocked, setTrialBlocked] = useState(false);
 
   const sourceDoc = useDocumentUpload(SOURCE_DOCUMENT_CONFIG);
   const requirementsDoc = useDocumentUpload(REQUIREMENTS_DOCUMENT_CONFIG);
@@ -60,19 +63,24 @@ export default function ConstructorPage() {
       });
 
       if (!response.ok) {
-        // Читаем тело как текст, потом пробуем распарсить как JSON
         const responseText = await response.text().catch(() => "");
         let errorMessage = "Ошибка при обработке документа";
+        let requiresAuth = false;
         try {
           const errorData = JSON.parse(responseText);
           errorMessage = errorData.error || errorMessage;
+          requiresAuth = errorData.requiresAuth === true;
         } catch {
-          // Vercel может вернуть не-JSON ответ (таймаут, 502, etc.)
           if (responseText) {
             errorMessage = `Ошибка сервера (${response.status}). Попробуйте ещё раз.`;
           } else {
             errorMessage = `Ошибка сервера (${response.status})`;
           }
+        }
+        if (requiresAuth) {
+          setTrialBlocked(true);
+          setPageState("upload");
+          return;
         }
         throw new Error(errorMessage);
       }
@@ -106,30 +114,43 @@ export default function ConstructorPage() {
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
-          <Link
-            href="/"
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <Link href="/" className="group">
-            <h1 className="text-lg font-bold">
-              <span className="gradient-text group-hover:opacity-80 transition-opacity">Smart</span>
-              <span className="text-white group-hover:opacity-80 transition-opacity">Format</span>
-            </h1>
-            <p className="text-sm text-white/50">
-              Конструктор документов
-            </p>
-          </Link>
-        </div>
-      </header>
+      <Header showBack />
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
         {pageState === "upload" ? (
           <div className="space-y-8">
+            {/* Баннер: триал заблокирован */}
+            {trialBlocked && (
+              <BlurFade inView>
+                <Card className="border-violet-500/30 bg-violet-500/10">
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-white mb-3">
+                      Бесплатная попытка использована. Зарегистрируйтесь для продолжения.
+                    </p>
+                    <Button onClick={() => router.push("/login")}>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Войти или зарегистрироваться
+                    </Button>
+                  </CardContent>
+                </Card>
+              </BlurFade>
+            )}
+
+            {/* Баннер: анонимный пользователь, триал доступен */}
+            {!authLoading && !user && !trialBlocked && (
+              <BlurFade inView>
+                <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-sm text-white/60">
+                    У вас <span className="text-violet-400 font-medium">1 бесплатная обработка</span> без регистрации.{" "}
+                    <button onClick={() => router.push("/login")} className="text-violet-400 hover:text-violet-300 underline">
+                      Войдите
+                    </button>
+                    {" "}для неограниченного доступа.
+                  </p>
+                </div>
+              </BlurFade>
+            )}
+
             {/* Описание */}
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-3">

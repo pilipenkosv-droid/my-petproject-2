@@ -5,7 +5,7 @@
  * Работает корректно на Vercel serverless (состояние не теряется).
  */
 
-import { getSupabase } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   DocumentStatistics,
   FormattingRules,
@@ -28,6 +28,9 @@ export interface JobState {
   status: JobStatus;
   progress: number; // 0-100
   statusMessage: string;
+
+  // Владелец (null для анонимных)
+  userId?: string;
 
   // Входные файлы
   sourceDocumentId?: string;
@@ -61,6 +64,7 @@ function rowToJob(row: Record<string, unknown>): JobState {
     status: row.status as JobStatus,
     progress: row.progress as number,
     statusMessage: row.status_message as string,
+    userId: row.user_id as string | undefined,
     sourceDocumentId: row.source_document_id as string | undefined,
     requirementsDocumentId: row.requirements_document_id as string | undefined,
     sourceOriginalName: row.source_original_name as string | undefined,
@@ -104,6 +108,7 @@ function jobToRow(
   if (updates.violations !== undefined) row.violations = updates.violations;
   if (updates.statistics !== undefined) row.statistics = updates.statistics;
   if (updates.error !== undefined) row.error = updates.error;
+  if (updates.userId !== undefined) row.user_id = updates.userId;
 
   return row;
 }
@@ -111,8 +116,8 @@ function jobToRow(
 /**
  * Создать новую задачу
  */
-export async function createJob(id: string): Promise<JobState> {
-  const supabase = getSupabase();
+export async function createJob(id: string, userId?: string): Promise<JobState> {
+  const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("jobs")
@@ -121,6 +126,7 @@ export async function createJob(id: string): Promise<JobState> {
       status: "pending",
       progress: 0,
       status_message: "Задача создана",
+      user_id: userId || null,
     })
     .select()
     .single();
@@ -137,7 +143,7 @@ export async function createJob(id: string): Promise<JobState> {
  * Получить задачу по ID
  */
 export async function getJob(id: string): Promise<JobState | null> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
     .from("jobs")
@@ -161,7 +167,7 @@ export async function updateJob(
   id: string,
   updates: Partial<JobState>
 ): Promise<JobState | null> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const row = jobToRow(updates);
 
   if (Object.keys(row).length === 0) {
@@ -238,7 +244,7 @@ export async function failJob(
  * Удалить задачу
  */
 export async function deleteJob(id: string): Promise<boolean> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
 
   const { error } = await supabase.from("jobs").delete().eq("id", id);
 
@@ -256,7 +262,7 @@ export async function deleteJob(id: string): Promise<boolean> {
 export async function cleanupOldJobs(
   maxAgeMs: number = 3600000
 ): Promise<number> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseAdmin();
   const cutoff = new Date(Date.now() - maxAgeMs).toISOString();
 
   const { data, error } = await supabase
@@ -287,6 +293,27 @@ export const STATUS_MESSAGES: Record<JobStatus, string> = {
   completed: "Обработка завершена",
   failed: "Ошибка обработки",
 };
+
+/**
+ * Получить все задачи пользователя (для профиля)
+ */
+export async function getJobsByUser(userId: string): Promise<JobState[]> {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error("[job-store] Failed to get jobs by user:", error);
+    return [];
+  }
+
+  return (data || []).map((row: Record<string, unknown>) => rowToJob(row));
+}
 
 /**
  * Получить прогресс для каждого статуса
