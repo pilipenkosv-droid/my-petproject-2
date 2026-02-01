@@ -1,16 +1,16 @@
 /**
- * Абстракция хранения файлов
- * - Dev: локальное хранение в ./uploads
- * - Prod (Vercel): /tmp для временных файлов
+ * Абстракция хранения файлов — Supabase Storage
+ *
+ * Заменяет локальное хранение в /tmp на Supabase Storage buckets.
+ * Работает корректно на Vercel serverless.
+ *
+ * Buckets:
+ * - documents: загруженные пользователем файлы
+ * - results: результаты обработки (marked original + formatted)
  */
 
-import { promises as fs } from "fs";
-import path from "path";
+import { getSupabase } from "@/lib/supabase/server";
 import { nanoid } from "nanoid";
-
-// Определяем базовую директорию в зависимости от окружения
-const isProduction = process.env.NODE_ENV === "production";
-const BASE_DIR = isProduction ? "/tmp/smartformat" : "./uploads";
 
 export interface StoredFile {
   id: string;
@@ -28,22 +28,12 @@ export interface UploadedFileData {
 }
 
 /**
- * Убедиться, что директория существует
- */
-async function ensureDir(dirPath: string): Promise<void> {
-  try {
-    await fs.mkdir(dirPath, { recursive: true });
-  } catch (error) {
-    // Игнорируем, если директория уже существует
-  }
-}
-
-/**
  * Получить расширение файла по MIME-типу
  */
 function getExtensionByMimeType(mimeType: string): string {
   const mimeToExt: Record<string, string> = {
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      ".docx",
     "application/pdf": ".pdf",
     "text/plain": ".txt",
   };
@@ -51,18 +41,37 @@ function getExtensionByMimeType(mimeType: string): string {
 }
 
 /**
- * Сохранить файл в хранилище
+ * Извлечь расширение из имени файла
+ */
+function getExtFromName(name: string): string {
+  const dotIndex = name.lastIndexOf(".");
+  if (dotIndex === -1) return "";
+  return name.substring(dotIndex);
+}
+
+/**
+ * Сохранить файл в хранилище (bucket: documents)
  */
 export async function saveFile(fileData: UploadedFileData): Promise<StoredFile> {
+  const supabase = getSupabase();
   const id = nanoid();
-  const ext = getExtensionByMimeType(fileData.mimeType) || 
-    path.extname(fileData.originalName);
-  
-  const fileName = `${id}${ext}`;
-  const storagePath = path.join(BASE_DIR, fileName);
+  const ext =
+    getExtensionByMimeType(fileData.mimeType) ||
+    getExtFromName(fileData.originalName);
 
-  await ensureDir(BASE_DIR);
-  await fs.writeFile(storagePath, fileData.buffer);
+  const storagePath = `${id}${ext}`;
+
+  const { error } = await supabase.storage
+    .from("documents")
+    .upload(storagePath, fileData.buffer, {
+      contentType: fileData.mimeType,
+      upsert: false,
+    });
+
+  if (error) {
+    console.error("[file-storage] Failed to upload file:", error);
+    throw new Error(`Failed to upload file: ${error.message}`);
+  }
 
   return {
     id,
@@ -75,125 +84,130 @@ export async function saveFile(fileData: UploadedFileData): Promise<StoredFile> 
 }
 
 /**
- * Получить файл из хранилища
+ * Получить файл из хранилища (bucket: documents)
  */
 export async function getFile(fileId: string): Promise<Buffer | null> {
-  try {
-    // Ищем файл с любым расширением
-    const files = await fs.readdir(BASE_DIR);
-    const matchingFile = files.find((f) => f.startsWith(fileId));
-    
-    if (!matchingFile) {
-      return null;
-    }
+  const supabase = getSupabase();
 
-    const filePath = path.join(BASE_DIR, matchingFile);
-    return await fs.readFile(filePath);
-  } catch (error) {
-    console.error(`Error reading file ${fileId}:`, error);
-    return null;
+  // Пробуем распространённые расширения
+  const extensions = [".docx", ".pdf", ".txt", ""];
+
+  for (const ext of extensions) {
+    const path = `${fileId}${ext}`;
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .download(path);
+
+    if (!error && data) {
+      const arrayBuffer = await data.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    }
   }
+
+  console.error(`[file-storage] File not found: ${fileId}`);
+  return null;
 }
 
 /**
- * Получить путь к файлу по ID
+ * Получить путь к файлу по ID (для Supabase — возвращает storage path)
  */
 export async function getFilePath(fileId: string): Promise<string | null> {
-  try {
-    const files = await fs.readdir(BASE_DIR);
-    const matchingFile = files.find((f) => f.startsWith(fileId));
-    
-    if (!matchingFile) {
-      return null;
-    }
+  const supabase = getSupabase();
 
-    return path.join(BASE_DIR, matchingFile);
-  } catch (error) {
-    console.error(`Error finding file ${fileId}:`, error);
-    return null;
+  const extensions = [".docx", ".pdf", ".txt", ""];
+
+  for (const ext of extensions) {
+    const path = `${fileId}${ext}`;
+    const { data } = await supabase.storage
+      .from("documents")
+      .download(path);
+
+    if (data) {
+      return path;
+    }
   }
+
+  return null;
 }
 
 /**
  * Удалить файл из хранилища
  */
 export async function deleteFile(fileId: string): Promise<boolean> {
-  try {
-    const files = await fs.readdir(BASE_DIR);
-    const matchingFile = files.find((f) => f.startsWith(fileId));
-    
-    if (!matchingFile) {
-      return false;
-    }
+  const supabase = getSupabase();
 
-    const filePath = path.join(BASE_DIR, matchingFile);
-    await fs.unlink(filePath);
-    return true;
-  } catch (error) {
-    console.error(`Error deleting file ${fileId}:`, error);
-    return false;
+  const extensions = [".docx", ".pdf", ".txt", ""];
+
+  for (const ext of extensions) {
+    const path = `${fileId}${ext}`;
+    const { error } = await supabase.storage.from("documents").remove([path]);
+
+    if (!error) return true;
   }
+
+  return false;
 }
 
 /**
- * Очистить старые файлы (по TTL)
- * @param maxAgeMs максимальный возраст файла в миллисекундах
+ * Очистить старые файлы — для Supabase Storage управляется через lifecycle policies
+ * Оставляем stub для совместимости
  */
-export async function cleanupOldFiles(maxAgeMs: number = 3600000): Promise<number> {
-  let deletedCount = 0;
-  
-  try {
-    await ensureDir(BASE_DIR);
-    const files = await fs.readdir(BASE_DIR);
-    const now = Date.now();
-
-    for (const file of files) {
-      const filePath = path.join(BASE_DIR, file);
-      const stats = await fs.stat(filePath);
-      const fileAge = now - stats.mtimeMs;
-
-      if (fileAge > maxAgeMs) {
-        await fs.unlink(filePath);
-        deletedCount++;
-      }
-    }
-  } catch (error) {
-    console.error("Error during cleanup:", error);
-  }
-
-  return deletedCount;
+export async function cleanupOldFiles(
+  _maxAgeMs: number = 3600000
+): Promise<number> {
+  // Supabase Storage lifecycle policies handle this
+  return 0;
 }
 
 /**
- * Сохранить результат обработки (с префиксом для идентификации)
+ * Сохранить результат обработки (bucket: results)
  */
 export async function saveResultFile(
   jobId: string,
   type: "original" | "formatted",
   buffer: Buffer
 ): Promise<string> {
-  const fileName = `${jobId}_${type}.docx`;
-  const storagePath = path.join(BASE_DIR, fileName);
+  const supabase = getSupabase();
+  const storagePath = `${jobId}/${type}.docx`;
 
-  await ensureDir(BASE_DIR);
-  await fs.writeFile(storagePath, buffer);
+  const { error } = await supabase.storage
+    .from("results")
+    .upload(storagePath, buffer, {
+      contentType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      upsert: true,
+    });
+
+  if (error) {
+    console.error("[file-storage] Failed to save result file:", error);
+    throw new Error(`Failed to save result file: ${error.message}`);
+  }
 
   return storagePath;
 }
 
 /**
- * Получить результат обработки
+ * Получить результат обработки (bucket: results)
  */
 export async function getResultFile(
   jobId: string,
   type: "original" | "formatted"
 ): Promise<Buffer | null> {
-  const fileName = `${jobId}_${type}.docx`;
-  const storagePath = path.join(BASE_DIR, fileName);
+  const supabase = getSupabase();
+  const storagePath = `${jobId}/${type}.docx`;
 
-  try {
-    return await fs.readFile(storagePath);
-  } catch (error) {
+  const { data, error } = await supabase.storage
+    .from("results")
+    .download(storagePath);
+
+  if (error || !data) {
+    console.error(
+      `[file-storage] Result file not found: ${storagePath}`,
+      error
+    );
     return null;
   }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }

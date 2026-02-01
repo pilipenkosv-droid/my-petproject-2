@@ -13,12 +13,12 @@ export const maxDuration = 60;
  * Получает jobId и опционально отредактированные правила
  */
 export async function POST(request: NextRequest) {
+  let jobId: string | undefined;
+
   try {
     const body = await request.json();
-    const { jobId, rules: updatedRules } = body as {
-      jobId: string;
-      rules?: FormattingRules;
-    };
+    jobId = body.jobId;
+    const updatedRules = body.rules as FormattingRules | undefined;
 
     if (!jobId) {
       return NextResponse.json(
@@ -108,8 +108,17 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Confirm rules error:", error);
-    
+
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
+
+    // КРИТИЧЕСКИЙ FIX: помечаем job как failed, чтобы не зависал навечно
+    if (jobId) {
+      try {
+        await failJob(jobId, errorMessage);
+      } catch (failError) {
+        console.error("Failed to mark job as failed:", failError);
+      }
+    }
 
     return NextResponse.json(
       { error: errorMessage },

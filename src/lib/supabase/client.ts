@@ -1,0 +1,13 @@
+/**
+ * Браузерный Supabase-клиент (anon key)
+ * Для будущей авторизации (Phase 2)
+ */
+
+import { createClient } from "@supabase/supabase-js";
+
+export function getSupabaseBrowser() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}

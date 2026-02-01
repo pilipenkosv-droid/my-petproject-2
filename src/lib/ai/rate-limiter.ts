@@ -1,33 +1,19 @@
 /**
- * Rate limiter для AI-моделей
+ * Rate limiter для AI-моделей — Supabase PostgreSQL
  *
  * Отслеживает использование каждой модели (RPM и RPD).
- * Состояние хранится в памяти + на диске (/tmp) для устойчивости на Vercel.
+ * Состояние хранится в Supabase PostgreSQL для устойчивости на Vercel serverless.
  */
 
-import { promises as fs } from "fs";
-import path from "path";
-
-const isProduction = process.env.NODE_ENV === "production";
-const LIMITER_DIR = isProduction
-  ? "/tmp/smartformat/rate-limits"
-  : "./uploads/rate-limits";
+import { getSupabase } from "@/lib/supabase/server";
 
 interface ModelUsage {
-  /** Запросы за текущую минуту */
   minuteRequests: number;
-  /** Начало текущей минуты (timestamp) */
   minuteStart: number;
-  /** Запросы за текущий день */
   dayRequests: number;
-  /** Начало текущего дня (timestamp, полночь UTC) */
   dayStart: number;
-  /** Время последнего запроса */
   lastRequestAt: number;
 }
-
-// In-memory cache
-const usageCache = new Map<string, ModelUsage>();
 
 function getDayStart(): number {
   const now = new Date();
@@ -41,42 +27,62 @@ function getMinuteStart(): number {
   return now - (now % 60_000);
 }
 
-function usageFilePath(modelId: string): string {
-  return path.join(LIMITER_DIR, `${modelId}.json`);
-}
-
+/**
+ * Загрузить usage из БД (или создать новую запись)
+ */
 async function loadUsage(modelId: string): Promise<ModelUsage> {
-  // Проверяем кэш
-  const cached = usageCache.get(modelId);
-  if (cached) return cached;
+  const supabase = getSupabase();
 
-  // Пробуем с диска
-  try {
-    const raw = await fs.readFile(usageFilePath(modelId), "utf-8");
-    const data = JSON.parse(raw) as ModelUsage;
-    usageCache.set(modelId, data);
-    return data;
-  } catch {
-    // Нет файла — создаём чистое состояние
-    const fresh: ModelUsage = {
+  const { data, error } = await supabase
+    .from("rate_limits")
+    .select("*")
+    .eq("model_id", modelId)
+    .single();
+
+  if (error || !data) {
+    return {
       minuteRequests: 0,
       minuteStart: getMinuteStart(),
       dayRequests: 0,
       dayStart: getDayStart(),
       lastRequestAt: 0,
     };
-    usageCache.set(modelId, fresh);
-    return fresh;
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = data as any;
+  return {
+    minuteRequests: row.minute_requests as number,
+    minuteStart: row.minute_start as number,
+    dayRequests: row.day_requests as number,
+    dayStart: row.day_start as number,
+    lastRequestAt: row.last_request_at as number,
+  };
 }
 
+/**
+ * Сохранить usage в БД (upsert)
+ */
 async function saveUsage(modelId: string, usage: ModelUsage): Promise<void> {
-  usageCache.set(modelId, usage);
-  try {
-    await fs.mkdir(LIMITER_DIR, { recursive: true });
-    await fs.writeFile(usageFilePath(modelId), JSON.stringify(usage), "utf-8");
-  } catch (err) {
-    console.error(`[rate-limiter] Failed to persist usage for ${modelId}:`, err);
+  const supabase = getSupabase();
+
+  const { error } = await supabase.from("rate_limits").upsert(
+    {
+      model_id: modelId,
+      minute_requests: usage.minuteRequests,
+      minute_start: usage.minuteStart,
+      day_requests: usage.dayRequests,
+      day_start: usage.dayStart,
+      last_request_at: usage.lastRequestAt,
+    },
+    { onConflict: "model_id" }
+  );
+
+  if (error) {
+    console.error(
+      `[rate-limiter] Failed to persist usage for ${modelId}:`,
+      error
+    );
   }
 }
 
@@ -87,7 +93,7 @@ function resetIfNeeded(usage: ModelUsage): ModelUsage {
   const nowMinute = getMinuteStart();
   const nowDay = getDayStart();
 
-  let updated = { ...usage };
+  const updated = { ...usage };
 
   if (updated.minuteStart < nowMinute) {
     updated.minuteRequests = 0;
@@ -112,11 +118,6 @@ export async function canUseModel(
 ): Promise<boolean> {
   const raw = await loadUsage(modelId);
   const usage = resetIfNeeded(raw);
-
-  // Обновляем кэш со сброшенными счётчиками
-  if (usage !== raw) {
-    usageCache.set(modelId, usage);
-  }
 
   return usage.minuteRequests < rpm && usage.dayRequests < rpd;
 }
@@ -143,7 +144,6 @@ export async function markModelFailed(modelId: string): Promise<void> {
   const raw = await loadUsage(modelId);
   const usage = resetIfNeeded(raw);
 
-  // Ставим минутный счётчик на максимум — модель не будет выбрана до сброса
   usage.minuteRequests = 999;
   usage.lastRequestAt = Date.now();
 

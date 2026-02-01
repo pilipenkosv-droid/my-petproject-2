@@ -1,63 +1,30 @@
 /**
- * Модуль очистки старых файлов и задач
+ * Модуль очистки старых задач
+ * Supabase Storage не требует ручной очистки файлов.
+ * Очищаем только записи в БД (jobs).
  */
 
-import { cleanupOldFiles } from "./file-storage";
 import { cleanupOldJobs } from "./job-store";
 
-// Время жизни файлов и задач (1 час)
-const DEFAULT_TTL_MS = 60 * 60 * 1000;
+// Время жизни задач (24 часа — можно увеличить, т.к. хранение в БД дешёвое)
+const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Запуск периодической очистки
- */
-let cleanupInterval: NodeJS.Timeout | null = null;
-
-export function startCleanupScheduler(intervalMs: number = 15 * 60 * 1000): void {
-  if (cleanupInterval) {
-    return; // Уже запущен
-  }
-
-  cleanupInterval = setInterval(async () => {
-    await runCleanup();
-  }, intervalMs);
-
-  // Запускаем сразу при старте
-  runCleanup();
-
-  console.log(`[Cleanup] Scheduler started, interval: ${intervalMs / 1000}s`);
-}
-
-export function stopCleanupScheduler(): void {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
-    console.log("[Cleanup] Scheduler stopped");
-  }
-}
-
-/**
- * Выполнить очистку
+ * Выполнить очистку старых записей
  */
 export async function runCleanup(ttlMs: number = DEFAULT_TTL_MS): Promise<{
-  filesDeleted: number;
   jobsDeleted: number;
 }> {
   try {
-    const [filesDeleted, jobsDeleted] = await Promise.all([
-      cleanupOldFiles(ttlMs),
-      cleanupOldJobs(ttlMs),
-    ]);
+    const jobsDeleted = await cleanupOldJobs(ttlMs);
 
-    if (filesDeleted > 0 || jobsDeleted > 0) {
-      console.log(
-        `[Cleanup] Deleted ${filesDeleted} files and ${jobsDeleted} jobs`
-      );
+    if (jobsDeleted > 0) {
+      console.log(`[Cleanup] Deleted ${jobsDeleted} old jobs`);
     }
 
-    return { filesDeleted, jobsDeleted };
+    return { jobsDeleted };
   } catch (error) {
     console.error("[Cleanup] Error during cleanup:", error);
-    return { filesDeleted: 0, jobsDeleted: 0 };
+    return { jobsDeleted: 0 };
   }
 }

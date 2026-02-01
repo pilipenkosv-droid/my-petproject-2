@@ -1,15 +1,16 @@
 /**
- * Хранение состояния задач обработки
- * Hybrid: in-memory cache + JSON-файлы на диске для устойчивости на Vercel
- * (serverless-функции не разделяют память, но /tmp доступен всем)
+ * Хранение состояния задач обработки — Supabase PostgreSQL
+ *
+ * Заменяет hybrid memory+/tmp подход на полноценное хранение в БД.
+ * Работает корректно на Vercel serverless (состояние не теряется).
  */
 
-import { promises as fs } from "fs";
-import path from "path";
-import { DocumentStatistics, FormattingRules, FormattingViolation } from "@/types/formatting-rules";
-
-const isProduction = process.env.NODE_ENV === "production";
-const JOBS_DIR = isProduction ? "/tmp/smartformat/jobs" : "./uploads/jobs";
+import { getSupabase } from "@/lib/supabase/server";
+import {
+  DocumentStatistics,
+  FormattingRules,
+  FormattingViolation,
+} from "@/types/formatting-rules";
 
 export type JobStatus =
   | "pending"
@@ -32,6 +33,10 @@ export interface JobState {
   sourceDocumentId?: string;
   requirementsDocumentId?: string;
 
+  // Оригинальные имена файлов
+  sourceOriginalName?: string;
+  requirementsOriginalName?: string;
+
   // Результаты
   rules?: FormattingRules;
   violations?: FormattingViolation[];
@@ -49,95 +54,133 @@ export interface JobState {
   updatedAt: Date;
 }
 
-// In-memory кэш (ускоряет чтение в рамках одного инстанса)
-const globalForJobs = globalThis as unknown as {
-  jobsStore: Map<string, JobState> | undefined;
-};
-const memoryCache = globalForJobs.jobsStore ?? new Map<string, JobState>();
-if (process.env.NODE_ENV !== "production") {
-  globalForJobs.jobsStore = memoryCache;
+/** DB row → JobState */
+function rowToJob(row: Record<string, unknown>): JobState {
+  return {
+    id: row.id as string,
+    status: row.status as JobStatus,
+    progress: row.progress as number,
+    statusMessage: row.status_message as string,
+    sourceDocumentId: row.source_document_id as string | undefined,
+    requirementsDocumentId: row.requirements_document_id as string | undefined,
+    sourceOriginalName: row.source_original_name as string | undefined,
+    requirementsOriginalName: row.requirements_original_name as
+      | string
+      | undefined,
+    markedOriginalId: row.marked_original_id as string | undefined,
+    formattedDocumentId: row.formatted_document_id as string | undefined,
+    rules: row.rules as FormattingRules | undefined,
+    violations: row.violations as FormattingViolation[] | undefined,
+    statistics: row.statistics as DocumentStatistics | undefined,
+    error: row.error as string | undefined,
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string),
+  };
 }
 
-/** Путь к JSON-файлу job на диске */
-function jobFilePath(id: string): string {
-  return path.join(JOBS_DIR, `${id}.json`);
-}
+/** JobState partial → DB columns (snake_case) */
+function jobToRow(
+  updates: Partial<JobState>
+): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
 
-/** Записать job на диск (async, fire-and-forget safe) */
-async function persistJob(job: JobState): Promise<void> {
-  try {
-    await fs.mkdir(JOBS_DIR, { recursive: true });
-    await fs.writeFile(jobFilePath(job.id), JSON.stringify(job), "utf-8");
-  } catch (err) {
-    console.error(`[job-store] Failed to persist job ${job.id}:`, err);
-  }
-}
+  if (updates.status !== undefined) row.status = updates.status;
+  if (updates.progress !== undefined) row.progress = updates.progress;
+  if (updates.statusMessage !== undefined)
+    row.status_message = updates.statusMessage;
+  if (updates.sourceDocumentId !== undefined)
+    row.source_document_id = updates.sourceDocumentId;
+  if (updates.requirementsDocumentId !== undefined)
+    row.requirements_document_id = updates.requirementsDocumentId;
+  if (updates.sourceOriginalName !== undefined)
+    row.source_original_name = updates.sourceOriginalName;
+  if (updates.requirementsOriginalName !== undefined)
+    row.requirements_original_name = updates.requirementsOriginalName;
+  if (updates.markedOriginalId !== undefined)
+    row.marked_original_id = updates.markedOriginalId;
+  if (updates.formattedDocumentId !== undefined)
+    row.formatted_document_id = updates.formattedDocumentId;
+  if (updates.rules !== undefined) row.rules = updates.rules;
+  if (updates.violations !== undefined) row.violations = updates.violations;
+  if (updates.statistics !== undefined) row.statistics = updates.statistics;
+  if (updates.error !== undefined) row.error = updates.error;
 
-/** Прочитать job с диска */
-async function loadJobFromDisk(id: string): Promise<JobState | null> {
-  try {
-    const raw = await fs.readFile(jobFilePath(id), "utf-8");
-    const data = JSON.parse(raw);
-    // Восстанавливаем Date из строк
-    data.createdAt = new Date(data.createdAt);
-    data.updatedAt = new Date(data.updatedAt);
-    return data as JobState;
-  } catch {
-    return null;
-  }
+  return row;
 }
 
 /**
  * Создать новую задачу
  */
 export async function createJob(id: string): Promise<JobState> {
-  const job: JobState = {
-    id,
-    status: "pending",
-    progress: 0,
-    statusMessage: "Задача создана",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const supabase = getSupabase();
 
-  memoryCache.set(id, job);
-  await persistJob(job);
-  return job;
+  const { data, error } = await supabase
+    .from("jobs")
+    .insert({
+      id,
+      status: "pending",
+      progress: 0,
+      status_message: "Задача создана",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[job-store] Failed to create job:", error);
+    throw new Error(`Failed to create job: ${error.message}`);
+  }
+
+  return rowToJob(data as Record<string, unknown>);
 }
 
 /**
- * Получить задачу по ID — ищет в памяти, потом на диске
+ * Получить задачу по ID
  */
 export async function getJob(id: string): Promise<JobState | null> {
-  const cached = memoryCache.get(id);
-  if (cached) return cached;
+  const supabase = getSupabase();
 
-  const fromDisk = await loadJobFromDisk(id);
-  if (fromDisk) {
-    memoryCache.set(id, fromDisk);
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null; // Not found
+    console.error("[job-store] Failed to get job:", error);
+    return null;
   }
-  return fromDisk;
+
+  return rowToJob(data as Record<string, unknown>);
 }
 
 /**
  * Обновить состояние задачи
  */
-export async function updateJob(id: string, updates: Partial<JobState>): Promise<JobState | null> {
-  let job = memoryCache.get(id);
-  if (!job) {
-    job = await loadJobFromDisk(id) ?? undefined;
-    if (!job) return null;
+export async function updateJob(
+  id: string,
+  updates: Partial<JobState>
+): Promise<JobState | null> {
+  const supabase = getSupabase();
+  const row = jobToRow(updates);
+
+  if (Object.keys(row).length === 0) {
+    return getJob(id);
   }
 
-  const updatedJob = {
-    ...job,
-    ...updates,
-    updatedAt: new Date(),
-  };
+  const { data, error } = await supabase
+    .from("jobs")
+    .update(row)
+    .eq("id", id)
+    .select()
+    .single();
 
-  memoryCache.set(id, updatedJob);
-  await persistJob(updatedJob);
-  return updatedJob;
+  if (error) {
+    console.error("[job-store] Failed to update job:", error);
+    return null;
+  }
+
+  return rowToJob(data as Record<string, unknown>);
 }
 
 /**
@@ -180,7 +223,10 @@ export async function completeJob(
 /**
  * Пометить задачу как неуспешную
  */
-export async function failJob(id: string, error: string): Promise<JobState | null> {
+export async function failJob(
+  id: string,
+  error: string
+): Promise<JobState | null> {
   return updateJob(id, {
     status: "failed",
     statusMessage: error,
@@ -191,46 +237,40 @@ export async function failJob(id: string, error: string): Promise<JobState | nul
 /**
  * Удалить задачу
  */
-export function deleteJob(id: string): boolean {
-  memoryCache.delete(id);
-  // Async удаление файла
-  fs.unlink(jobFilePath(id)).catch(() => {});
+export async function deleteJob(id: string): Promise<boolean> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase.from("jobs").delete().eq("id", id);
+
+  if (error) {
+    console.error("[job-store] Failed to delete job:", error);
+    return false;
+  }
+
   return true;
 }
 
 /**
  * Очистить старые задачи
  */
-export async function cleanupOldJobs(maxAgeMs: number = 3600000): Promise<number> {
-  let deletedCount = 0;
-  const now = Date.now();
+export async function cleanupOldJobs(
+  maxAgeMs: number = 3600000
+): Promise<number> {
+  const supabase = getSupabase();
+  const cutoff = new Date(Date.now() - maxAgeMs).toISOString();
 
-  // Чистим memory cache
-  for (const [id, job] of memoryCache.entries()) {
-    const jobAge = now - job.createdAt.getTime();
-    if (jobAge > maxAgeMs) {
-      memoryCache.delete(id);
-      deletedCount++;
-    }
+  const { data, error } = await supabase
+    .from("jobs")
+    .delete()
+    .lt("created_at", cutoff)
+    .select("id");
+
+  if (error) {
+    console.error("[job-store] Failed to cleanup old jobs:", error);
+    return 0;
   }
 
-  // Чистим файлы на диске
-  try {
-    const files = await fs.readdir(JOBS_DIR);
-    for (const file of files) {
-      if (!file.endsWith(".json")) continue;
-      const filePath = path.join(JOBS_DIR, file);
-      const stats = await fs.stat(filePath);
-      if (now - stats.mtimeMs > maxAgeMs) {
-        await fs.unlink(filePath);
-        deletedCount++;
-      }
-    }
-  } catch {
-    // Директория может не существовать
-  }
-
-  return deletedCount;
+  return data?.length ?? 0;
 }
 
 /**

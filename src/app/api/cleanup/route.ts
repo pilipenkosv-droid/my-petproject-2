@@ -2,12 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { runCleanup } from "@/lib/storage/cleanup";
 
 /**
- * API endpoint для ручного запуска очистки
- * Можно использовать с cron job (например, Vercel Cron)
- * 
- * GET /api/cleanup
- * 
- * Для защиты в production добавьте проверку секретного ключа:
+ * API endpoint для очистки старых записей в БД
  * GET /api/cleanup?secret=YOUR_CLEANUP_SECRET
  */
 export async function GET(request: NextRequest) {
