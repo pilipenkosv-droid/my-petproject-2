@@ -111,9 +111,14 @@ function extractJson(text: string): unknown {
     // Пробуем найти JSON-объект в тексте
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]);
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        // Если даже найденный фрагмент не парсится
+      }
     }
-    throw new Error("Could not extract JSON from AI response");
+    const preview = text.substring(0, 200);
+    throw new Error(`Could not extract JSON from AI response: "${preview}"`);
   }
 }
 
@@ -123,6 +128,8 @@ function extractJson(text: string): unknown {
  */
 export async function callAI(request: GatewayRequest): Promise<GatewayResponse> {
   const models = getAvailableModels();
+
+  console.log(`[ai-gateway] Available models: ${models.map(m => m.id).join(", ") || "NONE"}`);
 
   if (models.length === 0) {
     throw new Error(

@@ -63,17 +63,6 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     supportsJsonMode: true,
     priority: 2,
   },
-  {
-    id: "gemini-3-flash",
-    displayName: "Gemini 3 Flash",
-    protocol: "gemini",
-    apiKeyEnv: "GEMINI_API_KEY",
-    modelId: "gemini-3-flash",
-    limits: { rpm: 5, rpd: 20, tpm: 250_000 },
-    supportsJsonMode: true,
-    priority: 3,
-  },
-
   // ── Groq (Llama через OpenAI-compatible API) ──
   {
     id: "groq-llama-3.3-70b",
