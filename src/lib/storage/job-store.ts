@@ -1,12 +1,17 @@
 /**
  * Хранение состояния задач обработки
- * Для MVP используем in-memory хранилище
- * В production можно заменить на Redis или базу данных
+ * Hybrid: in-memory cache + JSON-файлы на диске для устойчивости на Vercel
+ * (serverless-функции не разделяют память, но /tmp доступен всем)
  */
 
+import { promises as fs } from "fs";
+import path from "path";
 import { DocumentStatistics, FormattingRules, FormattingViolation } from "@/types/formatting-rules";
 
-export type JobStatus = 
+const isProduction = process.env.NODE_ENV === "production";
+const JOBS_DIR = isProduction ? "/tmp/smartformat/jobs" : "./uploads/jobs";
+
+export type JobStatus =
   | "pending"
   | "uploading"
   | "extracting_text"
@@ -22,39 +27,64 @@ export interface JobState {
   status: JobStatus;
   progress: number; // 0-100
   statusMessage: string;
-  
+
   // Входные файлы
   sourceDocumentId?: string;
   requirementsDocumentId?: string;
-  
+
   // Результаты
   rules?: FormattingRules;
   violations?: FormattingViolation[];
   statistics?: DocumentStatistics;
-  
+
   // Выходные файлы
   markedOriginalId?: string;
   formattedDocumentId?: string;
-  
+
   // Ошибка (если status === "failed")
   error?: string;
-  
+
   // Временные метки
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Глобальное хранилище для устойчивости к hot reload в dev режиме
-// В production это работает как обычный Map
+// In-memory кэш (ускоряет чтение в рамках одного инстанса)
 const globalForJobs = globalThis as unknown as {
   jobsStore: Map<string, JobState> | undefined;
 };
-
-// In-memory хранилище задач (сохраняется между hot reload)
-const jobs = globalForJobs.jobsStore ?? new Map<string, JobState>();
-
+const memoryCache = globalForJobs.jobsStore ?? new Map<string, JobState>();
 if (process.env.NODE_ENV !== "production") {
-  globalForJobs.jobsStore = jobs;
+  globalForJobs.jobsStore = memoryCache;
+}
+
+/** Путь к JSON-файлу job на диске */
+function jobFilePath(id: string): string {
+  return path.join(JOBS_DIR, `${id}.json`);
+}
+
+/** Записать job на диск (async, fire-and-forget safe) */
+async function persistJob(job: JobState): Promise<void> {
+  try {
+    await fs.mkdir(JOBS_DIR, { recursive: true });
+    await fs.writeFile(jobFilePath(job.id), JSON.stringify(job), "utf-8");
+  } catch (err) {
+    console.error(`[job-store] Failed to persist job ${job.id}:`, err);
+  }
+}
+
+/** Прочитать job с диска */
+async function loadJobFromDisk(id: string): Promise<JobState | null> {
+  try {
+    const raw = await fs.readFile(jobFilePath(id), "utf-8");
+    const data = JSON.parse(raw);
+    // Восстанавливаем Date из строк
+    data.createdAt = new Date(data.createdAt);
+    data.updatedAt = new Date(data.updatedAt);
+    return data as JobState;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -69,34 +99,72 @@ export function createJob(id: string): JobState {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  
-  jobs.set(id, job);
+
+  memoryCache.set(id, job);
+  // Persist async — не блокируем ответ
+  persistJob(job);
   return job;
 }
 
 /**
- * Получить задачу по ID
+ * Получить задачу по ID (memory → disk fallback)
  */
 export function getJob(id: string): JobState | null {
-  return jobs.get(id) || null;
+  return memoryCache.get(id) || null;
+}
+
+/**
+ * Async версия getJob: ищет в памяти, потом на диске
+ */
+export async function getJobAsync(id: string): Promise<JobState | null> {
+  const cached = memoryCache.get(id);
+  if (cached) return cached;
+
+  const fromDisk = await loadJobFromDisk(id);
+  if (fromDisk) {
+    memoryCache.set(id, fromDisk);
+  }
+  return fromDisk;
 }
 
 /**
  * Обновить состояние задачи
  */
 export function updateJob(id: string, updates: Partial<JobState>): JobState | null {
-  const job = jobs.get(id);
+  const job = memoryCache.get(id);
   if (!job) {
     return null;
   }
-  
+
   const updatedJob = {
     ...job,
     ...updates,
     updatedAt: new Date(),
   };
-  
-  jobs.set(id, updatedJob);
+
+  memoryCache.set(id, updatedJob);
+  persistJob(updatedJob);
+  return updatedJob;
+}
+
+/**
+ * Async версия updateJob: пробует memory, потом disk
+ */
+export async function updateJobAsync(id: string, updates: Partial<JobState>): Promise<JobState | null> {
+  let job = memoryCache.get(id);
+  if (!job) {
+    job = await loadJobFromDisk(id) ?? undefined;
+    if (!job) return null;
+  }
+
+  const updatedJob = {
+    ...job,
+    ...updates,
+    updatedAt: new Date(),
+  };
+
+  memoryCache.set(id, updatedJob);
+  await persistJob(updatedJob);
   return updatedJob;
 }
 
@@ -152,24 +220,44 @@ export function failJob(id: string, error: string): JobState | null {
  * Удалить задачу
  */
 export function deleteJob(id: string): boolean {
-  return jobs.delete(id);
+  memoryCache.delete(id);
+  // Async удаление файла
+  fs.unlink(jobFilePath(id)).catch(() => {});
+  return true;
 }
 
 /**
  * Очистить старые задачи
  */
-export function cleanupOldJobs(maxAgeMs: number = 3600000): number {
+export async function cleanupOldJobs(maxAgeMs: number = 3600000): Promise<number> {
   let deletedCount = 0;
   const now = Date.now();
-  
-  for (const [id, job] of jobs.entries()) {
+
+  // Чистим memory cache
+  for (const [id, job] of memoryCache.entries()) {
     const jobAge = now - job.createdAt.getTime();
     if (jobAge > maxAgeMs) {
-      jobs.delete(id);
+      memoryCache.delete(id);
       deletedCount++;
     }
   }
-  
+
+  // Чистим файлы на диске
+  try {
+    const files = await fs.readdir(JOBS_DIR);
+    for (const file of files) {
+      if (!file.endsWith(".json")) continue;
+      const filePath = path.join(JOBS_DIR, file);
+      const stats = await fs.stat(filePath);
+      if (now - stats.mtimeMs > maxAgeMs) {
+        await fs.unlink(filePath);
+        deletedCount++;
+      }
+    }
+  } catch {
+    // Директория может не существовать
+  }
+
   return deletedCount;
 }
 

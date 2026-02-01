@@ -46,7 +46,7 @@ export async function runCleanup(ttlMs: number = DEFAULT_TTL_MS): Promise<{
   try {
     const [filesDeleted, jobsDeleted] = await Promise.all([
       cleanupOldFiles(ttlMs),
-      Promise.resolve(cleanupOldJobs(ttlMs)),
+      cleanupOldJobs(ttlMs),
     ]);
 
     if (filesDeleted > 0 || jobsDeleted > 0) {

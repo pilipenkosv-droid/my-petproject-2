@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/storage/job-store";
+import { getJobAsync } from "@/lib/storage/job-store";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   const { jobId } = await params;
-  
-  const job = getJob(jobId);
+
+  const job = await getJobAsync(jobId);
   
   if (!job) {
     return NextResponse.json(

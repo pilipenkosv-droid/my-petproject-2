@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
+import { getJobAsync, updateJobAsync, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
 import { getFile } from "@/lib/storage/file-storage";
 import { saveResultFile } from "@/lib/storage/file-storage";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = getJob(jobId);
+    const job = await getJobAsync(jobId);
     if (!job) {
       return NextResponse.json(
         { error: "Задача не найдена" },
