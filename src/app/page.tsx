@@ -69,7 +69,7 @@ export default function LandingPage() {
           
           <BlurFade delay={0.5} inView>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/constructor">
+              <Link href="/create">
                 <ShimmerButton className="text-lg">
                   <Zap className="w-5 h-5 mr-2" />
                   Начать форматирование
@@ -210,7 +210,7 @@ export default function LandingPage() {
               <p className="text-white/60 mb-8 max-w-md mx-auto">
                 Загрузите документ и получите результат за несколько минут
               </p>
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button size="lg" variant="glow">
                   <Zap className="w-5 h-5" />
                   Начать форматирование

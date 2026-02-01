@@ -55,7 +55,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               <CardDescription>{error}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button variant="outline" className="w-full">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Попробовать снова
@@ -113,7 +113,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               <CardDescription>{job.error || "Неизвестная ошибка"}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button variant="outline" className="w-full">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Попробовать снова
@@ -221,7 +221,7 @@ export default function ResultPage({ params }: ResultPageProps) {
 
           {/* Ссылка на новый документ */}
           <div className="text-center pt-4">
-            <Link href="/constructor">
+            <Link href="/create">
               <Button variant="secondary">
                 <RefreshCw className="h-4 w-4" />
                 Загрузить новый документ
@@ -239,7 +239,7 @@ function Header() {
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto max-w-2xl px-6 py-4 flex items-center gap-4">
         <Link
-          href="/constructor"
+          href="/create"
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
         >
           <ArrowLeft className="h-5 w-5" />

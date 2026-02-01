@@ -168,7 +168,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
               <CardDescription>{error}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button variant="outline" className="w-full">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Попробовать снова
@@ -193,7 +193,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
               <CardTitle className="text-white/70">Данные не найдены</CardTitle>
             </CardHeader>
             <CardContent>
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button variant="outline" className="w-full">
                   Загрузить документы
                 </Button>
@@ -293,7 +293,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           {/* Кнопки действий */}
           <BlurFade delay={0.3} inView>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link href="/constructor">
+              <Link href="/create">
                 <Button variant="secondary">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Загрузить другие документы
@@ -319,7 +319,7 @@ function Header() {
     <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
         <Link
-          href="/constructor"
+          href="/create"
           className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
         >
           <ArrowLeft className="h-5 w-5" />
