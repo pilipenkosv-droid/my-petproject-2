@@ -4,6 +4,7 @@ import { saveFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
+import { warmupModels } from "@/lib/ai/gateway";
 
 export const maxDuration = 60;
 
@@ -72,9 +73,21 @@ export async function POST(request: NextRequest) {
       requirementsDocumentId: savedRequirements.id,
     });
 
+    // Прогрев AI-моделей параллельно с извлечением текста
     await updateJobProgress(jobId, "extracting_text", 20, "Извлечение текста из методички");
 
-    const requirementsText = await extractText(requirementsBuffer, requirementsMimeType);
+    const [requirementsText, warmup] = await Promise.all([
+      extractText(requirementsBuffer, requirementsMimeType),
+      warmupModels(),
+    ]);
+
+    if (warmup.alive.length === 0) {
+      await failJob(jobId, "Нет доступных AI-моделей. Попробуйте позже.");
+      return NextResponse.json(
+        { error: "Нет доступных AI-моделей. Попробуйте позже." },
+        { status: 503 }
+      );
+    }
 
     if (!requirementsText || requirementsText.trim().length < 50) {
       await failJob(jobId, "Документ с требованиями слишком короткий или пустой");

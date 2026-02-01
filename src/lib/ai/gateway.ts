@@ -123,6 +123,87 @@ function extractJson(text: string): unknown {
 }
 
 /**
+ * Пинг одной модели — отправляет минимальный запрос для проверки доступности.
+ * Возвращает true если модель ответила, false если упала.
+ */
+async function pingModel(model: ModelConfig): Promise<boolean> {
+  const PING_REQUEST: GatewayRequest = {
+    systemPrompt: "Respond with valid JSON only.",
+    userPrompt: 'Return exactly: {"status":"ok"}',
+    temperature: 0,
+    maxTokens: 20,
+  };
+
+  try {
+    let rawText: string;
+    if (model.protocol === "gemini") {
+      rawText = await callGemini(model, PING_REQUEST);
+    } else {
+      rawText = await callOpenAICompatible(model, PING_REQUEST);
+    }
+    // Проверяем что ответ хотя бы содержит JSON
+    extractJson(rawText);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Прогрев моделей — параллельно пингует все доступные модели,
+ * помечая нерабочие как failed. Вызывать перед началом пайплайна.
+ * Не расходует rate limit (минимальный запрос).
+ */
+export async function warmupModels(): Promise<{
+  total: number;
+  alive: string[];
+  dead: string[];
+}> {
+  const models = getAvailableModels();
+
+  if (models.length === 0) {
+    console.warn("[ai-gateway] No models configured for warmup");
+    return { total: 0, alive: [], dead: [] };
+  }
+
+  console.log(
+    `[ai-gateway] Warming up ${models.length} models: ${models.map((m) => m.id).join(", ")}`
+  );
+
+  const results = await Promise.all(
+    models.map(async (model) => {
+      // Проверяем лимиты перед пингом
+      const withinLimits = await canUseModel(
+        model.id,
+        model.limits.rpm,
+        model.limits.rpd
+      );
+      if (!withinLimits) {
+        return { model, ok: false, reason: "rate-limited" };
+      }
+
+      await recordUsage(model.id);
+      const ok = await pingModel(model);
+      if (!ok) {
+        await markModelFailed(model.id);
+      }
+      return { model, ok, reason: ok ? "alive" : "ping-failed" };
+    })
+  );
+
+  const alive = results.filter((r) => r.ok).map((r) => r.model.displayName);
+  const dead = results
+    .filter((r) => !r.ok)
+    .map((r) => `${r.model.displayName} (${r.reason})`);
+
+  console.log(
+    `[ai-gateway] Warmup done: ${alive.length} alive [${alive.join(", ")}], ${dead.length} dead [${dead.join(", ")}]`
+  );
+
+  return { total: models.length, alive, dead };
+}
+
+/**
  * Главная функция: выбирает модель и отправляет запрос.
  * При ошибке пробует следующую модель.
  */
