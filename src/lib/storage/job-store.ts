@@ -90,7 +90,7 @@ async function loadJobFromDisk(id: string): Promise<JobState | null> {
 /**
  * Создать новую задачу
  */
-export function createJob(id: string): JobState {
+export async function createJob(id: string): Promise<JobState> {
   const job: JobState = {
     id,
     status: "pending",
@@ -101,22 +101,14 @@ export function createJob(id: string): JobState {
   };
 
   memoryCache.set(id, job);
-  // Persist async — не блокируем ответ
-  persistJob(job);
+  await persistJob(job);
   return job;
 }
 
 /**
- * Получить задачу по ID (memory → disk fallback)
+ * Получить задачу по ID — ищет в памяти, потом на диске
  */
-export function getJob(id: string): JobState | null {
-  return memoryCache.get(id) || null;
-}
-
-/**
- * Async версия getJob: ищет в памяти, потом на диске
- */
-export async function getJobAsync(id: string): Promise<JobState | null> {
+export async function getJob(id: string): Promise<JobState | null> {
   const cached = memoryCache.get(id);
   if (cached) return cached;
 
@@ -130,27 +122,7 @@ export async function getJobAsync(id: string): Promise<JobState | null> {
 /**
  * Обновить состояние задачи
  */
-export function updateJob(id: string, updates: Partial<JobState>): JobState | null {
-  const job = memoryCache.get(id);
-  if (!job) {
-    return null;
-  }
-
-  const updatedJob = {
-    ...job,
-    ...updates,
-    updatedAt: new Date(),
-  };
-
-  memoryCache.set(id, updatedJob);
-  persistJob(updatedJob);
-  return updatedJob;
-}
-
-/**
- * Async версия updateJob: пробует memory, потом disk
- */
-export async function updateJobAsync(id: string, updates: Partial<JobState>): Promise<JobState | null> {
+export async function updateJob(id: string, updates: Partial<JobState>): Promise<JobState | null> {
   let job = memoryCache.get(id);
   if (!job) {
     job = await loadJobFromDisk(id) ?? undefined;
@@ -171,12 +143,12 @@ export async function updateJobAsync(id: string, updates: Partial<JobState>): Pr
 /**
  * Обновить прогресс задачи
  */
-export function updateJobProgress(
+export async function updateJobProgress(
   id: string,
   status: JobStatus,
   progress: number,
   message: string
-): JobState | null {
+): Promise<JobState | null> {
   return updateJob(id, {
     status,
     progress,
@@ -187,7 +159,7 @@ export function updateJobProgress(
 /**
  * Пометить задачу как завершённую
  */
-export function completeJob(
+export async function completeJob(
   id: string,
   result: {
     markedOriginalId: string;
@@ -196,7 +168,7 @@ export function completeJob(
     statistics: DocumentStatistics;
     rules: FormattingRules;
   }
-): JobState | null {
+): Promise<JobState | null> {
   return updateJob(id, {
     status: "completed",
     progress: 100,
@@ -208,7 +180,7 @@ export function completeJob(
 /**
  * Пометить задачу как неуспешную
  */
-export function failJob(id: string, error: string): JobState | null {
+export async function failJob(id: string, error: string): Promise<JobState | null> {
   return updateJob(id, {
     status: "failed",
     statusMessage: error,

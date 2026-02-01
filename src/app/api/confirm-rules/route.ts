@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJobAsync, updateJobAsync, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
+import { getJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
 import { getFile } from "@/lib/storage/file-storage";
 import { saveResultFile } from "@/lib/storage/file-storage";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = await getJobAsync(jobId);
+    const job = await getJob(jobId);
     if (!job) {
       return NextResponse.json(
         { error: "Задача не найдена" },
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    updateJobProgress(jobId, "analyzing", 50, "Получение исходного документа");
+    await updateJobProgress(jobId, "analyzing", 50, "Получение исходного документа");
 
     // Получаем исходный документ из хранилища
     const sourceBuffer = await getFile(job.sourceDocumentId);
     if (!sourceBuffer) {
-      failJob(jobId, "Не удалось получить исходный документ");
+      await failJob(jobId, "Не удалось получить исходный документ");
       return NextResponse.json(
         { error: "Не удалось получить исходный документ" },
         { status: 500 }
@@ -71,27 +71,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Парсим структуру и размечаем блоки через AI
-    updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
+    await updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
     const docxStructure = await parseDocxStructure(sourceBuffer);
     const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
 
     // Анализируем документ
-    updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");
+    await updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");
     const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
 
-    updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
+    await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
     // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
     const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
 
-    updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
+    await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
     // Сохраняем результаты
     await saveResultFile(jobId, "original", formattingResult.markedOriginal);
     await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
 
     // Завершаем задачу
-    completeJob(jobId, {
+    await completeJob(jobId, {
       markedOriginalId: `${jobId}_original`,
       formattedDocumentId: `${jobId}_formatted`,
       violations: analysisResult.violations,

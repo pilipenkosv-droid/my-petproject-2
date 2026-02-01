@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
   
   try {
     // Создаём задачу
-    createJob(jobId);
-    updateJobProgress(jobId, "uploading", 5, "Получение файлов");
+    await createJob(jobId);
+    await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     // Получаем файлы из FormData
     const formData = await request.formData();
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const requirementsFile = formData.get("requirementsDocument") as File | null;
 
     if (!sourceFile || !requirementsFile) {
-      failJob(jobId, "Необходимо загрузить оба файла");
+      await failJob(jobId, "Необходимо загрузить оба файла");
       return NextResponse.json(
         { error: "Необходимо загрузить оба файла" },
         { status: 400 }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Валидация типов файлов
     if (!isValidSourceDocument(sourceMimeType)) {
-      failJob(jobId, "Исходный документ должен быть в формате .docx");
+      await failJob(jobId, "Исходный документ должен быть в формате .docx");
       return NextResponse.json(
         { error: "Исходный документ должен быть в формате .docx" },
         { status: 400 }
@@ -44,14 +44,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isValidRequirementsDocument(requirementsMimeType)) {
-      failJob(jobId, "Документ с требованиями должен быть в формате .docx, .pdf или .txt");
+      await failJob(jobId, "Документ с требованиями должен быть в формате .docx, .pdf или .txt");
       return NextResponse.json(
         { error: "Документ с требованиями должен быть в формате .docx, .pdf или .txt" },
         { status: 400 }
       );
     }
 
-    updateJobProgress(jobId, "uploading", 10, "Сохранение файлов");
+    await updateJobProgress(jobId, "uploading", 10, "Сохранение файлов");
 
     // Читаем файлы в буферы
     const sourceBuffer = Buffer.from(await sourceFile.arrayBuffer());
@@ -70,49 +70,49 @@ export async function POST(request: NextRequest) {
       mimeType: requirementsMimeType,
     });
 
-    updateJobProgress(jobId, "extracting_text", 20, "Извлечение текста из документов");
+    await updateJobProgress(jobId, "extracting_text", 20, "Извлечение текста из документов");
 
     // Извлекаем текст из документа с требованиями
     const requirementsText = await extractText(requirementsBuffer, requirementsMimeType);
 
     if (!requirementsText || requirementsText.trim().length < 50) {
-      failJob(jobId, "Документ с требованиями слишком короткий или пустой");
+      await failJob(jobId, "Документ с требованиями слишком короткий или пустой");
       return NextResponse.json(
         { error: "Документ с требованиями слишком короткий или пустой" },
         { status: 400 }
       );
     }
 
-    updateJobProgress(jobId, "parsing_rules", 35, "Анализ требований форматирования с помощью AI");
+    await updateJobProgress(jobId, "parsing_rules", 35, "Анализ требований форматирования с помощью AI");
 
     // Парсим правила форматирования через AI
     const aiResponse = await parseFormattingRules(requirementsText);
     const rules = mergeWithDefaults(aiResponse.rules);
 
-    updateJobProgress(jobId, "analyzing", 50, "AI-разметка блоков документа");
+    await updateJobProgress(jobId, "analyzing", 50, "AI-разметка блоков документа");
 
     // Парсим структуру и размечаем блоки через AI
     const docxStructure = await parseDocxStructure(sourceBuffer);
     const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
 
-    updateJobProgress(jobId, "analyzing", 60, "Проверка документа на соответствие требованиям");
+    await updateJobProgress(jobId, "analyzing", 60, "Проверка документа на соответствие требованиям");
 
     // Анализируем документ
     const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
 
-    updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
+    await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
     // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
     const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
 
-    updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
+    await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
     // Сохраняем результаты
     await saveResultFile(jobId, "original", formattingResult.markedOriginal);
     await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
 
     // Завершаем задачу
-    completeJob(jobId, {
+    await completeJob(jobId, {
       markedOriginalId: `${jobId}_original`,
       formattedDocumentId: `${jobId}_formatted`,
       violations: analysisResult.violations,
@@ -130,9 +130,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Processing error:", error);
-    
+
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
-    failJob(jobId, errorMessage);
+    await failJob(jobId, errorMessage);
 
     return NextResponse.json(
       { error: errorMessage, jobId },
