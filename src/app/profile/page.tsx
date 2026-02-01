@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard } from "lucide-react";
+import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
 
 export default async function ProfilePage() {
   const supabase = await createSupabaseServer();
@@ -116,6 +117,13 @@ export default async function ProfilePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Verify pending payments */}
+        {access.accessType !== "subscription" && (
+          <div className="mb-8 -mt-4">
+            <VerifyPaymentsButton />
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">

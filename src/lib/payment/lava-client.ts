@@ -22,6 +22,11 @@ interface InvoiceResponse {
   };
 }
 
+export interface InvoiceStatusResponse {
+  id: string;
+  status: "NEW" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+}
+
 export async function createInvoice(
   params: CreateInvoiceParams
 ): Promise<InvoiceResponse> {
@@ -39,6 +44,29 @@ export async function createInvoice(
       buyerLanguage: params.buyerLanguage || "RU",
     }),
   });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Lava.top API error ${res.status}: ${error}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * Проверяет статус invoice в Lava.top
+ */
+export async function getInvoiceStatus(
+  invoiceId: string
+): Promise<InvoiceStatusResponse> {
+  const res = await fetch(
+    `${LAVA_CONFIG.baseUrl}/api/v2/invoices/${invoiceId}`,
+    {
+      headers: {
+        "X-Api-Key": LAVA_CONFIG.apiKey,
+      },
+    }
+  );
 
   if (!res.ok) {
     const error = await res.text();
