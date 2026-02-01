@@ -6,9 +6,24 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Gift } from "lucide-react";
 
 const plans = [
+  {
+    id: "trial" as const,
+    name: "Пробный",
+    price: "0 ₽",
+    period: "первый документ",
+    icon: Gift,
+    description: "Попробуйте бесплатно",
+    features: [
+      "1 бесплатная обработка",
+      "AI-анализ структуры",
+      "Форматирование по ГОСТу",
+      "Скачивание результата",
+    ],
+    accent: false,
+  },
   {
     id: "one_time" as const,
     name: "Разовая",
@@ -47,7 +62,12 @@ export default function PricingPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handlePurchase = async (offerType: "one_time" | "subscription") => {
+  const handlePurchase = async (offerType: "trial" | "one_time" | "subscription") => {
+    if (offerType === "trial") {
+      router.push(user ? "/create" : "/login?redirect=/create");
+      return;
+    }
+
     if (!user) {
       router.push("/login?redirect=/pricing");
       return;
@@ -100,7 +120,7 @@ export default function PricingPage() {
         </div>
 
         {/* Тарифные карточки */}
-        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {plans.map((plan) => {
             const Icon = plan.icon;
             return (
@@ -158,9 +178,11 @@ export default function PricingPage() {
                   >
                     {loading === plan.id
                       ? "Перенаправление..."
-                      : plan.accent
-                        ? "Оформить подписку"
-                        : "Купить"}
+                      : plan.id === "trial"
+                        ? "Попробовать бесплатно"
+                        : plan.accent
+                          ? "Оформить подписку"
+                          : "Купить"}
                   </Button>
                 </CardContent>
               </Card>
@@ -168,10 +190,10 @@ export default function PricingPage() {
           })}
         </div>
 
-        {/* Бесплатный триал */}
+        {/* Подсказка */}
         <div className="text-center mt-8">
           <p className="text-white/40 text-sm">
-            Первая обработка документа — бесплатно, без регистрации карты
+            Без регистрации карты · Отмена подписки в любой момент
           </p>
         </div>
       </main>
