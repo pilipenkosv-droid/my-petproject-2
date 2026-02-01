@@ -59,14 +59,14 @@ export default function LandingPage() {
           
           <BlurFade delay={0.3} inView>
             <p className="text-xl sm:text-2xl text-white/70 mb-4 font-medium">
-              Автоматическое форматирование научных работ
+              Идеальное оформление научной работы по методичке
             </p>
           </BlurFade>
           
           <BlurFade delay={0.4} inView>
             <p className="text-lg text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Загрузите курсовую или диплом вместе с требованиями к оформлению — 
-              мы проверим документ и исправим все несоответствия за считанные минуты.
+              Загрузите курсовую или диплом в .docx и методичку вашего вуза —
+              нейросеть автоматически оформит отступы, шрифты, заголовки и список литературы по ГОСТу.
             </p>
           </BlurFade>
           
@@ -108,31 +108,31 @@ export default function LandingPage() {
                 step: "1",
                 icon: FileText,
                 title: "Загрузите документ",
-                description: "Ваша курсовая, диплом или научная работа в формате .docx",
+                description: "Отправьте курсовую, диплом или научную работу в формате .docx",
                 gradient: "from-violet-500 to-purple-600",
                 delay: 0.3,
               },
               {
                 step: "2",
                 icon: FileText,
-                title: "Добавьте требования",
-                description: "Методичка или правила оформления от вашего ВУЗа",
+                title: "Добавьте методичку",
+                description: "Загрузите методические указания или требования к оформлению от вашего вуза",
                 gradient: "from-indigo-500 to-blue-600",
                 delay: 0.4,
               },
               {
                 step: "3",
                 icon: Sparkles,
-                title: "AI анализирует",
-                description: "Система извлекает правила и проверяет документ",
+                title: "ИИ-обработка",
+                description: "Нейросеть считывает требования и автоматически исправляет форматирование по ГОСТу",
                 gradient: "from-fuchsia-500 to-pink-600",
                 delay: 0.5,
               },
               {
                 step: "4",
                 icon: Download,
-                title: "Получите результат",
-                description: "Скачайте исправленный документ с пометками изменений",
+                title: "Скачайте результат",
+                description: "Получите идеально оформленный документ, готовый к сдаче",
                 gradient: "from-emerald-500 to-teal-600",
                 delay: 0.6,
               },
@@ -166,10 +166,10 @@ export default function LandingPage() {
         
         <div className="relative mx-auto max-w-4xl">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-            Забудьте о рутине
+            Забудьте о ручной настройке отступов и шрифтов
           </h2>
           <p className="text-center text-white/50 mb-12 max-w-xl mx-auto">
-            Больше не нужно вручную искать ошибки форматирования
+            Больше не нужно вручную искать ошибки форматирования — ИИ сделает это за вас
           </p>
           
           <div className="grid gap-3 md:grid-cols-2">
@@ -211,7 +211,7 @@ export default function LandingPage() {
                 Готовы сэкономить время?
               </h2>
               <p className="text-white/60 mb-8 max-w-md mx-auto">
-                Загрузите документ и получите результат за несколько минут
+                Загрузите документ и методичку — получите идеально оформленную работу по ГОСТу
               </p>
               <Link href="/create" className="w-full sm:w-auto">
                 <Button size="lg" variant="glow" className="w-full sm:w-auto">
@@ -231,7 +231,7 @@ export default function LandingPage() {
             <span className="font-bold gradient-text">SmartFormat</span>
           </div>
           <p className="text-sm text-white/40">
-            Сервис автоматического форматирования научных работ
+            Сервис автоматического форматирования курсовых и дипломных работ по ГОСТу
           </p>
         </div>
       </footer>
