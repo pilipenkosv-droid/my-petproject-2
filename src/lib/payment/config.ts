@@ -19,6 +19,7 @@ export const LAVA_CONFIG = {
       price: 399,
       currency: "RUB" as const,
       periodicity: "MONTHLY" as const,
+      uses: 10, // 10 обработок в месяц
     },
   },
 

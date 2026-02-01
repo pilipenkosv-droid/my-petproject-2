@@ -63,7 +63,7 @@ export default async function ProfilePage() {
                   <div>
                     <p className="text-white font-medium">Подписка Pro</p>
                     <p className="text-sm text-white/50">
-                      Безлимитные обработки до{" "}
+                      Осталось: {access.remainingUses} из 10 обработок · до{" "}
                       {access.subscriptionActiveUntil
                         ? new Date(access.subscriptionActiveUntil).toLocaleDateString("ru-RU", {
                             day: "numeric",
