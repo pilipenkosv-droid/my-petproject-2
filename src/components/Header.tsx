@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, CreditCard } from "lucide-react";
+import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus } from "lucide-react";
 
 interface HeaderProps {
   showBack?: boolean;
@@ -111,10 +111,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
             )}
             <NavigationMenuItem>
               <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                <Link href="/pricing">
-                  <CreditCard className="h-4 w-4 mr-1.5" />
-                  Тарифы
-                </Link>
+                <Link href="/pricing">Тарифы</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
