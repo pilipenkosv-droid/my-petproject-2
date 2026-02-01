@@ -123,36 +123,46 @@ function extractJson(text: string): unknown {
 }
 
 /**
- * Пинг одной модели — отправляет минимальный запрос для проверки доступности.
- * Возвращает true если модель ответила, false если упала.
+ * Лёгкая проверка доступности API провайдера (HTTP-уровень, без AI-запроса).
+ * Не расходует rate limits и не тратит токены.
  */
-async function pingModel(model: ModelConfig): Promise<boolean> {
-  const PING_REQUEST: GatewayRequest = {
-    systemPrompt: "Respond with valid JSON only.",
-    userPrompt: 'Return exactly: {"status":"ok"}',
-    temperature: 0,
-    maxTokens: 20,
-  };
-
+async function checkProviderReachable(model: ModelConfig): Promise<boolean> {
   try {
-    let rawText: string;
     if (model.protocol === "gemini") {
-      rawText = await callGemini(model, PING_REQUEST);
+      // Проверяем Gemini API — запрос list models
+      const apiKey = process.env[model.apiKeyEnv];
+      if (!apiKey) return false;
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model.modelId}?key=${apiKey}`,
+        { method: "GET", signal: AbortSignal.timeout(5000) }
+      );
+      return res.ok;
     } else {
-      rawText = await callOpenAICompatible(model, PING_REQUEST);
+      // OpenAI-compatible — запрос /models
+      const apiKey = process.env[model.apiKeyEnv];
+      if (!apiKey) return false;
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${apiKey}`,
+      };
+      if (model.extraParams?.headers) {
+        Object.assign(headers, model.extraParams.headers);
+      }
+      const res = await fetch(`${model.baseUrl}/models`, {
+        method: "GET",
+        headers,
+        signal: AbortSignal.timeout(5000),
+      });
+      return res.ok || res.status === 401; // 401 = key issue, but API reachable
     }
-    // Проверяем что ответ хотя бы содержит JSON
-    extractJson(rawText);
-    return true;
   } catch {
     return false;
   }
 }
 
 /**
- * Прогрев моделей — параллельно пингует все доступные модели,
- * помечая нерабочие как failed. Вызывать перед началом пайплайна.
- * Не расходует rate limit (минимальный запрос).
+ * Прогрев моделей — параллельно проверяет доступность API провайдеров
+ * через лёгкие HTTP-запросы (без AI-вызовов, без расхода лимитов).
+ * Недоступные провайдеры помечаются как failed.
  */
 export async function warmupModels(): Promise<{
   total: number;
@@ -170,31 +180,36 @@ export async function warmupModels(): Promise<{
     `[ai-gateway] Warming up ${models.length} models: ${models.map((m) => m.id).join(", ")}`
   );
 
-  const results = await Promise.all(
-    models.map(async (model) => {
-      // Проверяем лимиты перед пингом
-      const withinLimits = await canUseModel(
-        model.id,
-        model.limits.rpm,
-        model.limits.rpd
-      );
-      if (!withinLimits) {
-        return { model, ok: false, reason: "rate-limited" };
-      }
+  // Группируем по провайдеру (apiKeyEnv+baseUrl) — пингуем каждый провайдер один раз
+  const providerMap = new Map<string, ModelConfig[]>();
+  for (const model of models) {
+    const key = `${model.apiKeyEnv}|${model.baseUrl || "gemini"}`;
+    const existing = providerMap.get(key) || [];
+    existing.push(model);
+    providerMap.set(key, existing);
+  }
 
-      await recordUsage(model.id);
-      const ok = await pingModel(model);
-      if (!ok) {
-        await markModelFailed(model.id);
-      }
-      return { model, ok, reason: ok ? "alive" : "ping-failed" };
+  const providerResults = await Promise.all(
+    Array.from(providerMap.entries()).map(async ([key, providerModels]) => {
+      const representative = providerModels[0];
+      const reachable = await checkProviderReachable(representative);
+      return { key, reachable, models: providerModels };
     })
   );
 
-  const alive = results.filter((r) => r.ok).map((r) => r.model.displayName);
-  const dead = results
-    .filter((r) => !r.ok)
-    .map((r) => `${r.model.displayName} (${r.reason})`);
+  const alive: string[] = [];
+  const dead: string[] = [];
+
+  for (const { reachable, models: providerModels } of providerResults) {
+    for (const model of providerModels) {
+      if (reachable) {
+        alive.push(model.displayName);
+      } else {
+        dead.push(model.displayName);
+        await markModelFailed(model.id);
+      }
+    }
+  }
 
   console.log(
     `[ai-gateway] Warmup done: ${alive.length} alive [${alive.join(", ")}], ${dead.length} dead [${dead.join(", ")}]`
