@@ -64,8 +64,10 @@ export default function PricingPage() {
 
       const data = await res.json();
 
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      if (data.paymentUrl && data.invoiceId) {
+        // Открываем оплату в новой вкладке, а текущую перенаправляем на страницу ожидания
+        window.open(data.paymentUrl, "_blank");
+        router.push(`/payment/success?invoiceId=${data.invoiceId}`);
       } else {
         console.error("No payment URL:", data);
         alert("Не удалось создать платёж. Попробуйте снова.");
