@@ -38,6 +38,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    /*
+     * Middleware only runs on pages that need auth session refresh.
+     * Excluded: landing (/), pricing, static assets, API routes, _next.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|api/|pricing|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$)(?!$).*)",
   ],
 };

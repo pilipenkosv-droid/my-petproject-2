@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,16 +27,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   return (
     <html lang="ru">
       <head>
@@ -49,7 +43,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        <AuthProvider initialSession={session}>
+        <AuthProvider initialSession={null}>
           {children}
         </AuthProvider>
         <Analytics />

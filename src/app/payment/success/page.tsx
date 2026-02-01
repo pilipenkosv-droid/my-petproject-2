@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ type PaymentState = "polling" | "completed" | "failed" | "timeout";
 const POLL_INTERVAL = 3000;
 const MAX_POLL_TIME = 5 * 60 * 1000; // 5 минут
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const invoiceId = searchParams.get("invoiceId");
@@ -68,12 +68,9 @@ export default function PaymentSuccessPage() {
   }, [invoiceId, checkPayment]);
 
   return (
-    <div className="min-h-screen">
-      <Header showBack backHref="/" />
-
-      <main className="mx-auto max-w-lg px-6 py-24">
-        <div className="text-center space-y-6">
-          {state === "polling" && (
+    <main className="mx-auto max-w-lg px-6 py-24">
+      <div className="text-center space-y-6">
+        {state === "polling" && (
             <>
               <Loader2 className="w-16 h-16 text-violet-400 animate-spin mx-auto" />
               <h1 className="text-2xl font-bold text-white">
@@ -156,8 +153,24 @@ export default function PaymentSuccessPage() {
               </div>
             </>
           )}
-        </div>
-      </main>
+      </div>
+    </main>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <div className="min-h-screen">
+      <Header showBack backHref="/" />
+      <Suspense fallback={
+        <main className="mx-auto max-w-lg px-6 py-24">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 text-violet-400 animate-spin mx-auto" />
+          </div>
+        </main>
+      }>
+        <PaymentSuccessContent />
+      </Suspense>
     </div>
   );
 }

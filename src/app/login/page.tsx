@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
@@ -13,7 +13,7 @@ import { ArrowLeft, Mail, Chrome, Loader2 } from "lucide-react";
 
 type AuthMode = "login" | "signup";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode = searchParams.get("mode") === "signup" ? "signup" : "login";
@@ -77,6 +77,132 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="relative z-10 w-full max-w-md">
+      {/* Back link */}
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        На главную
+      </Link>
+
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">
+            <span className="gradient-text">Smart</span>
+            <span className="text-white">Format</span>
+          </CardTitle>
+          <CardDescription>
+            {mode === "login"
+              ? "Войдите в аккаунт"
+              : "Создайте аккаунт"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Google OAuth */}
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleAuth}
+            disabled={loading}
+          >
+            <Chrome className="mr-2 h-4 w-4" />
+            Войти через Google
+          </Button>
+
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              или
+            </span>
+          </div>
+
+          {/* Email/Password form */}
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Минимум 6 символов"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                disabled={loading}
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-400">{error}</p>
+            )}
+
+            {message && (
+              <p className="text-sm text-green-400">{message}</p>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="mr-2 h-4 w-4" />
+              )}
+              {mode === "login" ? "Войти" : "Зарегистрироваться"}
+            </Button>
+          </form>
+
+          {/* Toggle mode */}
+          <p className="text-center text-sm text-muted-foreground">
+            {mode === "login" ? (
+              <>
+                Нет аккаунта?{" "}
+                <button
+                  type="button"
+                  onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
+                  className="text-violet-400 hover:text-violet-300 underline"
+                >
+                  Зарегистрироваться
+                </button>
+              </>
+            ) : (
+              <>
+                Уже есть аккаунт?{" "}
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+                  className="text-violet-400 hover:text-violet-300 underline"
+                >
+                  Войти
+                </button>
+              </>
+            )}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <main className="min-h-screen relative flex items-center justify-center px-6 py-12">
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
@@ -85,127 +211,13 @@ export default function LoginPage() {
         <div className="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        {/* Back link */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          На главную
-        </Link>
-
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">
-              <span className="gradient-text">Smart</span>
-              <span className="text-white">Format</span>
-            </CardTitle>
-            <CardDescription>
-              {mode === "login"
-                ? "Войдите в аккаунт"
-                : "Создайте аккаунт"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Google OAuth */}
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleAuth}
-              disabled={loading}
-            >
-              <Chrome className="mr-2 h-4 w-4" />
-              Войти через Google
-            </Button>
-
-            <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                или
-              </span>
-            </div>
-
-            {/* Email/Password form */}
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Минимум 6 символов"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  disabled={loading}
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-red-400">{error}</p>
-              )}
-
-              {message && (
-                <p className="text-sm text-green-400">{message}</p>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="mr-2 h-4 w-4" />
-                )}
-                {mode === "login" ? "Войти" : "Зарегистрироваться"}
-              </Button>
-            </form>
-
-            {/* Toggle mode */}
-            <p className="text-center text-sm text-muted-foreground">
-              {mode === "login" ? (
-                <>
-                  Нет аккаунта?{" "}
-                  <button
-                    type="button"
-                    onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
-                    className="text-violet-400 hover:text-violet-300 underline"
-                  >
-                    Зарегистрироваться
-                  </button>
-                </>
-              ) : (
-                <>
-                  Уже есть аккаунт?{" "}
-                  <button
-                    type="button"
-                    onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                    className="text-violet-400 hover:text-violet-300 underline"
-                  >
-                    Войти
-                  </button>
-                </>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={
+        <div className="relative z-10 w-full max-w-md flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
     </main>
   );
 }
