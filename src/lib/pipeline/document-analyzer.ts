@@ -56,8 +56,26 @@ export interface DocxParagraph {
   };
 }
 
+export interface DocxTableCell {
+  paragraphs: DocxParagraph[];
+  alignment?: string;
+  verticalAlignment?: string;
+}
+
+export interface DocxTableRow {
+  cells: DocxTableCell[];
+  isHeader: boolean;
+}
+
+export interface DocxTable {
+  index: number;
+  bodyIndex: number;
+  rows: DocxTableRow[];
+}
+
 export interface DocxDocument {
   paragraphs: DocxParagraph[];
+  tables: DocxTable[];
   sections: {
     margins: { top: number; bottom: number; left: number; right: number };
     pageSize: { width: number; height: number };
@@ -85,69 +103,22 @@ export async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> 
   }
 
   const paragraphs: DocxParagraph[] = [];
+  const tables: DocxTable[] = [];
   const sections: DocxDocument["sections"] = [];
 
   // Извлекаем параграфы из body children (сохраняя правильный порядок)
   const bodyChildren = children(body);
   let pIndex = 0;
+  let tableIndex = 0;
 
-  for (const child of bodyChildren) {
+  for (let bodyIdx = 0; bodyIdx < bodyChildren.length; bodyIdx++) {
+    const child = bodyChildren[bodyIdx];
     if ("w:p" in child) {
-      // Это параграф
-      const runs = findChildren(child, "w:r");
-      const text = runs
-        .map((r) => {
-          const tNodes = findChildren(r, "w:t");
-          return tNodes.map((t) => getText(t)).join("");
-        })
-        .join("");
-
-      const pPr = findChild(child, "w:pPr");
-      const firstRunRPr = runs.length > 0 ? findChild(runs[0], "w:rPr") : undefined;
-
-      // Извлекаем стиль
-      const pStyleNode = pPr ? findChild(pPr, "w:pStyle") : undefined;
-      const style = pStyleNode ? getAttr(pStyleNode, "w:val") : undefined;
-
-      // Извлекаем свойства run
-      const fontFamilyNode = firstRunRPr ? findChild(firstRunRPr, "w:rFonts") : undefined;
-      const fontFamily = fontFamilyNode ? getAttr(fontFamilyNode, "w:ascii") : undefined;
-
-      const szNode = firstRunRPr ? findChild(firstRunRPr, "w:sz") : undefined;
-      const szVal = szNode ? getAttr(szNode, "w:val") : undefined;
-      const fontSize = szVal ? parseInt(szVal) / HALF_POINTS_PER_PT : undefined;
-
-      const bold = firstRunRPr ? !!findChild(firstRunRPr, "w:b") : false;
-      const italic = firstRunRPr ? !!findChild(firstRunRPr, "w:i") : false;
-
-      // Извлекаем свойства параграфа
-      const jcNode = pPr ? findChild(pPr, "w:jc") : undefined;
-      const alignment = jcNode ? getAttr(jcNode, "w:val") : undefined;
-
-      const indNode = pPr ? findChild(pPr, "w:ind") : undefined;
-      const firstLineVal = indNode ? getAttr(indNode, "w:firstLine") : undefined;
-      const indent = firstLineVal ? parseInt(firstLineVal) / TWIPS_PER_MM : undefined;
-
-      const spacingNode = pPr ? findChild(pPr, "w:spacing") : undefined;
-      const lineVal = spacingNode ? getAttr(spacingNode, "w:line") : undefined;
-      const lineSpacing = lineVal ? parseInt(lineVal) / 240 : undefined;
-
-      paragraphs.push({
-        index: pIndex,
-        text,
-        style,
-        properties: {
-          fontFamily,
-          fontSize,
-          bold,
-          italic,
-          alignment,
-          indent,
-          lineSpacing,
-        },
-      });
+      const paragraph = parseParagraphNode(child, pIndex);
+      paragraphs.push(paragraph);
 
       // Проверяем sectPr внутри pPr
+      const pPr = findChild(child, "w:pPr");
       if (pPr) {
         const sectPr = findChild(pPr, "w:sectPr");
         if (sectPr) {
@@ -156,6 +127,11 @@ export async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> 
       }
 
       pIndex++;
+    } else if ("w:tbl" in child) {
+      // Парсим таблицу
+      const table = parseTableNode(child, tableIndex, bodyIdx);
+      tables.push(table);
+      tableIndex++;
     } else if ("w:sectPr" in child) {
       // sectPr на уровне body
       sections.push(extractSectionFromNode(child));
@@ -170,7 +146,103 @@ export async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> 
     });
   }
 
-  return { paragraphs, sections };
+  return { paragraphs, tables, sections };
+}
+
+/**
+ * Парсит один w:p узел в DocxParagraph
+ */
+function parseParagraphNode(pNode: OrderedXmlNode, index: number): DocxParagraph {
+  const runs = findChildren(pNode, "w:r");
+  const text = runs
+    .map((r) => {
+      const tNodes = findChildren(r, "w:t");
+      return tNodes.map((t) => getText(t)).join("");
+    })
+    .join("");
+
+  const pPr = findChild(pNode, "w:pPr");
+  const firstRunRPr = runs.length > 0 ? findChild(runs[0], "w:rPr") : undefined;
+
+  const pStyleNode = pPr ? findChild(pPr, "w:pStyle") : undefined;
+  const style = pStyleNode ? getAttr(pStyleNode, "w:val") : undefined;
+
+  const fontFamilyNode = firstRunRPr ? findChild(firstRunRPr, "w:rFonts") : undefined;
+  const fontFamily = fontFamilyNode ? getAttr(fontFamilyNode, "w:ascii") : undefined;
+
+  const szNode = firstRunRPr ? findChild(firstRunRPr, "w:sz") : undefined;
+  const szVal = szNode ? getAttr(szNode, "w:val") : undefined;
+  const fontSize = szVal ? parseInt(szVal) / HALF_POINTS_PER_PT : undefined;
+
+  const bold = firstRunRPr ? !!findChild(firstRunRPr, "w:b") : false;
+  const italic = firstRunRPr ? !!findChild(firstRunRPr, "w:i") : false;
+
+  const jcNode = pPr ? findChild(pPr, "w:jc") : undefined;
+  const alignment = jcNode ? getAttr(jcNode, "w:val") : undefined;
+
+  const indNode = pPr ? findChild(pPr, "w:ind") : undefined;
+  const firstLineVal = indNode ? getAttr(indNode, "w:firstLine") : undefined;
+  const indent = firstLineVal ? parseInt(firstLineVal) / TWIPS_PER_MM : undefined;
+
+  const spacingNode = pPr ? findChild(pPr, "w:spacing") : undefined;
+  const lineVal = spacingNode ? getAttr(spacingNode, "w:line") : undefined;
+  const lineSpacing = lineVal ? parseInt(lineVal) / 240 : undefined;
+
+  return {
+    index,
+    text,
+    style,
+    properties: {
+      fontFamily,
+      fontSize,
+      bold,
+      italic,
+      alignment,
+      indent,
+      lineSpacing,
+    },
+  };
+}
+
+/**
+ * Парсит w:tbl узел в DocxTable
+ */
+function parseTableNode(tblNode: OrderedXmlNode, tableIndex: number, bodyIndex: number): DocxTable {
+  const rows: DocxTableRow[] = [];
+  const trNodes = findChildren(tblNode, "w:tr");
+
+  trNodes.forEach((tr, rowIdx) => {
+    // Определяем заголовочную строку
+    const trPr = findChild(tr, "w:trPr");
+    const tblHeader = trPr ? findChild(trPr, "w:tblHeader") : undefined;
+    const isHeader = rowIdx === 0 || !!tblHeader;
+
+    const cells: DocxTableCell[] = [];
+    const tcNodes = findChildren(tr, "w:tc");
+
+    tcNodes.forEach((tc) => {
+      const cellParagraphs: DocxParagraph[] = [];
+      const pNodes = findChildren(tc, "w:p");
+
+      pNodes.forEach((pNode, pIdx) => {
+        cellParagraphs.push(parseParagraphNode(pNode, pIdx));
+      });
+
+      // Извлекаем выравнивание ячейки из tcPr
+      const tcPr = findChild(tc, "w:tcPr");
+      const vAlignNode = tcPr ? findChild(tcPr, "w:vAlign") : undefined;
+      const verticalAlignment = vAlignNode ? getAttr(vAlignNode, "w:val") : undefined;
+
+      cells.push({
+        paragraphs: cellParagraphs,
+        verticalAlignment,
+      });
+    });
+
+    rows.push({ cells, isHeader });
+  });
+
+  return { index: tableIndex, bodyIndex, rows };
 }
 
 /**
@@ -283,8 +355,37 @@ function checkMargins(
   return violations;
 }
 
+/** Маппинг выравнивания XML → человекочитаемое */
+const ALIGNMENT_MAP: Record<string, string> = {
+  left: "left",
+  center: "center",
+  right: "right",
+  both: "justify",
+  justify: "justify",
+};
+
+/** Типы блоков, для которых применяются правила обычного текста */
+const TEXT_BLOCK_TYPES: Set<BlockType | undefined> = new Set([
+  "body_text",
+  "list_item",
+  "quote",
+  "appendix_content",
+  undefined, // если blockType не определён — проверяем как обычный текст
+]);
+
+/** Типы блоков, которые пропускаем при проверке текста */
+const SKIP_BLOCK_TYPES: Set<BlockType> = new Set([
+  "heading_1", "heading_2", "heading_3", "heading_4",
+  "title_page", "toc", "toc_entry",
+  "figure_caption", "table_caption",
+  "bibliography_title", "bibliography_entry",
+  "table", "figure", "formula",
+  "page_number", "empty", "unknown",
+  "footnote", "appendix_title",
+]);
+
 /**
- * Проверить форматирование текста
+ * Проверить форматирование обычного текста (body_text, list_item, quote)
  */
 function checkTextFormatting(
   paragraphs: DocxParagraph[],
@@ -294,13 +395,16 @@ function checkTextFormatting(
   const textRules = rules.text;
 
   paragraphs.forEach((paragraph) => {
-    // Пропускаем пустые параграфы
     if (!paragraph.text.trim()) return;
 
-    // Пропускаем заголовки (они проверяются отдельно)
+    // Пропускаем заголовки по стилю (на случай если blockType не определён)
     if (paragraph.style?.toLowerCase().includes("heading")) return;
 
+    // Пропускаем блоки которые проверяются отдельно
+    if (paragraph.blockType && SKIP_BLOCK_TYPES.has(paragraph.blockType)) return;
+
     const props = paragraph.properties;
+    const textSnippet = paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : "");
 
     // Проверка шрифта
     if (props.fontFamily && props.fontFamily !== textRules.fontFamily) {
@@ -310,10 +414,7 @@ function checkTextFormatting(
         message: "Неверный шрифт",
         expected: textRules.fontFamily,
         actual: props.fontFamily,
-        location: {
-          paragraphIndex: paragraph.index,
-          text: paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : ""),
-        },
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
         autoFixable: true,
       });
     }
@@ -326,25 +427,14 @@ function checkTextFormatting(
         message: "Неверный размер шрифта",
         expected: `${textRules.fontSize} pt`,
         actual: `${props.fontSize} pt`,
-        location: {
-          paragraphIndex: paragraph.index,
-          text: paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : ""),
-        },
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
         autoFixable: true,
       });
     }
 
     // Проверка выравнивания
-    const alignmentMap: Record<string, string> = {
-      left: "left",
-      center: "center",
-      right: "right",
-      both: "justify",
-      justify: "justify",
-    };
-    
     if (props.alignment) {
-      const actualAlignment = alignmentMap[props.alignment] || props.alignment;
+      const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
       if (actualAlignment !== textRules.alignment) {
         violations.push({
           ruleId: `text-align-${paragraph.index}`,
@@ -352,10 +442,7 @@ function checkTextFormatting(
           message: "Неверное выравнивание текста",
           expected: textRules.alignment,
           actual: actualAlignment,
-          location: {
-            paragraphIndex: paragraph.index,
-            text: paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : ""),
-          },
+          location: { paragraphIndex: paragraph.index, text: textSnippet },
           autoFixable: true,
         });
       }
@@ -363,7 +450,7 @@ function checkTextFormatting(
 
     // Проверка абзацного отступа
     if (props.indent !== undefined) {
-      const tolerance = 2; // мм
+      const tolerance = 2;
       if (Math.abs(props.indent - textRules.paragraphIndent) > tolerance) {
         violations.push({
           ruleId: `text-indent-${paragraph.index}`,
@@ -371,10 +458,7 @@ function checkTextFormatting(
           message: "Неверный абзацный отступ",
           expected: `${textRules.paragraphIndent} мм`,
           actual: `${Math.round(props.indent)} мм`,
-          location: {
-            paragraphIndex: paragraph.index,
-            text: paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : ""),
-          },
+          location: { paragraphIndex: paragraph.index, text: textSnippet },
           autoFixable: true,
         });
       }
@@ -390,14 +474,229 @@ function checkTextFormatting(
           message: "Неверный межстрочный интервал",
           expected: `${textRules.lineSpacing}`,
           actual: `${props.lineSpacing.toFixed(1)}`,
-          location: {
-            paragraphIndex: paragraph.index,
-            text: paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : ""),
-          },
+          location: { paragraphIndex: paragraph.index, text: textSnippet },
           autoFixable: true,
         });
       }
     }
+  });
+
+  return violations;
+}
+
+/**
+ * Проверить форматирование заголовков по rules.headings
+ */
+function checkHeadingFormatting(
+  paragraphs: DocxParagraph[],
+  rules: FormattingRules
+): FormattingViolation[] {
+  const violations: FormattingViolation[] = [];
+
+  const headingLevels: Record<string, { level: number; rules: typeof rules.headings.level1 }> = {
+    heading_1: { level: 1, rules: rules.headings.level1 },
+    heading_2: { level: 2, rules: rules.headings.level2 },
+    heading_3: { level: 3, rules: rules.headings.level3 },
+  };
+  if (rules.headings.level4) {
+    headingLevels["heading_4"] = { level: 4, rules: rules.headings.level4 };
+  }
+
+  paragraphs.forEach((paragraph) => {
+    if (!paragraph.text.trim()) return;
+    if (!paragraph.blockType) return;
+
+    const headingInfo = headingLevels[paragraph.blockType];
+    if (!headingInfo) return;
+
+    const h = headingInfo.rules;
+    const props = paragraph.properties;
+    const textSnippet = paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : "");
+
+    // Проверка выравнивания заголовка
+    if (h.alignment && props.alignment) {
+      const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
+      if (actualAlignment !== h.alignment) {
+        violations.push({
+          ruleId: `heading${headingInfo.level}-align-${paragraph.index}`,
+          rulePath: `headings.level${headingInfo.level}.alignment`,
+          message: `Неверное выравнивание заголовка уровня ${headingInfo.level}`,
+          expected: h.alignment,
+          actual: actualAlignment,
+          location: { paragraphIndex: paragraph.index, text: textSnippet },
+          autoFixable: true,
+        });
+      }
+    }
+
+    // Проверка шрифта заголовка
+    const expectedFont = h.fontFamily || rules.text.fontFamily;
+    if (props.fontFamily && props.fontFamily !== expectedFont) {
+      violations.push({
+        ruleId: `heading${headingInfo.level}-font-${paragraph.index}`,
+        rulePath: `headings.level${headingInfo.level}.fontFamily`,
+        message: `Неверный шрифт заголовка уровня ${headingInfo.level}`,
+        expected: expectedFont,
+        actual: props.fontFamily,
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+
+    // Проверка размера шрифта заголовка
+    const expectedSize = h.fontSize || rules.text.fontSize;
+    if (props.fontSize && Math.abs(props.fontSize - expectedSize) > 0.5) {
+      violations.push({
+        ruleId: `heading${headingInfo.level}-size-${paragraph.index}`,
+        rulePath: `headings.level${headingInfo.level}.fontSize`,
+        message: `Неверный размер шрифта заголовка уровня ${headingInfo.level}`,
+        expected: `${expectedSize} pt`,
+        actual: `${props.fontSize} pt`,
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+
+    // Проверка жирности
+    if (h.bold !== undefined && props.bold !== h.bold) {
+      violations.push({
+        ruleId: `heading${headingInfo.level}-bold-${paragraph.index}`,
+        rulePath: `headings.level${headingInfo.level}.bold`,
+        message: `Заголовок уровня ${headingInfo.level} ${h.bold ? "должен быть" : "не должен быть"} полужирным`,
+        expected: h.bold ? "полужирный" : "обычный",
+        actual: props.bold ? "полужирный" : "обычный",
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+  });
+
+  return violations;
+}
+
+/**
+ * Проверить форматирование специальных элементов (подписи к рисункам, таблицам, библиография)
+ */
+function checkSpecialElementFormatting(
+  paragraphs: DocxParagraph[],
+  rules: FormattingRules
+): FormattingViolation[] {
+  const violations: FormattingViolation[] = [];
+
+  paragraphs.forEach((paragraph) => {
+    if (!paragraph.text.trim()) return;
+    if (!paragraph.blockType) return;
+
+    const props = paragraph.properties;
+    const textSnippet = paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : "");
+
+    // Подписи к рисункам
+    if (paragraph.blockType === "figure_caption") {
+      const figRules = rules.specialElements?.figures;
+      const expectedAlignment = figRules?.alignment || "center";
+
+      if (props.alignment) {
+        const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
+        if (actualAlignment !== expectedAlignment) {
+          violations.push({
+            ruleId: `figure-caption-align-${paragraph.index}`,
+            rulePath: "specialElements.figures.alignment",
+            message: "Неверное выравнивание подписи к рисунку",
+            expected: expectedAlignment,
+            actual: actualAlignment,
+            location: { paragraphIndex: paragraph.index, text: textSnippet },
+            autoFixable: true,
+          });
+        }
+      }
+    }
+
+    // Подписи к таблицам
+    if (paragraph.blockType === "table_caption") {
+      const tblRules = rules.specialElements?.tables;
+      const expectedAlignment = tblRules?.headers?.alignment || "justify";
+
+      if (props.alignment) {
+        const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
+        if (actualAlignment !== expectedAlignment) {
+          violations.push({
+            ruleId: `table-caption-align-${paragraph.index}`,
+            rulePath: "specialElements.tables.headers.alignment",
+            message: "Неверное выравнивание подписи к таблице",
+            expected: expectedAlignment,
+            actual: actualAlignment,
+            location: { paragraphIndex: paragraph.index, text: textSnippet },
+            autoFixable: true,
+          });
+        }
+      }
+    }
+  });
+
+  return violations;
+}
+
+/**
+ * Проверить форматирование внутри таблиц
+ */
+function checkTableFormatting(
+  tables: DocxTable[],
+  rules: FormattingRules
+): FormattingViolation[] {
+  const violations: FormattingViolation[] = [];
+
+  const tableRules = rules.specialElements?.tables;
+  if (!tableRules) return violations;
+
+  const expectedFontSize = tableRules.fontSize?.default || 12;
+
+  tables.forEach((table) => {
+    table.rows.forEach((row, rowIdx) => {
+      row.cells.forEach((cell, cellIdx) => {
+        cell.paragraphs.forEach((paragraph) => {
+          if (!paragraph.text.trim()) return;
+
+          const props = paragraph.properties;
+          const textSnippet = paragraph.text.slice(0, 30) + (paragraph.text.length > 30 ? "..." : "");
+
+          // Проверка размера шрифта в таблице
+          if (props.fontSize && Math.abs(props.fontSize - expectedFontSize) > 0.5) {
+            violations.push({
+              ruleId: `table-${table.index}-r${rowIdx}-c${cellIdx}-fontsize`,
+              rulePath: "specialElements.tables.fontSize.default",
+              message: `Неверный размер шрифта в таблице ${table.index + 1}`,
+              expected: `${expectedFontSize} pt`,
+              actual: `${props.fontSize} pt`,
+              location: {
+                paragraphIndex: -1,
+                text: `[Таблица ${table.index + 1}, строка ${rowIdx + 1}, столбец ${cellIdx + 1}] ${textSnippet}`,
+              },
+              autoFixable: true,
+            });
+          }
+
+          // Проверка выравнивания в заголовочной строке
+          if (row.isHeader && props.alignment) {
+            const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
+            const expectedAlignment = tableRules.headers?.alignment || "center";
+            if (actualAlignment !== expectedAlignment) {
+              violations.push({
+                ruleId: `table-${table.index}-r${rowIdx}-c${cellIdx}-align`,
+                rulePath: "specialElements.tables.headers.alignment",
+                message: `Неверное выравнивание заголовка таблицы ${table.index + 1}`,
+                expected: expectedAlignment,
+                actual: actualAlignment,
+                location: {
+                  paragraphIndex: -1,
+                  text: `[Таблица ${table.index + 1}, строка ${rowIdx + 1}, столбец ${cellIdx + 1}] ${textSnippet}`,
+                },
+                autoFixable: true,
+              });
+            }
+          }
+        });
+      });
+    });
   });
 
   return violations;
@@ -421,31 +720,46 @@ function checkNonBreakingSpaces(
     
     // Проверка пробелов перед единицами измерения
     if (nbspRules.beforeUnits) {
-      const unitPattern = /(\d)\s+(мм|см|м|км|кг|г|мг|л|мл|с|мин|ч|%)/g;
-      let match;
-      while ((match = unitPattern.exec(text)) !== null) {
-        violations.push({
-          ruleId: `nbsp-unit-${paragraph.index}-${match.index}`,
-          rulePath: "additional.nonBreakingSpaces.beforeUnits",
-          message: "Требуется неразрывный пробел перед единицей измерения",
-          expected: "неразрывный пробел",
-          actual: "обычный пробел",
-          location: {
-            paragraphIndex: paragraph.index,
-            startOffset: match.index,
-            endOffset: match.index + match[0].length,
-            text: match[0],
-          },
-          autoFixable: true,
-        });
+      // Составные/однозначные единицы — не могут быть началом обычного слова
+      const safeUnitPattern = /(\d) (мм|см|дм|км|кг|мг|мл|мин|кВт|Вт|Гц|Па|МПа|дБ|°C|об\/мин)(?=[\s,.\);:!?\-]|$)/g;
+      // Короткие единицы — требуем, чтобы после НЕ шла буква (иначе это обычное слово)
+      const shortUnitPattern = /(\d) (м|г|л|с|ч|т|А|В|К)(?![а-яёА-ЯЁa-zA-Z])/g;
+
+      for (const unitPattern of [safeUnitPattern, shortUnitPattern]) {
+        let match;
+        while ((match = unitPattern.exec(text)) !== null) {
+          // Пропускаем если пробел уже неразрывный
+          const spaceChar = text.charAt(match.index + match[1].length);
+          if (spaceChar === "\u00A0") continue;
+
+          violations.push({
+            ruleId: `nbsp-unit-${paragraph.index}-${match.index}`,
+            rulePath: "additional.nonBreakingSpaces.beforeUnits",
+            message: "Требуется неразрывный пробел перед единицей измерения",
+            expected: "неразрывный пробел",
+            actual: "обычный пробел",
+            location: {
+              paragraphIndex: paragraph.index,
+              startOffset: match.index,
+              endOffset: match.index + match[0].length,
+              text: match[0],
+            },
+            autoFixable: true,
+          });
+        }
       }
     }
 
     // Проверка инициалов
     if (nbspRules.afterInitials) {
-      const initialsPattern = /([А-ЯЁ]\.)\s+([А-ЯЁ]\.)\s+([А-ЯЁ][а-яё]+)/g;
+      const initialsPattern = /([А-ЯЁ]\.) ([А-ЯЁ]\.) ([А-ЯЁ][а-яё]+)/g;
       let match;
       while ((match = initialsPattern.exec(text)) !== null) {
+        // Пропускаем если пробелы уже неразрывные
+        const space1Pos = match.index + match[1].length;
+        const space2Pos = space1Pos + 1 + match[2].length;
+        if (text.charAt(space1Pos) === "\u00A0" && text.charAt(space2Pos) === "\u00A0") continue;
+
         violations.push({
           ruleId: `nbsp-initials-${paragraph.index}-${match.index}`,
           rulePath: "additional.nonBreakingSpaces.afterInitials",
@@ -655,24 +969,36 @@ export async function enrichWithBlockMarkup(
 
 /**
  * Главная функция анализа документа
+ *
+ * Принимает опциональные enrichedParagraphs — если переданы, использует их
+ * blockType для контекстно-зависимых проверок (заголовки, подписи, библиография).
+ * Если не переданы, проверяет как раньше (без учёта blockType).
  */
 export async function analyzeDocument(
   buffer: Buffer,
-  rules: FormattingRules
+  rules: FormattingRules,
+  enrichedParagraphs?: DocxParagraph[]
 ): Promise<AnalysisResult> {
   const docxStructure = await parseDocxStructure(buffer);
-  
+
+  // Если переданы enriched параграфы — используем их blockType
+  const paragraphs = enrichedParagraphs || docxStructure.paragraphs;
+
   const violations: FormattingViolation[] = [
     ...checkMargins(docxStructure.sections, rules),
-    ...checkTextFormatting(docxStructure.paragraphs, rules),
-    ...checkNonBreakingSpaces(docxStructure.paragraphs, rules),
-    ...checkProhibitedAbbreviations(docxStructure.paragraphs, rules),
-    ...checkQuotes(docxStructure.paragraphs, rules),
-    ...checkDashes(docxStructure.paragraphs, rules),
-    ...checkProhibitedFormatting(docxStructure.paragraphs, rules),
+    ...checkTextFormatting(paragraphs, rules),
+    ...checkHeadingFormatting(paragraphs, rules),
+    ...checkSpecialElementFormatting(paragraphs, rules),
+    ...checkTableFormatting(docxStructure.tables, rules),
+    ...checkNonBreakingSpaces(paragraphs, rules),
+    ...checkProhibitedAbbreviations(paragraphs, rules),
+    ...checkQuotes(paragraphs, rules),
+    ...checkDashes(paragraphs, rules),
+    ...checkProhibitedFormatting(paragraphs, rules),
   ];
 
-  const statistics = calculateStatistics(docxStructure.paragraphs);
+  const statistics = calculateStatistics(paragraphs);
+  statistics.tableCount = docxStructure.tables.length;
 
   const checkedRules = [
     "document.margins",
@@ -681,6 +1007,11 @@ export async function analyzeDocument(
     "text.alignment",
     "text.paragraphIndent",
     "text.lineSpacing",
+    "headings.level1",
+    "headings.level2",
+    "headings.level3",
+    "specialElements.figures",
+    "specialElements.tables",
     "additional.nonBreakingSpaces",
     "additional.abbreviationRules.prohibited",
     "additional.symbolRules.quotes",

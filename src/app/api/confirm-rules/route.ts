@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Анализируем документ
     updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");
-    const analysisResult = await analyzeDocument(sourceBuffer, rules);
+    const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
 
     updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 

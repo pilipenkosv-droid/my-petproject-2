@@ -73,6 +73,9 @@ async function createFormattedDocumentXml(
     formatter.applyFormattingToParagraph(i, blockType, rules);
   }
 
+  // Применяем форматирование к таблицам (размер шрифта)
+  formatter.applyTableFormatting(rules);
+
   // Для библиографии — дополнительно применяем текстовые замены
   // Нужно загрузить документ заново для работы с текстом через XML
   const intermediateBuffer = await formatter.saveDocument();

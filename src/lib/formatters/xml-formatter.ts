@@ -22,6 +22,7 @@ import {
   ensureRPr,
   getRuns,
   findChild,
+  findChildren,
   setOrderedProp,
   removeChild,
   createNode,
@@ -445,6 +446,38 @@ export class XmlDocumentFormatter {
 
       default:
         return null;
+    }
+  }
+
+  /**
+   * Применяет форматирование к таблицам (размер шрифта)
+   */
+  applyTableFormatting(rules: FormattingRules): void {
+    const tableRules = rules.specialElements?.tables;
+    if (!tableRules?.fontSize?.default) return;
+
+    const expectedFontSize = tableRules.fontSize.default;
+    const sizeHalf = expectedFontSize * HALF_POINTS_PER_PT;
+
+    const bodyNodes = children(this.body);
+    for (const node of bodyNodes) {
+      if (!("w:tbl" in node)) continue;
+
+      const rows = findChildren(node, "w:tr");
+      for (const row of rows) {
+        const cells = findChildren(row, "w:tc");
+        for (const cell of cells) {
+          const paragraphs = findChildren(cell, "w:p");
+          for (const p of paragraphs) {
+            const runs = getRuns(p);
+            for (const run of runs) {
+              const rPr = ensureRPr(run);
+              setOrderedProp(rPr, "w:sz", { "w:val": String(sizeHalf) });
+              setOrderedProp(rPr, "w:szCs", { "w:val": String(sizeHalf) });
+            }
+          }
+        }
+      }
     }
   }
 }
