@@ -49,17 +49,13 @@ export default function LandingPage() {
             </div>
           </BlurFade>
           
-          <BlurFade delay={0.15} inView>
-            <div className="flex justify-center mb-6">
-              <Logo variant="dark" size={64} />
-            </div>
-          </BlurFade>
-
           <BlurFade delay={0.2} inView>
-            <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6">
+            <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6 flex items-center justify-center gap-2 sm:gap-3">
               <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
                 Smart
               </AuroraText>
+              <Logo variant="dark" size={56} className="sm:hidden" />
+              <Logo variant="dark" size={72} className="hidden sm:inline-flex" />
               <span className="text-white">Format</span>
             </h1>
           </BlurFade>
