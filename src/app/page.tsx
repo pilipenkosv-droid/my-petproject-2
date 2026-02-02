@@ -54,8 +54,7 @@ export default function LandingPage() {
               <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
                 Smart
               </AuroraText>
-              <Logo variant="dark" size={40} className="sm:hidden" />
-              <Logo variant="dark" size={72} className="hidden sm:inline-flex" />
+              <Logo variant="dark" size={72} className="w-10 h-10 sm:w-[72px] sm:h-[72px]" />
               <span className="text-white">Format</span>
             </h1>
           </BlurFade>
