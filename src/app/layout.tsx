@@ -4,6 +4,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ai-sformat.vercel.app"),
   title: "SmartFormat — Автоматическое форматирование научных работ по методичке онлайн",
   description:
     "Загрузите работу в .docx и методичку — ИИ-сервис автоматически оформит текст по ГОСТу и требованиям вуза за несколько минут. Отступы, шрифты, заголовки, список литературы.",
