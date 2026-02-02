@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 interface HeaderProps {
   showBack?: boolean;
@@ -76,15 +77,8 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           )}
-          <Link href="/" className="group flex items-center gap-2">
-            <h1 className="text-lg font-bold leading-tight">
-              <span className="gradient-text group-hover:opacity-80 transition-opacity">
-                Smart
-              </span>
-              <span className="text-white group-hover:opacity-80 transition-opacity">
-                Format
-              </span>
-            </h1>
+          <Link href="/" className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Logo variant="favicon" size={28} withText />
           </Link>
         </div>
 

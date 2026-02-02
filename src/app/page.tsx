@@ -6,6 +6,7 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Header } from "@/components/Header";
 import { FileText, Sparkles, Zap, Download } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function LandingPage() {
   return (
@@ -49,10 +50,12 @@ export default function LandingPage() {
           </BlurFade>
           
           <BlurFade delay={0.2} inView>
-            <h1 className="text-4xl sm:text-7xl font-extrabold tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-7xl font-extrabold tracking-tight mb-6 flex items-center justify-center gap-2 sm:gap-3">
               <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
                 Smart
               </AuroraText>
+              <Logo variant="dark" size={40} className="sm:hidden" />
+              <Logo variant="dark" size={72} className="hidden sm:inline-flex" />
               <span className="text-white">Format</span>
             </h1>
           </BlurFade>
@@ -228,7 +231,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/10 py-8 px-6">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold gradient-text">SmartFormat</span>
+            <Logo variant="favicon" size={24} withText />
           </div>
           <p className="text-sm text-white/40">
             Сервис автоматического форматирования курсовых и дипломных работ по ГОСТу

@@ -1,22 +1,32 @@
 # SmartFormat
 
-Веб-сервис автоматического форматирования научных работ по требованиям заказчика.
+Веб-сервис автоматического форматирования научных работ (курсовые, дипломы, ВКР) по требованиям вуза и ГОСТу.
 
 ## Возможности
 
 - Загрузка исходного документа (.docx) и требований к оформлению (.docx, .pdf, .txt)
-- AI-анализ требований и извлечение правил форматирования
-- Проверка документа на соответствие требованиям
-- Автоматическое исправление форматирования
-- Выделение нарушений (красным) и исправлений (зелёным)
-- Статистика документа и список нарушений
+- AI-извлечение правил форматирования из методички
+- Редактирование и подтверждение правил перед обработкой
+- Семантический AI-анализ структуры документа (секции, заголовки, библиография)
+- Автоматическое форматирование с учётом контекста
+- Выделение нарушений (красным) и исправлений (зелёным) в документе
+- Двойной просмотр: оригинал и отформатированный документ бок о бок
+- Статистика и список нарушений
+- CSAT-виджет для оценки качества результата
+- Система оплаты через Lava.top (разовая покупка / подписка)
 
 ## Технологии
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS v4
-- **UI**: shadcn/ui, Radix UI
-- **AI**: Google Gemini (бесплатный) / OpenAI GPT-4o / Anthropic Claude
-- **Документы**: mammoth (чтение), docx (создание), pdf-parse (PDF)
+| Категория | Стек |
+|-----------|------|
+| Frontend | Next.js 15, React 19, TypeScript |
+| Стили | Tailwind CSS v4, shadcn/ui, Radix UI |
+| AI | Gemini, OpenAI, Anthropic, Groq, OpenRouter, Cerebras (мульти-провайдер шлюз с фоллбэком) |
+| Документы | mammoth (чтение DOCX), docx (создание DOCX), pdf-parse (PDF) |
+| БД и хранилище | Supabase (PostgreSQL + Auth + Storage) |
+| Оплата | Lava.top |
+| Деплой | Vercel + Cloudflare CDN |
+| Аналитика | Vercel Analytics |
 
 ## Быстрый старт
 
@@ -28,37 +38,24 @@ npm install
 
 ### 2. Настройка окружения
 
-Скопируйте `.env.example` в `.env.local` и добавьте API-ключ:
-
 ```bash
 cp .env.example .env.local
 ```
 
-#### Рекомендуется: Google Gemini (бесплатный)
-
-1. Откройте [aistudio.google.com](https://aistudio.google.com/)
-2. Войдите с Google аккаунтом
-3. Нажмите "Get API key" → "Create API key"
-4. Скопируйте ключ в `.env.local`:
+Заполните `.env.local` — минимально нужен хотя бы один AI-ключ и Supabase:
 
 ```env
-AI_PROVIDER=gemini
-GEMINI_API_KEY=ваш_ключ_здесь
+# AI (достаточно одного, gateway выберет доступную модель)
+GEMINI_API_KEY=ваш_ключ
+GROQ_API_KEY=ваш_ключ
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=ваш_ключ
+SUPABASE_SERVICE_ROLE_KEY=ваш_ключ
 ```
 
-#### Альтернативы (платные)
-
-```env
-# OpenAI
-AI_PROVIDER=openai
-OPENAI_API_KEY=sk-...
-
-# Anthropic
-AI_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-### 3. Запуск в режиме разработки
+### 3. Запуск
 
 ```bash
 npm run dev
@@ -66,87 +63,58 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000)
 
-### 4. Сборка для production
+### 4. Сборка
 
 ```bash
-npm run build
-npm run start
+npm run build && npm run start
 ```
 
 ## Структура проекта
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── page.tsx           # Landing page
-│   ├── constructor/       # Страница загрузки документов
-│   ├── result/[jobId]/    # Страница результатов
-│   └── api/               # API routes
-├── features/              # Фичи (Feature-based architecture)
-│   ├── constructor/       # Компоненты загрузки
-│   └── result/            # Компоненты результатов
-├── lib/                   # Бизнес-логика
-│   ├── ai/                # AI-провайдер и промпты
-│   ├── documents/         # Чтение документов
-│   ├── pipeline/          # Анализ и форматирование
-│   └── storage/           # Хранение файлов
-├── components/ui/         # UI-компоненты (shadcn)
-└── types/                 # TypeScript типы
+├── app/                       # Next.js App Router (страницы + API)
+│   ├── page.tsx              # Лендинг
+│   ├── create/               # Загрузка документов
+│   ├── confirm-rules/[jobId] # Подтверждение правил
+│   ├── result/[jobId]        # Результаты (двойной просмотр)
+│   ├── pricing/              # Тарифы
+│   ├── profile/              # Профиль пользователя
+│   ├── login/                # Авторизация
+│   └── api/                  # 14 API-эндпоинтов
+├── features/                  # Feature-модули
+│   ├── constructor/          # Загрузка и обработка
+│   ├── result/               # Просмотр результатов, CSAT
+│   └── confirm-rules/        # Редактор правил
+├── components/                # Общие компоненты
+│   ├── ui/                   # shadcn/ui (16+ компонентов)
+│   └── providers/            # React-провайдеры
+├── lib/                       # Бизнес-логика
+│   ├── ai/                   # AI-шлюз, модели, промпты, семантический парсер
+│   ├── pipeline/             # Анализатор + форматтер документов
+│   ├── documents/            # Чтение DOCX/PDF/TXT
+│   ├── formatters/           # XML-форматирование, библиография
+│   ├── storage/              # Supabase Storage + Job Store
+│   ├── payment/              # Lava.top интеграция
+│   ├── auth/                 # Авторизация и триал
+│   └── utils/                # Утилиты + тесты
+└── types/                     # TypeScript типы
 ```
 
-## API
+## Тарифы
 
-### POST /api/process
+| Тариф | Цена | Обработки |
+|-------|------|-----------|
+| Пробный | 0 ₽ | 1 бесплатная |
+| Разовая | 159 ₽ | 1 документ |
+| Pro | 399 ₽/мес | 10 в месяц |
 
-Загрузка и обработка документов.
+## Документация
 
-**Request**: FormData
-- `sourceDocument` — исходный документ (.docx)
-- `requirementsDocument` — требования к оформлению (.docx, .pdf, .txt)
-
-**Response**:
-```json
-{
-  "jobId": "abc123",
-  "status": "completed",
-  "statistics": {
-    "totalCharacters": 50000,
-    "pageCount": 25
-  },
-  "violationsCount": 42
-}
-```
-
-### GET /api/status/[jobId]
-
-Получение статуса задачи.
-
-### GET /api/download/[fileId]
-
-Скачивание результата. `fileId` в формате `{jobId}_original` или `{jobId}_formatted`.
-
-## Правила форматирования
-
-Система поддерживает проверку:
-- Размеры полей документа
-- Шрифт и размер текста
-- Межстрочный интервал
-- Абзацный отступ
-- Выравнивание текста
-- Неразрывные пробелы перед единицами измерения
-- И другие параметры
-
-По умолчанию используются требования ГОСТ (Times New Roman 14pt, интервал 1.5, поля 20-30 мм).
-
-## Деплой на Vercel
-
-1. Подключите репозиторий к Vercel
-2. Добавьте переменные окружения в настройках проекта:
-   - `AI_PROVIDER` = `gemini` (или `openai` / `anthropic`)
-   - `GEMINI_API_KEY` (или `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`)
-3. Деплой произойдёт автоматически
-
-**Важно**: На Vercel файлы хранятся в `/tmp` (эфемерное хранилище). Для персистентного хранения интегрируйте Vercel Blob или внешнее S3-хранилище.
+- [Архитектура проекта](docs/ARCHITECTURE.md) — пайплайн обработки, AI-шлюз, схема БД
+- [Справочник API](docs/API.md) — все 14 эндпоинтов с форматами запросов и ответов
+- [Деплой и настройка](docs/DEPLOYMENT.md) — Vercel, Supabase, переменные окружения
+- [Журнал изменений](docs/CHANGES_SUMMARY.md) — история ключевых обновлений
 
 ## Лицензия
 

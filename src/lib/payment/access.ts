@@ -38,9 +38,9 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
   if (data.access_type === "subscription" && data.subscription_active_until) {
     const isActive = new Date(data.subscription_active_until) > new Date();
     return {
-      hasAccess: isActive,
+      hasAccess: isActive && data.remaining_uses > 0,
       accessType: isActive ? "subscription" : "none",
-      remainingUses: isActive ? -1 : 0, // -1 = безлимит
+      remainingUses: isActive ? data.remaining_uses : 0,
       subscriptionActiveUntil: data.subscription_active_until,
     };
   }
@@ -71,8 +71,18 @@ export async function consumeUse(userId: string): Promise<boolean> {
 
   const access = await getUserAccess(userId);
 
-  // Подписка — не списываем
-  if (access.accessType === "subscription") return true;
+  // Подписка — списываем использование
+  if (access.accessType === "subscription" && access.remainingUses > 0) {
+    const { error } = await supabase
+      .from("user_access")
+      .update({
+        remaining_uses: access.remainingUses - 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+
+    return !error;
+  }
 
   // Триал — создаём запись и списываем
   if (access.accessType === "trial") {
@@ -147,7 +157,7 @@ export async function activateAccess(
       {
         user_id: userId,
         access_type: "subscription",
-        remaining_uses: 0,
+        remaining_uses: LAVA_CONFIG.offers.subscription.uses,
         subscription_active_until: activeUntil.toISOString(),
         lava_subscription_id: lavaSubscriptionId || null,
         updated_at: new Date().toISOString(),
