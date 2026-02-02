@@ -33,6 +33,7 @@ export default function ConstructorPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [pageState, setPageState] = useState<PageState>("upload");
   const [trialBlocked, setTrialBlocked] = useState(false);
+  const [pageLimitError, setPageLimitError] = useState<string | null>(null);
 
   const sourceDoc = useDocumentUpload(SOURCE_DOCUMENT_CONFIG);
   const requirementsDoc = useDocumentUpload(REQUIREMENTS_DOCUMENT_CONFIG);
@@ -66,10 +67,12 @@ export default function ConstructorPage() {
         const responseText = await response.text().catch(() => "");
         let errorMessage = "Ошибка при обработке документа";
         let requiresAuth = false;
+        let pageLimitExceeded = false;
         try {
           const errorData = JSON.parse(responseText);
           errorMessage = errorData.error || errorMessage;
           requiresAuth = errorData.requiresAuth === true;
+          pageLimitExceeded = errorData.pageLimitExceeded === true;
         } catch {
           if (responseText) {
             errorMessage = `Ошибка сервера (${response.status}). Попробуйте ещё раз.`;
@@ -79,6 +82,11 @@ export default function ConstructorPage() {
         }
         if (requiresAuth) {
           setTrialBlocked(true);
+          setPageState("upload");
+          return;
+        }
+        if (pageLimitExceeded) {
+          setPageLimitError(errorMessage);
           setPageState("upload");
           return;
         }
@@ -136,12 +144,28 @@ export default function ConstructorPage() {
               </BlurFade>
             )}
 
+            {/* Баннер: превышен лимит страниц */}
+            {pageLimitError && (
+              <BlurFade inView>
+                <Card className="border-amber-500/30 bg-amber-500/10">
+                  <CardContent className="pt-6 text-center">
+                    <p className="text-white mb-3">
+                      {pageLimitError}
+                    </p>
+                    <Button onClick={() => router.push("/pricing")} variant="outline">
+                      Посмотреть тарифы
+                    </Button>
+                  </CardContent>
+                </Card>
+              </BlurFade>
+            )}
+
             {/* Баннер: анонимный пользователь, триал доступен */}
             {!authLoading && !user && !trialBlocked && (
               <BlurFade inView>
                 <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
                   <p className="text-sm text-white/60">
-                    У вас <span className="text-violet-400 font-medium">1 бесплатная обработка</span> без регистрации.{" "}
+                    У вас <span className="text-violet-400 font-medium">1 бесплатная обработка</span> без регистрации (до 30 страниц).{" "}
                     <button onClick={() => router.push("/login")} className="text-violet-400 hover:text-violet-300 underline">
                       Войдите
                     </button>

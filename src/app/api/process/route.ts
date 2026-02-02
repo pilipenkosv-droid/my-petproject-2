@@ -8,6 +8,7 @@ import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/li
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
+import { LAVA_CONFIG } from "@/lib/payment/config";
 
 export const maxDuration = 60; // Максимальное время выполнения для Vercel
 
@@ -19,8 +20,11 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 
+    let userAccessType: "trial" | "one_time" | "subscription" | "none" = "trial";
+
     if (user?.id) {
       const access = await getUserAccess(user.id);
+      userAccessType = access.accessType;
       if (!access.hasAccess) {
         return NextResponse.json(
           { error: "Лимит обработок исчерпан. Приобретите тариф.", redirectTo: "/pricing" },
@@ -33,6 +37,7 @@ export async function POST(request: NextRequest) {
       }
     }
     // Анонимные пользователи: пропускаем (1 бесплатная обработка контролируется фронтом/cookies)
+    // userAccessType остаётся "trial" для анонимных
     // Создаём задачу
     await createJob(jobId);
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
@@ -119,6 +124,18 @@ export async function POST(request: NextRequest) {
 
     // Анализируем документ
     const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
+
+    // Проверка лимита страниц для пробного тарифа (анонимные и триал-пользователи)
+    if (userAccessType === "trial" && analysisResult.statistics.pageCount > LAVA_CONFIG.freeTrialMaxPages) {
+      await failJob(jobId, `Документ слишком большой для бесплатного тарифа (${analysisResult.statistics.pageCount} стр.). Лимит — ${LAVA_CONFIG.freeTrialMaxPages} страниц.`);
+      return NextResponse.json(
+        {
+          error: `Документ содержит ~${analysisResult.statistics.pageCount} страниц. В бесплатном тарифе доступна обработка до ${LAVA_CONFIG.freeTrialMaxPages} страниц. Приобретите тариф для обработки больших документов.`,
+          redirectTo: "/pricing",
+        },
+        { status: 402 }
+      );
+    }
 
     await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 

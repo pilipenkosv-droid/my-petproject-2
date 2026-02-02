@@ -25,6 +25,9 @@ export const LAVA_CONFIG = {
 
   // Кол-во бесплатных обработок для нового пользователя
   freeTrialUses: 1,
+
+  // Лимит страниц для бесплатного (пробного) тарифа
+  freeTrialMaxPages: 30,
 } as const;
 
 export type OfferType = "one_time" | "subscription";
