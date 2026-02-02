@@ -13,7 +13,7 @@ export default function LandingPage() {
       <Header />
 
       {/* Hero Section with Animated Grid */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-6 py-24 sm:py-32">
+      <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-24 sm:py-32">
         {/* Animated Grid Pattern */}
         <AnimatedGridPattern
           numSquares={30}
@@ -49,7 +49,7 @@ export default function LandingPage() {
           </BlurFade>
           
           <BlurFade delay={0.2} inView>
-            <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-7xl font-extrabold tracking-tight mb-6">
               <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
                 Smart
               </AuroraText>
@@ -73,12 +73,12 @@ export default function LandingPage() {
           <BlurFade delay={0.5} inView>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/create" className="w-full sm:w-auto">
-                <ShimmerButton className="text-lg w-full sm:w-auto">
-                  <Zap className="w-5 h-5 mr-2" />
+                <ShimmerButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8">
+                  <Zap className="w-5 h-5 mr-2 flex-shrink-0" />
                   Начать форматирование
                 </ShimmerButton>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-7 w-full sm:w-auto" asChild>
+              <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-6 sm:py-7 w-full sm:w-auto" asChild>
                 <a href="#how-it-works">Как это работает</a>
               </Button>
             </div>
