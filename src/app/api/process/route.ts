@@ -4,7 +4,7 @@ import { saveFile, saveResultFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
-import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
+import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup, truncateDocxToPageLimit } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
@@ -116,31 +116,35 @@ export async function POST(request: NextRequest) {
 
     await updateJobProgress(jobId, "analyzing", 50, "AI-разметка блоков документа");
 
+    // Для пробного тарифа — обрезаем документ до лимита страниц
+    let processBuffer: Buffer = sourceBuffer;
+    let wasTruncated = false;
+    let originalPageCount = 0;
+
+    if (userAccessType === "trial") {
+      const truncResult = await truncateDocxToPageLimit(sourceBuffer, LAVA_CONFIG.freeTrialMaxPages);
+      processBuffer = Buffer.from(truncResult.buffer);
+      wasTruncated = truncResult.wasTruncated;
+      originalPageCount = truncResult.originalPageCount;
+
+      if (wasTruncated) {
+        console.log(`[process] Документ обрезан: ${originalPageCount} → ${LAVA_CONFIG.freeTrialMaxPages} стр.`);
+      }
+    }
+
     // Парсим структуру и размечаем блоки через AI
-    const docxStructure = await parseDocxStructure(sourceBuffer);
+    const docxStructure = await parseDocxStructure(processBuffer);
     const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
 
     await updateJobProgress(jobId, "analyzing", 60, "Проверка документа на соответствие требованиям");
 
     // Анализируем документ
-    const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
-
-    // Проверка лимита страниц для пробного тарифа (анонимные и триал-пользователи)
-    if (userAccessType === "trial" && analysisResult.statistics.pageCount > LAVA_CONFIG.freeTrialMaxPages) {
-      await failJob(jobId, `Документ слишком большой для бесплатного тарифа (${analysisResult.statistics.pageCount} стр.). Лимит — ${LAVA_CONFIG.freeTrialMaxPages} страниц.`);
-      return NextResponse.json(
-        {
-          error: `Документ содержит ~${analysisResult.statistics.pageCount} страниц. В бесплатном тарифе доступна обработка до ${LAVA_CONFIG.freeTrialMaxPages} страниц. Приобретите тариф для обработки больших документов.`,
-          redirectTo: "/pricing",
-        },
-        { status: 402 }
-      );
-    }
+    const analysisResult = await analyzeDocument(processBuffer, rules, enrichedParagraphs);
 
     await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
     // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
+    const formattingResult = await formatDocument(processBuffer, rules, analysisResult.violations, enrichedParagraphs);
 
     await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
@@ -148,19 +152,29 @@ export async function POST(request: NextRequest) {
     await saveResultFile(jobId, "original", formattingResult.markedOriginal);
     await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
 
+    // Добавляем информацию об обрезке в статистику
+    const statistics = {
+      ...analysisResult.statistics,
+      ...(wasTruncated && {
+        wasTruncated: true,
+        originalPageCount,
+        pageLimitApplied: LAVA_CONFIG.freeTrialMaxPages,
+      }),
+    };
+
     // Завершаем задачу
     await completeJob(jobId, {
       markedOriginalId: `${jobId}_original`,
       formattedDocumentId: `${jobId}_formatted`,
       violations: analysisResult.violations,
-      statistics: analysisResult.statistics,
+      statistics,
       rules,
     });
 
     return NextResponse.json({
       jobId,
       status: "completed",
-      statistics: analysisResult.statistics,
+      statistics,
       violationsCount: analysisResult.violations.length,
       warnings: aiResponse.warnings,
     });

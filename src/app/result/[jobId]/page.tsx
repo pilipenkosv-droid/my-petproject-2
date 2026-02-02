@@ -8,7 +8,7 @@ import { CSATWidget } from "@/features/result/components/CSATWidget";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck } from "lucide-react";
+import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 
 interface ResultPageProps {
@@ -162,6 +162,29 @@ export default function ResultPage({ params }: ResultPageProps) {
               violationsCount={job.violationsCount ?? 0}
               fixesApplied={job.violationsCount ?? 0}
             />
+          )}
+
+          {/* Уведомление об обрезке документа */}
+          {job.statistics?.wasTruncated && (
+            <Card className="border-amber-500/30 bg-amber-500/10">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-white font-medium mb-1">
+                      Обработаны первые {job.statistics.pageLimitApplied} из ~{job.statistics.originalPageCount} страниц
+                    </p>
+                    <p className="text-white/60 text-sm">
+                      В бесплатном тарифе доступна обработка до {job.statistics.pageLimitApplied} страниц.
+                      Для обработки полного документа{" "}
+                      <Link href="/pricing" className="text-violet-400 hover:text-violet-300 underline">
+                        приобретите тариф
+                      </Link>.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Download section */}

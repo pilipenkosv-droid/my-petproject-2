@@ -23,6 +23,7 @@ import { parseDocumentBlocks } from "../ai/document-block-markup";
 import {
   type OrderedXmlNode,
   parseDocxXml,
+  buildDocxXml,
   getBody,
   children,
   findChild,
@@ -80,6 +81,148 @@ export interface DocxDocument {
     margins: { top: number; bottom: number; left: number; right: number };
     pageSize: { width: number; height: number };
   }[];
+}
+
+/**
+ * Обрезает .docx документ до указанного лимита страниц.
+ * Удаляет параграфы и таблицы, которые выходят за лимит,
+ * сохраняя w:sectPr (настройки секции).
+ *
+ * Возвращает { buffer, wasTruncated, originalPageCount }.
+ */
+export async function truncateDocxToPageLimit(
+  buffer: Buffer,
+  maxPages: number
+): Promise<{ buffer: Buffer; wasTruncated: boolean; originalPageCount: number }> {
+  const CHARS_PER_PAGE = 2000;
+  const maxChars = maxPages * CHARS_PER_PAGE;
+
+  const zip = await JSZip.loadAsync(buffer);
+  const documentXml = await zip.file("word/document.xml")?.async("string");
+  if (!documentXml) {
+    return { buffer, wasTruncated: false, originalPageCount: 1 };
+  }
+
+  const parsed = parseDocxXml(documentXml);
+  const body = getBody(parsed);
+  if (!body) {
+    return { buffer, wasTruncated: false, originalPageCount: 1 };
+  }
+
+  const bodyChildren = children(body);
+
+  // Считаем общий объём текста для оценки originalPageCount
+  let totalChars = 0;
+  for (const child of bodyChildren) {
+    if ("w:p" in child) {
+      const runs = findChildren(child, "w:r");
+      for (const r of runs) {
+        const tNodes = findChildren(r, "w:t");
+        for (const t of tNodes) {
+          totalChars += (getText(t) || "").length;
+        }
+      }
+    } else if ("w:tbl" in child) {
+      // Считаем текст в таблице
+      const rows = findChildren(child, "w:tr");
+      for (const row of rows) {
+        const cells = findChildren(row, "w:tc");
+        for (const cell of cells) {
+          const pNodes = findChildren(cell, "w:p");
+          for (const p of pNodes) {
+            const runs = findChildren(p, "w:r");
+            for (const r of runs) {
+              const tNodes = findChildren(r, "w:t");
+              for (const t of tNodes) {
+                totalChars += (getText(t) || "").length;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const originalPageCount = Math.max(1, Math.ceil(totalChars / CHARS_PER_PAGE));
+
+  if (totalChars <= maxChars) {
+    return { buffer, wasTruncated: false, originalPageCount };
+  }
+
+  // Обрезаем: сохраняем элементы до лимита + w:sectPr
+  const newBodyChildren: OrderedXmlNode[] = [];
+  let charsSoFar = 0;
+  let limitReached = false;
+
+  for (const child of bodyChildren) {
+    // Всегда сохраняем sectPr (настройки страницы)
+    if ("w:sectPr" in child) {
+      newBodyChildren.push(child);
+      continue;
+    }
+
+    if (limitReached) continue;
+
+    if ("w:p" in child) {
+      let pChars = 0;
+      const runs = findChildren(child, "w:r");
+      for (const r of runs) {
+        const tNodes = findChildren(r, "w:t");
+        for (const t of tNodes) {
+          pChars += (getText(t) || "").length;
+        }
+      }
+
+      if (charsSoFar + pChars > maxChars && newBodyChildren.length > 0) {
+        limitReached = true;
+        continue;
+      }
+      charsSoFar += pChars;
+      newBodyChildren.push(child);
+    } else if ("w:tbl" in child) {
+      let tblChars = 0;
+      const rows = findChildren(child, "w:tr");
+      for (const row of rows) {
+        const cells = findChildren(row, "w:tc");
+        for (const cell of cells) {
+          const pNodes = findChildren(cell, "w:p");
+          for (const p of pNodes) {
+            const runs = findChildren(p, "w:r");
+            for (const r of runs) {
+              const tNodes = findChildren(r, "w:t");
+              for (const t of tNodes) {
+                tblChars += (getText(t) || "").length;
+              }
+            }
+          }
+        }
+      }
+
+      if (charsSoFar + tblChars > maxChars && newBodyChildren.length > 0) {
+        limitReached = true;
+        continue;
+      }
+      charsSoFar += tblChars;
+      newBodyChildren.push(child);
+    } else {
+      // Другие элементы (bookmarkStart, etc.) — сохраняем
+      newBodyChildren.push(child);
+    }
+  }
+
+  // Заменяем children в body
+  const bodyTag = Object.keys(body).find(k => k !== ":@")!;
+  body[bodyTag] = newBodyChildren;
+
+  const newXml = buildDocxXml(parsed);
+  zip.file("word/document.xml", newXml);
+
+  const newBuffer = (await zip.generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+  })) as Buffer;
+
+  return { buffer: newBuffer, wasTruncated: true, originalPageCount };
 }
 
 /**

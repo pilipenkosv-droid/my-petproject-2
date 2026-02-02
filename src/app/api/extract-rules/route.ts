@@ -7,7 +7,6 @@ import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { warmupModels } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
-import { LAVA_CONFIG } from "@/lib/payment/config";
 
 export const maxDuration = 60;
 
@@ -89,27 +88,6 @@ export async function POST(request: NextRequest) {
       sourceOriginalName: sourceFile.name,
       requirementsOriginalName: requirementsFile.name,
     });
-
-    // Для пробного тарифа (анонимные) — проверяем лимит страниц до тяжёлых AI-операций
-    if (isAnonymous) {
-      try {
-        const sourceText = await extractText(sourceBuffer, sourceMimeType);
-        const estimatedPages = Math.max(1, Math.ceil((sourceText?.length || 0) / 2000));
-        if (estimatedPages > LAVA_CONFIG.freeTrialMaxPages) {
-          await failJob(jobId, `Документ слишком большой для бесплатного тарифа (~${estimatedPages} стр.)`);
-          return NextResponse.json(
-            {
-              error: `Документ содержит ~${estimatedPages} страниц. В бесплатном тарифе доступна обработка до ${LAVA_CONFIG.freeTrialMaxPages} страниц. Приобретите тариф для обработки больших документов.`,
-              redirectTo: "/pricing",
-              pageLimitExceeded: true,
-            },
-            { status: 402 }
-          );
-        }
-      } catch {
-        // Если не удалось оценить — проверка будет на этапе process
-      }
-    }
 
     // Прогрев AI-моделей параллельно с извлечением текста
     await updateJobProgress(jobId, "extracting_text", 20, "Извлечение текста из методички");

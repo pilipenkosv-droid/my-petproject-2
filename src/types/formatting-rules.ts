@@ -911,4 +911,10 @@ export interface DocumentStatistics {
   imageCount: number;
   /** Количество таблиц */
   tableCount: number;
+  /** Документ был обрезан (пробный тариф) */
+  wasTruncated?: boolean;
+  /** Количество страниц до обрезки */
+  originalPageCount?: number;
+  /** Применённый лимит страниц */
+  pageLimitApplied?: number;
 }
