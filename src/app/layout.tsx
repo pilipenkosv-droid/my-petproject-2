@@ -24,6 +24,13 @@ export const metadata: Metadata = {
     siteName: "SmartFormat",
     locale: "ru_RU",
     type: "website",
+    url: "https://ai-sformat.vercel.app",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SmartFormat — Идеальное оформление научной работы по методичке",
+    description:
+      "Загрузите работу и методичку — ИИ автоматически оформит документ по ГОСТу и требованиям вашего вуза.",
   },
 };
 
