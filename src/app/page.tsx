@@ -56,6 +56,9 @@ export default function LandingPage() {
               </AuroraText>
               <Logo variant="dark" size={72} className="w-10 h-10 sm:w-[72px] sm:h-[72px]" />
               <span className="text-white">Format</span>
+              <sup className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-violet-600 to-indigo-600 text-white/90 leading-none shadow-[0_0_12px_rgba(139,92,246,0.4)]">
+                beta
+              </sup>
             </h1>
           </BlurFade>
           
