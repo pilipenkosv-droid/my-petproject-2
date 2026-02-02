@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Header } from "@/components/Header";
+import { CtaButton } from "@/components/CtaButton";
 import { FileText, Sparkles, Zap, Download } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
@@ -74,12 +74,9 @@ export default function LandingPage() {
           
           <BlurFade delay={0.5} inView>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/create" className="w-full sm:w-auto">
-                <ShimmerButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8">
-                  <Zap className="w-5 h-5 mr-2 flex-shrink-0" />
-                  Начать форматирование
-                </ShimmerButton>
-              </Link>
+              <div className="w-full sm:w-auto">
+                <CtaButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8" />
+              </div>
               <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-6 sm:py-7 w-full sm:w-auto" asChild>
                 <a href="#how-it-works">Как это работает</a>
               </Button>
