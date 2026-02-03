@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getBreadcrumbSchema, getArticleSchema } from "@/lib/seo/schemas";
 import { getPostBySlug, getAllPosts } from "@/lib/blog/posts";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
@@ -82,6 +83,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       />
 
       <main className="mx-auto max-w-3xl px-6 py-16">
+        {/* Хлебные крошки */}
+        <Breadcrumbs
+          items={[
+            { label: "Блог", href: "/blog" },
+            { label: post.title },
+          ]}
+        />
+
         {/* Заголовок */}
         <div className="mb-8">
           <div className="flex items-center gap-4 text-white/40 text-sm mb-4">
@@ -205,7 +214,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
 // Простой конвертер markdown в HTML
 function formatContent(content: string): string {
-  return content
+  // Сначала обрабатываем таблицы
+  const tableRegex = /(\|.+\|\n)+/g;
+  let processedContent = content.replace(tableRegex, (tableMatch) => {
+    const lines = tableMatch.trim().split('\n').filter(line => line.trim());
+    if (lines.length < 2) return tableMatch;
+
+    // Первая строка — заголовки
+    const headerLine = lines[0];
+    const headerCells = headerLine.split('|').filter(Boolean).map(c => c.trim());
+
+    // Вторая строка — разделитель (пропускаем)
+    // Остальные строки — данные
+    const dataLines = lines.slice(2);
+
+    const headerRow = `<tr>${headerCells.map(c => `<th>${c}</th>`).join('')}</tr>`;
+    const dataRows = dataLines.map(line => {
+      const cells = line.split('|').filter(Boolean).map(c => c.trim());
+      return `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
+    }).join('');
+
+    return `<table><thead>${headerRow}</thead><tbody>${dataRows}</tbody></table>`;
+  });
+
+  return processedContent
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -218,17 +250,9 @@ function formatContent(content: string): string {
       return `<ul>${match}</ul>`;
     })
     .replace(/\n\n/g, '</p><p>')
-    .replace(/^(?!<[hulo])/gm, '<p>')
+    .replace(/^(?!<[hultop])/gm, '<p>')
     .replace(/(?<![>])$/gm, '</p>')
     .replace(/<p><\/p>/g, '')
-    .replace(/<p>(<[hulo])/g, '$1')
-    .replace(/(<\/[hulo][^>]*>)<\/p>/g, '$1')
-    .replace(/\| (.+) \|/g, (match) => {
-      const cells = match.split('|').filter(Boolean).map(c => c.trim());
-      const isHeader = cells.some(c => c.includes('---'));
-      if (isHeader) return '';
-      const tag = match.includes('Параметр') || match.includes('Год') ? 'th' : 'td';
-      return `<tr>${cells.map(c => `<${tag}>${c}</${tag}>`).join('')}</tr>`;
-    })
-    .replace(/(<tr>.*<\/tr>\n?)+/g, (match) => `<table><tbody>${match}</tbody></table>`);
+    .replace(/<p>(<[hultop])/g, '$1')
+    .replace(/(<\/[hultop][^>]*>)<\/p>/g, '$1');
 }
