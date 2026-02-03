@@ -718,6 +718,120 @@ function checkHeadingFormatting(
 }
 
 /**
+ * Проверить наличие подписей к таблицам и рисункам
+ *
+ * Ищет таблицы и рисунки без соответствующих подписей.
+ * Для таблиц проверяет наличие table_caption рядом с таблицей.
+ * Для рисунков проверяет наличие figure_caption рядом с figure.
+ */
+function checkMissingCaptions(
+  paragraphs: DocxParagraph[],
+  tables: DocxTable[],
+  rules: FormattingRules
+): FormattingViolation[] {
+  const violations: FormattingViolation[] = [];
+
+  // Собираем все подписи к таблицам и рисункам
+  const tableCaptions = new Set<number>();
+  const figureCaptions = new Set<number>();
+
+  // Паттерны для определения номера в подписи
+  const tableCaptionPattern = /(?:Таблица|Табл\.?)\s*(\d+(?:\.\d+)?)/i;
+  const figureCaptionPattern = /(?:Рисунок|Рис\.?)\s*(\d+(?:\.\d+)?)/i;
+
+  // Собираем номера подписей
+  paragraphs.forEach((p) => {
+    if (p.blockType === "table_caption" && p.text.trim()) {
+      const match = p.text.match(tableCaptionPattern);
+      if (match) {
+        // Извлекаем номер таблицы (например, "1" из "Таблица 1" или "1.2" из "Таблица 1.2")
+        tableCaptions.add(parseFloat(match[1]));
+      }
+    }
+    if (p.blockType === "figure_caption" && p.text.trim()) {
+      const match = p.text.match(figureCaptionPattern);
+      if (match) {
+        figureCaptions.add(parseFloat(match[1]));
+      }
+    }
+  });
+
+  // Проверяем таблицы — есть ли для каждой подпись
+  // Используем простую эвристику: если кол-во подписей < кол-ва таблиц
+  const tableCount = tables.length;
+
+  if (tableCount > 0 && tableCaptions.size < tableCount) {
+    // Ищем таблицы без подписей
+    // Проверяем каждую таблицу — есть ли рядом параграф с table_caption
+    tables.forEach((table, idx) => {
+      const tableNum = idx + 1;
+
+      // Проверяем, есть ли подпись с таким номером
+      // или есть ли table_caption рядом с позицией таблицы
+      const hasCaption = tableCaptions.has(tableNum) ||
+        paragraphs.some((p, pIdx) => {
+          // Ищем table_caption в окрестности таблицы (±3 параграфа от позиции)
+          if (p.blockType === "table_caption" && p.text.trim()) {
+            const distance = Math.abs(pIdx - table.bodyIndex);
+            return distance <= 3;
+          }
+          return false;
+        });
+
+      if (!hasCaption) {
+        violations.push({
+          ruleId: `table-${tableNum}-missing-caption`,
+          rulePath: "specialElements.tables.captionRequired",
+          message: `Таблица ${tableNum} не имеет подписи`,
+          expected: `Подпись вида "Таблица ${tableNum} — описание"`,
+          actual: "Подпись не найдена",
+          location: {
+            paragraphIndex: table.bodyIndex,
+            text: `[Таблица ${tableNum}]`,
+          },
+          autoFixable: false,
+        });
+      }
+    });
+  }
+
+  // Проверяем рисунки — ищем figure без figure_caption рядом
+  let figureCount = 0;
+  paragraphs.forEach((p, idx) => {
+    if (p.blockType === "figure") {
+      figureCount++;
+
+      // Ищем figure_caption в окрестности (±2 параграфа)
+      const hasCaption = paragraphs.some((cp, cpIdx) => {
+        if (cp.blockType === "figure_caption" && cp.text.trim()) {
+          const distance = Math.abs(cpIdx - idx);
+          return distance <= 2;
+        }
+        return false;
+      });
+
+      if (!hasCaption) {
+        const textSnippet = p.text.trim().slice(0, 30) || "[Изображение]";
+        violations.push({
+          ruleId: `figure-${figureCount}-missing-caption`,
+          rulePath: "specialElements.figures.captionRequired",
+          message: `Рисунок ${figureCount} не имеет подписи`,
+          expected: `Подпись вида "Рисунок ${figureCount} — описание"`,
+          actual: "Подпись не найдена",
+          location: {
+            paragraphIndex: idx,
+            text: textSnippet,
+          },
+          autoFixable: false,
+        });
+      }
+    }
+  });
+
+  return violations;
+}
+
+/**
  * Проверить форматирование специальных элементов (подписи к рисункам, таблицам, библиография)
  */
 function checkSpecialElementFormatting(
@@ -1133,6 +1247,7 @@ export async function analyzeDocument(
     ...checkHeadingFormatting(paragraphs, rules),
     ...checkSpecialElementFormatting(paragraphs, rules),
     ...checkTableFormatting(docxStructure.tables, rules),
+    ...checkMissingCaptions(paragraphs, docxStructure.tables, rules),
     ...checkNonBreakingSpaces(paragraphs, rules),
     ...checkProhibitedAbbreviations(paragraphs, rules),
     ...checkQuotes(paragraphs, rules),
@@ -1154,7 +1269,9 @@ export async function analyzeDocument(
     "headings.level2",
     "headings.level3",
     "specialElements.figures",
+    "specialElements.figures.captionRequired",
     "specialElements.tables",
+    "specialElements.tables.captionRequired",
     "additional.nonBreakingSpaces",
     "additional.abbreviationRules.prohibited",
     "additional.symbolRules.quotes",
