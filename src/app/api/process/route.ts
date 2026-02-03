@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
 
-    let userAccessType: "trial" | "one_time" | "subscription" | "none" = "trial";
+    let userAccessType: "trial" | "one_time" | "subscription" | "admin" | "none" = "trial";
 
     if (user?.id) {
       const access = await getUserAccess(user.id);
@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
-      // Списываем использование (для разовых/триала)
-      if (access.accessType !== "subscription") {
+      // Списываем использование (для разовых/триала), кроме подписки и админа
+      if (access.accessType !== "subscription" && access.accessType !== "admin") {
         await consumeUse(user.id);
       }
     }

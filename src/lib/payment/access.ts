@@ -5,11 +5,43 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { LAVA_CONFIG } from "./config";
 
+/**
+ * Whitelist админских email-адресов с бесконечным Pro доступом.
+ * Эти аккаунты получают unlimited доступ без проверки оплаты.
+ */
+const ADMIN_EMAILS = [
+  "pilipenkosv@gmail.com",
+];
+
 export interface UserAccess {
   hasAccess: boolean;
-  accessType: "trial" | "one_time" | "subscription" | "none";
+  accessType: "trial" | "one_time" | "subscription" | "admin" | "none";
   remainingUses: number;
   subscriptionActiveUntil: string | null;
+}
+
+/**
+ * Проверяет, является ли email админским (whitelist)
+ */
+async function isAdminUser(userId: string): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+
+  const { data } = await supabase
+    .from("auth.users")
+    .select("email")
+    .eq("id", userId)
+    .single();
+
+  // Fallback: проверяем через auth.users напрямую
+  if (!data) {
+    const { data: authData } = await supabase.auth.admin.getUserById(userId);
+    if (authData?.user?.email) {
+      return ADMIN_EMAILS.includes(authData.user.email.toLowerCase());
+    }
+    return false;
+  }
+
+  return ADMIN_EMAILS.includes(data.email?.toLowerCase() || "");
 }
 
 /**
@@ -17,6 +49,17 @@ export interface UserAccess {
  */
 export async function getUserAccess(userId: string): Promise<UserAccess> {
   const supabase = getSupabaseAdmin();
+
+  // Проверяем, является ли пользователь админом (бесконечный доступ)
+  const isAdmin = await isAdminUser(userId);
+  if (isAdmin) {
+    return {
+      hasAccess: true,
+      accessType: "admin",
+      remainingUses: 999999,
+      subscriptionActiveUntil: "2099-12-31T23:59:59Z",
+    };
+  }
 
   const { data, error } = await supabase
     .from("user_access")
@@ -70,6 +113,11 @@ export async function consumeUse(userId: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
 
   const access = await getUserAccess(userId);
+
+  // Админ — не списываем использования
+  if (access.accessType === "admin") {
+    return true;
+  }
 
   // Подписка — списываем использование
   if (access.accessType === "subscription" && access.remainingUses > 0) {
@@ -135,7 +183,7 @@ export async function activateAccess(
     // Добавляем использование
     const current = await getUserAccess(userId);
     const currentUses =
-      current.accessType === "none" || current.accessType === "trial"
+      current.accessType === "none" || current.accessType === "trial" || current.accessType === "admin"
         ? 0
         : current.remainingUses;
 
