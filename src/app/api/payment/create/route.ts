@@ -10,9 +10,13 @@ import { LAVA_CONFIG, OfferType } from "@/lib/payment/config";
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("[payment/create] Step 1: Starting...");
+
     // Проверяем авторизацию
     const supabase = await createSupabaseServer();
     const { data: { user } } = await supabase.auth.getUser();
+
+    console.log("[payment/create] Step 2: User check", { userId: user?.id, email: user?.email });
 
     if (!user?.id || !user?.email) {
       return NextResponse.json(
@@ -22,6 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { offerType } = (await request.json()) as { offerType: OfferType };
+    console.log("[payment/create] Step 3: offerType =", offerType);
 
     if (!offerType || !["one_time", "subscription"].includes(offerType)) {
       return NextResponse.json(
@@ -35,6 +40,8 @@ export async function POST(request: NextRequest) {
         ? LAVA_CONFIG.offers.oneTime
         : LAVA_CONFIG.offers.subscription;
 
+    console.log("[payment/create] Step 4: Creating Lava invoice...", { offerId: offer.offerId });
+
     // Создаём invoice в Lava.top
     const invoice = await createInvoice({
       email: user.email,
@@ -43,13 +50,17 @@ export async function POST(request: NextRequest) {
       periodicity: offer.periodicity,
     });
 
+    console.log("[payment/create] Step 5: Lava invoice created", { invoiceId: invoice.id, hasPaymentUrl: !!invoice.paymentUrl });
+
     if (!invoice.paymentUrl) {
       throw new Error("Lava.top не вернул paymentUrl");
     }
 
+    console.log("[payment/create] Step 6: Saving to DB...");
+
     // Сохраняем платёж в БД
     const admin = getSupabaseAdmin();
-    await admin.from("payments").insert({
+    const { error: dbError } = await admin.from("payments").insert({
       user_id: user.id,
       lava_invoice_id: invoice.id,
       offer_type: offerType,
@@ -57,6 +68,13 @@ export async function POST(request: NextRequest) {
       currency: offer.currency,
       status: "pending",
     });
+
+    if (dbError) {
+      console.error("[payment/create] DB insert error:", dbError);
+      throw new Error(`DB error: ${dbError.message}`);
+    }
+
+    console.log("[payment/create] Step 7: Success!");
 
     return NextResponse.json({
       paymentUrl: invoice.paymentUrl,
