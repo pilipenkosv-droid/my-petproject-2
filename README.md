@@ -25,7 +25,7 @@
 | Документы | mammoth (чтение DOCX), docx (создание DOCX), pdf-parse (PDF) |
 | БД и хранилище | Supabase (PostgreSQL + Auth + Storage) |
 | Оплата | Lava.top |
-| Деплой | Vercel + Cloudflare CDN |
+| Деплой | Vercel |
 | Аналитика | Vercel Analytics |
 
 ## Быстрый старт
@@ -77,10 +77,19 @@ src/
 │   ├── page.tsx              # Лендинг
 │   ├── create/               # Загрузка документов
 │   ├── confirm-rules/[jobId] # Подтверждение правил
-│   ├── result/[jobId]        # Результаты (двойной просмотр)
+│   ├── result/[jobId]        # Результаты
 │   ├── pricing/              # Тарифы
 │   ├── profile/              # Профиль пользователя
 │   ├── login/                # Авторизация
+│   ├── faq/                  # Вопросы и ответы (30+ FAQ)
+│   ├── about/                # О сервисе
+│   ├── blog/                 # Блог со статьями
+│   ├── diplom/               # Landing: дипломные работы
+│   ├── kursovaya/            # Landing: курсовые работы
+│   ├── referat/              # Landing: рефераты
+│   ├── esse/                 # Landing: эссе
+│   ├── otchet-po-praktike/   # Landing: отчеты по практике
+│   ├── sitemap.ts            # Динамический sitemap
 │   └── api/                  # 14 API-эндпоинтов
 ├── features/                  # Feature-модули
 │   ├── constructor/          # Загрузка и обработка
@@ -88,7 +97,9 @@ src/
 │   └── confirm-rules/        # Редактор правил
 ├── components/                # Общие компоненты
 │   ├── ui/                   # shadcn/ui (16+ компонентов)
-│   └── providers/            # React-провайдеры
+│   ├── providers/            # React-провайдеры
+│   ├── JsonLd.tsx            # JSON-LD structured data
+│   └── WorkTypeLanding.tsx   # Шаблон landing page
 ├── lib/                       # Бизнес-логика
 │   ├── ai/                   # AI-шлюз, модели, промпты, семантический парсер
 │   ├── pipeline/             # Анализатор + форматтер документов
@@ -97,9 +108,25 @@ src/
 │   ├── storage/              # Supabase Storage + Job Store
 │   ├── payment/              # Lava.top интеграция
 │   ├── auth/                 # Авторизация и триал
+│   ├── seo/                  # SEO-утилиты (schemas, metadata)
+│   ├── blog/                 # Контент блога
 │   └── utils/                # Утилиты + тесты
 └── types/                     # TypeScript типы
+
+public/
+├── robots.txt                # Правила для поисковых ботов (вкл. AI-боты)
 ```
+
+## SEO и GEO оптимизация
+
+Проект оптимизирован для поисковых систем и AI-поисковиков:
+
+- **robots.txt** — открыт доступ для GPTBot, ChatGPT-User, anthropic-ai, PerplexityBot
+- **sitemap.xml** — динамическая генерация всех страниц
+- **JSON-LD Schema** — SoftwareApplication, FAQPage, Article, BreadcrumbList
+- **Landing pages** — отдельные страницы для каждого типа работ
+- **Блог** — статьи о форматировании по ГОСТу
+- **FAQ** — 30+ вопросов для индексации AI-системами
 
 ## Тарифы
 

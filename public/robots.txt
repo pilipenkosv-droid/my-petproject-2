@@ -1,0 +1,34 @@
+User-agent: *
+Allow: /
+
+# AI bots access (критично для GEO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+# Yandex AI
+User-agent: YandexBot
+Allow: /
+
+# Disallow private pages
+Disallow: /api/
+Disallow: /profile
+Disallow: /result/
+Disallow: /confirm-rules/
+Disallow: /payment/
+
+Sitemap: https://ai-sformat.vercel.app/sitemap.xml

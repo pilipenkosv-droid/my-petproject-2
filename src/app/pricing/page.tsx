@@ -6,7 +6,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown, Gift } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Gift, HelpCircle } from "lucide-react";
+import Link from "next/link";
 
 const plans = [
   {
@@ -199,6 +200,46 @@ export default function PricingPage() {
           <p className="text-white/40 text-sm">
             Без регистрации карты · Отмена подписки в любой момент
           </p>
+        </div>
+
+        {/* FAQ секция */}
+        <div className="mt-16 pt-12 border-t border-white/10">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <HelpCircle className="w-5 h-5 text-violet-400" />
+            <h2 className="text-xl font-semibold text-white">Частые вопросы об оплате</h2>
+          </div>
+
+          <div className="grid gap-6 max-w-2xl mx-auto">
+            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+              <h3 className="font-medium text-white mb-2">Какие способы оплаты доступны?</h3>
+              <p className="text-white/60 text-sm">
+                Принимаем банковские карты (Visa, MasterCard, МИР), а также оплату через СБП и электронные кошельки.
+              </p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+              <h3 className="font-medium text-white mb-2">Как работает пробный период?</h3>
+              <p className="text-white/60 text-sm">
+                Первый документ обрабатывается бесплатно без привязки карты. Вы сможете оценить качество форматирования перед покупкой.
+              </p>
+            </div>
+
+            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+              <h3 className="font-medium text-white mb-2">Можно ли отменить подписку?</h3>
+              <p className="text-white/60 text-sm">
+                Да, подписку можно отменить в любой момент. Доступ сохранится до конца оплаченного периода.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link
+              href="/faq"
+              className="text-violet-400 hover:text-violet-300 text-sm transition-colors"
+            >
+              Все вопросы и ответы →
+            </Link>
+          </div>
         </div>
       </main>
     </div>
