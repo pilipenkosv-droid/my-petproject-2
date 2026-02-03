@@ -11,6 +11,7 @@ import { LAVA_CONFIG } from "./config";
  */
 const ADMIN_EMAILS = [
   "pilipenkosv@gmail.com",
+  "mary_shu@mail.ru",
 ];
 
 export interface UserAccess {
