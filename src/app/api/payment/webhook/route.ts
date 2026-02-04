@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { activateAccess } from "@/lib/payment/access";
+import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
+import { updateJob } from "@/lib/storage/job-store";
 
 interface LavaWebhookPayload {
   type: string;
@@ -79,6 +81,26 @@ export async function POST(request: NextRequest) {
           payment.offer_type,
           payload.subscriptionId
         );
+
+        // Если есть jobId для разблокировки — разблокируем полную версию
+        if (payment.unlock_job_id) {
+          try {
+            const [unlockedOriginal, unlockedFormatted] = await Promise.all([
+              unlockFullVersionFile(payment.unlock_job_id, "original"),
+              unlockFullVersionFile(payment.unlock_job_id, "formatted"),
+            ]);
+
+            if (unlockedOriginal && unlockedFormatted) {
+              // Убираем флаг hasFullVersion, т.к. теперь основные файлы — полные версии
+              await updateJob(payment.unlock_job_id, { hasFullVersion: false });
+              console.log(`🔓 Full version unlocked for job ${payment.unlock_job_id}`);
+            } else {
+              console.warn(`⚠️ Could not unlock full version for job ${payment.unlock_job_id}`);
+            }
+          } catch (unlockError) {
+            console.error(`Failed to unlock job ${payment.unlock_job_id}:`, unlockError);
+          }
+        }
 
         console.log(`✅ Payment completed: ${payment.offer_type} for user ${payment.user_id}`);
         break;

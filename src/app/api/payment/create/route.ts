@@ -25,8 +25,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { offerType } = (await request.json()) as { offerType: OfferType };
-    console.log("[payment/create] Step 3: offerType =", offerType);
+    const { offerType, unlockJobId } = (await request.json()) as {
+      offerType: OfferType;
+      unlockJobId?: string;
+    };
+    console.log("[payment/create] Step 3: offerType =", offerType, "unlockJobId =", unlockJobId);
 
     if (!offerType || !["one_time", "subscription"].includes(offerType)) {
       return NextResponse.json(
@@ -67,6 +70,8 @@ export async function POST(request: NextRequest) {
       amount: offer.price,
       currency: offer.currency,
       status: "pending",
+      // Если есть jobId для разблокировки — сохраняем его
+      ...(unlockJobId && { unlock_job_id: unlockJobId }),
     });
 
     if (dbError) {

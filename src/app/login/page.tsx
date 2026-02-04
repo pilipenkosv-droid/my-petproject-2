@@ -35,7 +35,7 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-type AuthMode = "login" | "signup";
+type AuthMode = "login" | "signup" | "forgotPassword";
 
 function LoginForm() {
   const router = useRouter();
@@ -100,6 +100,28 @@ function LoginForm() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    const supabase = getSupabaseBrowser();
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      });
+      if (error) throw error;
+      setMessage("Ссылка для сброса пароля отправлена на вашу почту.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Произошла ошибка";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative z-10 w-full max-w-md">
       {/* Back link */}
@@ -120,105 +142,171 @@ function LoginForm() {
           <CardDescription>
             {mode === "login"
               ? "Войдите в аккаунт"
-              : "Создайте аккаунт"}
+              : mode === "signup"
+              ? "Создайте аккаунт"
+              : "Восстановление пароля"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Google OAuth */}
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleAuth}
-            disabled={loading}
-          >
-            <GoogleIcon className="mr-2 h-4 w-4" />
-            Войти через Google
-          </Button>
+          {mode === "forgotPassword" ? (
+            <>
+              {/* Forgot Password form */}
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
 
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              или
-            </span>
-          </div>
+                {error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
 
-          {/* Email/Password form */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
+                {message && (
+                  <p className="text-sm text-green-400">{message}</p>
+                )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Минимум 6 символов"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                disabled={loading}
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-400">{error}</p>
-            )}
-
-            {message && (
-              <p className="text-sm text-green-400">{message}</p>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="mr-2 h-4 w-4" />
-              )}
-              {mode === "login" ? "Войти" : "Зарегистрироваться"}
-            </Button>
-          </form>
-
-          {/* Toggle mode */}
-          <p className="text-center text-sm text-muted-foreground">
-            {mode === "login" ? (
-              <>
-                Нет аккаунта?{" "}
-                <button
-                  type="button"
-                  onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
-                  className="text-violet-400 hover:text-violet-300 underline"
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading}
                 >
-                  Зарегистрироваться
-                </button>
-              </>
-            ) : (
-              <>
-                Уже есть аккаунт?{" "}
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="mr-2 h-4 w-4" />
+                  )}
+                  Сбросить пароль
+                </Button>
+              </form>
+
+              <p className="text-center text-sm text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => { setMode("login"); setError(""); setMessage(""); }}
                   className="text-violet-400 hover:text-violet-300 underline"
                 >
-                  Войти
+                  Вернуться ко входу
                 </button>
-              </>
-            )}
-          </p>
+              </p>
+            </>
+          ) : (
+            <>
+              {/* Google OAuth */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleAuth}
+                disabled={loading}
+              >
+                <GoogleIcon className="mr-2 h-4 w-4" />
+                Войти через Google
+              </Button>
+
+              <div className="relative">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  или
+                </span>
+              </div>
+
+              {/* Email/Password form */}
+              <form onSubmit={handleEmailAuth} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Пароль</Label>
+                    {mode === "login" && (
+                      <button
+                        type="button"
+                        onClick={() => { setMode("forgotPassword"); setError(""); setMessage(""); }}
+                        className="text-xs text-violet-400 hover:text-violet-300"
+                      >
+                        Забыли пароль?
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Минимум 6 символов"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    disabled={loading}
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
+
+                {message && (
+                  <p className="text-sm text-green-400">{message}</p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="mr-2 h-4 w-4" />
+                  )}
+                  {mode === "login" ? "Войти" : "Зарегистрироваться"}
+                </Button>
+              </form>
+
+              {/* Toggle mode */}
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === "login" ? (
+                  <>
+                    Нет аккаунта?{" "}
+                    <button
+                      type="button"
+                      onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
+                      className="text-violet-400 hover:text-violet-300 underline"
+                    >
+                      Зарегистрироваться
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Уже есть аккаунт?{" "}
+                    <button
+                      type="button"
+                      onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+                      className="text-violet-400 hover:text-violet-300 underline"
+                    >
+                      Войти
+                    </button>
+                  </>
+                )}
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

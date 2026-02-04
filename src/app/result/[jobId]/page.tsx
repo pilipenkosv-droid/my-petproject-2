@@ -8,7 +8,7 @@ import { CSATWidget } from "@/features/result/components/CSATWidget";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle } from "lucide-react";
+import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
 
 interface ResultPageProps {
@@ -164,8 +164,37 @@ export default function ResultPage({ params }: ResultPageProps) {
             />
           )}
 
-          {/* Уведомление об обрезке документа */}
-          {job.statistics?.wasTruncated && (
+          {/* Hook-offer: полная версия уже готова */}
+          {job.statistics?.wasTruncated && job.hasFullVersion && (
+            <Card className="border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
+              <CardContent className="pt-6 relative">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 shrink-0">
+                    <Gift className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-semibold text-lg mb-1">
+                      Полная версия уже готова! 🎉
+                    </p>
+                    <p className="text-white/70 text-sm mb-4">
+                      Мы обработали весь ваш документ (~{job.statistics.originalPageCount} стр.), но показали только первые {job.statistics.pageLimitApplied}.
+                      Получите полную версию прямо сейчас — без повторной обработки!
+                    </p>
+                    <Link href={`/pricing?unlock=${jobId}`}>
+                      <Button variant="glow" className="group">
+                        Получить полную версию
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Уведомление об обрезке документа (если нет полной версии) */}
+          {job.statistics?.wasTruncated && !job.hasFullVersion && (
             <Card className="border-amber-500/30 bg-amber-500/10">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">

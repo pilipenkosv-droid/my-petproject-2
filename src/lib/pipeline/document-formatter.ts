@@ -15,7 +15,8 @@ import JSZip from "jszip";
 import { formatViolationMessage } from "../utils/formatting-messages";
 import { XmlDocumentFormatter } from "../formatters/xml-formatter";
 import { applyBibliographyFormattingToXmlParagraph } from "../formatters/bibliography-xml-formatter";
-import { DocxParagraph } from "./document-analyzer";
+import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
+import { LAVA_CONFIG } from "../payment/config";
 import {
   type OrderedXmlNode,
   parseDocxXml,
@@ -40,7 +41,17 @@ interface FormattingResult {
   formattedDocument: Buffer;
   /** Количество применённых исправлений */
   fixesApplied: number;
+  /** Была ли применена обрезка для trial */
+  wasTruncated?: boolean;
+  /** Оригинальное количество страниц до обрезки */
+  originalPageCount?: number;
+  /** Полная версия (до обрезки) оригинала с пометками - для trial */
+  fullMarkedOriginal?: Buffer;
+  /** Полная версия (до обрезки) исправленного документа - для trial */
+  fullFormattedDocument?: Buffer;
 }
+
+export type AccessType = "trial" | "one_time" | "subscription" | "admin" | "none";
 
 /**
  * Создать отформатированный документ через XML-модификацию
@@ -351,23 +362,62 @@ async function createMarkedOriginal(
 
 /**
  * Главная функция форматирования документа
+ *
+ * @param buffer - исходный документ
+ * @param rules - правила форматирования
+ * @param violations - найденные нарушения
+ * @param enrichedParagraphs - размеченные параграфы
+ * @param accessType - тип доступа пользователя (для обрезки trial до 30 страниц)
  */
 export async function formatDocument(
   buffer: Buffer,
   rules: FormattingRules,
   violations: FormattingViolation[],
-  enrichedParagraphs?: DocxParagraph[]
+  enrichedParagraphs?: DocxParagraph[],
+  accessType?: AccessType
 ): Promise<FormattingResult> {
-  const [markedOriginal, formattedDocument] = await Promise.all([
+  let [markedOriginal, formattedDocument] = await Promise.all([
     createMarkedOriginal(buffer, violations),
     enrichedParagraphs
       ? createFormattedDocumentXml(buffer, rules, enrichedParagraphs)
       : Promise.resolve(buffer), // fallback: return original if no markup
   ]);
 
+  // Для trial — обрезаем оба результата до лимита страниц ПОСЛЕ форматирования
+  // Но СОХРАНЯЕМ полные версии для разблокировки после оплаты
+  let wasTruncated = false;
+  let originalPageCount = 0;
+  let fullMarkedOriginal: Buffer | undefined;
+  let fullFormattedDocument: Buffer | undefined;
+
+  if (accessType === "trial") {
+    const [truncatedMarked, truncatedFormatted] = await Promise.all([
+      truncateDocxToPageLimit(markedOriginal, LAVA_CONFIG.freeTrialMaxPages),
+      truncateDocxToPageLimit(formattedDocument, LAVA_CONFIG.freeTrialMaxPages),
+    ]);
+
+    // Используем результат обрезки с оригинала (markedOriginal) для статистики
+    wasTruncated = truncatedMarked.wasTruncated || truncatedFormatted.wasTruncated;
+    originalPageCount = Math.max(truncatedMarked.originalPageCount, truncatedFormatted.originalPageCount);
+
+    // Если документ был обрезан — сохраняем полные версии для hook-offer
+    if (wasTruncated) {
+      fullMarkedOriginal = markedOriginal;
+      fullFormattedDocument = formattedDocument;
+      console.log(`[formatDocument] Документы обрезаны до ${LAVA_CONFIG.freeTrialMaxPages} страниц (было ~${originalPageCount}). Полные версии сохранены для разблокировки.`);
+    }
+
+    markedOriginal = Buffer.from(truncatedMarked.buffer);
+    formattedDocument = Buffer.from(truncatedFormatted.buffer);
+  }
+
   return {
     markedOriginal,
     formattedDocument,
     fixesApplied: violations.filter((v) => v.autoFixable).length,
+    wasTruncated,
+    originalPageCount,
+    fullMarkedOriginal,
+    fullFormattedDocument,
   };
 }

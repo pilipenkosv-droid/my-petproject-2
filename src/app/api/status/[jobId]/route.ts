@@ -37,6 +37,7 @@ export async function GET(
     error: job.error,
     statistics: job.statistics,
     violationsCount: job.violations?.length ?? 0,
+    hasFullVersion: job.hasFullVersion,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   });

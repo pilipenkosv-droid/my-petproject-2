@@ -49,6 +49,9 @@ export interface JobState {
   markedOriginalId?: string;
   formattedDocumentId?: string;
 
+  // Флаг наличия полной версии (для trial, разблокируется после оплаты)
+  hasFullVersion?: boolean;
+
   // Ошибка (если status === "failed")
   error?: string;
 
@@ -73,6 +76,7 @@ function rowToJob(row: Record<string, unknown>): JobState {
       | undefined,
     markedOriginalId: row.marked_original_id as string | undefined,
     formattedDocumentId: row.formatted_document_id as string | undefined,
+    hasFullVersion: row.has_full_version as boolean | undefined,
     rules: row.rules as FormattingRules | undefined,
     violations: row.violations as FormattingViolation[] | undefined,
     statistics: row.statistics as DocumentStatistics | undefined,
@@ -104,6 +108,8 @@ function jobToRow(
     row.marked_original_id = updates.markedOriginalId;
   if (updates.formattedDocumentId !== undefined)
     row.formatted_document_id = updates.formattedDocumentId;
+  if (updates.hasFullVersion !== undefined)
+    row.has_full_version = updates.hasFullVersion;
   if (updates.rules !== undefined) row.rules = updates.rules;
   if (updates.violations !== undefined) row.violations = updates.violations;
   if (updates.statistics !== undefined) row.statistics = updates.statistics;
@@ -216,6 +222,7 @@ export async function completeJob(
     violations: FormattingViolation[];
     statistics: DocumentStatistics;
     rules: FormattingRules;
+    hasFullVersion?: boolean;
   }
 ): Promise<JobState | null> {
   return updateJob(id, {

@@ -211,3 +211,89 @@ export async function getResultFile(
   const arrayBuffer = await data.arrayBuffer();
   return Buffer.from(arrayBuffer);
 }
+
+/**
+ * Сохранить полную версию результата (до обрезки) для trial пользователей
+ * Эти файлы становятся доступны после оплаты
+ */
+export async function saveFullVersionFile(
+  jobId: string,
+  type: "original" | "formatted",
+  buffer: Buffer
+): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  const storagePath = `${jobId}/${type}_full.docx`;
+
+  const { error } = await supabase.storage
+    .from("results")
+    .upload(storagePath, buffer, {
+      contentType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      upsert: true,
+    });
+
+  if (error) {
+    console.error("[file-storage] Failed to save full version file:", error);
+    throw new Error(`Failed to save full version file: ${error.message}`);
+  }
+
+  return storagePath;
+}
+
+/**
+ * Получить полную версию результата (bucket: results)
+ */
+export async function getFullVersionFile(
+  jobId: string,
+  type: "original" | "formatted"
+): Promise<Buffer | null> {
+  const supabase = getSupabaseAdmin();
+  const storagePath = `${jobId}/${type}_full.docx`;
+
+  const { data, error } = await supabase.storage
+    .from("results")
+    .download(storagePath);
+
+  if (error || !data) {
+    console.error(
+      `[file-storage] Full version file not found: ${storagePath}`,
+      error
+    );
+    return null;
+  }
+
+  const arrayBuffer = await data.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+/**
+ * Разблокировать полную версию (скопировать из _full в основной файл)
+ */
+export async function unlockFullVersion(
+  jobId: string,
+  type: "original" | "formatted"
+): Promise<boolean> {
+  const fullBuffer = await getFullVersionFile(jobId, type);
+  if (!fullBuffer) {
+    console.error(`[file-storage] No full version to unlock for ${jobId}/${type}`);
+    return false;
+  }
+
+  await saveResultFile(jobId, type, fullBuffer);
+  console.log(`[file-storage] Unlocked full version: ${jobId}/${type}`);
+  return true;
+}
+
+/**
+ * Проверить, есть ли полная версия файла
+ */
+export async function hasFullVersion(jobId: string): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+  const storagePath = `${jobId}/formatted_full.docx`;
+
+  const { data, error } = await supabase.storage
+    .from("results")
+    .download(storagePath);
+
+  return !error && !!data;
+}

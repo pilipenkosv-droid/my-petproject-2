@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown, Gift, HelpCircle } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Gift, HelpCircle, FileCheck } from "lucide-react";
 import Link from "next/link";
 
 const plans = [
@@ -62,10 +62,14 @@ const plans = [
   },
 ];
 
-export default function PricingPage() {
+function PricingContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Если есть параметр unlock — пользователь пришёл разблокировать полную версию документа
+  const unlockJobId = searchParams.get("unlock");
 
   const handlePurchase = async (offerType: "trial" | "one_time" | "subscription") => {
     if (offerType === "trial") {
@@ -74,7 +78,8 @@ export default function PricingPage() {
     }
 
     if (!user) {
-      router.push("/login?redirect=/pricing");
+      const redirectUrl = unlockJobId ? `/pricing?unlock=${unlockJobId}` : "/pricing";
+      router.push(`/login?redirect=${encodeURIComponent(redirectUrl)}`);
       return;
     }
 
@@ -84,7 +89,11 @@ export default function PricingPage() {
       const res = await fetch("/api/payment/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offerType }),
+        body: JSON.stringify({
+          offerType,
+          // Передаём jobId для разблокировки после оплаты
+          ...(unlockJobId && { unlockJobId }),
+        }),
       });
 
       const data = await res.json();
@@ -92,7 +101,11 @@ export default function PricingPage() {
       if (data.paymentUrl && data.invoiceId) {
         // Открываем оплату в новой вкладке, а текущую перенаправляем на страницу ожидания
         window.open(data.paymentUrl, "_blank");
-        router.push(`/payment/success?invoiceId=${data.invoiceId}`);
+        // Если разблокируем конкретный документ — передаём jobId на страницу успеха
+        const successUrl = unlockJobId
+          ? `/payment/success?invoiceId=${data.invoiceId}&unlockJob=${unlockJobId}`
+          : `/payment/success?invoiceId=${data.invoiceId}`;
+        router.push(successUrl);
       } else {
         console.error("No payment URL:", data);
         alert("Не удалось создать платёж. Попробуйте снова.");
@@ -110,6 +123,23 @@ export default function PricingPage() {
       <Header showBack backHref="/" />
 
       <main className="mx-auto max-w-4xl px-6 py-16">
+        {/* Баннер разблокировки полной версии */}
+        {unlockJobId && (
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-500/30">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shrink-0">
+                <FileCheck className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Разблокировка полной версии документа</p>
+                <p className="text-white/60 text-sm">
+                  После оплаты любого тарифа вы сразу получите доступ к полной версии вашего обработанного документа
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Заголовок */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
@@ -243,5 +273,25 @@ export default function PricingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen">
+        <Header showBack backHref="/" />
+        <main className="mx-auto max-w-4xl px-6 py-16">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-white/10 rounded w-48 mx-auto mb-4"></div>
+              <div className="h-4 bg-white/10 rounded w-64 mx-auto"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <PricingContent />
+    </Suspense>
   );
 }

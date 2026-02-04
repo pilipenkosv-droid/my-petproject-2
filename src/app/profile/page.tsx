@@ -6,7 +6,8 @@ import { getUserAccess } from "@/lib/payment/access";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard } from "lucide-react";
+import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, Sparkles } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
 
 export default async function ProfilePage() {
@@ -26,6 +27,21 @@ export default async function ProfilePage() {
 
   const completedJobs = jobs.filter((j) => j.status === "completed");
   const totalJobs = jobs.length;
+
+  // Вычисление оставшегося времени хранения (24 часа)
+  const getTimeRemaining = (createdAt: Date): string => {
+    const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const diff = expiresAt.getTime() - now.getTime();
+
+    if (diff <= 0) return "Истекло";
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) return `${hours}ч ${minutes}мин`;
+    return `${minutes}мин`;
+  };
 
   return (
     <main className="min-h-screen relative">
@@ -125,6 +141,16 @@ export default async function ProfilePage() {
           </div>
         )}
 
+        {/* Quick action button */}
+        <div className="mb-8 flex justify-end">
+          <Link href="/create">
+            <Button variant="glow">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Обработать документ
+            </Button>
+          </Link>
+        </div>
+
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card>
@@ -179,7 +205,7 @@ export default async function ProfilePage() {
                 {jobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-lg bg-white/5 border border-white/10"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Status icon */}
@@ -191,11 +217,11 @@ export default async function ProfilePage() {
                         <Clock className="h-5 w-5 text-yellow-400 shrink-0" />
                       )}
 
-                      <div className="min-w-0">
-                        <p className="text-sm text-white truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-white truncate max-w-[200px] sm:max-w-none">
                           {job.sourceOriginalName || "Документ"}
                         </p>
-                        <p className="text-xs text-white/40">
+                        <p className="text-xs text-white/40 truncate">
                           {job.createdAt.toLocaleDateString("ru-RU", {
                             day: "numeric",
                             month: "long",
@@ -204,20 +230,47 @@ export default async function ProfilePage() {
                             minute: "2-digit",
                           })}
                         </p>
+                        {job.status === "completed" && (
+                          <p className="text-xs text-amber-400/70 flex items-center gap-1 mt-0.5">
+                            <Clock className="h-3 w-3" />
+                            Осталось: {getTimeRemaining(job.createdAt)}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
                       {job.status === "completed" && (
                         <>
-                          {job.formattedDocumentId && (
-                            <Link href={`/api/download/${job.formattedDocumentId}`}>
-                              <Button variant="outline" size="sm">
-                                <Download className="h-3 w-3 mr-1" />
-                                Скачать
-                              </Button>
-                            </Link>
+                          {(job.formattedDocumentId || job.markedOriginalId) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Download className="h-3 w-3 mr-1" />
+                                  Скачать
+                                  <ChevronDown className="h-3 w-3 ml-1" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {job.formattedDocumentId && (
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/api/download/${job.formattedDocumentId}`} className="flex items-center">
+                                      <FileCheck className="h-4 w-4 mr-2 text-green-400" />
+                                      Исправленный документ
+                                    </Link>
+                                  </DropdownMenuItem>
+                                )}
+                                {job.markedOriginalId && (
+                                  <DropdownMenuItem asChild>
+                                    <Link href={`/api/download/${job.markedOriginalId}`} className="flex items-center">
+                                      <FileText className="h-4 w-4 mr-2 text-amber-400" />
+                                      С пометками (ошибки)
+                                    </Link>
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                           <Link href={`/result/${job.id}`}>
                             <Button variant="ghost" size="sm">

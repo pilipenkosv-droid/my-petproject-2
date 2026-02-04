@@ -20,7 +20,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus } from "lucide-react";
+import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, ChevronDown, Sparkles } from "lucide-react";
+import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/Logo";
 
 interface HeaderProps {
@@ -89,9 +90,36 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                <Link href="/">Главная</Link>
-              </NavigationMenuLink>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`${navigationMenuTriggerStyle()} flex items-center gap-1`}>
+                    Главная
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem asChild>
+                    <Link href="/">На главную</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-white/50">Типы работ</DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link href="/diplom">Дипломная работа</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/kursovaya">Курсовая работа</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/referat">Реферат</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/esse">Эссе</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/otchet-po-praktike">Отчёт по практике</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </NavigationMenuItem>
             {isLanding ? (
               <NavigationMenuItem>
@@ -129,7 +157,15 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           {isLoading ? (
             <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
           ) : user ? (
-            <DropdownMenu>
+            <>
+              {/* Кнопка "Начать" для авторизованных пользователей */}
+              <Link href="/create">
+                <Button variant="glow" size="sm">
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Начать</span>
+                </Button>
+              </Link>
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 transition-colors">
                   {isPro && (
@@ -161,6 +197,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login?mode=signup">
