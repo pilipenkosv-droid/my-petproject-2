@@ -119,8 +119,19 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Ошибка при обработке");
+        // При таймауте (504) или серверной ошибке тело может быть не JSON
+        let errorMessage = "Ошибка при обработке";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          if (response.status === 504) {
+            errorMessage = "Превышено время ожидания. Попробуйте ещё раз — сервер перегружен.";
+          } else if (response.status >= 500) {
+            errorMessage = `Ошибка сервера (${response.status}). Попробуйте позже.`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       // Let animation finish, then redirect

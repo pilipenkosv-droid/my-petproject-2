@@ -10,6 +10,21 @@ import OpenAI from "openai";
 import { ModelConfig, getAvailableModels } from "./model-registry";
 import { canUseModel, recordUsage, markModelFailed } from "./rate-limiter";
 
+// Таймаут для AI вызовов (15 секунд на модель, чтобы успеть попробовать несколько)
+const AI_CALL_TIMEOUT_MS = 15000;
+
+/**
+ * Обёртка для добавления таймаута к Promise
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, modelName: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${modelName} timeout after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 export interface GatewayRequest {
   /** Системный промпт */
   systemPrompt: string;
@@ -68,6 +83,7 @@ async function callOpenAICompatible(
   const clientOptions: ConstructorParameters<typeof OpenAI>[0] = {
     apiKey,
     baseURL: config.baseUrl,
+    timeout: AI_CALL_TIMEOUT_MS,
   };
 
   // OpenRouter требует дополнительные заголовки
@@ -257,10 +273,19 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
 
       let rawText: string;
 
+      // Оборачиваем вызов в таймаут для быстрого failover при 503/перегрузке
       if (model.protocol === "gemini") {
-        rawText = await callGemini(model, request);
+        rawText = await withTimeout(
+          callGemini(model, request),
+          AI_CALL_TIMEOUT_MS,
+          model.displayName
+        );
       } else {
-        rawText = await callOpenAICompatible(model, request);
+        rawText = await withTimeout(
+          callOpenAICompatible(model, request),
+          AI_CALL_TIMEOUT_MS,
+          model.displayName
+        );
       }
 
       const json = extractJson(rawText);
