@@ -60,6 +60,9 @@ Gateway автоматически использует модели с наст
 2. `migration-002-auth.sql` — расширения авторизации
 3. `migration-003-feedback.sql` — таблица feedback
 4. `migration-004-payments.sql` — таблицы payments, user_access
+5. `migration-005-rate-limits-rls.sql` — RLS для rate_limits
+6. `migration-006-jobs-has-full-version.sql` — поле has_full_version для hook-offer
+7. `migration-007-payments-unlock-job-id.sql` — поле unlock_job_id для hook-offer
 
 ### 3. Настройка Storage
 

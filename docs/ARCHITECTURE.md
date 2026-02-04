@@ -106,6 +106,7 @@
 | source_original_name | TEXT | Имя загруженного файла |
 | marked_original_id | TEXT | ID файла с пометками нарушений |
 | formatted_document_id | TEXT | ID отформатированного файла |
+| has_full_version | BOOLEAN | Флаг наличия полной версии (для hook-offer) |
 | rules | JSONB | Извлечённые правила форматирования |
 | violations | JSONB | Массив найденных нарушений |
 | statistics | JSONB | Статистика документа |
@@ -140,6 +141,7 @@
 | amount | DECIMAL | Сумма |
 | currency | TEXT | RUB |
 | status | TEXT | pending / completed / failed |
+| unlock_job_id | TEXT | ID задачи для разблокировки полной версии (hook-offer) |
 
 ### Таблица `feedback`
 
@@ -163,12 +165,26 @@ CSAT-отзывы пользователей.
 | minute_requests | INTEGER | Запросов в текущей минуте |
 | day_requests | INTEGER | Запросов за день |
 
+**Row Level Security (RLS):** Таблица защищена RLS с политикой доступа только для service_role. Пользователи не имеют прямого доступа к rate_limits.
+
 ### Supabase Storage
 
 | Бакет | Доступ | Содержимое |
 |-------|--------|------------|
 | documents | private | Загруженные пользователями файлы |
-| results | private | Обработанные документы |
+| results | private | Обработанные документы (+ полные версии для hook-offer: `*_full.docx`) |
+
+## Hook-Offer для trial пользователей
+
+При обработке документа trial-пользователем с документом >30 страниц:
+
+1. Документ форматируется полностью (все страницы)
+2. Полные версии сохраняются в Storage (`{jobId}/original_full.docx`, `{jobId}/formatted_full.docx`)
+3. Результаты обрезаются до 30 страниц для скачивания
+4. Устанавливается флаг `has_full_version = true` в таблице `jobs`
+5. На странице результата показывается предложение купить тариф
+6. При оплате передаётся `unlock_job_id` в payment
+7. После успешной оплаты webhook разблокирует полные версии (копирует `*_full.docx` → `*.docx`)
 
 ## Аутентификация
 
@@ -225,3 +241,6 @@ CSAT-отзывы пользователей.
 | migration-002-auth.sql | Расширения авторизации |
 | migration-003-feedback.sql | feedback |
 | migration-004-payments.sql | payments, user_access |
+| migration-005-rate-limits-rls.sql | RLS для rate_limits |
+| migration-006-jobs-has-full-version.sql | has_full_version для jobs |
+| migration-007-payments-unlock-job-id.sql | unlock_job_id для payments |
