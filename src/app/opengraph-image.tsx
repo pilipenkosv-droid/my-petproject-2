@@ -45,7 +45,7 @@ export default async function Image() {
         <svg
           width="1200"
           height="630"
-          viewBox="0 0 696 316"
+          viewBox="-400 -650 1500 1550"
           fill="none"
           style={{
             position: "absolute",
