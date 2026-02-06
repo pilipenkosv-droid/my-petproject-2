@@ -106,6 +106,11 @@ export function getArticleSchema(post: BlogPost) {
     datePublished: post.datePublished,
     dateModified: post.dateModified || post.datePublished,
     image: post.image || `${BASE_URL}/og-image.png`,
+    author: {
+      '@type': 'Organization',
+      name: 'SmartFormat',
+      url: BASE_URL,
+    },
     publisher: {
       '@type': 'Organization',
       name: 'SmartFormat',

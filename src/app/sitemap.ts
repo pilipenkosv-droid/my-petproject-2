@@ -1,15 +1,7 @@
 import { MetadataRoute } from 'next'
+import { getAllPosts } from '@/lib/blog/posts'
 
 const BASE_URL = 'https://ai-sformat.vercel.app'
-
-// Статьи блога (будут добавлены позже)
-const blogPosts = [
-  { slug: 'kak-oformit-diplom-po-gostu', date: '2025-01-15' },
-  { slug: 'trebovaniya-k-kursovoj-rabote', date: '2025-01-20' },
-  { slug: 'otstupy-i-intervaly-po-gostu', date: '2025-01-25' },
-  { slug: 'spisok-literatury-gost-7-1', date: '2025-01-28' },
-  { slug: 'formatirovanie-tablic-i-risunkov', date: '2025-02-01' },
-]
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString()
@@ -92,10 +84,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  // Статьи блога
-  const blogPostPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+  // Статьи блога (автоматически из posts.ts)
+  const allPosts = getAllPosts()
+  const blogPostPages: MetadataRoute.Sitemap = allPosts.map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
-    lastModified: post.date,
+    lastModified: post.dateModified || post.datePublished,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }))

@@ -43,6 +43,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       publishedTime: post.datePublished,
       modifiedTime: post.dateModified || post.datePublished,
       url: `https://ai-sformat.vercel.app/blog/${slug}`,
+      images: [{
+        url: `https://ai-sformat.vercel.app/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: post.title,
+      }],
     },
   };
 }
