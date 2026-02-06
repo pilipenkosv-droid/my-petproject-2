@@ -107,6 +107,12 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     <Link href="/diplom">Дипломная работа</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link href="/vkr">ВКР</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/magisterskaya">Магистерская диссертация</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/kursovaya">Курсовая работа</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
