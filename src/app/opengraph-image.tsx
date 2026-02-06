@@ -55,70 +55,15 @@ export default async function Image() {
             height: "100%",
           }}
         >
-          {/* Base beam grid */}
-          <path
-            d={ALL_BEAMS}
-            stroke="url(#beamsRadial)"
-            strokeOpacity="0.04"
-            strokeWidth="0.5"
-          />
+          {/* Base beam grid — visible subtle lines */}
+          <path d={ALL_BEAMS} stroke="#ffffff" strokeOpacity="0.06" strokeWidth="0.8" />
 
-          {/* Meteor 1 */}
-          <path d={BEAM_2} stroke="url(#m0)" strokeOpacity="0.4" strokeWidth="0.5" />
-          {/* Meteor 2 */}
-          <path d={BEAM_5} stroke="url(#m1)" strokeOpacity="0.35" strokeWidth="0.5" />
-          {/* Meteor 3 */}
-          <path d={BEAM_8} stroke="url(#m2)" strokeOpacity="0.4" strokeWidth="0.5" />
-          {/* Meteor 4 */}
-          <path d={BEAM_11} stroke="url(#m3)" strokeOpacity="0.3" strokeWidth="0.5" />
-          {/* Meteor 5 */}
-          <path d={BEAM_14} stroke="url(#m4)" strokeOpacity="0.35" strokeWidth="0.5" />
-
-          <defs>
-            <radialGradient
-              id="beamsRadial"
-              cx="0"
-              cy="0"
-              r="1"
-              gradientUnits="userSpaceOnUse"
-              gradientTransform="translate(352 34) rotate(90) scale(555 1560)"
-            >
-              <stop offset="0.067" stopColor="#d4d4d4" />
-              <stop offset="0.243" stopColor="#d4d4d4" />
-              <stop offset="0.436" stopColor="white" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Meteor gradients */}
-            <linearGradient id="m0" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="20%" stopColor="#18CCFC" stopOpacity="0" />
-              <stop offset="28%" stopColor="#6344F5" />
-              <stop offset="32%" stopColor="#AE48FF" stopOpacity="0" />
-            </linearGradient>
-
-            <linearGradient id="m1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="40%" stopColor="#18CCFC" stopOpacity="0" />
-              <stop offset="50%" stopColor="#6344F5" />
-              <stop offset="55%" stopColor="#AE48FF" stopOpacity="0" />
-            </linearGradient>
-
-            <linearGradient id="m2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="10%" stopColor="#18CCFC" stopOpacity="0" />
-              <stop offset="18%" stopColor="#6344F5" />
-              <stop offset="22%" stopColor="#AE48FF" stopOpacity="0" />
-            </linearGradient>
-
-            <linearGradient id="m3" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="55%" stopColor="#18CCFC" stopOpacity="0" />
-              <stop offset="63%" stopColor="#6344F5" />
-              <stop offset="68%" stopColor="#AE48FF" stopOpacity="0" />
-            </linearGradient>
-
-            <linearGradient id="m4" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="32%" stopColor="#18CCFC" stopOpacity="0" />
-              <stop offset="38%" stopColor="#6344F5" />
-              <stop offset="41%" stopColor="#AE48FF" stopOpacity="0" />
-            </linearGradient>
-          </defs>
+          {/* Bright meteor streaks on individual beams */}
+          <path d={BEAM_2} stroke="#6344F5" strokeOpacity="0.5" strokeWidth="1.5" />
+          <path d={BEAM_5} stroke="#8B5CF6" strokeOpacity="0.35" strokeWidth="1.2" />
+          <path d={BEAM_8} stroke="#18CCFC" strokeOpacity="0.4" strokeWidth="1.3" />
+          <path d={BEAM_11} stroke="#AE48FF" strokeOpacity="0.3" strokeWidth="1" />
+          <path d={BEAM_14} stroke="#6344F5" strokeOpacity="0.45" strokeWidth="1.4" />
         </svg>
 
         {/* Subtle background glow */}
