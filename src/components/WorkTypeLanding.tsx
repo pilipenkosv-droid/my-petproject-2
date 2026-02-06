@@ -8,7 +8,7 @@ import {
   ArrowRight,
   FileText,
   Clock,
-  Shield,
+  ShieldCheck,
   ChevronRight,
 } from "lucide-react";
 
@@ -155,9 +155,10 @@ export function WorkTypeLanding({
               <p className="text-white/50 text-sm">Обработка за 3-5 минут</p>
             </div>
             <div className="bg-white/5 rounded-xl border border-white/10 p-5 text-center">
-              <Shield className="w-8 h-8 text-violet-400 mx-auto mb-3" />
-              <h3 className="font-medium text-white mb-1">Безопасно</h3>
-              <p className="text-white/50 text-sm">Файлы удаляются через 24ч</p>
+              <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
+              <h3 className="font-medium text-white mb-2">Безопасно</h3>
+              <p className="text-white/50 text-sm mb-1">Не попадает в Антиплагиат</p>
+              <p className="text-white/30 text-xs">Файлы удаляются через 24ч</p>
             </div>
             <div className="bg-white/5 rounded-xl border border-white/10 p-5 text-center">
               <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />

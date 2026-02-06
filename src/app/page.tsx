@@ -5,7 +5,7 @@ import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { FileText, Sparkles, Zap, Download } from "lucide-react";
+import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 export default function LandingPage() {
@@ -195,6 +195,39 @@ export default function LandingPage() {
                 <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">{pain}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Безопасность от антиплагиата */}
+      <section className="relative py-16 px-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent rounded-2xl border border-emerald-500/20 p-8 md:p-10">
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <ShieldCheck className="w-7 h-7 text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                  Не попадает в базы антиплагиата
+                </h2>
+                <p className="text-white/60 mb-4 leading-relaxed max-w-2xl">
+                  SmartFormat — сервис форматирования, не система проверки.
+                  Мы используем Google Gemini и Groq для анализа методички, но не имеем
+                  доступа к Антиплагиат.ВУЗ и не передаём документы в университетские базы.
+                  Оригинальность вашей работы не изменится.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/blog/bezopasnost-antiplagiat"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                  >
+                    Подробнее о безопасности
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
