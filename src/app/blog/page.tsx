@@ -6,6 +6,7 @@ import { getBreadcrumbSchema } from "@/lib/seo/schemas";
 import { getAllPosts } from "@/lib/blog/posts";
 import { BookOpen, Clock, ArrowRight, Sparkles } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { ShareButtons } from "@/components/ShareButtons";
 
 export const metadata: Metadata = {
   title: "Блог — статьи об оформлении научных работ по ГОСТу",
@@ -53,36 +54,47 @@ export default function BlogPage() {
         {/* Список статей */}
         <div className="space-y-6 mb-12">
           {posts.map((post) => (
-            <Link
+            <div
               key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="block bg-white/5 rounded-xl border border-white/10 p-6 hover:bg-white/10 hover:border-violet-500/30 transition-all group"
+              className="relative bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-violet-500/30 transition-all group"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors">
-                    {post.title}
-                  </h2>
-                  <p className="text-white/60 text-sm mb-4 line-clamp-2">
-                    {post.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-white/40 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {post.readingTime}
-                    </span>
-                    <span>
-                      {new Date(post.datePublished).toLocaleDateString("ru-RU", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </span>
+              <Link
+                href={`/blog/${post.slug}`}
+                className="block p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors">
+                      {post.title}
+                    </h2>
+                    <p className="text-white/60 text-sm mb-4 line-clamp-2 pr-8">
+                      {post.description}
+                    </p>
+                    <div className="flex items-center gap-4 text-white/40 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {post.readingTime}
+                      </span>
+                      <span>
+                        {new Date(post.datePublished).toLocaleDateString("ru-RU", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
                   </div>
+                  <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-violet-400 transition-colors shrink-0 mt-1" />
                 </div>
-                <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-violet-400 transition-colors shrink-0 mt-1" />
+              </Link>
+              <div className="absolute bottom-4 right-4">
+                <ShareButtons
+                  variant="compact"
+                  url={`https://ai-sformat.vercel.app/blog/${post.slug}`}
+                  title={post.title}
+                />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
 

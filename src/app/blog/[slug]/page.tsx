@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getBreadcrumbSchema, getArticleSchema } from "@/lib/seo/schemas";
 import { getPostBySlug, getAllPosts } from "@/lib/blog/posts";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -134,7 +135,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </article>
 
         {/* Теги */}
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="flex flex-wrap gap-2">
             {post.keywords.map((keyword) => (
               <span
@@ -145,6 +146,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </span>
             ))}
           </div>
+        </div>
+
+        {/* Поделиться */}
+        <div className="mb-12">
+          <div className="text-white/40 text-xs uppercase tracking-wider mb-3">
+            Поделиться статьёй
+          </div>
+          <ShareButtons
+            url={`https://ai-sformat.vercel.app/blog/${slug}`}
+            title={post.title}
+            description={post.description}
+          />
         </div>
 
         {/* Навигация между статьями */}
