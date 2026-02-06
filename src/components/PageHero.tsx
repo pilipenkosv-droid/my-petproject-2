@@ -12,7 +12,7 @@ interface PageHeroProps {
 
 export function PageHero({ badge, title, subtitle, children }: PageHeroProps) {
   return (
-    <div className="relative overflow-hidden border-b border-white/5">
+    <div className="relative overflow-hidden">
       <div className="relative z-10 mx-auto max-w-4xl px-6 pt-16 pb-12 text-center">
         {badge}
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
@@ -25,7 +25,7 @@ export function PageHero({ badge, title, subtitle, children }: PageHeroProps) {
         )}
         {children}
       </div>
-      <BackgroundBeams className="opacity-40" />
+      <BackgroundBeams />
     </div>
   );
 }
