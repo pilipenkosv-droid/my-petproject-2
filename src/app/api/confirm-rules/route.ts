@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
-import { getFile } from "@/lib/storage/file-storage";
-import { saveResultFile } from "@/lib/storage/file-storage";
+import { getFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
-import { formatDocument } from "@/lib/pipeline/document-formatter";
+import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
+import { getUserAccess } from "@/lib/payment/access";
+import { LAVA_CONFIG } from "@/lib/payment/config";
 
 export const maxDuration = 60;
 
@@ -49,6 +50,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Определяем тип доступа пользователя для обрезки trial
+    let userAccessType: AccessType = "trial";
+    if (job.userId) {
+      const access = await getUserAccess(job.userId);
+      userAccessType = access.accessType;
+    }
+    // Анонимные (userId === null) остаются "trial"
+
     // Используем обновлённые правила или сохранённые ранее
     const rules = updatedRules || job.rules;
     if (!rules) {
@@ -82,27 +91,50 @@ export async function POST(request: NextRequest) {
     await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
     // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs);
+    // Для trial — обрезка до 30 страниц происходит ПОСЛЕ форматирования
+    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs, userAccessType);
 
     await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
-    // Сохраняем результаты
+    // Сохраняем результаты (обрезанные для trial)
     await saveResultFile(jobId, "original", formattingResult.markedOriginal);
     await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
+
+    // Если есть полные версии (trial с обрезкой) — сохраняем их для разблокировки после оплаты
+    let hasFullVersion = false;
+    if (formattingResult.fullMarkedOriginal && formattingResult.fullFormattedDocument) {
+      await Promise.all([
+        saveFullVersionFile(jobId, "original", formattingResult.fullMarkedOriginal),
+        saveFullVersionFile(jobId, "formatted", formattingResult.fullFormattedDocument),
+      ]);
+      hasFullVersion = true;
+      console.log(`[confirm-rules] Saved full versions for job ${jobId} (hook-offer)`);
+    }
+
+    // Добавляем информацию об обрезке в статистику (если была)
+    const statistics = {
+      ...analysisResult.statistics,
+      ...(formattingResult.wasTruncated && {
+        wasTruncated: true,
+        originalPageCount: formattingResult.originalPageCount,
+        pageLimitApplied: LAVA_CONFIG.freeTrialMaxPages,
+      }),
+    };
 
     // Завершаем задачу
     await completeJob(jobId, {
       markedOriginalId: `${jobId}_original`,
       formattedDocumentId: `${jobId}_formatted`,
       violations: analysisResult.violations,
-      statistics: analysisResult.statistics,
+      statistics,
       rules,
+      ...(hasFullVersion && { hasFullVersion: true }),
     });
 
     return NextResponse.json({
       jobId,
       status: "completed",
-      statistics: analysisResult.statistics,
+      statistics,
       violationsCount: analysisResult.violations.length,
     });
 
