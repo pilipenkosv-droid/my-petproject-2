@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { getBreadcrumbSchema } from "@/lib/seo/schemas";
 import { getAllPosts } from "@/lib/blog/posts";
 import { BookOpen, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { PageHero } from "@/components/PageHero";
 
 export const metadata: Metadata = {
   title: "Блог — статьи об оформлении научных работ по ГОСТу",
@@ -36,21 +37,18 @@ export default function BlogPage() {
         ])}
       />
 
-      <main className="mx-auto max-w-4xl px-6 py-16">
-        {/* Заголовок */}
-        <div className="text-center mb-12">
+      <PageHero
+        badge={
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
             <BookOpen className="w-4 h-4" />
             Блог
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Статьи об оформлении научных работ
-          </h1>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
-            Полезные материалы о форматировании по ГОСТу, требованиях вузов и
-            правилах оформления
-          </p>
-        </div>
+        }
+        title="Статьи об оформлении научных работ"
+        subtitle="Полезные материалы о форматировании по ГОСТу, требованиях вузов и правилах оформления"
+      />
+
+      <main className="mx-auto max-w-4xl px-6 py-12">
 
         {/* Список статей */}
         <div className="space-y-6 mb-12">

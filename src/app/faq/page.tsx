@@ -14,6 +14,7 @@ import {
   BookOpen,
   ChevronRight,
 } from "lucide-react";
+import { PageHero } from "@/components/PageHero";
 
 export const metadata: Metadata = {
   title: "Вопросы и ответы — SmartFormat",
@@ -296,21 +297,18 @@ export default function FAQPage() {
         ])}
       />
 
-      <main className="mx-auto max-w-4xl px-6 py-16">
-        {/* Заголовок */}
-        <div className="text-center mb-12">
+      <PageHero
+        badge={
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
             <HelpCircle className="w-4 h-4" />
             FAQ
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Вопросы и ответы
-          </h1>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
-            Всё, что нужно знать о форматировании научных работ по ГОСТу и
-            работе сервиса SmartFormat
-          </p>
-        </div>
+        }
+        title="Вопросы и ответы"
+        subtitle="Всё, что нужно знать о форматировании научных работ по ГОСТу и работе сервиса SmartFormat"
+      />
+
+      <main className="mx-auto max-w-4xl px-6 py-12">
 
         {/* Быстрые ссылки на категории */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">

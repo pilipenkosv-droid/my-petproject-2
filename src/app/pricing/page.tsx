@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Zap, Crown, Gift, HelpCircle, FileCheck } from "lucide-react";
 import Link from "next/link";
+import { PageHero } from "@/components/PageHero";
 
 const plans = [
   {
@@ -122,7 +123,18 @@ function PricingContent() {
     <div className="min-h-screen">
       <Header showBack backHref="/" />
 
-      <main className="mx-auto max-w-4xl px-6 py-16">
+      <PageHero
+        badge={
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+            <Sparkles className="w-4 h-4" />
+            Тарифы
+          </div>
+        }
+        title="Выберите подходящий тариф"
+        subtitle="Автоматическое оформление курсовых и дипломов по ГОСТу и требованиям вашего вуза"
+      />
+
+      <main className="mx-auto max-w-4xl px-6 py-12">
         {/* Баннер разблокировки полной версии */}
         {unlockJobId && (
           <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-500/30">
@@ -139,20 +151,6 @@ function PricingContent() {
             </div>
           </div>
         )}
-
-        {/* Заголовок */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
-            <Sparkles className="w-4 h-4" />
-            Тарифы
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Выберите подходящий тариф
-          </h1>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
-            Автоматическое оформление курсовых и дипломов по ГОСТу и требованиям вашего вуза
-          </p>
-        </div>
 
         {/* Тарифные карточки */}
         <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">

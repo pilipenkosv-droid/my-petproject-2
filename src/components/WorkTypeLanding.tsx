@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ChevronRight,
 } from "lucide-react";
+import { PageHero } from "@/components/PageHero";
 
 export interface WorkTypeFAQ {
   question: string;
@@ -60,27 +61,26 @@ export function WorkTypeLanding({
       />
       <JsonLd data={getFAQPageSchema(faqs)} />
 
-      <main className="mx-auto max-w-4xl px-6 py-16">
-        {/* Hero секция */}
-        <div className="text-center mb-12">
+      <PageHero
+        badge={
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
             <FileText className="w-4 h-4" />
             {type}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            {title}
-          </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto mb-8">
-            {subtitle}
-          </p>
-          <Link
-            href="/create"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors text-lg"
-          >
-            Отформатировать бесплатно
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
+        }
+        title={title}
+        subtitle={subtitle}
+      >
+        <Link
+          href="/create"
+          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors text-lg mt-8"
+        >
+          Отформатировать бесплатно
+          <ArrowRight className="w-5 h-5" />
+        </Link>
+      </PageHero>
+
+      <main className="mx-auto max-w-4xl px-6 py-12">
 
         {/* Описание */}
         <section className="mb-12">
