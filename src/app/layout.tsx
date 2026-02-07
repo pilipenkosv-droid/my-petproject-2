@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
@@ -64,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -76,9 +77,11 @@ export default function RootLayout({
         <JsonLd data={getSoftwareApplicationSchema()} />
       </head>
       <body className="min-h-screen antialiased">
-        <AuthProvider initialSession={null}>
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider initialSession={null}>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

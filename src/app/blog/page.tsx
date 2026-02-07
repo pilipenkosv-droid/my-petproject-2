@@ -40,7 +40,7 @@ export default function BlogPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-primary text-sm mb-6">
             <BookOpen className="w-4 h-4" />
             Блог
           </div>
@@ -56,7 +56,7 @@ export default function BlogPage() {
           {posts.map((post) => (
             <div
               key={post.slug}
-              className="relative bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-violet-500/30 transition-all group"
+              className="relative bg-surface rounded-xl border border-surface-border hover:bg-surface-hover hover:border-violet-500/30 transition-all group"
             >
               <Link
                 href={`/blog/${post.slug}`}
@@ -64,13 +64,13 @@ export default function BlogPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-400 transition-colors">
+                    <h2 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                       {post.title}
                     </h2>
-                    <p className="text-white/60 text-sm mb-4 line-clamp-2 pr-8">
+                    <p className="text-on-surface-muted text-sm mb-4 line-clamp-2 pr-8">
                       {post.description}
                     </p>
-                    <div className="flex items-center gap-4 text-white/40 text-sm">
+                    <div className="flex items-center gap-4 text-muted-foreground text-sm">
                       <span className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         {post.readingTime}
@@ -84,7 +84,7 @@ export default function BlogPage() {
                       </span>
                     </div>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-violet-400 transition-colors shrink-0 mt-1" />
+                  <ArrowRight className="w-5 h-5 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 mt-1" />
                 </div>
               </Link>
               <div className="absolute bottom-4 right-4">
@@ -100,7 +100,7 @@ export default function BlogPage() {
 
         {/* Категории / Теги */}
         <div className="mb-12">
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
             Популярные темы
           </h2>
           <div className="flex flex-wrap gap-3">
@@ -114,7 +114,7 @@ export default function BlogPage() {
             ].map((tag) => (
               <span
                 key={tag}
-                className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm"
+                className="px-4 py-2 rounded-full bg-surface border border-surface-border text-on-surface-muted text-sm"
               >
                 {tag}
               </span>
@@ -125,11 +125,11 @@ export default function BlogPage() {
         {/* CTA */}
         <div className="text-center">
           <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
-            <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Не хотите разбираться в ГОСТах?
             </h2>
-            <p className="text-white/60 mb-6">
+            <p className="text-on-surface-muted mb-6">
               SmartFormat автоматически оформит работу по методичке вашего вуза
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -142,7 +142,7 @@ export default function BlogPage() {
               </Link>
               <Link
                 href="/faq"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 Частые вопросы
               </Link>

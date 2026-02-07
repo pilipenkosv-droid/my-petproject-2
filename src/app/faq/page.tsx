@@ -342,7 +342,7 @@ export default function FAQPage() {
               <a
                 key={category.id}
                 href={`#${category.id}`}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-colors text-sm"
               >
                 <Icon className="w-4 h-4" />
                 {category.title}
@@ -361,7 +361,7 @@ export default function FAQPage() {
                   <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
                     <Icon className="w-5 h-5 text-violet-400" />
                   </div>
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-foreground">
                     {category.title}
                   </h2>
                 </div>
@@ -370,7 +370,7 @@ export default function FAQPage() {
                   <div className="mb-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                      <p className="text-sm text-white/70">
+                      <p className="text-sm text-on-surface-muted">
                         <span className="text-emerald-300 font-medium">
                           SmartFormat не связан с системами антиплагиата.
                         </span>{" "}
@@ -385,16 +385,16 @@ export default function FAQPage() {
                   {category.questions.map((item, index) => (
                     <details
                       key={index}
-                      className="group bg-white/5 rounded-xl border border-white/10 overflow-hidden"
+                      className="group bg-surface rounded-xl border border-surface-border overflow-hidden"
                     >
-                      <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                        <h3 className="font-medium text-white pr-4">
+                      <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface transition-colors">
+                        <h3 className="font-medium text-foreground pr-4">
                           {item.question}
                         </h3>
-                        <ChevronRight className="w-5 h-5 text-white/40 shrink-0 transition-transform group-open:rotate-90" />
+                        <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 transition-transform group-open:rotate-90" />
                       </summary>
                       <div className="px-5 pb-5 pt-0">
-                        <p className="text-white/70 leading-relaxed">
+                        <p className="text-on-surface-muted leading-relaxed">
                           {item.answer}
                         </p>
                       </div>
@@ -410,10 +410,10 @@ export default function FAQPage() {
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
             <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Остались вопросы?
             </h2>
-            <p className="text-white/60 mb-6">
+            <p className="text-on-surface-muted mb-6">
               Попробуйте сервис бесплатно — первый документ форматируется без
               оплаты
             </p>
@@ -426,7 +426,7 @@ export default function FAQPage() {
               </Link>
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 Посмотреть тарифы
               </Link>

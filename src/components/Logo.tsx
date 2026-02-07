@@ -162,12 +162,12 @@ export function Logo({
         {variant === "light" ? (
           <>
             <span className="gradient-text">Smart</span>
-            <span className="text-gray-900">Format</span>
+            <span className="text-foreground">Format</span>
           </>
         ) : (
           <>
             <span className="gradient-text">Smart</span>
-            <span className="text-white">Format</span>
+            <span className="text-foreground">Format</span>
           </>
         )}
       </span>

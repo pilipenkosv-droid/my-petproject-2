@@ -127,7 +127,7 @@ function LoginForm() {
       {/* Back link */}
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-on-surface-subtle hover:text-foreground mb-6 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         На главную
@@ -137,7 +137,7 @@ function LoginForm() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
             <span className="gradient-text">Smart</span>
-            <span className="text-white">Format</span>
+            <span className="text-foreground">Format</span>
           </CardTitle>
           <CardDescription>
             {mode === "login"
@@ -191,7 +191,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                  className="text-violet-400 hover:text-violet-300 underline"
+                  className="text-primary hover:text-primary/80 underline"
                 >
                   Вернуться ко входу
                 </button>
@@ -210,11 +210,10 @@ function LoginForm() {
                 Войти через Google
               </Button>
 
-              <div className="relative">
-                <Separator />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                  или
-                </span>
+              <div className="flex items-center gap-3">
+                <Separator className="flex-1" />
+                <span className="text-xs text-muted-foreground">или</span>
+                <Separator className="flex-1" />
               </div>
 
               {/* Email/Password form */}
@@ -239,7 +238,7 @@ function LoginForm() {
                       <button
                         type="button"
                         onClick={() => { setMode("forgotPassword"); setError(""); setMessage(""); }}
-                        className="text-xs text-violet-400 hover:text-violet-300"
+                        className="text-xs text-primary hover:text-primary/80"
                       >
                         Забыли пароль?
                       </button>
@@ -287,7 +286,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
-                      className="text-violet-400 hover:text-violet-300 underline"
+                      className="text-primary hover:text-primary/80 underline"
                     >
                       Зарегистрироваться
                     </button>
@@ -298,7 +297,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                      className="text-violet-400 hover:text-violet-300 underline"
+                      className="text-primary hover:text-primary/80 underline"
                     >
                       Войти
                     </button>

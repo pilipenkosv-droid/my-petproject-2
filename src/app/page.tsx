@@ -35,7 +35,7 @@ export default function LandingPage() {
           <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '4s' }} />
           
           {/* Floating geometric shapes */}
-          <div className="absolute top-32 right-1/4 w-20 h-20 border border-white/20 rounded-2xl rotate-12 animate-float" />
+          <div className="absolute top-32 right-1/4 w-20 h-20 border border-surface-border rounded-2xl rotate-12 animate-float" />
           <div className="absolute bottom-40 left-20 w-16 h-16 border border-violet-400/30 rounded-full animate-float-slow" />
           <div className="absolute top-1/2 right-10 w-12 h-12 bg-gradient-to-br from-violet-500/20 to-indigo-500/20 rounded-xl rotate-45 animate-float" style={{ animationDelay: '1s' }} />
         </div>
@@ -43,9 +43,9 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           {/* Badge */}
           <BlurFade delay={0.1} inView>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border backdrop-blur-sm mb-8">
               <Sparkles className="w-4 h-4 text-violet-400" />
-              <span className="text-sm text-white/80">Powered by AI</span>
+              <span className="text-sm text-on-surface">Powered by AI</span>
             </div>
           </BlurFade>
           
@@ -55,7 +55,7 @@ export default function LandingPage() {
                 Smart
               </AuroraText>
               <Logo variant="dark" size={72} className="w-10 h-10 sm:w-[72px] sm:h-[72px]" />
-              <span className="text-white">Format</span>
+              <span className="text-foreground">Format</span>
               <sup className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-violet-600 to-indigo-600 text-white/90 leading-none shadow-[0_0_12px_rgba(139,92,246,0.4)]">
                 beta
               </sup>
@@ -63,13 +63,13 @@ export default function LandingPage() {
           </BlurFade>
           
           <BlurFade delay={0.3} inView>
-            <p className="text-xl sm:text-2xl text-white/70 mb-4 font-medium">
+            <p className="text-xl sm:text-2xl text-on-surface-muted mb-4 font-medium">
               Идеальное оформление научной работы по методичке
             </p>
           </BlurFade>
           
           <BlurFade delay={0.4} inView>
-            <p className="text-lg text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
               Загрузите курсовую или диплом в .docx и методичку вашего вуза —
               нейросеть автоматически оформит отступы, шрифты, заголовки и список литературы по ГОСТу.
             </p>
@@ -99,7 +99,7 @@ export default function LandingPage() {
             </h2>
           </BlurFade>
           <BlurFade delay={0.2} inView>
-            <p className="text-center text-white/50 mb-16 max-w-xl mx-auto">
+            <p className="text-center text-on-surface-subtle mb-16 max-w-xl mx-auto">
               Всего 4 простых шага до идеально оформленного документа
             </p>
           </BlurFade>
@@ -141,18 +141,18 @@ export default function LandingPage() {
             ].map((item) => (
               <BlurFade key={item.step} delay={item.delay} inView>
                 <div 
-                  className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] h-full"
+                  className="group relative p-6 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 hover:bg-surface-hover hover:border-surface-border hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] h-full"
                 >
                   <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
                     <item.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                  <p className="text-sm text-white/50 leading-relaxed">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-sm text-on-surface-subtle leading-relaxed">
                     {item.description}
                   </p>
                   
                   {/* Step number */}
-                  <div className="absolute top-4 right-4 text-5xl font-bold text-white/5 group-hover:text-white/10 transition-colors">
+                  <div className="absolute top-4 right-4 text-5xl font-bold text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
                     {item.step}
                   </div>
                 </div>
@@ -170,7 +170,7 @@ export default function LandingPage() {
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
             Забудьте о ручной настройке отступов и шрифтов
           </h2>
-          <p className="text-center text-white/50 mb-12 max-w-xl mx-auto">
+          <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
             Больше не нужно вручную искать ошибки форматирования — ИИ сделает это за вас
           </p>
           
@@ -187,12 +187,12 @@ export default function LandingPage() {
             ].map((pain, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/10 p-4 transition-all duration-300 hover:bg-red-500/5 hover:border-red-500/20 group"
+                className="flex items-start gap-3 rounded-xl bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-red-500/5 hover:border-red-500/20 group"
               >
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
                   <span className="text-red-400 text-sm">✕</span>
                 </div>
-                <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">{pain}</span>
+                <span className="text-sm text-on-surface-muted group-hover:text-foreground/90 transition-colors">{pain}</span>
               </div>
             ))}
           </div>
@@ -208,10 +208,10 @@ export default function LandingPage() {
                 <ShieldCheck className="w-7 h-7 text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
                   Не попадает в базы антиплагиата
                 </h2>
-                <p className="text-white/60 mb-4 leading-relaxed max-w-2xl">
+                <p className="text-on-surface-muted mb-4 leading-relaxed max-w-2xl">
                   SmartFormat — сервис форматирования, не система проверки.
                   Мы используем Google Gemini и Groq для анализа методички, но не имеем
                   доступа к Антиплагиат.ВУЗ и не передаём документы в университетские базы.
@@ -220,7 +220,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href="/blog/bezopasnost-antiplagiat"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-hover hover:bg-surface-hover text-foreground text-sm transition-colors"
                   >
                     Подробнее о безопасности
                     <ArrowRight className="w-4 h-4" />
@@ -239,13 +239,13 @@ export default function LandingPage() {
             {/* Gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-indigo-600/20 to-fuchsia-600/20" />
             <div className="absolute inset-0 backdrop-blur-xl" />
-            <div className="absolute inset-0 border border-white/10 rounded-3xl" />
+            <div className="absolute inset-0 border border-surface-border rounded-3xl" />
             
             <div className="relative text-center">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Готовы сэкономить время?
               </h2>
-              <p className="text-white/60 mb-8 max-w-md mx-auto">
+              <p className="text-on-surface-muted mb-8 max-w-md mx-auto">
                 Загрузите документ и методичку — получите идеально оформленную работу по ГОСТу
               </p>
               <Link href="/create" className="w-full sm:w-auto">
@@ -260,12 +260,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-6">
+      <footer className="border-t border-surface-border py-8 px-6">
         <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Logo variant="favicon" size={24} withText />
           </div>
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-muted-foreground">
             Сервис автоматического форматирования курсовых и дипломных работ по ГОСТу
           </p>
         </div>

@@ -124,7 +124,7 @@ export default function ConstructorPage() {
               <BlurFade inView>
                 <Card className="border-violet-500/30 bg-violet-500/10">
                   <CardContent className="pt-6 text-center">
-                    <p className="text-white mb-3">
+                    <p className="text-foreground mb-3">
                       Бесплатная попытка использована. Зарегистрируйтесь для продолжения.
                     </p>
                     <Button onClick={() => router.push("/login")}>
@@ -139,10 +139,10 @@ export default function ConstructorPage() {
             {/* Баннер: анонимный пользователь, триал доступен */}
             {!authLoading && !user && !trialBlocked && (
               <BlurFade inView>
-                <div className="text-center p-3 rounded-lg bg-white/5 border border-white/10">
-                  <p className="text-sm text-white/60">
-                    У вас <span className="text-violet-400 font-medium">1 бесплатная обработка</span> без регистрации (первые 30 страниц).{" "}
-                    <button onClick={() => router.push("/login")} className="text-violet-400 hover:text-violet-300 underline">
+                <div className="text-center p-3 rounded-lg bg-surface border border-surface-border">
+                  <p className="text-sm text-on-surface-muted">
+                    У вас <span className="text-primary font-medium">1 бесплатная обработка</span> без регистрации (первые 30 страниц).{" "}
+                    <button onClick={() => router.push("/login")} className="text-primary hover:text-primary/80 underline">
                       Войдите
                     </button>
                     {" "}для неограниченного доступа.
@@ -155,9 +155,9 @@ export default function ConstructorPage() {
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-3">
                 <span className="gradient-text">Загрузите</span>
-                <span className="text-white"> документы</span>
+                <span className="text-foreground"> документы</span>
               </h2>
-              <p className="text-white/50 max-w-md mx-auto">
+              <p className="text-on-surface-subtle max-w-md mx-auto">
                 Добавьте вашу научную работу и файл с требованиями к оформлению
               </p>
             </div>
@@ -235,7 +235,7 @@ export default function ConstructorPage() {
 
                 {/* Подсказка */}
                 {!canProcess && (sourceDoc.uploadedFile || requirementsDoc.uploadedFile) && (
-                  <p className="text-sm text-white/40">
+                  <p className="text-sm text-muted-foreground">
                     Загрузите оба документа для начала обработки
                   </p>
                 )}

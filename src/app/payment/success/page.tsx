@@ -73,10 +73,10 @@ function PaymentSuccessContent() {
         {state === "polling" && (
             <>
               <Loader2 className="w-16 h-16 text-violet-400 animate-spin mx-auto" />
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 Обрабатываем оплату...
               </h1>
-              <p className="text-white/60">
+              <p className="text-on-surface-muted">
                 Пожалуйста, подождите. Обычно это занимает несколько секунд.
                 <br />
                 Не закрывайте эту страницу.
@@ -87,10 +87,10 @@ function PaymentSuccessContent() {
           {state === "completed" && (
             <>
               <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 Оплата прошла успешно!
               </h1>
-              <p className="text-white/60">
+              <p className="text-on-surface-muted">
                 {offerType === "subscription"
                   ? "Подписка активирована. Безлимитные обработки уже доступны."
                   : "Обработка документа добавлена в ваш аккаунт."}
@@ -108,10 +108,10 @@ function PaymentSuccessContent() {
           {state === "failed" && (
             <>
               <XCircle className="w-16 h-16 text-red-400 mx-auto" />
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 Оплата не прошла
               </h1>
-              <p className="text-white/60">
+              <p className="text-on-surface-muted">
                 Платёж не был завершён. Попробуйте ещё раз или выберите другой способ оплаты.
               </p>
               <Button
@@ -127,10 +127,10 @@ function PaymentSuccessContent() {
           {state === "timeout" && (
             <>
               <Clock className="w-16 h-16 text-amber-400 mx-auto" />
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 Ожидание подтверждения
               </h1>
-              <p className="text-white/60">
+              <p className="text-on-surface-muted">
                 Платёж обрабатывается дольше обычного. Если деньги были списаны,
                 доступ активируется автоматически в течение нескольких минут.
               </p>

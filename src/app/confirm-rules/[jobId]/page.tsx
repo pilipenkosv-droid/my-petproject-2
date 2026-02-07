@@ -158,8 +158,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
         <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardContent className="py-12 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-white/50 mx-auto mb-4" />
-              <p className="text-white/50">Загрузка...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-on-surface-subtle mx-auto mb-4" />
+              <p className="text-on-surface-subtle">Загрузка...</p>
             </CardContent>
           </Card>
         </div>
@@ -202,7 +202,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
         <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
-              <CardTitle className="text-white/70">Данные не найдены</CardTitle>
+              <CardTitle className="text-on-surface-muted">Данные не найдены</CardTitle>
             </CardHeader>
             <CardContent>
               <Link href="/create">
@@ -283,9 +283,9 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
               </div>
               <h2 className="text-2xl font-bold mb-2">
                 <span className="gradient-text">Проверьте</span>
-                <span className="text-white"> требования к форматированию</span>
+                <span className="text-foreground"> требования к форматированию</span>
               </h2>
-              <p className="text-white/50 max-w-md mx-auto">
+              <p className="text-on-surface-subtle max-w-md mx-auto">
                 AI извлёк правила из вашей методички. Проверьте их и при необходимости скорректируйте перед обработкой документа.
               </p>
             </div>

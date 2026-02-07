@@ -121,12 +121,12 @@ export default function AboutPage() {
             <Sparkles className="w-4 h-4" />
             О сервисе
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
             Автоматическое форматирование
             <br />
             научных работ по ГОСТу
           </h1>
-          <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          <p className="text-on-surface-muted text-lg max-w-2xl mx-auto">
             SmartFormat использует искусственный интеллект для анализа
             методических указаний вашего вуза и автоматического применения
             требований к оформлению документа.
@@ -138,12 +138,12 @@ export default function AboutPage() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-white/5 rounded-xl border border-white/10 p-4 text-center"
+              className="bg-surface rounded-xl border border-surface-border p-4 text-center"
             >
-              <div className="text-2xl font-bold text-white mb-1">
+              <div className="text-2xl font-bold text-foreground mb-1">
                 {stat.value}
               </div>
-              <div className="text-white/50 text-sm">{stat.label}</div>
+              <div className="text-on-surface-subtle text-sm">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ export default function AboutPage() {
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <Target className="w-5 h-5 text-violet-400" />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Как это работает
             </h2>
           </div>
@@ -163,15 +163,15 @@ export default function AboutPage() {
             {howItWorks.map((item) => (
               <div
                 key={item.step}
-                className="bg-white/5 rounded-xl border border-white/10 p-6"
+                className="bg-surface rounded-xl border border-surface-border p-6"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 font-semibold shrink-0">
                     {item.step}
                   </div>
                   <div>
-                    <h3 className="font-medium text-white mb-2">{item.title}</h3>
-                    <p className="text-white/60 text-sm">{item.description}</p>
+                    <h3 className="font-medium text-foreground mb-2">{item.title}</h3>
+                    <p className="text-on-surface-muted text-sm">{item.description}</p>
                   </div>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function AboutPage() {
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-violet-400" />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Возможности сервиса
             </h2>
           </div>
@@ -196,15 +196,15 @@ export default function AboutPage() {
               return (
                 <div
                   key={index}
-                  className="bg-white/5 rounded-xl border border-white/10 p-6"
+                  className="bg-surface rounded-xl border border-surface-border p-6"
                 >
                   <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-violet-400" />
                   </div>
-                  <h3 className="font-medium text-white mb-2">
+                  <h3 className="font-medium text-foreground mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-white/60 text-sm">{feature.description}</p>
+                  <p className="text-on-surface-muted text-sm">{feature.description}</p>
                 </div>
               );
             })}
@@ -217,24 +217,24 @@ export default function AboutPage() {
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <Cpu className="w-5 h-5 text-violet-400" />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Технологии искусственного интеллекта
             </h2>
           </div>
 
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <p className="text-white/70 leading-relaxed mb-4">
+          <div className="bg-surface rounded-xl border border-surface-border p-6">
+            <p className="text-on-surface-muted leading-relaxed mb-4">
               SmartFormat использует современные языковые модели для анализа
               текстовых документов. Система способна понимать естественный язык
               методических указаний и извлекать из них конкретные параметры
               форматирования.
             </p>
-            <p className="text-white/70 leading-relaxed mb-4">
+            <p className="text-on-surface-muted leading-relaxed mb-4">
               В основе работы лежат модели GPT-4o, Claude и Gemini — в
               зависимости от типа задачи система выбирает оптимальный инструмент
               для достижения наилучшего результата.
             </p>
-            <p className="text-white/70 leading-relaxed">
+            <p className="text-on-surface-muted leading-relaxed">
               Такой подход позволяет обрабатывать даже нестандартные методички с
               необычными требованиями, которые невозможно было бы учесть в
               обычной программе с жёстко заданными правилами.
@@ -248,7 +248,7 @@ export default function AboutPage() {
             <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
               <FileText className="w-5 h-5 text-violet-400" />
             </div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-foreground">
               Поддерживаемые типы работ
             </h2>
           </div>
@@ -265,9 +265,9 @@ export default function AboutPage() {
               <Link
                 key={index}
                 href={item.href}
-                className="bg-white/5 rounded-xl border border-white/10 p-4 text-center hover:bg-white/10 hover:border-violet-500/30 transition-colors group"
+                className="bg-surface rounded-xl border border-surface-border p-4 text-center hover:bg-surface-hover hover:border-violet-500/30 transition-colors group"
               >
-                <span className="text-white/80 group-hover:text-white transition-colors">
+                <span className="text-on-surface group-hover:text-foreground transition-colors">
                   {item.name}
                 </span>
               </Link>
@@ -279,10 +279,10 @@ export default function AboutPage() {
         <div className="text-center">
           <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
             <Clock className="w-8 h-8 text-violet-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Готовы попробовать?
             </h2>
-            <p className="text-white/60 mb-6">
+            <p className="text-on-surface-muted mb-6">
               Первый документ форматируется бесплатно — оцените качество без
               рисков
             </p>
@@ -296,7 +296,7 @@ export default function AboutPage() {
               </Link>
               <Link
                 href="/faq"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 Частые вопросы
               </Link>

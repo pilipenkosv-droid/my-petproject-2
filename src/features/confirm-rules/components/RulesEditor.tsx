@@ -100,8 +100,8 @@ export function RulesEditor({
     const displayValue = value === undefined ? "—" : String(value);
 
     return (
-      <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-b-0">
-        <span className="text-sm text-white/70">{label}</span>
+      <div className="flex items-center justify-between py-2 border-b border-surface-border/50 last:border-b-0">
+        <span className="text-sm text-on-surface-muted">{label}</span>
         <div className="flex items-center gap-2">
           {isEditing ? (
             <>
@@ -109,7 +109,7 @@ export function RulesEditor({
                 <select
                   value={tempValue}
                   onChange={(e) => setTempValue(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm text-white"
+                  className="bg-surface-hover border border-surface-border rounded px-2 py-1 text-sm text-foreground"
                 >
                   <option value="true">Да</option>
                   <option value="false">Нет</option>
@@ -119,7 +119,7 @@ export function RulesEditor({
                   type={type === "number" ? "number" : "text"}
                   value={tempValue}
                   onChange={(e) => setTempValue(e.target.value)}
-                  className="w-32 bg-white/10 border border-white/20 rounded px-2 py-1 text-sm text-white"
+                  className="w-32 bg-surface-hover border border-surface-border rounded px-2 py-1 text-sm text-foreground"
                   autoFocus
                 />
               )}
@@ -138,13 +138,13 @@ export function RulesEditor({
             </>
           ) : (
             <>
-              <span className="text-sm font-medium text-white">{displayValue}</span>
+              <span className="text-sm font-medium text-foreground">{displayValue}</span>
               {value !== undefined && (
                 <button
                   onClick={() => startEditing(pathStr, value)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-1 hover:bg-surface-hover rounded transition-colors opacity-0 group-hover:opacity-100"
                 >
-                  <Edit2 className="h-3 w-3 text-white/50" />
+                  <Edit2 className="h-3 w-3 text-on-surface-subtle" />
                 </button>
               )}
             </>
@@ -164,21 +164,21 @@ export function RulesEditor({
     const isExpanded = expandedSections.has(id);
 
     return (
-      <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+      <div className="rounded-xl bg-surface border border-surface-border overflow-hidden">
         <button
           onClick={() => toggleSection(id)}
-          className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between p-4 hover:bg-surface transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
               {icon}
             </div>
-            <span className="font-medium text-white">{title}</span>
+            <span className="font-medium text-foreground">{title}</span>
           </div>
           {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-white/50" />
+            <ChevronDown className="h-5 w-5 text-on-surface-subtle" />
           ) : (
-            <ChevronRight className="h-5 w-5 text-white/50" />
+            <ChevronRight className="h-5 w-5 text-on-surface-subtle" />
           )}
         </button>
         {isExpanded && (
@@ -259,8 +259,8 @@ export function RulesEditor({
           "from-emerald-500 to-teal-600",
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-white/50 mb-2">Заголовок 1 уровня (главы)</p>
-              <div className="pl-3 border-l-2 border-white/10">
+              <p className="text-xs text-on-surface-subtle mb-2">Заголовок 1 уровня (главы)</p>
+              <div className="pl-3 border-l-2 border-surface-border">
                 {renderField("Размер (pt)", rules.headings.level1.fontSize, ["headings", "level1", "fontSize"], "number")}
                 {renderField("Жирный", rules.headings.level1.bold, ["headings", "level1", "bold"], "boolean")}
                 {renderField("Прописные", rules.headings.level1.uppercase, ["headings", "level1", "uppercase"], "boolean")}
@@ -268,16 +268,16 @@ export function RulesEditor({
               </div>
             </div>
             <div>
-              <p className="text-xs text-white/50 mb-2">Заголовок 2 уровня (разделы)</p>
-              <div className="pl-3 border-l-2 border-white/10">
+              <p className="text-xs text-on-surface-subtle mb-2">Заголовок 2 уровня (разделы)</p>
+              <div className="pl-3 border-l-2 border-surface-border">
                 {renderField("Размер (pt)", rules.headings.level2.fontSize, ["headings", "level2", "fontSize"], "number")}
                 {renderField("Жирный", rules.headings.level2.bold, ["headings", "level2", "bold"], "boolean")}
                 {renderField("Выравнивание", translateAlignment(rules.headings.level2.alignment), ["headings", "level2", "alignment"], "text")}
               </div>
             </div>
             <div>
-              <p className="text-xs text-white/50 mb-2">Заголовок 3 уровня (подразделы)</p>
-              <div className="pl-3 border-l-2 border-white/10">
+              <p className="text-xs text-on-surface-subtle mb-2">Заголовок 3 уровня (подразделы)</p>
+              <div className="pl-3 border-l-2 border-surface-border">
                 {renderField("Размер (pt)", rules.headings.level3.fontSize, ["headings", "level3", "fontSize"], "number")}
                 {renderField("Жирный", rules.headings.level3.bold, ["headings", "level3", "bold"], "boolean")}
                 {renderField("Курсив", rules.headings.level3.italic, ["headings", "level3", "italic"], "boolean")}
@@ -308,8 +308,8 @@ export function RulesEditor({
           <div className="space-y-4">
             {rules.specialElements.bibliography && (
               <div>
-                <p className="text-xs text-white/50 mb-2">Список литературы</p>
-                <div className="pl-3 border-l-2 border-white/10">
+                <p className="text-xs text-on-surface-subtle mb-2">Список литературы</p>
+                <div className="pl-3 border-l-2 border-surface-border">
                   {renderField("Заголовок", rules.specialElements.bibliography.title, ["specialElements", "bibliography", "title"], "text")}
                   {renderField("Стиль", rules.specialElements.bibliography.style?.toUpperCase(), ["specialElements", "bibliography", "style"], "text")}
                 </div>
@@ -317,8 +317,8 @@ export function RulesEditor({
             )}
             {rules.specialElements.figures && (
               <div>
-                <p className="text-xs text-white/50 mb-2">Рисунки</p>
-                <div className="pl-3 border-l-2 border-white/10">
+                <p className="text-xs text-on-surface-subtle mb-2">Рисунки</p>
+                <div className="pl-3 border-l-2 border-surface-border">
                   {renderField("Подпись", rules.specialElements.figures.captionPrefix, ["specialElements", "figures", "captionPrefix"], "text")}
                   {renderField("Позиция подписи", rules.specialElements.figures.captionPosition === "above" ? "Над" : "Под", ["specialElements", "figures", "captionPosition"], "text")}
                 </div>
@@ -326,8 +326,8 @@ export function RulesEditor({
             )}
             {rules.specialElements.tables && (
               <div>
-                <p className="text-xs text-white/50 mb-2">Таблицы</p>
-                <div className="pl-3 border-l-2 border-white/10">
+                <p className="text-xs text-on-surface-subtle mb-2">Таблицы</p>
+                <div className="pl-3 border-l-2 border-surface-border">
                   {renderField("Подпись", rules.specialElements.tables.captionPrefix, ["specialElements", "tables", "captionPrefix"], "text")}
                   {renderField("Позиция подписи", rules.specialElements.tables.captionPosition === "above" ? "Над" : "Под", ["specialElements", "tables", "captionPosition"], "text")}
                 </div>
@@ -339,9 +339,9 @@ export function RulesEditor({
 
       {/* Нераспознанные правила */}
       {missingRules.length > 0 && (
-        <Card className="border-white/10">
+        <Card className="border-surface-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-white/70 text-sm">
+            <CardTitle className="text-on-surface-muted text-sm">
               Используются значения по умолчанию
             </CardTitle>
             <CardDescription>
@@ -349,7 +349,7 @@ export function RulesEditor({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm text-white/50 space-y-1">
+            <ul className="text-sm text-on-surface-subtle space-y-1">
               {missingRules.map((rule, i) => (
                 <li key={i}>• {rule}</li>
               ))}

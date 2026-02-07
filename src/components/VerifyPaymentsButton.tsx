@@ -38,13 +38,13 @@ export function VerifyPaymentsButton() {
         size="sm"
         onClick={handleVerify}
         disabled={loading}
-        className="text-white/50 hover:text-white"
+        className="text-on-surface-subtle hover:text-foreground"
       >
         <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
         {loading ? "Проверяю..." : "Проверить оплату"}
       </Button>
       {result && (
-        <span className="text-xs text-white/50">{result}</span>
+        <span className="text-xs text-on-surface-subtle">{result}</span>
       )}
     </div>
   );

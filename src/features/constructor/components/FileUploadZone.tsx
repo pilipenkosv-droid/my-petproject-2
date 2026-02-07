@@ -77,13 +77,13 @@ export function FileUploadZone({
   const getStatusIcon = (status: FileStatus) => {
     switch (status) {
       case "validating":
-        return <Loader2 className="h-5 w-5 animate-spin text-white/50" />;
+        return <Loader2 className="h-5 w-5 animate-spin text-on-surface-subtle" />;
       case "valid":
         return <CheckCircle className="h-5 w-5 text-emerald-400" />;
       case "invalid":
         return <AlertCircle className="h-5 w-5 text-red-400" />;
       default:
-        return <File className="h-5 w-5 text-white/50" />;
+        return <File className="h-5 w-5 text-on-surface-subtle" />;
     }
   };
 
@@ -95,7 +95,7 @@ export function FileUploadZone({
 
   return (
     <div className="space-y-3">
-      {label && <label className="text-sm font-medium text-white">{label}</label>}
+      {label && <label className="text-sm font-medium text-foreground">{label}</label>}
 
       {!uploadedFile ? (
         <div
@@ -106,14 +106,14 @@ export function FileUploadZone({
             "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
             isDragging
               ? "border-violet-400 border-solid bg-violet-500/10"
-              : "border-white/20 hover:border-white/40 hover:bg-white/5",
+              : "border-surface-border hover:border-surface-border hover:bg-surface",
             disabled && "cursor-not-allowed opacity-50"
           )}
         >
-          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-            <Upload className="h-6 w-6 text-white/50" />
+          <div className="w-14 h-14 rounded-2xl bg-surface border border-surface-border flex items-center justify-center mb-4">
+            <Upload className="h-6 w-6 text-on-surface-subtle" />
           </div>
-          <p className="text-sm text-white/60 text-center mb-3">
+          <p className="text-sm text-on-surface-muted text-center mb-3">
             Перетащите файл сюда или
           </p>
           <label className="cursor-pointer">
@@ -128,7 +128,7 @@ export function FileUploadZone({
               disabled={disabled}
             />
           </label>
-          <p className="text-xs text-white/40 mt-4">
+          <p className="text-xs text-muted-foreground mt-4">
             {description}
           </p>
         </div>
@@ -140,21 +140,21 @@ export function FileUploadZone({
               ? "border-red-500/30 bg-red-500/10"
               : uploadedFile.status === "valid"
               ? "border-emerald-500/30 bg-emerald-500/10"
-              : "border-white/10 bg-white/5"
+              : "border-surface-border bg-surface"
           )}
         >
           <div className={cn(
             "w-10 h-10 rounded-lg flex items-center justify-center",
             uploadedFile.status === "valid" ? "bg-emerald-500/20" : 
-            uploadedFile.status === "invalid" ? "bg-red-500/20" : "bg-white/10"
+            uploadedFile.status === "invalid" ? "bg-red-500/20" : "bg-surface-hover"
           )}>
             {getStatusIcon(uploadedFile.status)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {uploadedFile.file.name}
             </p>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-on-surface-subtle">
               {formatFileSize(uploadedFile.file.size)}
               {uploadedFile.error && (
                 <span className="text-red-400 ml-2">
@@ -168,14 +168,14 @@ export function FileUploadZone({
             size="icon"
             onClick={onFileRemove}
             disabled={disabled}
-            className="flex-shrink-0 hover:bg-white/10"
+            className="flex-shrink-0 hover:bg-surface-hover"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-muted-foreground">
         Форматы: {acceptedExtensions.join(", ")}
       </p>
     </div>

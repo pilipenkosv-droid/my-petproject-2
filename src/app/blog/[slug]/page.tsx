@@ -94,7 +94,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Заголовок */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 text-white/40 text-sm mb-4">
+          <div className="flex items-center gap-4 text-muted-foreground text-sm mb-4">
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {post.readingTime}
@@ -107,28 +107,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               })}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
             {post.title}
           </h1>
-          <p className="text-white/60 text-lg">{post.description}</p>
+          <p className="text-on-surface-muted text-lg">{post.description}</p>
         </div>
 
         {/* Контент */}
         <article className="prose prose-invert prose-violet max-w-none mb-12">
           <div
             className="
-              [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-8 [&_h2]:mb-4
-              [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-white [&_h3]:mt-6 [&_h3]:mb-3
-              [&_p]:text-white/70 [&_p]:leading-relaxed [&_p]:mb-4
-              [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:text-white/70 [&_ul]:mb-4
-              [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:text-white/70 [&_ol]:mb-4
+              [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-8 [&_h2]:mb-4
+              [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-6 [&_h3]:mb-3
+              [&_p]:text-on-surface-muted [&_p]:leading-relaxed [&_p]:mb-4
+              [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:text-on-surface-muted [&_ul]:mb-4
+              [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:text-on-surface-muted [&_ol]:mb-4
               [&_li]:mb-2
-              [&_strong]:text-white [&_strong]:font-medium
+              [&_strong]:text-foreground [&_strong]:font-medium
               [&_table]:w-full [&_table]:border-collapse [&_table]:mb-4
-              [&_th]:bg-white/10 [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:text-white [&_th]:font-medium [&_th]:border [&_th]:border-white/20
-              [&_td]:px-4 [&_td]:py-2 [&_td]:text-white/70 [&_td]:border [&_td]:border-white/10
-              [&_blockquote]:border-l-4 [&_blockquote]:border-violet-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/60
-              [&_code]:bg-white/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-violet-400 [&_code]:text-sm
+              [&_th]:bg-surface-hover [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:text-foreground [&_th]:font-medium [&_th]:border [&_th]:border-surface-border
+              [&_td]:px-4 [&_td]:py-2 [&_td]:text-on-surface-muted [&_td]:border [&_td]:border-surface-border
+              [&_blockquote]:border-l-4 [&_blockquote]:border-violet-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-on-surface-muted
+              [&_code]:bg-surface-hover [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-sm
             "
             dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
           />
@@ -140,7 +140,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {post.keywords.map((keyword) => (
               <span
                 key={keyword}
-                className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/50 text-sm"
+                className="px-3 py-1 rounded-full bg-surface border border-surface-border text-on-surface-subtle text-sm"
               >
                 {keyword}
               </span>
@@ -150,7 +150,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Поделиться */}
         <div className="mb-12">
-          <div className="text-white/40 text-xs uppercase tracking-wider mb-3">
+          <div className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
             Поделиться статьёй
           </div>
           <ShareButtons
@@ -165,12 +165,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {prevPost && (
             <Link
               href={`/blog/${prevPost.slug}`}
-              className="flex items-center gap-3 bg-white/5 rounded-xl border border-white/10 p-4 hover:bg-white/10 transition-colors group"
+              className="flex items-center gap-3 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
             >
-              <ArrowLeft className="w-5 h-5 text-white/40 group-hover:text-violet-400 transition-colors shrink-0" />
+              <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               <div className="flex-1 min-w-0">
-                <div className="text-white/40 text-xs mb-1">Предыдущая статья</div>
-                <div className="text-white text-sm font-medium truncate">
+                <div className="text-muted-foreground text-xs mb-1">Предыдущая статья</div>
+                <div className="text-foreground text-sm font-medium truncate">
                   {prevPost.title}
                 </div>
               </div>
@@ -179,15 +179,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {nextPost && (
             <Link
               href={`/blog/${nextPost.slug}`}
-              className="flex items-center gap-3 bg-white/5 rounded-xl border border-white/10 p-4 hover:bg-white/10 transition-colors group sm:text-right"
+              className="flex items-center gap-3 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group sm:text-right"
             >
               <div className="flex-1 min-w-0">
-                <div className="text-white/40 text-xs mb-1">Следующая статья</div>
-                <div className="text-white text-sm font-medium truncate">
+                <div className="text-muted-foreground text-xs mb-1">Следующая статья</div>
+                <div className="text-foreground text-sm font-medium truncate">
                   {nextPost.title}
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-violet-400 transition-colors shrink-0" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
             </Link>
           )}
         </div>
@@ -195,11 +195,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* CTA */}
         <div className="text-center">
           <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
-            <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Не хотите разбираться в правилах?
             </h2>
-            <p className="text-white/60 mb-6">
+            <p className="text-on-surface-muted mb-6">
               SmartFormat автоматически оформит работу по методичке вашего вуза
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -212,7 +212,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </Link>
               <Link
                 href="/blog"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
                 Все статьи

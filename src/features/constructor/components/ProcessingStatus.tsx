@@ -64,8 +64,8 @@ export function ProcessingStatus({
     }
 
     return (
-      <div className="flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-white/5">
-        <Circle className="h-3 w-3 text-white/30" />
+      <div className="flex h-6 w-6 items-center justify-center rounded-full border border-surface-border bg-surface">
+        <Circle className="h-3 w-3 text-muted-foreground/60" />
       </div>
     );
   };
@@ -74,8 +74,8 @@ export function ProcessingStatus({
     <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-white/50">Прогресс</span>
-          <span className="font-semibold text-white">{Math.round(progress)}%</span>
+          <span className="text-on-surface-subtle">Прогресс</span>
+          <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
         </div>
         <Progress value={progress} />
       </div>
@@ -87,15 +87,15 @@ export function ProcessingStatus({
             className={cn(
               "flex items-center gap-3 text-sm transition-all duration-300",
               index <= currentStepIndex
-                ? "text-white"
-                : "text-white/40"
+                ? "text-foreground"
+                : "text-muted-foreground"
             )}
           >
             {getStepIcon(index)}
             <span
               className={cn(
                 "transition-all duration-300",
-                index === currentStepIndex && !error && "font-medium text-white"
+                index === currentStepIndex && !error && "font-medium text-foreground"
               )}
             >
               {step.label}
@@ -109,7 +109,7 @@ export function ProcessingStatus({
           <p className="text-sm text-red-400 font-medium">
             Ошибка обработки
           </p>
-          <p className="text-sm text-white/70 mt-1">{error}</p>
+          <p className="text-sm text-on-surface-muted mt-1">{error}</p>
         </div>
       )}
     </div>

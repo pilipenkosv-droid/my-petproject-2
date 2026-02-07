@@ -33,8 +33,8 @@ export default function ResultPage({ params }: ResultPageProps) {
           <Card className="max-w-md mx-auto">
             <CardContent className="py-12 text-center">
               <div className="animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-3/4 mx-auto mb-4"></div>
-                <div className="h-4 bg-white/10 rounded w-1/2 mx-auto"></div>
+                <div className="h-4 bg-surface-hover rounded w-3/4 mx-auto mb-4"></div>
+                <div className="h-4 bg-surface-hover rounded w-1/2 mx-auto"></div>
               </div>
             </CardContent>
           </Card>
@@ -147,10 +147,10 @@ export default function ResultPage({ params }: ResultPageProps) {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Документ успешно обработан
             </h2>
-            <p className="text-white/50">
+            <p className="text-on-surface-subtle">
               Проанализирован и отформатирован в соответствии с требованиями
             </p>
           </div>
@@ -174,10 +174,10 @@ export default function ResultPage({ params }: ResultPageProps) {
                     <Gift className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-white font-semibold text-lg mb-1">
+                    <p className="text-foreground font-semibold text-lg mb-1">
                       Полная версия уже готова! 🎉
                     </p>
-                    <p className="text-white/70 text-sm mb-4">
+                    <p className="text-on-surface-muted text-sm mb-4">
                       Мы обработали весь ваш документ (~{job.statistics.originalPageCount} стр.), но показали только первые {job.statistics.pageLimitApplied}.
                       Получите полную версию прямо сейчас — без повторной обработки!
                     </p>
@@ -200,13 +200,13 @@ export default function ResultPage({ params }: ResultPageProps) {
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-white font-medium mb-1">
+                    <p className="text-foreground font-medium mb-1">
                       Обработаны первые {job.statistics.pageLimitApplied} из ~{job.statistics.originalPageCount} страниц
                     </p>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-on-surface-muted text-sm">
                       В бесплатном тарифе доступна обработка до {job.statistics.pageLimitApplied} страниц.
                       Для обработки полного документа{" "}
-                      <Link href="/pricing" className="text-violet-400 hover:text-violet-300 underline">
+                      <Link href="/pricing" className="text-primary hover:text-primary/80 underline">
                         приобретите тариф
                       </Link>.
                     </p>
@@ -229,18 +229,18 @@ export default function ResultPage({ params }: ResultPageProps) {
                 {/* Marked original */}
                 <button
                   onClick={() => handleDownload("original")}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-6 transition-all duration-200 hover:bg-white/10 hover:border-white/20 text-left"
+                  className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
                 >
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
                     <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-white">С пометками</p>
-                    <p className="text-xs text-white/40 mt-1">
+                    <p className="text-sm font-medium text-foreground">С пометками</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Исходный документ с выделенными нарушениями и комментариями
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-white/50">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-subtle">
                     <Download className="h-3 w-3" />
                     <span>.docx</span>
                   </div>
@@ -255,8 +255,8 @@ export default function ResultPage({ params }: ResultPageProps) {
                     <FileCheck className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-white">Исправленный</p>
-                    <p className="text-xs text-white/40 mt-1">
+                    <p className="text-sm font-medium text-foreground">Исправленный</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Автоматически отформатированный документ, готовый к сдаче
                     </p>
                   </div>

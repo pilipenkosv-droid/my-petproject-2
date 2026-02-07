@@ -15,11 +15,11 @@ export function PageHero({ badge, title, subtitle, children }: PageHeroProps) {
     <div className="relative overflow-hidden">
       <div className="relative z-10 mx-auto max-w-4xl px-6 pt-16 pb-12 text-center">
         {badge}
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
+          <p className="text-on-surface-muted text-lg max-w-xl mx-auto">
             {subtitle}
           </p>
         )}

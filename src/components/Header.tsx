@@ -23,6 +23,7 @@ import {
 import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, ChevronDown, Sparkles } from "lucide-react";
 import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   showBack?: boolean;
@@ -66,14 +67,14 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const isLanding = pathname === "/";
 
   return (
-    <header className="relative z-10 border-b border-white/10 bg-white/5 backdrop-blur-xl">
+    <header className="relative z-10 border-b border-surface-border bg-surface backdrop-blur-xl">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
         {/* Left: Back + Logo */}
         <div className="flex items-center gap-4">
           {showBack && (
             <Link
               href={backHref}
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="flex items-center justify-center w-9 h-9 rounded-lg bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -102,7 +103,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     <Link href="/">На главную</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-white/50">Типы работ</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-on-surface-subtle">Типы работ</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <Link href="/diplom">Дипломная работа</Link>
                   </DropdownMenuItem>
@@ -158,10 +159,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Right: Auth UI */}
+        {/* Right: Theme Toggle + Auth UI */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {isLoading ? (
-            <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
+            <div className="w-8 h-8 rounded-full bg-surface-hover animate-pulse" />
           ) : user ? (
             <>
               {/* Кнопка "Начать" для авторизованных пользователей */}
@@ -173,7 +175,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </Link>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-white/10 transition-colors">
+                <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-hover transition-colors">
                   {isPro && (
                     <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
                       <Crown className="h-3 w-3" />
@@ -182,11 +184,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   )}
                   <Avatar className={`h-8 w-8 ${isPro ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-transparent" : ""}`}>
                     {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                    <AvatarFallback className={`text-white text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
+                    <AvatarFallback className={`text-primary-foreground text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm text-white/70 hidden sm:block max-w-[150px] truncate">
+                  <span className="text-sm text-on-surface-muted hidden sm:block max-w-[150px] truncate">
                     {user.email}
                   </span>
                 </button>
@@ -207,7 +209,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login?mode=signup">
-                <Button variant="ghost" size="sm" className="text-white/70 hover:text-white">
+                <Button variant="ghost" size="sm" className="text-on-surface-muted hover:text-foreground">
                   <UserPlus className="mr-1.5 h-4 w-4" />
                   <span className="hidden sm:inline">Регистрация</span>
                 </Button>

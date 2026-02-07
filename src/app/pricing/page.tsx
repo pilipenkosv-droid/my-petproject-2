@@ -143,8 +143,8 @@ function PricingContent() {
                 <FileCheck className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-white font-semibold">Разблокировка полной версии документа</p>
-                <p className="text-white/60 text-sm">
+                <p className="text-foreground font-semibold">Разблокировка полной версии документа</p>
+                <p className="text-on-surface-muted text-sm">
                   После оплаты любого тарифа вы сразу получите доступ к полной версии вашего обработанного документа
                 </p>
               </div>
@@ -162,7 +162,7 @@ function PricingContent() {
                 className={`relative overflow-hidden transition-all ${
                   plan.accent
                     ? "bg-violet-500/10 border-violet-500/30 shadow-lg shadow-violet-500/10"
-                    : "bg-white/5 border-white/10"
+                    : "bg-surface border-surface-border"
                 }`}
               >
                 {plan.accent && (
@@ -175,12 +175,12 @@ function PricingContent() {
                       className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         plan.accent
                           ? "bg-violet-500/20 text-violet-400"
-                          : "bg-white/10 text-white/60"
+                          : "bg-surface-hover text-on-surface-muted"
                       }`}
                     >
                       <Icon className="w-5 h-5" />
                     </div>
-                    <CardTitle className="text-white text-lg">{plan.name}</CardTitle>
+                    <CardTitle className="text-foreground text-lg">{plan.name}</CardTitle>
                   </div>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
@@ -188,14 +188,14 @@ function PricingContent() {
                 <CardContent className="space-y-6">
                   {/* Цена */}
                   <div>
-                    <span className="text-3xl font-bold text-white">{plan.price}</span>
-                    <span className="text-white/50 ml-1">{plan.period}</span>
+                    <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-on-surface-subtle ml-1">{plan.period}</span>
                   </div>
 
                   {/* Фичи */}
                   <ul className="space-y-3">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3 text-sm text-white/80">
+                      <li key={feature} className="flex items-center gap-3 text-sm text-on-surface">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                         {feature}
                       </li>
@@ -225,36 +225,36 @@ function PricingContent() {
 
         {/* Подсказка */}
         <div className="text-center mt-8">
-          <p className="text-white/40 text-sm">
+          <p className="text-muted-foreground text-sm">
             Без регистрации карты · Отмена подписки в любой момент
           </p>
         </div>
 
         {/* FAQ секция */}
-        <div className="mt-16 pt-12 border-t border-white/10">
+        <div className="mt-16 pt-12 border-t border-surface-border">
           <div className="flex items-center justify-center gap-2 mb-8">
             <HelpCircle className="w-5 h-5 text-violet-400" />
-            <h2 className="text-xl font-semibold text-white">Частые вопросы об оплате</h2>
+            <h2 className="text-xl font-semibold text-foreground">Частые вопросы об оплате</h2>
           </div>
 
           <div className="grid gap-6 max-w-2xl mx-auto">
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-medium text-white mb-2">Какие способы оплаты доступны?</h3>
-              <p className="text-white/60 text-sm">
+            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+              <h3 className="font-medium text-foreground mb-2">Какие способы оплаты доступны?</h3>
+              <p className="text-on-surface-muted text-sm">
                 Принимаем банковские карты (Visa, MasterCard, МИР), а также оплату через СБП и электронные кошельки.
               </p>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-medium text-white mb-2">Как работает пробный период?</h3>
-              <p className="text-white/60 text-sm">
+            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+              <h3 className="font-medium text-foreground mb-2">Как работает пробный период?</h3>
+              <p className="text-on-surface-muted text-sm">
                 Первый документ обрабатывается бесплатно без привязки карты. Вы сможете оценить качество форматирования перед покупкой.
               </p>
             </div>
 
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-medium text-white mb-2">Можно ли отменить подписку?</h3>
-              <p className="text-white/60 text-sm">
+            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+              <h3 className="font-medium text-foreground mb-2">Можно ли отменить подписку?</h3>
+              <p className="text-on-surface-muted text-sm">
                 Да, подписку можно отменить в любой момент. Доступ сохранится до конца оплаченного периода.
               </p>
             </div>
@@ -263,7 +263,7 @@ function PricingContent() {
           <div className="text-center mt-8">
             <Link
               href="/faq"
-              className="text-violet-400 hover:text-violet-300 text-sm transition-colors"
+              className="text-primary hover:text-primary/80 text-sm transition-colors"
             >
               Все вопросы и ответы →
             </Link>
@@ -282,8 +282,8 @@ export default function PricingPage() {
         <main className="mx-auto max-w-4xl px-6 py-16">
           <div className="text-center">
             <div className="animate-pulse">
-              <div className="h-8 bg-white/10 rounded w-48 mx-auto mb-4"></div>
-              <div className="h-4 bg-white/10 rounded w-64 mx-auto"></div>
+              <div className="h-8 bg-surface-hover rounded w-48 mx-auto mb-4"></div>
+              <div className="h-4 bg-surface-hover rounded w-64 mx-auto"></div>
             </div>
           </div>
         </main>

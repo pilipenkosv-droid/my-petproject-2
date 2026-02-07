@@ -54,7 +54,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
 
   if (isSubmitted) {
     return (
-      <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+      <Card className="bg-surface border-surface-border backdrop-blur-sm">
         <CardContent className="py-6">
           <div className="flex items-center gap-3 text-emerald-400">
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -62,7 +62,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
             </div>
             <div>
               <p className="font-medium">Спасибо за вашу оценку!</p>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-on-surface-subtle">
                 Мы используем ваш отзыв для улучшения сервиса
               </p>
             </div>
@@ -73,9 +73,9 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
   }
 
   return (
-    <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+    <Card className="bg-surface border-surface-border backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-white">Оцените качество форматирования</CardTitle>
+        <CardTitle className="text-foreground">Оцените качество форматирования</CardTitle>
         <CardDescription>
           Помогите нам стать лучше — поделитесь своими впечатлениями
         </CardDescription>
@@ -96,7 +96,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
                 className={`w-8 h-8 transition-colors ${
                   (hoveredRating !== null ? star <= hoveredRating : star <= (rating || 0))
                     ? "fill-yellow-400 text-yellow-400"
-                    : "text-white/20"
+                    : "text-muted-foreground/60"
                 }`}
               />
             </button>
@@ -105,7 +105,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
 
         {/* Текстовое пояснение оценки */}
         {rating !== null && (
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-on-surface-muted">
             {rating === 1 && "Очень плохо — документ требует много правок"}
             {rating === 2 && "Плохо — нашел много ошибок форматирования"}
             {rating === 3 && "Удовлетворительно — есть несколько ошибок"}
@@ -117,7 +117,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
         {/* Поле для комментария (показываем если оценка 3 или ниже) */}
         {rating !== null && rating <= 3 && (
           <div className="space-y-2">
-            <label htmlFor="feedback" className="text-sm text-white/70 flex items-center gap-2">
+            <label htmlFor="feedback" className="text-sm text-on-surface-muted flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Что можно улучшить? (необязательно)
             </label>
@@ -126,10 +126,10 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Например: не исправлены инициалы в списке литературы, неверное форматирование заголовков..."
-              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
               maxLength={500}
             />
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-muted-foreground">
               {feedback.length}/500 символов
             </p>
           </div>
