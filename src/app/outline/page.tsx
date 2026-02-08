@@ -301,9 +301,29 @@ function OutlinePageContent() {
             </BlurFade>
           )}
 
-          {/* CTA block */}
+          {/* CTA: Подбор литературы */}
           {outline && (
             <BlurFade delay={0.2} inView>
+              <Card className="border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+                <CardContent className="py-4 text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Подберём реальные источники для этой темы?
+                  </p>
+                  <Link
+                    href={`/sources?topic=${encodeURIComponent(topic)}${workType ? `&type=${workType}` : ""}`}
+                  >
+                    <Button variant="outline" size="sm">
+                      Найти литературу
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </BlurFade>
+          )}
+
+          {/* CTA: Форматирование */}
+          {outline && (
+            <BlurFade delay={0.25} inView>
               <Card className="border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">

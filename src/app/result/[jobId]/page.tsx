@@ -323,6 +323,20 @@ export default function ResultPage({ params }: ResultPageProps) {
             </CardContent>
           </Card>
 
+          {/* CTA: Подбор литературы */}
+          <Card className="border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+            <CardContent className="py-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Нужен список литературы?
+              </p>
+              <Link href="/sources">
+                <Button variant="outline" size="sm">
+                  Подобрать источники
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           {/* Ссылка на новый документ */}
           <div className="text-center pt-4">
             <Link href="/create">

@@ -21,6 +21,7 @@ export type FunnelEvent =
   | "summarize_generate"    // User generated text summary
   | "rewrite_generate"      // User generated rewritten text
   | "grammar_check"         // User checked text grammar
+  | "sources_search"        // User searched for academic sources
   | "gost_mode_selected"    // User switched to standard GOST mode
   | "work_type_selected";   // User selected work type
 
