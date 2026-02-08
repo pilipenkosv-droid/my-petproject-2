@@ -129,11 +129,6 @@ function OutlinePageContent() {
     <main className="min-h-screen relative">
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
-      </div>
-
       <Header />
 
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-8">
@@ -144,9 +139,8 @@ function OutlinePageContent() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 mb-4">
                 <FileText className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold mb-2">
-                <span className="gradient-text">Генератор</span>
-                <span className="text-foreground"> плана работы</span>
+              <h1 className="text-2xl font-bold mb-2 text-foreground">
+                Генератор плана работы
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
                 Введите тему и тип работы — AI сгенерирует структуру с разделами, подразделами и рекомендуемым объёмом

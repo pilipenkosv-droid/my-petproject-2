@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,7 +20,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, ChevronDown, Sparkles } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
+import {
+  ArrowLeft,
+  LogIn,
+  User,
+  LogOut,
+  Crown,
+  UserPlus,
+  ChevronDown,
+  Sparkles,
+  Menu,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -31,10 +49,32 @@ interface HeaderProps {
 
 type AccessType = "trial" | "one_time" | "subscription" | "none";
 
+const workLinks = [
+  { href: "/diplom", label: "Дипломная работа" },
+  { href: "/vkr", label: "ВКР" },
+  { href: "/magisterskaya", label: "Магистерская диссертация" },
+  { href: "/kursovaya", label: "Курсовая работа" },
+  { href: "/referat", label: "Реферат" },
+  { href: "/esse", label: "Эссе" },
+  { href: "/otchet-po-praktike", label: "Отчёт по практике" },
+];
+
+const toolLinks = [
+  { href: "/create", label: "Форматирование по ГОСТу" },
+  { href: "/outline", label: "Генератор плана" },
+];
+
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoading, signOut } = useAuth();
   const [accessType, setAccessType] = useState<AccessType | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close sheet on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!user) {
@@ -84,7 +124,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           </Link>
         </div>
 
-        {/* Center: Navigation */}
+        {/* Center: Navigation (desktop) */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -96,27 +136,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href="/diplom">Дипломная работа</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/vkr">ВКР</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/magisterskaya">Магистерская диссертация</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/kursovaya">Курсовая работа</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/referat">Реферат</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/esse">Эссе</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/otchet-po-praktike">Отчёт по практике</Link>
-                  </DropdownMenuItem>
+                  {workLinks.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild>
+                      <Link href={link.href}>{link.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavigationMenuItem>
@@ -129,12 +153,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href="/create">Форматирование по ГОСТу</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/outline">Генератор плана</Link>
-                  </DropdownMenuItem>
+                  {toolLinks.map((link) => (
+                    <DropdownMenuItem key={link.href} asChild>
+                      <Link href={link.href}>{link.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavigationMenuItem>
@@ -156,7 +179,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Right: Theme Toggle + Auth UI */}
+        {/* Right: Theme Toggle + Auth UI + Mobile Menu */}
         <div className="flex items-center gap-2">
           <div className="hidden sm:block">
             <ThemeToggle />
@@ -165,7 +188,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
             <div className="w-8 h-8 rounded-full bg-surface-hover animate-pulse" />
           ) : user ? (
             <>
-              {/* Кнопка "Начать" для авторизованных пользователей */}
+              {/* "Начать" button for authenticated users */}
               <Link href="/create">
                 <Button variant="glow" size="sm">
                   <Sparkles className="h-4 w-4 mr-1" />
@@ -174,7 +197,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </Link>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-hover transition-colors">
+                <button className="hidden md:flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-hover transition-colors">
                   {isPro && (
                     <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
                       <Crown className="h-3 w-3" />
@@ -206,7 +229,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
             </DropdownMenu>
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <Link href="/login?mode=signup">
                 <Button variant="ghost" size="sm" className="text-on-surface-muted hover:text-foreground">
                   <UserPlus className="mr-1.5 h-4 w-4" />
@@ -221,6 +244,168 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </Link>
             </div>
           )}
+
+          {/* Mobile: hamburger menu button */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden h-9 w-9 rounded-lg"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Открыть меню"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+
+            <SheetContent side="right" className="bg-surface w-[300px] sm:max-w-[350px] flex flex-col">
+              <SheetHeader className="border-b border-surface-border pb-4">
+                <SheetTitle className="text-foreground">Меню</SheetTitle>
+              </SheetHeader>
+
+              {/* Navigation links */}
+              <nav className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
+                {/* Работы section */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Работы
+                  </p>
+                  <div className="space-y-1">
+                    {workLinks.map((link) => (
+                      <SheetClose key={link.href} asChild>
+                        <Link
+                          href={link.href}
+                          className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-surface-hover transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Инструменты section */}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Инструменты
+                  </p>
+                  <div className="space-y-1">
+                    {toolLinks.map((link) => (
+                      <SheetClose key={link.href} asChild>
+                        <Link
+                          href={link.href}
+                          className="block rounded-lg px-3 py-2 text-sm text-foreground hover:bg-surface-hover transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Direct links */}
+                <div className="space-y-1 border-t border-surface-border pt-4">
+                  <SheetClose asChild>
+                    <Link
+                      href="/pricing"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
+                    >
+                      Тарифы
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link
+                      href="/blog"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
+                    >
+                      Блог
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link
+                      href="/faq"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover transition-colors"
+                    >
+                      FAQ
+                    </Link>
+                  </SheetClose>
+                </div>
+              </nav>
+
+              {/* Footer: Theme toggle + Auth */}
+              <SheetFooter className="border-t border-surface-border pt-4">
+                <div className="flex items-center justify-between w-full mb-3">
+                  <span className="text-sm text-muted-foreground">Тема</span>
+                  <ThemeToggle />
+                </div>
+
+                {isLoading ? (
+                  <div className="w-full h-10 rounded-lg bg-surface-hover animate-pulse" />
+                ) : user ? (
+                  <div className="space-y-3 w-full">
+                    {/* User info */}
+                    <div className="flex items-center gap-3 px-1">
+                      <Avatar className={`h-9 w-9 ${isPro ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-transparent" : ""}`}>
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
+                        <AvatarFallback className={`text-primary-foreground text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          {isPro && (
+                            <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
+                              <Crown className="h-3 w-3" />
+                              PRO
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <SheetClose asChild>
+                        <Link href="/profile" className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full">
+                            <User className="mr-1.5 h-4 w-4" />
+                            Профиль
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={handleSignOut}
+                      >
+                        <LogOut className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 w-full">
+                    <SheetClose asChild>
+                      <Link href="/login?mode=signup" className="flex-1">
+                        <Button variant="ghost" size="sm" className="w-full text-on-surface-muted hover:text-foreground">
+                          <UserPlus className="mr-1.5 h-4 w-4" />
+                          Регистрация
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/login" className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <LogIn className="mr-1.5 h-4 w-4" />
+                          Войти
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                  </div>
+                )}
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

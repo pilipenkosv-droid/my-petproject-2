@@ -21,6 +21,7 @@ import {
   Loader2
 } from "lucide-react";
 import { Header } from "@/components/Header";
+import { FlowStepper } from "@/components/FlowStepper";
 import { trackEvent } from "@/lib/analytics/events";
 
 interface ConfirmRulesPageProps {
@@ -229,6 +230,9 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
       <main className="min-h-screen relative">
         <div className="fixed inset-0 mesh-gradient pointer-events-none" />
         <Header showBack backHref="/create" />
+        <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
+          <FlowStepper currentStep={2} />
+        </div>
         <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader>
@@ -271,13 +275,11 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
 
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      </div>
-
       <Header showBack backHref="/create" />
+
+      <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
+        <FlowStepper currentStep={1} />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-8">
         <div className="space-y-6">
@@ -287,9 +289,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 mb-4">
                 <CheckCircle className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">
-                <span className="gradient-text">Проверьте</span>
-                <span className="text-foreground"> требования к форматированию</span>
+              <h2 className="text-2xl font-bold mb-2 text-foreground">
+                Проверьте требования к форматированию
               </h2>
               <p className="text-on-surface-subtle max-w-md mx-auto">
                 AI извлёк правила из вашей методички. Проверьте их и при необходимости скорректируйте перед обработкой документа.

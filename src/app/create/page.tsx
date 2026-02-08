@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb } from "lucide-react";
 import { Header } from "@/components/Header";
+import { FlowStepper } from "@/components/FlowStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
 import { WORK_TYPES, type RequirementsMode } from "@/types/work-types";
@@ -171,13 +172,11 @@ function ConstructorPageContent() {
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
 
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-violet-500/20 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      </div>
-
       <Header showBack />
+
+      <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
+        <FlowStepper currentStep={0} />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
         {pageState === "upload" ? (
@@ -216,9 +215,8 @@ function ConstructorPageContent() {
 
             {/* Описание */}
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-3">
-                <span className="gradient-text">Загрузите</span>
-                <span className="text-foreground"> документ</span>
+              <h2 className="text-3xl font-bold mb-3 text-foreground">
+                Загрузите документ
               </h2>
               <p className="text-on-surface-subtle max-w-md mx-auto">
                 Добавьте вашу работу — и выберите, как её оформить
@@ -334,7 +332,7 @@ function ConstructorPageContent() {
                         <p className="text-sm text-foreground font-medium">
                           Будет применён стандартный ГОСТ 7.32-2017:
                         </p>
-                        <ul className="text-sm text-on-surface-subtle space-y-1.5">
+                        <ul className="text-sm text-on-surface-muted space-y-1.5">
                           <li className="flex items-start gap-2">
                             <span className="text-primary mt-0.5">•</span>
                             Шрифт Times New Roman, 14 pt

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
+import { FlowStepper } from "@/components/FlowStepper";
 import { trackEvent } from "@/lib/analytics/events";
 
 interface ResultPageProps {
@@ -142,13 +143,11 @@ export default function ResultPage({ params }: ResultPageProps) {
     <main className="min-h-screen relative">
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
 
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute bottom-40 left-20 w-80 h-80 bg-violet-500/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-      </div>
-
       <Header showBack backHref="/create" />
+
+      <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
+        <FlowStepper currentStep={3} />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-2xl px-6 py-8">
         <div className="space-y-6">

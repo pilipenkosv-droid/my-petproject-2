@@ -78,7 +78,7 @@ export default async function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Подписка Pro</p>
-                    <p className="text-sm text-on-surface-subtle">
+                    <p className="text-sm text-on-surface-muted">
                       Осталось: {access.remainingUses} из 10 обработок · до{" "}
                       {access.subscriptionActiveUntil
                         ? new Date(access.subscriptionActiveUntil).toLocaleDateString("ru-RU", {
@@ -100,7 +100,7 @@ export default async function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Разовые обработки</p>
-                    <p className="text-sm text-on-surface-subtle">
+                    <p className="text-sm text-on-surface-muted">
                       Осталось: {access.remainingUses}{" "}
                       {access.remainingUses === 1 ? "обработка" : access.remainingUses >= 2 && access.remainingUses <= 4 ? "обработки" : "обработок"}
                     </p>
@@ -121,7 +121,7 @@ export default async function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Нет активного тарифа</p>
-                    <p className="text-sm text-on-surface-subtle">Выберите подходящий план</p>
+                    <p className="text-sm text-on-surface-muted">Выберите подходящий план</p>
                   </div>
                 </div>
                 <Link href="/pricing">
@@ -190,7 +190,7 @@ export default async function ProfilePage() {
             {jobs.length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground/60 mx-auto mb-4" />
-                <p className="text-on-surface-subtle mb-4">
+                <p className="text-on-surface-muted mb-4">
                   У вас пока нет обработанных документов
                 </p>
                 <Link href="/create">

@@ -1,44 +1,29 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
-import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
 import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
+import { Footer } from "@/components/Footer";
+import { StatsCounter } from "@/components/StatsCounter";
+import { BeforeAfter } from "@/components/BeforeAfter";
+import { Testimonials } from "@/components/Testimonials";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-hidden">
       <Header />
 
-      {/* Hero Section with Animated Grid */}
+      {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-24 sm:py-32">
-        {/* Animated Grid Pattern */}
-        <AnimatedGridPattern
-          numSquares={30}
-          maxOpacity={0.3}
-          duration={3}
-          repeatDelay={1}
-          className="[mask-image:radial-gradient(600px_circle_at_center,white,transparent)]"
-        />
-        
         {/* Background mesh gradient */}
         <div className="absolute inset-0 mesh-gradient pointer-events-none" />
-        
-        {/* Floating decorative elements */}
+
+        {/* Single soft glow accent */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Large blurred circles */}
-          <div className="absolute top-20 left-10 w-72 h-72 bg-violet-500/30 rounded-full blur-[100px] animate-pulse-glow" />
-          <div className="absolute top-40 right-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
-          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '4s' }} />
-          
-          {/* Floating geometric shapes */}
-          <div className="absolute top-32 right-1/4 w-20 h-20 border border-surface-border rounded-2xl rotate-12 animate-float" />
-          <div className="absolute bottom-40 left-20 w-16 h-16 border border-violet-400/30 rounded-full animate-float-slow" />
-          <div className="absolute top-1/2 right-10 w-12 h-12 bg-gradient-to-br from-violet-500/20 to-indigo-500/20 rounded-xl rotate-45 animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/15 rounded-full blur-[150px]" />
         </div>
         
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -71,6 +56,8 @@ export default function LandingPage() {
               </Button>
             </div>
           </BlurFade>
+
+          <StatsCounter />
         </div>
       </section>
 
@@ -78,7 +65,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="relative py-24 px-6 scroll-mt-20">
         <div className="mx-auto max-w-5xl">
           <BlurFade delay={0.1} inView>
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
               <AuroraText colors={["#7928CA", "#FF0080", "#0070F3"]}>
                 Как это работает
               </AuroraText>
@@ -89,8 +76,9 @@ export default function LandingPage() {
               Всего 4 простых шага до идеально оформленного документа
             </p>
           </BlurFade>
-          
-          <div className="grid gap-6 md:grid-cols-4">
+
+          {/* Timeline */}
+          <div className="flex flex-col md:flex-row md:items-stretch md:gap-0 gap-0">
             {[
               {
                 step: "1",
@@ -124,22 +112,58 @@ export default function LandingPage() {
                 gradient: "from-emerald-500 to-teal-600",
                 delay: 0.6,
               },
-            ].map((item) => (
-              <BlurFade key={item.step} delay={item.delay} inView>
-                <div 
-                  className="group relative p-6 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 hover:bg-surface-hover hover:border-surface-border hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] h-full"
-                >
-                  <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
-                    <item.icon className="w-6 h-6" />
+            ].map((item, index) => (
+              <BlurFade key={item.step} delay={item.delay} inView className="flex-1">
+                {/* Mobile layout (vertical timeline) */}
+                <div className="flex md:hidden">
+                  {/* Left: circle + vertical line */}
+                  <div className="flex flex-col items-center mr-4">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${item.gradient} text-white font-bold flex items-center justify-center text-sm shadow-lg flex-shrink-0`}>
+                      {item.step}
+                    </div>
+                    {index < 3 && (
+                      <div className="w-0 flex-1 border-l-2 border-dashed border-surface-border my-2" />
+                    )}
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-on-surface-subtle leading-relaxed">
-                    {item.description}
-                  </p>
-                  
-                  {/* Step number */}
-                  <div className="absolute top-4 right-4 text-5xl font-bold text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-                    {item.step}
+                  {/* Right: card content */}
+                  <div className={`group p-5 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] flex-1 ${index < 3 ? "mb-4" : ""}`}>
+                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-on-surface-muted leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Desktop layout (horizontal timeline) */}
+                <div className="hidden md:flex flex-col items-center h-full">
+                  {/* Top: circle + horizontal connector */}
+                  <div className="flex items-center w-full mb-6">
+                    <div className="flex-1">
+                      {index > 0 && (
+                        <div className="border-t-2 border-dashed border-surface-border w-full" />
+                      )}
+                    </div>
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${item.gradient} text-white font-bold flex items-center justify-center text-sm shadow-lg flex-shrink-0 mx-1`}>
+                      {item.step}
+                    </div>
+                    <div className="flex-1">
+                      {index < 3 && (
+                        <div className="border-t-2 border-dashed border-surface-border w-full" />
+                      )}
+                    </div>
+                  </div>
+                  {/* Bottom: card */}
+                  <div className="group p-6 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] w-full flex-1">
+                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-on-surface-muted leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
                 </div>
               </BlurFade>
@@ -148,12 +172,15 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Before / After */}
+      <BeforeAfter />
+
       {/* Pain points */}
       <section className="relative py-24 px-6">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent" />
         
         <div className="relative mx-auto max-w-4xl">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
             Забудьте о ручной настройке отступов и шрифтов
           </h2>
           <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
@@ -173,7 +200,7 @@ export default function LandingPage() {
             ].map((pain, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-xl bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-red-500/5 hover:border-red-500/20 group"
+                className="flex items-start gap-3 rounded-xl bg-surface border border-surface-border p-4 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-red-500/5 hover:border-red-500/20 group"
               >
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
                   <span className="text-red-400 text-sm">✕</span>
@@ -184,6 +211,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials */}
+      <Testimonials />
 
       {/* Безопасность от антиплагиата */}
       <section className="relative py-16 px-6">
@@ -228,7 +258,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 border border-surface-border rounded-3xl" />
             
             <div className="relative text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
                 Готовы сэкономить время?
               </h2>
               <p className="text-on-surface-muted mb-8 max-w-md mx-auto">
@@ -245,17 +275,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-surface-border py-8 px-6">
-        <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Logo variant="favicon" size={24} withText />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Сервис автоматического форматирования курсовых и дипломных работ по ГОСТу
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }

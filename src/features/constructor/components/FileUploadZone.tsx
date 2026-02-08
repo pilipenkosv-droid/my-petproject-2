@@ -137,7 +137,7 @@ export function FileUploadZone({
           className={cn(
             "flex items-center gap-4 rounded-xl border p-4 transition-all duration-300",
             uploadedFile.status === "invalid"
-              ? "border-red-500/30 bg-red-500/10"
+              ? "border-red-500/30 bg-red-500/10 animate-shake"
               : uploadedFile.status === "valid"
               ? "border-emerald-500/30 bg-emerald-500/10"
               : "border-surface-border bg-surface"

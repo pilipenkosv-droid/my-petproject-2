@@ -91,8 +91,8 @@ export function WorkTypeLanding({
         {/* Что делает сервис */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Что делает SmartFormat
@@ -115,8 +115,8 @@ export function WorkTypeLanding({
         {/* Требования ГОСТ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <FileText className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Стандартные требования по ГОСТу
@@ -170,8 +170,8 @@ export function WorkTypeLanding({
         {/* FAQ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">Частые вопросы</h2>
           </div>

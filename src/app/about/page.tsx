@@ -121,7 +121,7 @@ export default function AboutPage() {
             <Sparkles className="w-4 h-4" />
             О сервисе
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
             Автоматическое форматирование
             <br />
             научных работ по ГОСТу
@@ -151,8 +151,8 @@ export default function AboutPage() {
         {/* Как это работает */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <Target className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <Target className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Как это работает
@@ -166,7 +166,7 @@ export default function AboutPage() {
                 className="bg-surface rounded-xl border border-surface-border p-6"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 font-semibold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold shrink-0">
                     {item.step}
                   </div>
                   <div>
@@ -182,8 +182,8 @@ export default function AboutPage() {
         {/* Возможности */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Возможности сервиса
@@ -198,8 +198,8 @@ export default function AboutPage() {
                   key={index}
                   className="bg-surface rounded-xl border border-surface-border p-6"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-violet-400" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <h3 className="font-medium text-foreground mb-2">
                     {feature.title}
@@ -214,8 +214,8 @@ export default function AboutPage() {
         {/* AI технологии */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <Cpu className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <Cpu className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Технологии искусственного интеллекта
@@ -245,8 +245,8 @@ export default function AboutPage() {
         {/* Поддерживаемые типы работ */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-violet-400" />
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+              <FileText className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Поддерживаемые типы работ

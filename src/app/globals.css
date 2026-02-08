@@ -102,6 +102,9 @@ html {
   --on-surface: oklch(0.15 0.01 280);
   --on-surface-muted: oklch(0.4 0.01 280);
   --on-surface-subtle: oklch(0.55 0.01 280);
+
+  /* Premium easing */
+  --ease-premium: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -129,13 +132,13 @@ html {
   --muted-foreground: oklch(0.65 0 0);
 
   /* Glass-карточки */
-  --card: rgba(255, 255, 255, 0.05);
+  --card: rgba(255, 255, 255, 0.06);
   --card-foreground: oklch(0.95 0 0);
-  --card-border: rgba(255, 255, 255, 0.1);
+  --card-border: rgba(255, 255, 255, 0.13);
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.13);
+  --input: rgba(255, 255, 255, 0.13);
 
   /* Статусы */
   --success: oklch(0.7 0.2 145);
@@ -181,9 +184,9 @@ html {
   --sidebar-ring: oklch(0.7 0.22 280);
 
   /* Семантические токены для поверхностей */
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-hover: rgba(255, 255, 255, 0.1);
-  --surface-border: rgba(255, 255, 255, 0.1);
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-hover: rgba(255, 255, 255, 0.12);
+  --surface-border: rgba(255, 255, 255, 0.14);
   --on-surface: oklch(0.95 0 0);
   --on-surface-muted: oklch(0.7 0 0);
   --on-surface-subtle: oklch(0.5 0 0);
@@ -289,6 +292,18 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-pulse-glow {
   animation: pulse-glow 4s ease-in-out infinite;
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
 }
 
 /* Mesh gradient background */
