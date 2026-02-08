@@ -63,6 +63,7 @@ const workLinks = [
 const toolLinks = [
   { href: "/create", label: "Форматирование по ГОСТу" },
   { href: "/outline", label: "Генератор плана" },
+  { href: "/summarize", label: "Краткое содержание" },
 ];
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
