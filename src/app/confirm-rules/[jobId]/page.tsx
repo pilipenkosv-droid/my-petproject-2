@@ -20,6 +20,7 @@ import {
   Loader2
 } from "lucide-react";
 import { Header } from "@/components/Header";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface ConfirmRulesPageProps {
   params: Promise<{ jobId: string }>;
@@ -105,6 +106,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     setIsProcessing(true);
     setError(null);
     animatedProgress.start();
+    trackEvent("processing_start");
 
     try {
       const response = await fetch("/api/confirm-rules", {
@@ -133,6 +135,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
         }
         throw new Error(errorMessage);
       }
+
+      trackEvent("processing_complete");
 
       // Let animation finish, then redirect
       animatedProgress.complete(() => {

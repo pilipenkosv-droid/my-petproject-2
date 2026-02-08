@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { JsonLd } from "@/components/JsonLd";
+import { YandexMetrika } from "@/components/analytics/YandexMetrika";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
 import "./globals.css";
 
@@ -83,6 +86,10 @@ export default function RootLayout({
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
+        <Suspense fallback={null}>
+          <YandexMetrika />
+          <GoogleAnalytics />
+        </Suspense>
       </body>
     </html>
   );

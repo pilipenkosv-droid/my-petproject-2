@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useJobStatus } from "@/features/result/hooks/useJobStatus";
 import { StatisticsPanel } from "@/features/result/components/StatisticsPanel";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
 import { Header } from "@/components/Header";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface ResultPageProps {
   params: Promise<{ jobId: string }>;
@@ -18,8 +19,17 @@ interface ResultPageProps {
 export default function ResultPage({ params }: ResultPageProps) {
   const { jobId } = use(params);
   const { job, isLoading, error } = useJobStatus({ jobId });
+  const trackedPreview = useRef(false);
+
+  useEffect(() => {
+    if (job?.status === "completed" && !trackedPreview.current) {
+      trackedPreview.current = true;
+      trackEvent("preview_view");
+    }
+  }, [job?.status]);
 
   const handleDownload = (type: "original" | "formatted") => {
+    trackEvent("file_download", { download_type: type });
     const fileId = `${jobId}_${type}`;
     window.open(`/api/download/${fileId}`, "_blank");
   };

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
+import { trackEvent } from "@/lib/analytics/events";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 
@@ -54,6 +55,7 @@ function PaymentSuccessContent() {
       if (result.status === "completed") {
         setState("completed");
         setOfferType(result.offerType);
+        trackEvent("payment_complete", { offer_type: result.offerType });
         clearInterval(timer);
       } else if (result.status === "failed") {
         setState("failed");

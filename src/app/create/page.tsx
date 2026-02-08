@@ -17,6 +17,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { FileText, Sparkles, Zap, LogIn } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { trackEvent } from "@/lib/analytics/events";
 
 type PageState = "upload" | "processing";
 
@@ -37,6 +38,16 @@ export default function ConstructorPage() {
   const sourceDoc = useDocumentUpload(SOURCE_DOCUMENT_CONFIG);
   const requirementsDoc = useDocumentUpload(REQUIREMENTS_DOCUMENT_CONFIG);
 
+  const handleSourceFileSelect = useCallback((file: File) => {
+    trackEvent("file_upload", { file_type: file.name.split(".").pop() });
+    sourceDoc.handleFileSelect(file);
+  }, [sourceDoc]);
+
+  const handleGuidelinesFileSelect = useCallback((file: File) => {
+    trackEvent("guidelines_upload", { file_type: file.name.split(".").pop() });
+    requirementsDoc.handleFileSelect(file);
+  }, [requirementsDoc]);
+
   const canProcess = sourceDoc.isValid && requirementsDoc.isValid;
 
   const animatedProgress = useAnimatedProgress({
@@ -51,6 +62,7 @@ export default function ConstructorPage() {
 
     setPageState("processing");
     animatedProgress.start();
+    trackEvent("processing_start");
 
     try {
       const formData = new FormData();
@@ -184,7 +196,7 @@ export default function ConstructorPage() {
                       acceptedTypes={SOURCE_DOCUMENT_CONFIG.acceptedTypes}
                       acceptedExtensions={SOURCE_DOCUMENT_CONFIG.acceptedExtensions}
                       uploadedFile={sourceDoc.uploadedFile}
-                      onFileSelect={sourceDoc.handleFileSelect}
+                      onFileSelect={handleSourceFileSelect}
                       onFileRemove={sourceDoc.handleFileRemove}
                       disabled={false}
                     />
@@ -212,7 +224,7 @@ export default function ConstructorPage() {
                       acceptedTypes={REQUIREMENTS_DOCUMENT_CONFIG.acceptedTypes}
                       acceptedExtensions={REQUIREMENTS_DOCUMENT_CONFIG.acceptedExtensions}
                       uploadedFile={requirementsDoc.uploadedFile}
-                      onFileSelect={requirementsDoc.handleFileSelect}
+                      onFileSelect={handleGuidelinesFileSelect}
                       onFileRemove={requirementsDoc.handleFileRemove}
                       disabled={false}
                     />

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Zap, Crown, Gift, HelpCircle, FileCheck } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
+import { trackEvent } from "@/lib/analytics/events";
 
 const plans = [
   {
@@ -85,6 +86,7 @@ function PricingContent() {
     }
 
     setLoading(offerType);
+    trackEvent("payment_init", { offer_type: offerType });
 
     try {
       const res = await fetch("/api/payment/create", {
