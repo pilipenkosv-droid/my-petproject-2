@@ -65,6 +65,7 @@ const toolLinks = [
   { href: "/outline", label: "Генератор плана" },
   { href: "/summarize", label: "Краткое содержание" },
   { href: "/rewrite", label: "Повысить уникальность" },
+  { href: "/grammar", label: "Проверка грамматики" },
 ];
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {

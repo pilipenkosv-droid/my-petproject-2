@@ -309,6 +309,20 @@ export default function ResultPage({ params }: ResultPageProps) {
             </CardContent>
           </Card>
 
+          {/* CTA: Проверка грамматики */}
+          <Card className="border-red-500/20 bg-gradient-to-r from-red-500/5 to-rose-500/5">
+            <CardContent className="py-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Хотите проверить текст на ошибки?
+              </p>
+              <Link href="/grammar">
+                <Button variant="outline" size="sm">
+                  Проверить грамматику
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           {/* Ссылка на новый документ */}
           <div className="text-center pt-4">
             <Link href="/create">
