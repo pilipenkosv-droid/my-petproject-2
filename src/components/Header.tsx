@@ -257,7 +257,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <SheetContent side="right" className="bg-surface w-[300px] sm:max-w-[350px] flex flex-col">
+            <SheetContent side="right" className="bg-background w-[300px] sm:max-w-[350px] flex flex-col border-l-surface-border">
               <SheetHeader className="border-b border-surface-border pb-4">
                 <SheetTitle className="text-foreground">Меню</SheetTitle>
               </SheetHeader>
