@@ -87,6 +87,7 @@ const relatedTypes = [
 export default function ReferatPage() {
   return (
     <WorkTypeLanding
+      slug="referat"
       type="Реферат"
       title="Форматирование реферата по ГОСТу"
       subtitle="Загрузите реферат — получите правильно оформленный документ с корректными полями, шрифтами и отступами"

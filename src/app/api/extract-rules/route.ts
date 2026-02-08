@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const sourceFile = formData.get("sourceDocument") as File | null;
     const requirementsFile = formData.get("requirementsDocument") as File | null;
+    const workType = formData.get("workType") as string | null;
 
     if (!sourceFile || !requirementsFile) {
       await failJob(jobId, "Необходимо загрузить оба файла");
@@ -87,6 +88,8 @@ export async function POST(request: NextRequest) {
       requirementsDocumentId: savedRequirements.id,
       sourceOriginalName: sourceFile.name,
       requirementsOriginalName: requirementsFile.name,
+      workType: workType || undefined,
+      requirementsMode: "upload",
     });
 
     // Прогрев AI-моделей параллельно с извлечением текста

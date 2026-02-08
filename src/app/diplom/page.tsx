@@ -90,6 +90,7 @@ const relatedTypes = [
 export default function DiplomPage() {
   return (
     <WorkTypeLanding
+      slug="diplom"
       type="Дипломная работа"
       title="Форматирование дипломной работы по ГОСТу"
       subtitle="Загрузите диплом и методичку вуза — AI-система автоматически оформит документ по всем требованиям за несколько минут"

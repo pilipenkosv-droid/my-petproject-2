@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Zap, Loader2 } from "lucide-react";
 
-export function CtaButton({ className }: { className?: string }) {
+export function CtaButton({ className, workType }: { className?: string; workType?: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [clicked, setClicked] = useState(false);
@@ -14,8 +14,9 @@ export function CtaButton({ className }: { className?: string }) {
 
   const handleClick = () => {
     setClicked(true);
+    const url = workType ? `/create?type=${workType}` : "/create";
     startTransition(() => {
-      router.push("/create");
+      router.push(url);
     });
   };
 

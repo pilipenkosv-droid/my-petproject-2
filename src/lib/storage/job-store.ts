@@ -52,6 +52,10 @@ export interface JobState {
   // Флаг наличия полной версии (для trial, разблокируется после оплаты)
   hasFullVersion?: boolean;
 
+  // Тип работы и режим требований
+  workType?: string;
+  requirementsMode?: string;
+
   // Ошибка (если status === "failed")
   error?: string;
 
@@ -80,6 +84,8 @@ function rowToJob(row: Record<string, unknown>): JobState {
     rules: row.rules as FormattingRules | undefined,
     violations: row.violations as FormattingViolation[] | undefined,
     statistics: row.statistics as DocumentStatistics | undefined,
+    workType: row.work_type as string | undefined,
+    requirementsMode: row.requirements_mode as string | undefined,
     error: row.error as string | undefined,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
@@ -115,6 +121,8 @@ function jobToRow(
   if (updates.statistics !== undefined) row.statistics = updates.statistics;
   if (updates.error !== undefined) row.error = updates.error;
   if (updates.userId !== undefined) row.user_id = updates.userId;
+  if (updates.workType !== undefined) row.work_type = updates.workType;
+  if (updates.requirementsMode !== undefined) row.requirements_mode = updates.requirementsMode;
 
   return row;
 }

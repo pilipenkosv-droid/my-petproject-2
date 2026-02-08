@@ -87,6 +87,7 @@ const relatedTypes = [
 export default function OtchetPoPraktikePage() {
   return (
     <WorkTypeLanding
+      slug="otchet-po-praktike"
       type="Отчет по практике"
       title="Форматирование отчета по практике по ГОСТу"
       subtitle="Загрузите отчет и методичку — AI автоматически оформит документ с титульным листом, содержанием и приложениями"

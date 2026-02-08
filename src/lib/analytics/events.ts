@@ -17,7 +17,9 @@ export type FunnelEvent =
   | "file_download"         // User downloaded formatted file
   | "outline_generate"      // User generated work outline
   | "chat_question"         // User asked question about guidelines
-  | "blog_share";           // User shared a blog post
+  | "blog_share"            // User shared a blog post
+  | "gost_mode_selected"    // User switched to standard GOST mode
+  | "work_type_selected";   // User selected work type
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.

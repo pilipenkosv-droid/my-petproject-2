@@ -87,6 +87,7 @@ const relatedTypes = [
 export default function EssePage() {
   return (
     <WorkTypeLanding
+      slug="esse"
       type="Эссе"
       title="Форматирование эссе по стандартам"
       subtitle="Загрузите эссе и требования — AI автоматически оформит документ по стандартам вуза"

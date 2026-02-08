@@ -90,6 +90,7 @@ const relatedTypes = [
 export default function KursovayaPage() {
   return (
     <WorkTypeLanding
+      slug="kursovaya"
       type="Курсовая работа / Курсовой проект"
       title="Форматирование курсовой работы и курсового проекта по ГОСТу"
       subtitle="Загрузите курсовую работу или курсовой проект и методичку — AI автоматически применит все требования к оформлению документа"

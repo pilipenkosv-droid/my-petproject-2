@@ -25,6 +25,7 @@ export interface WorkTypeGostRequirement {
 }
 
 export interface WorkTypeLandingProps {
+  slug: string;
   type: string;
   title: string;
   subtitle: string;
@@ -38,6 +39,7 @@ export interface WorkTypeLandingProps {
 }
 
 export function WorkTypeLanding({
+  slug,
   type,
   title,
   subtitle,
@@ -73,7 +75,7 @@ export function WorkTypeLanding({
         subtitle={subtitle}
       >
         <div className="mt-8 flex justify-center">
-          <CtaButton className="text-base sm:text-lg px-6 sm:px-8" />
+          <CtaButton className="text-base sm:text-lg px-6 sm:px-8" workType={slug} />
         </div>
       </PageHero>
 
@@ -231,7 +233,7 @@ export function WorkTypeLanding({
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/create"
+                href={`/create?type=${slug}`}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
               >
                 Начать форматирование

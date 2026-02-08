@@ -90,6 +90,7 @@ const relatedTypes = [
 export default function MagisterskayaPage() {
   return (
     <WorkTypeLanding
+      slug="magisterskaya"
       type="Магистерская диссертация"
       title="Форматирование магистерской диссертации по ГОСТу"
       subtitle="Загрузите магистерскую диссертацию и методичку вуза — AI-система автоматически оформит документ по всем требованиям за несколько минут"
