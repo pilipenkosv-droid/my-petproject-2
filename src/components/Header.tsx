@@ -200,10 +200,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center rounded-full p-1 hover:bg-surface-hover transition-colors">
                   {isPro ? (
-                    <div className="p-[2px] rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-purple-600">
-                      <Avatar className="h-8 w-8 border-2 border-background">
+                    <div className="p-[3px] rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-500 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]">
+                      <Avatar className="h-8 w-8 ring-[2px] ring-background">
                         {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                        <AvatarFallback className="text-primary-foreground text-xs bg-gradient-to-br from-violet-600 to-indigo-600">
+                        <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
@@ -360,10 +360,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1">
                       {isPro ? (
-                        <div className="p-[2px] rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-purple-600 shrink-0">
-                          <Avatar className="h-9 w-9 border-2 border-background">
+                        <div className="p-[3px] rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-500 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.5)] shrink-0">
+                          <Avatar className="h-9 w-9 ring-[2px] ring-background">
                             {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                            <AvatarFallback className="text-primary-foreground text-xs bg-gradient-to-br from-violet-600 to-indigo-600">
+                            <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
