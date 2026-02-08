@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
@@ -22,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield } from "lucide-react";
+import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb } from "lucide-react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
@@ -272,6 +273,17 @@ function ConstructorPageContent() {
                   </SelectContent>
                 </Select>
               </div>
+            </BlurFade>
+
+            {/* Ссылка на генератор плана */}
+            <BlurFade delay={0.27} inView>
+              <Link
+                href={workType ? `/outline?type=${workType}` : "/outline"}
+                className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Lightbulb className="h-4 w-4" />
+                Нет плана? Сгенерируем структуру работы с помощью AI
+              </Link>
             </BlurFade>
 
             {/* 3. Требования к оформлению */}

@@ -41,7 +41,7 @@ export function RulesEditor({
   confidence = 1 
 }: RulesEditorProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(["document", "text", "headings"])
+    new Set(["document"])
   );
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>("");

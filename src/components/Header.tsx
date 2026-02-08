@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,7 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ArrowLeft, LogIn, User, LogOut, Crown, UserPlus, ChevronDown, Sparkles } from "lucide-react";
-import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -34,7 +33,6 @@ type AccessType = "trial" | "one_time" | "subscription" | "none";
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const { user, isLoading, signOut } = useAuth();
   const [accessType, setAccessType] = useState<AccessType | null>(null);
 
@@ -64,7 +62,6 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const isPro = accessType === "subscription";
-  const isLanding = pathname === "/";
 
   return (
     <header className="relative z-10 border-b border-surface-border bg-surface backdrop-blur-xl">
@@ -94,16 +91,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={`${navigationMenuTriggerStyle()} flex items-center gap-1`}>
-                    Главная
+                    Работы
                     <ChevronDown className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href="/">На главную</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-on-surface-subtle">Типы работ</DropdownMenuLabel>
                   <DropdownMenuItem asChild>
                     <Link href="/diplom">Дипломная работа</Link>
                   </DropdownMenuItem>
@@ -128,19 +120,24 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavigationMenuItem>
-            {isLanding ? (
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <a href="#how-it-works">Как это работает</a>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            ) : (
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/#how-it-works">Как это работает</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            )}
+            <NavigationMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`${navigationMenuTriggerStyle()} flex items-center gap-1`}>
+                    Инструменты
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem asChild>
+                    <Link href="/create">Форматирование по ГОСТу</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/outline">Генератор плана</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                 <Link href="/pricing">Тарифы</Link>
