@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormattingRules } from "@/types/formatting-rules";
 import { RulesEditor } from "@/features/confirm-rules/components/RulesEditor";
+import { GuidelinesChat } from "@/features/confirm-rules/components/GuidelinesChat";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/hooks/useAnimatedProgress";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface JobData {
   confidence?: number;
   warnings?: string[];
   missingRules?: string[];
+  hasGuidelinesText?: boolean;
 }
 
 const PHASE2_STEPS: AnimatedStep[] = [
@@ -305,6 +307,13 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
               confidence={job.confidence}
             />
           </BlurFade>
+
+          {/* Чат с методичкой */}
+          {job.hasGuidelinesText && (
+            <BlurFade delay={0.25} inView>
+              <GuidelinesChat jobId={jobId} />
+            </BlurFade>
+          )}
 
           {/* Кнопки действий */}
           <BlurFade delay={0.3} inView>

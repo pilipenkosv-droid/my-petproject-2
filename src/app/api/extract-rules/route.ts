@@ -121,12 +121,13 @@ export async function POST(request: NextRequest) {
     const aiResponse = await parseFormattingRules(requirementsText);
     const rules = mergeWithDefaults(aiResponse.rules);
 
-    // Сохраняем правила и переводим в статус ожидания подтверждения
+    // Сохраняем правила, текст методички и переводим в статус ожидания подтверждения
     await updateJob(jobId, {
       status: "awaiting_confirmation",
       progress: 100,
       statusMessage: "Правила извлечены, ожидается подтверждение",
       rules,
+      guidelinesText: requirementsText,
     });
 
     // Для анонимных — помечаем триал как использованный

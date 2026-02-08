@@ -56,6 +56,9 @@ export interface JobState {
   workType?: string;
   requirementsMode?: string;
 
+  // Текст методички (для чата с методичкой)
+  guidelinesText?: string;
+
   // Ошибка (если status === "failed")
   error?: string;
 
@@ -86,6 +89,7 @@ function rowToJob(row: Record<string, unknown>): JobState {
     statistics: row.statistics as DocumentStatistics | undefined,
     workType: row.work_type as string | undefined,
     requirementsMode: row.requirements_mode as string | undefined,
+    guidelinesText: row.guidelines_text as string | undefined,
     error: row.error as string | undefined,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
@@ -123,6 +127,7 @@ function jobToRow(
   if (updates.userId !== undefined) row.user_id = updates.userId;
   if (updates.workType !== undefined) row.work_type = updates.workType;
   if (updates.requirementsMode !== undefined) row.requirements_mode = updates.requirementsMode;
+  if (updates.guidelinesText !== undefined) row.guidelines_text = updates.guidelinesText;
 
   return row;
 }

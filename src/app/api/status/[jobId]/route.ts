@@ -24,6 +24,7 @@ export async function GET(
       progress: job.progress,
       statusMessage: job.statusMessage,
       rules: job.rules,
+      hasGuidelinesText: !!job.guidelinesText,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     });

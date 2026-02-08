@@ -34,6 +34,8 @@ export interface GatewayRequest {
   temperature?: number;
   /** Максимальное количество токенов ответа */
   maxTokens?: number;
+  /** Возвращать текст вместо JSON (для чата) */
+  textMode?: boolean;
 }
 
 export interface GatewayResponse {
@@ -59,7 +61,7 @@ async function callGemini(
     model: config.modelId,
     generationConfig: {
       temperature: request.temperature ?? 0.1,
-      responseMimeType: config.supportsJsonMode
+      responseMimeType: config.supportsJsonMode && !request.textMode
         ? "application/json"
         : undefined,
       maxOutputTokens: request.maxTokens,
@@ -102,7 +104,7 @@ async function callOpenAICompatible(
       { role: "system", content: request.systemPrompt },
       { role: "user", content: request.userPrompt },
     ],
-    response_format: config.supportsJsonMode
+    response_format: config.supportsJsonMode && !request.textMode
       ? { type: "json_object" }
       : undefined,
     temperature: request.temperature ?? 0.1,
@@ -288,7 +290,7 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
         );
       }
 
-      const json = extractJson(rawText);
+      const json = request.textMode ? rawText : extractJson(rawText);
 
       console.log(`[ai-gateway] Success with ${model.displayName}`);
 
