@@ -304,6 +304,11 @@ h1, h2, h3, h4, h5, h6 {
   100% { background-position: 0% 50%; }
 }
 
+@keyframes textFlipIn {
+  0% { opacity: 0; filter: blur(10px); }
+  100% { opacity: 1; filter: blur(0px); }
+}
+
 .animate-aurora {
   animation: aurora 10s ease infinite;
 }

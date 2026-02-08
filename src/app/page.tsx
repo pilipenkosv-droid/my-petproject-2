@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
 import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { HeroSubtitle } from "@/components/HeroSubtitle";
 
 export default function LandingPage() {
   return (
@@ -50,22 +51,7 @@ export default function LandingPage() {
           </BlurFade>
           
           <BlurFade delay={0.2} inView>
-            <h1 className="text-4xl sm:text-7xl font-extrabold tracking-tight mb-6 flex items-center justify-center gap-2 sm:gap-3">
-              <AuroraText colors={["#FF0080", "#7928CA", "#0070F3", "#38bdf8"]}>
-                Smart
-              </AuroraText>
-              <Logo variant="dark" size={72} className="w-10 h-10 sm:w-[72px] sm:h-[72px]" />
-              <span className="text-foreground">Format</span>
-              <sup className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-gradient-to-r from-violet-600 to-indigo-600 text-white/90 leading-none shadow-[0_0_12px_rgba(139,92,246,0.4)]">
-                beta
-              </sup>
-            </h1>
-          </BlurFade>
-          
-          <BlurFade delay={0.3} inView>
-            <p className="text-xl sm:text-2xl text-on-surface-muted mb-4 font-medium">
-              Идеальное оформление научной работы по методичке
-            </p>
+            <HeroSubtitle />
           </BlurFade>
           
           <BlurFade delay={0.4} inView>

@@ -161,7 +161,9 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
 
         {/* Right: Theme Toggle + Auth UI */}
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           {isLoading ? (
             <div className="w-8 h-8 rounded-full bg-surface-hover animate-pulse" />
           ) : user ? (
