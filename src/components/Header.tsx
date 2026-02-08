@@ -48,7 +48,7 @@ interface HeaderProps {
   backHref?: string;
 }
 
-type AccessType = "trial" | "one_time" | "subscription" | "none";
+type AccessType = "trial" | "one_time" | "subscription" | "admin" | "none";
 
 const workLinks = [
   { href: "/diplom", label: "Дипломная работа" },
@@ -102,7 +102,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
     : "??";
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const isPro = accessType === "subscription";
+  const isPro = accessType === "subscription" || accessType === "admin";
 
   return (
     <header className="relative z-10 border-b border-surface-border bg-surface backdrop-blur-xl">
