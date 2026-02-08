@@ -157,10 +157,10 @@ function OutlinePageContent() {
                   <Label htmlFor="topic">Тема работы</Label>
                   <Textarea
                     id="topic"
-                    placeholder="Например: Анализ финансовой устойчивости предприятия на примере ООО «Рога и копыта»"
+                    placeholder="Например: Анализ финансовой устойчивости предприятия"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    rows={3}
+                    rows={2}
                     maxLength={500}
                     disabled={isGenerating}
                   />
@@ -214,7 +214,7 @@ function OutlinePageContent() {
                   </Label>
                   <Textarea
                     id="requirements"
-                    placeholder="Например: Включить анализ за 2020-2024 гг., использовать методы экономического анализа"
+                    placeholder="Например: Включить анализ за 2020-2024 гг."
                     value={additionalRequirements}
                     onChange={(e) => setAdditionalRequirements(e.target.value)}
                     rows={2}
