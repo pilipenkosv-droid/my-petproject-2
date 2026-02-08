@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { getBreadcrumbSchema } from "@/lib/seo/schemas";
@@ -60,31 +61,44 @@ export default function BlogPage() {
             >
               <Link
                 href={`/blog/${post.slug}`}
-                className="block p-6"
+                className="block"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h2>
-                    <p className="text-on-surface-muted text-sm mb-4 line-clamp-2 pr-8">
-                      {post.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {post.readingTime}
-                      </span>
-                      <span>
-                        {new Date(post.datePublished).toLocaleDateString("ru-RU", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
+                {post.coverImage && (
+                  <div className="overflow-hidden rounded-t-xl">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      width={1792}
+                      height={1024}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 mt-1" />
+                )}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                        {post.title}
+                      </h2>
+                      <p className="text-on-surface-muted text-sm mb-4 line-clamp-2 pr-8">
+                        {post.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-muted-foreground text-sm">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {post.readingTime}
+                        </span>
+                        <span>
+                          {new Date(post.datePublished).toLocaleDateString("ru-RU", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 mt-1" />
+                  </div>
                 </div>
               </Link>
               <div className="absolute bottom-4 right-4">

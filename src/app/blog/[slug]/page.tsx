@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
@@ -44,6 +45,9 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       publishedTime: post.datePublished,
       modifiedTime: post.dateModified || post.datePublished,
       url: `https://sformat.online/blog/${slug}`,
+      ...(post.coverImage && {
+        images: [{ url: `https://sformat.online${post.coverImage}`, width: 1792, height: 1024 }],
+      }),
     },
   };
 }
@@ -112,6 +116,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </h1>
           <p className="text-on-surface-muted text-lg">{post.description}</p>
         </div>
+
+        {/* Обложка */}
+        {post.coverImage && (
+          <div className="mb-8 rounded-xl overflow-hidden">
+            <Image
+              src={post.coverImage}
+              alt={post.title}
+              width={1792}
+              height={1024}
+              className="w-full h-auto object-cover"
+              priority
+            />
+          </div>
+        )}
 
         {/* Контент */}
         <article className="prose prose-invert prose-violet max-w-none mb-12">
