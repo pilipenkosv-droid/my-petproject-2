@@ -25,6 +25,7 @@ import {
   Plus,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
+import { RelatedTools } from "@/components/RelatedTools";
 
 type InputMode = "text" | "file";
 type TargetLength = "short" | "medium" | "detailed";
@@ -459,6 +460,10 @@ function SummarizePageContent() {
               </Card>
             </BlurFade>
           )}
+
+          <BlurFade delay={0.25} inView>
+            <RelatedTools currentTool="summarize" />
+          </BlurFade>
         </div>
       </div>
     </main>

@@ -7,12 +7,16 @@ const footerLinks = {
     links: [
       { label: "Форматирование", href: "/create" },
       { label: "Генератор плана", href: "/outline" },
-      { label: "Тарифы", href: "/pricing" },
+      { label: "Проверка грамматики", href: "/grammar" },
+      { label: "Повышение уникальности", href: "/rewrite" },
+      { label: "Краткое содержание", href: "/summarize" },
+      { label: "Подбор литературы", href: "/sources" },
     ],
   },
   info: {
     title: "Информация",
     links: [
+      { label: "Тарифы", href: "/pricing" },
       { label: "О сервисе", href: "/about" },
       { label: "Блог", href: "/blog" },
     ],
@@ -34,7 +38,7 @@ export function Footer() {
           <div className="col-span-2 sm:col-span-1">
             <Logo variant="favicon" size={28} withText />
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Автоматическое форматирование научных работ по ГОСТу
+              Инструменты для оформления и подготовки научных работ
             </p>
           </div>
 

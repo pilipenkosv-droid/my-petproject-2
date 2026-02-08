@@ -86,6 +86,40 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
+  // Инструменты (tool pages)
+  const toolPages: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/grammar`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/sources`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/summarize`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/rewrite`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/outline`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+  ]
+
   // Блог
   const blogPage: MetadataRoute.Sitemap = [
     {
@@ -105,5 +139,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  return [...mainPages, ...workTypePages, ...blogPage, ...blogPostPages]
+  return [...mainPages, ...workTypePages, ...toolPages, ...blogPage, ...blogPostPages]
 }

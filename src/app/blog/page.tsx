@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { getBreadcrumbSchema } from "@/lib/seo/schemas";
 import { getAllPosts } from "@/lib/blog/posts";
-import { BookOpen, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Clock, ArrowRight, Sparkles, SpellCheck, Pencil, FileText } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { ShareButtons } from "@/components/ShareButtons";
 
@@ -146,6 +146,24 @@ export default function BlogPage() {
               >
                 Частые вопросы
               </Link>
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center mt-5">
+              <span className="text-xs text-muted-foreground self-center">Также попробуйте:</span>
+              {[
+                { href: "/grammar", icon: SpellCheck, label: "Грамматика" },
+                { href: "/sources", icon: BookOpen, label: "Литература" },
+                { href: "/rewrite", icon: Pencil, label: "Уникальность" },
+                { href: "/outline", icon: FileText, label: "План работы" },
+              ].map((tool) => (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
+                >
+                  <tool.icon className="w-3 h-3" />
+                  {tool.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
+import { RelatedTools } from "@/components/RelatedTools";
 import { useSourceSearch } from "@/features/sources/hooks/useSourceSearch";
 import { SourcesTable } from "@/features/sources/components/SourcesTable";
 
@@ -327,6 +328,10 @@ function SourcesPageContent() {
               </Card>
             </BlurFade>
           )}
+
+          <BlurFade delay={0.25} inView>
+            <RelatedTools currentTool="sources" />
+          </BlurFade>
         </div>
       </div>
     </main>

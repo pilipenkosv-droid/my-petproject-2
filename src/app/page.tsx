@@ -4,7 +4,7 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight } from "lucide-react";
+import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight, BookOpen, SpellCheck, Pencil } from "lucide-react";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { Footer } from "@/components/Footer";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -174,6 +174,101 @@ export default function LandingPage() {
 
       {/* Before / After */}
       <BeforeAfter />
+
+      {/* Tools showcase */}
+      <section className="relative py-24 px-6">
+        <div className="mx-auto max-w-5xl">
+          <BlurFade delay={0.1} inView>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
+              <AuroraText colors={["#7928CA", "#FF0080", "#0070F3"]}>
+                Все инструменты для вашей работы
+              </AuroraText>
+            </h2>
+          </BlurFade>
+          <BlurFade delay={0.2} inView>
+            <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
+              Форматирование, проверка грамматики, подбор литературы и другие AI-инструменты — всё в одном сервисе
+            </p>
+          </BlurFade>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                href: "/create",
+                icon: FileText,
+                label: "Форматирование по ГОСТу",
+                desc: "Загрузите документ и методичку — ИИ оформит по стандарту",
+                gradient: "from-violet-500 to-purple-600",
+                delay: 0.3,
+              },
+              {
+                href: "/outline",
+                icon: FileText,
+                label: "Генератор плана",
+                desc: "Создайте структуру курсовой или диплома с помощью ИИ",
+                gradient: "from-indigo-500 to-violet-600",
+                delay: 0.35,
+              },
+              {
+                href: "/grammar",
+                icon: SpellCheck,
+                label: "Проверка грамматики",
+                desc: "Проверьте текст на орфографические и пунктуационные ошибки",
+                gradient: "from-red-500 to-rose-600",
+                delay: 0.4,
+              },
+              {
+                href: "/rewrite",
+                icon: Pencil,
+                label: "Повышение уникальности",
+                desc: "Перепишите текст с сохранением смысла для антиплагиата",
+                gradient: "from-amber-500 to-orange-600",
+                delay: 0.45,
+              },
+              {
+                href: "/summarize",
+                icon: Sparkles,
+                label: "Краткое содержание",
+                desc: "Сгенерируйте аннотацию или резюме вашей работы",
+                gradient: "from-emerald-500 to-teal-600",
+                delay: 0.5,
+              },
+              {
+                href: "/sources",
+                icon: BookOpen,
+                label: "Подбор литературы",
+                desc: "Найдите реальные научные источники из OpenAlex и CrossRef",
+                gradient: "from-teal-500 to-cyan-600",
+                delay: 0.55,
+              },
+            ].map((tool) => {
+              const ToolIcon = tool.icon;
+              return (
+                <BlurFade key={tool.href} delay={tool.delay} inView>
+                  <Link
+                    href={tool.href}
+                    className="flex items-start gap-4 bg-surface rounded-2xl border border-surface-border p-5 hover:bg-surface-hover hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(139,92,246,0.1)] transition-all duration-300 group h-full"
+                  >
+                    <div
+                      className={`w-11 h-11 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0 shadow-lg`}
+                    >
+                      <ToolIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                        {tool.label}
+                      </p>
+                      <p className="text-sm text-on-surface-muted leading-relaxed">
+                        {tool.desc}
+                      </p>
+                    </div>
+                  </Link>
+                </BlurFade>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* Pain points */}
       <section className="relative py-24 px-6">

@@ -10,6 +10,9 @@ import {
   Clock,
   ShieldCheck,
   ChevronRight,
+  BookOpen,
+  SpellCheck,
+  Pencil,
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { CtaButton } from "@/components/CtaButton";
@@ -218,6 +221,66 @@ export function WorkTypeLanding({
                 {item.name}
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* Полезные инструменты */}
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Полезные инструменты
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {[
+              {
+                href: "/outline",
+                label: "Генератор плана",
+                desc: "Создайте структуру работы с помощью ИИ",
+                icon: FileText,
+                gradient: "from-indigo-500 to-violet-600",
+              },
+              {
+                href: "/sources",
+                label: "Подбор литературы",
+                desc: "Найдите научные источники по теме",
+                icon: BookOpen,
+                gradient: "from-teal-500 to-cyan-600",
+              },
+              {
+                href: "/grammar",
+                label: "Проверка грамматики",
+                desc: "Проверьте текст на ошибки",
+                icon: SpellCheck,
+                gradient: "from-red-500 to-rose-600",
+              },
+              {
+                href: "/rewrite",
+                label: "Повышение уникальности",
+                desc: "Перепишите текст для антиплагиата",
+                icon: Pencil,
+                gradient: "from-amber-500 to-orange-600",
+              },
+            ].map((tool) => {
+              const ToolIcon = tool.icon;
+              return (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  className="flex items-center gap-4 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0`}
+                  >
+                    <ToolIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
+                      {tool.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{tool.desc}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
 

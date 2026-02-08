@@ -26,6 +26,7 @@ import {
   Search,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
+import { RelatedTools } from "@/components/RelatedTools";
 
 type InputMode = "text" | "file";
 
@@ -378,6 +379,10 @@ function GrammarPageContent() {
               </Card>
             </BlurFade>
           )}
+
+          <BlurFade delay={0.25} inView>
+            <RelatedTools currentTool="grammar" />
+          </BlurFade>
         </div>
       </div>
     </main>

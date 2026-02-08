@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
+import { RelatedTools } from "@/components/RelatedTools";
 
 const OUTLINE_WORK_TYPES = WORK_TYPES.filter((wt) => wt.slug !== "other");
 
@@ -339,6 +340,10 @@ function OutlinePageContent() {
               </Card>
             </BlurFade>
           )}
+
+          <BlurFade delay={0.3} inView>
+            <RelatedTools currentTool="outline" />
+          </BlurFade>
         </div>
       </div>
     </main>
