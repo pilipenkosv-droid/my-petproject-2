@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { CtaButton } from "@/components/CtaButton";
 
 export interface WorkTypeFAQ {
   question: string;
@@ -71,13 +72,9 @@ export function WorkTypeLanding({
         title={title}
         subtitle={subtitle}
       >
-        <Link
-          href="/create"
-          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors text-lg mt-8"
-        >
-          Отформатировать бесплатно
-          <ArrowRight className="w-5 h-5" />
-        </Link>
+        <div className="mt-8">
+          <CtaButton className="text-base sm:text-lg px-6 sm:px-8" />
+        </div>
       </PageHero>
 
       <main className="mx-auto max-w-4xl px-6 py-12">
