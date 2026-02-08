@@ -168,12 +168,9 @@ function PricingContent() {
                 }`}
               >
                 {plan.accent && (
-                  <>
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs font-semibold z-10">
-                      Популярное
-                    </span>
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 to-indigo-500" />
-                  </>
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs font-semibold z-10">
+                    Популярное
+                  </span>
                 )}
 
                 <CardHeader>
