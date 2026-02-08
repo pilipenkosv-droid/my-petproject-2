@@ -57,7 +57,7 @@ export default async function ProfilePage() {
             <h2 className="text-3xl font-bold">
               <span className="gradient-text">Профиль</span>
             </h2>
-            {access.accessType === "subscription" && (
+            {(access.accessType === "subscription" || access.accessType === "admin") && (
               <span className="pro-badge flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold">
                 <Crown className="h-3.5 w-3.5" />
                 PRO
@@ -68,9 +68,24 @@ export default async function ProfilePage() {
         </div>
 
         {/* Access info card */}
-        <Card className={`mb-8 ${access.accessType === "subscription" ? "border-violet-500/30 bg-violet-500/5" : ""}`}>
+        <Card className={`mb-8 ${access.accessType === "subscription" || access.accessType === "admin" ? "border-violet-500/30 bg-violet-500/5" : ""}`}>
           <CardContent className="pt-6">
-            {access.accessType === "subscription" ? (
+            {access.accessType === "admin" ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="text-foreground font-medium">Pro — безлимитный доступ</p>
+                    <p className="text-sm text-on-surface-muted">
+                      Неограниченное количество обработок
+                    </p>
+                  </div>
+                </div>
+                <span className="text-sm text-violet-400 font-medium">Активна</span>
+              </div>
+            ) : access.accessType === "subscription" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
@@ -135,7 +150,7 @@ export default async function ProfilePage() {
         </Card>
 
         {/* Verify pending payments */}
-        {access.accessType !== "subscription" && (
+        {access.accessType !== "subscription" && access.accessType !== "admin" && (
           <div className="mb-8 -mt-4">
             <VerifyPaymentsButton />
           </div>
