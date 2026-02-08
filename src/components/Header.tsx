@@ -17,6 +17,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -197,25 +198,39 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </Link>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="hidden md:flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-hover transition-colors">
-                  {isPro && (
-                    <span className="pro-badge flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold">
-                      <Crown className="h-3 w-3" />
-                      PRO
-                    </span>
+                <button className="hidden md:flex items-center rounded-full p-1 hover:bg-surface-hover transition-colors">
+                  {isPro ? (
+                    <div className="p-[2px] rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-purple-600">
+                      <Avatar className="h-8 w-8 border-2 border-background">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
+                        <AvatarFallback className="text-primary-foreground text-xs bg-gradient-to-br from-violet-600 to-indigo-600">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  ) : (
+                    <Avatar className="h-8 w-8">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
+                      <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
-                  <Avatar className={`h-8 w-8 ${isPro ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-transparent" : ""}`}>
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                    <AvatarFallback className={`text-primary-foreground text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-on-surface-muted hidden sm:block max-w-[150px] truncate">
-                    {user.email}
-                  </span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate max-w-[160px]">{user.email}</p>
+                    {isPro && (
+                      <span className="pro-badge flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                        <Crown className="h-2.5 w-2.5" />
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push("/profile")}>
                   <User className="mr-2 h-4 w-4" />
                   Профиль
@@ -344,12 +359,23 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   <div className="space-y-3 w-full">
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1">
-                      <Avatar className={`h-9 w-9 ${isPro ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-transparent" : ""}`}>
-                        {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                        <AvatarFallback className={`text-primary-foreground text-xs ${isPro ? "bg-gradient-to-br from-violet-600 to-indigo-600" : "bg-violet-600"}`}>
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
+                      {isPro ? (
+                        <div className="p-[2px] rounded-full bg-gradient-to-br from-violet-500 via-indigo-500 to-purple-600 shrink-0">
+                          <Avatar className="h-9 w-9 border-2 border-background">
+                            {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
+                            <AvatarFallback className="text-primary-foreground text-xs bg-gradient-to-br from-violet-600 to-indigo-600">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      ) : (
+                        <Avatar className="h-9 w-9 shrink-0">
+                          {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
+                          <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           {isPro && (
