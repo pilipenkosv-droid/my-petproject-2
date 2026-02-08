@@ -161,7 +161,7 @@ function PricingContent() {
             return (
               <Card
                 key={plan.id}
-                className={`relative overflow-hidden transition-all ${
+                className={`relative transition-all ${
                   plan.accent
                     ? "bg-violet-500/10 border-violet-500/30 shadow-xl shadow-violet-500/20 scale-105 z-10"
                     : "bg-surface border-surface-border opacity-[0.9]"
