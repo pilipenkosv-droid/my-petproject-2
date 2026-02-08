@@ -8,6 +8,7 @@ const testimonials = [
     workType: "Дипломная работа",
     rating: 5,
     text: "Сдала диплом с первого раза! Препод возвращал работу с пометкой «неправильное оформление», даже не объяснял что именно не так — 2 раза я тратила по 2 дня на оформление, а теперь за 5 минут и сразу всё идеально.",
+    avatar: "/avatars/anna.jpg",
   },
   {
     name: "Дмитрий П.",
@@ -15,6 +16,7 @@ const testimonials = [
     workType: "Курсовая работа",
     rating: 5,
     text: "Загрузил методичку кафедры и документ — сервис сам всё подправил. Преподаватель не нашёл ни одной ошибки в оформлении.",
+    avatar: "/avatars/dmitry.jpg",
   },
   {
     name: "Мария С.",
@@ -63,9 +65,17 @@ export function Testimonials() {
 
                 {/* Author */}
                 <div className="flex items-center gap-3 pt-4 border-t border-surface-border">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-                    {t.name.charAt(0)}
-                  </div>
+                  {t.avatar ? (
+                    <img
+                      src={t.avatar}
+                      alt={t.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+                      {t.name.charAt(0)}
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-medium text-foreground">{t.name}</p>
                     <p className="text-xs text-muted-foreground">
