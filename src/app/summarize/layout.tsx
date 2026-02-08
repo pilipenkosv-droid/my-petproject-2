@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "аннотация к диплому",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/summarize",
+    canonical: "https://sformat.online/summarize",
   },
   openGraph: {
     title: "Краткое содержание текста — SmartFormat",
     description:
       "Создайте аннотацию к научной работе с помощью ИИ. Короткое, среднее или подробное резюме.",
-    url: "https://ai-sformat.vercel.app/summarize",
+    url: "https://sformat.online/summarize",
   },
 };
 

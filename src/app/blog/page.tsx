@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "форматирование по ГОСТу",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/blog",
+    canonical: "https://sformat.online/blog",
   },
 };
 
@@ -90,7 +90,7 @@ export default function BlogPage() {
               <div className="absolute bottom-4 right-4">
                 <ShareButtons
                   variant="compact"
-                  url={`https://ai-sformat.vercel.app/blog/${post.slug}`}
+                  url={`https://sformat.online/blog/${post.slug}`}
                   title={post.title}
                 />
               </div>

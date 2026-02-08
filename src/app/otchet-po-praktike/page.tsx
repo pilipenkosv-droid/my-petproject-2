@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "производственная практика оформление",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/otchet-po-praktike",
+    canonical: "https://sformat.online/otchet-po-praktike",
   },
   openGraph: {
     title: "Форматирование отчета по практике — SmartFormat",
     description:
       "Загрузите отчет по практике и методичку — AI оформит документ по требованиям за минуты.",
-    url: "https://ai-sformat.vercel.app/otchet-po-praktike",
+    url: "https://sformat.online/otchet-po-praktike",
   },
 };
 

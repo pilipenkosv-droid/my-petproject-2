@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     description: post.description,
     keywords: post.keywords,
     alternates: {
-      canonical: `https://ai-sformat.vercel.app/blog/${slug}`,
+      canonical: `https://sformat.online/blog/${slug}`,
     },
     openGraph: {
       title: post.title,
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       type: "article",
       publishedTime: post.datePublished,
       modifiedTime: post.dateModified || post.datePublished,
-      url: `https://ai-sformat.vercel.app/blog/${slug}`,
+      url: `https://sformat.online/blog/${slug}`,
     },
   };
 }
@@ -154,7 +154,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             Поделиться статьёй
           </div>
           <ShareButtons
-            url={`https://ai-sformat.vercel.app/blog/${slug}`}
+            url={`https://sformat.online/blog/${slug}`}
             title={post.title}
             description={post.description}
           />

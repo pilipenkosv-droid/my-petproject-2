@@ -9,7 +9,7 @@ import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
 import "./globals.css";
 
-const BASE_URL = "https://ai-sformat.vercel.app";
+const BASE_URL = "https://sformat.online";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

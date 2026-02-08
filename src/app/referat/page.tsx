@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "как оформить реферат",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/referat",
+    canonical: "https://sformat.online/referat",
   },
   openGraph: {
     title: "Форматирование реферата по ГОСТу — SmartFormat",
     description:
       "Загрузите реферат — AI оформит документ по требованиям за минуты. Поля, шрифты, отступы по стандарту.",
-    url: "https://ai-sformat.vercel.app/referat",
+    url: "https://sformat.online/referat",
   },
 };
 

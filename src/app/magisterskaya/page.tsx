@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     "оформление диссертации 2026",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/magisterskaya",
+    canonical: "https://sformat.online/magisterskaya",
   },
   openGraph: {
     title: "Форматирование магистерской диссертации по ГОСТу — SmartFormat",
     description:
       "Загрузите магистерскую диссертацию и методичку — AI оформит документ по всем требованиям за несколько минут.",
-    url: "https://ai-sformat.vercel.app/magisterskaya",
+    url: "https://sformat.online/magisterskaya",
   },
 };
 

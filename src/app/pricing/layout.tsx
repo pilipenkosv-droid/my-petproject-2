@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     "оформление научной работы стоимость",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/pricing",
+    canonical: "https://sformat.online/pricing",
   },
   openGraph: {
     title: "Тарифы SmartFormat — оформление работ по ГОСТу",
     description:
       "Пробный период бесплатно. Разовая обработка — 159₽. Безлимитная подписка — 399₽/месяц.",
-    url: "https://ai-sformat.vercel.app/pricing",
+    url: "https://sformat.online/pricing",
   },
 };
 

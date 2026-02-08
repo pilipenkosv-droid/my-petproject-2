@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "литература для диплома",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/sources",
+    canonical: "https://sformat.online/sources",
   },
   openGraph: {
     title: "Подбор литературы для научной работы — SmartFormat",
     description:
       "Найдите реальные научные источники по теме работы. Поиск по OpenAlex и CrossRef с оформлением по ГОСТу.",
-    url: "https://ai-sformat.vercel.app/sources",
+    url: "https://sformat.online/sources",
   },
 };
 

@@ -189,7 +189,7 @@ export default async function Image({
               color: "rgba(255,255,255,0.3)",
             }}
           >
-            ai-sformat.vercel.app
+            sformat.online
           </span>
         </div>
       </div>

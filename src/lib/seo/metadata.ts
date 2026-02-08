@@ -4,7 +4,7 @@
 
 import { Metadata } from 'next'
 
-const BASE_URL = 'https://ai-sformat.vercel.app'
+const BASE_URL = 'https://sformat.online'
 const SITE_NAME = 'SmartFormat'
 
 interface PageMetadataOptions {

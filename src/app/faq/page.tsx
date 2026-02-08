@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "ГОСТ 7.1 список литературы",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/faq",
+    canonical: "https://sformat.online/faq",
   },
 };
 

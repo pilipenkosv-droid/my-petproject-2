@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog/posts'
 
-const BASE_URL = 'https://ai-sformat.vercel.app'
+const BASE_URL = 'https://sformat.online'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString()

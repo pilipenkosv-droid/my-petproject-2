@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     "курсовой проект по ГОСТу",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/kursovaya",
+    canonical: "https://sformat.online/kursovaya",
   },
   openGraph: {
     title: "Форматирование курсовой работы и курсового проекта по ГОСТу — SmartFormat",
     description:
       "Загрузите курсовую работу или курсовой проект и методичку — AI оформит документ по требованиям вуза за несколько минут.",
-    url: "https://ai-sformat.vercel.app/kursovaya",
+    url: "https://sformat.online/kursovaya",
   },
 };
 

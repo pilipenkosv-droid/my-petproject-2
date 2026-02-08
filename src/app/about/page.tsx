@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "как работает SmartFormat",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/about",
+    canonical: "https://sformat.online/about",
   },
 };
 

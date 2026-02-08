@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "повышение оригинальности",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/rewrite",
+    canonical: "https://sformat.online/rewrite",
   },
   openGraph: {
     title: "Повышение уникальности текста — SmartFormat",
     description:
       "Перепишите текст с сохранением смысла для повышения уникальности. Три режима глубины рерайта.",
-    url: "https://ai-sformat.vercel.app/rewrite",
+    url: "https://sformat.online/rewrite",
   },
 };
 

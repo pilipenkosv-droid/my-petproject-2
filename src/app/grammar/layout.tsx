@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "проверка стилистики текста",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/grammar",
+    canonical: "https://sformat.online/grammar",
   },
   openGraph: {
     title: "Проверка грамматики онлайн — SmartFormat",
     description:
       "Проверьте текст на орфографические, пунктуационные и стилистические ошибки. Подробный отчёт с вариантами исправления.",
-    url: "https://ai-sformat.vercel.app/grammar",
+    url: "https://sformat.online/grammar",
   },
 };
 

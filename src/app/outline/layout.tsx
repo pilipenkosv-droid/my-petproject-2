@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "оглавление диплома",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/outline",
+    canonical: "https://sformat.online/outline",
   },
   openGraph: {
     title: "Генератор плана работы — SmartFormat",
     description:
       "Создайте структуру курсовой или дипломной работы с помощью ИИ. Разделы, подразделы и рекомендуемый объём.",
-    url: "https://ai-sformat.vercel.app/outline",
+    url: "https://sformat.online/outline",
   },
 };
 

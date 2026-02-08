@@ -14,13 +14,13 @@ export const metadata: Metadata = {
     "как оформить эссе",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/esse",
+    canonical: "https://sformat.online/esse",
   },
   openGraph: {
     title: "Форматирование эссе — SmartFormat",
     description:
       "Загрузите эссе и требования — AI оформит документ по стандартам за минуты.",
-    url: "https://ai-sformat.vercel.app/esse",
+    url: "https://sformat.online/esse",
   },
 };
 

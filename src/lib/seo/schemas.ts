@@ -2,7 +2,7 @@
  * JSON-LD Schema генераторы для SEO/GEO оптимизации
  */
 
-const BASE_URL = 'https://ai-sformat.vercel.app'
+const BASE_URL = 'https://sformat.online'
 
 export interface FAQItem {
   question: string

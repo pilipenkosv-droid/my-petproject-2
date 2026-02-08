@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     "помощь с оформлением диплома",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/diplom",
+    canonical: "https://sformat.online/diplom",
   },
   openGraph: {
     title: "Форматирование диплома по ГОСТу — SmartFormat",
     description:
       "Загрузите дипломную работу и методичку — AI оформит документ по всем требованиям за несколько минут.",
-    url: "https://ai-sformat.vercel.app/diplom",
+    url: "https://sformat.online/diplom",
   },
 };
 

@@ -31,4 +31,4 @@ Disallow: /result/
 Disallow: /confirm-rules/
 Disallow: /payment/
 
-Sitemap: https://ai-sformat.vercel.app/sitemap.xml
+Sitemap: https://sformat.online/sitemap.xml

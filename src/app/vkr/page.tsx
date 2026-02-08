@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     "оформление выпускной квалификационной работы",
   ],
   alternates: {
-    canonical: "https://ai-sformat.vercel.app/vkr",
+    canonical: "https://sformat.online/vkr",
   },
   openGraph: {
     title: "Форматирование ВКР по ГОСТу — SmartFormat",
     description:
       "Загрузите выпускную квалификационную работу и методичку — AI оформит документ по всем требованиям за несколько минут.",
-    url: "https://ai-sformat.vercel.app/vkr",
+    url: "https://sformat.online/vkr",
   },
 };
 
