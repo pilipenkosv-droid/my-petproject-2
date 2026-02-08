@@ -1552,6 +1552,7 @@ AI-сервисы для форматирования — это инструм�
   },
   {
     slug: "6-instrumentov-dlya-podgotovki-nauchnyh-rabot",
+    coverImage: "/blog/6-instrumentov-dlya-podgotovki-nauchnyh-rabot.png",
     title:
       "6 AI-инструментов SmartFormat для подготовки научных работ: полный обзор",
     description:
