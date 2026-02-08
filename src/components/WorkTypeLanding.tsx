@@ -72,7 +72,7 @@ export function WorkTypeLanding({
         title={title}
         subtitle={subtitle}
       >
-        <div className="mt-8">
+        <div className="mt-8 flex justify-center">
           <CtaButton className="text-base sm:text-lg px-6 sm:px-8" />
         </div>
       </PageHero>
