@@ -114,3 +114,9 @@ export const REQUIREMENTS_DOCUMENT_CONFIG = {
   acceptedTypes: [DOCX_MIME, PDF_MIME, TXT_MIME],
   acceptedExtensions: [".docx", ".pdf", ".txt"],
 };
+
+/** Общий конфиг для инструментов, принимающих текстовые документы (summarize, rewrite) */
+export const TEXT_DOCUMENT_CONFIG = {
+  acceptedTypes: [DOCX_MIME, PDF_MIME, TXT_MIME],
+  acceptedExtensions: [".docx", ".pdf", ".txt"],
+};

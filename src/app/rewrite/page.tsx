@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -18,24 +19,22 @@ import {
   RefreshCw,
   Loader2,
   ArrowRight,
-  FileText,
+  Pencil,
   Type,
   Upload,
-  Minus,
-  Plus,
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 
 type InputMode = "text" | "file";
-type TargetLength = "short" | "medium" | "detailed";
+type RewriteMode = "light" | "medium" | "heavy";
 
-const LENGTH_OPTIONS: { value: TargetLength; label: string; description: string }[] = [
-  { value: "short", label: "Короткое", description: "100-200 слов" },
-  { value: "medium", label: "Среднее", description: "300-500 слов" },
-  { value: "detailed", label: "Подробное", description: "800-1000 слов" },
+const MODE_OPTIONS: { value: RewriteMode; label: string; description: string }[] = [
+  { value: "light", label: "Лёгкий", description: "Синонимы, ~70-80%" },
+  { value: "medium", label: "Средний", description: "Перестройка, ~80-90%" },
+  { value: "heavy", label: "Глубокий", description: "Перефразирование, ~90-95%" },
 ];
 
-export default function SummarizePage() {
+export default function RewritePage() {
   return (
     <Suspense
       fallback={
@@ -52,16 +51,17 @@ export default function SummarizePage() {
         </main>
       }
     >
-      <SummarizePageContent />
+      <RewritePageContent />
     </Suspense>
   );
 }
 
-function SummarizePageContent() {
+function RewritePageContent() {
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [text, setText] = useState("");
-  const [targetLength, setTargetLength] = useState<TargetLength>("medium");
-  const [summary, setSummary] = useState<string | null>(null);
+  const [rewriteMode, setRewriteMode] = useState<RewriteMode>("medium");
+  const [preserveTerms, setPreserveTerms] = useState("");
+  const [rewritten, setRewritten] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedText, setExtractedText] = useState<string | null>(null);
@@ -112,7 +112,6 @@ function SummarizePageContent() {
 
     let inputText = activeText;
 
-    // Если файловый режим и текст ещё не извлечён — извлекаем
     if (inputMode === "file" && !extractedText) {
       inputText = await handleExtractText();
       if (!inputText) return;
@@ -125,81 +124,60 @@ function SummarizePageContent() {
 
     setIsGenerating(true);
     setError(null);
-    setSummary(null);
+    setRewritten(null);
 
-    trackEvent("summarize_generate", {
-      targetLength,
+    trackEvent("rewrite_generate", {
+      rewriteMode,
       inputMode,
       textLength: inputText.length,
+      hasPreserveTerms: preserveTerms.trim().length > 0,
     });
 
     try {
-      const response = await fetch("/api/summarize", {
+      const response = await fetch("/api/rewrite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: inputText.trim(),
-          targetLength,
+          mode: rewriteMode,
+          preserveTerms: preserveTerms.trim() || undefined,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Ошибка при генерации резюме");
+        throw new Error(data.error || "Ошибка при рерайте текста");
       }
 
       const data = await response.json();
-      setSummary(data.summary);
+      setRewritten(data.rewritten);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
       setIsGenerating(false);
     }
-  }, [isGenerating, activeText, inputMode, extractedText, handleExtractText, targetLength]);
-
-  const handleShorter = useCallback(() => {
-    const idx = LENGTH_OPTIONS.findIndex((o) => o.value === targetLength);
-    if (idx > 0) {
-      setTargetLength(LENGTH_OPTIONS[idx - 1].value);
-      // Перегенерируем после обновления state
-      setTimeout(() => {
-        setSummary(null);
-        setError(null);
-      }, 0);
-    }
-  }, [targetLength]);
-
-  const handleLonger = useCallback(() => {
-    const idx = LENGTH_OPTIONS.findIndex((o) => o.value === targetLength);
-    if (idx < LENGTH_OPTIONS.length - 1) {
-      setTargetLength(LENGTH_OPTIONS[idx + 1].value);
-      setTimeout(() => {
-        setSummary(null);
-        setError(null);
-      }, 0);
-    }
-  }, [targetLength]);
+  }, [isGenerating, activeText, inputMode, extractedText, handleExtractText, rewriteMode, preserveTerms]);
 
   const handleCopy = useCallback(async () => {
-    if (!summary) return;
+    if (!rewritten) return;
     try {
-      await navigator.clipboard.writeText(summary);
+      await navigator.clipboard.writeText(rewritten);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // fallback — ignore
     }
-  }, [summary]);
+  }, [rewritten]);
 
   const handleReset = () => {
-    setSummary(null);
+    setRewritten(null);
     setError(null);
   };
 
   const handleModeSwitch = (mode: InputMode) => {
     setInputMode(mode);
     setError(null);
-    setSummary(null);
+    setRewritten(null);
     if (mode === "text") {
       setExtractedText(null);
       fileUpload.reset();
@@ -218,14 +196,14 @@ function SummarizePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
-                <FileText className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 mb-4">
+                <Pencil className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Краткое содержание
+                Повышение уникальности
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Вставьте текст или загрузите файл — AI создаст аннотацию или краткое содержание вашей работы
+                Вставьте текст или загрузите файл — AI перепишет его с сохранением смысла для повышения уникальности
               </p>
             </div>
           </BlurFade>
@@ -267,10 +245,10 @@ function SummarizePageContent() {
                 {/* Text input */}
                 {inputMode === "text" && (
                   <div className="space-y-2">
-                    <Label htmlFor="text">Текст для резюмирования</Label>
+                    <Label htmlFor="text">Текст для рерайта</Label>
                     <Textarea
                       id="text"
-                      placeholder="Вставьте текст работы или её фрагмент..."
+                      placeholder="Вставьте текст, который нужно переписать..."
                       value={text}
                       onChange={(e) => setText(e.target.value)}
                       rows={8}
@@ -288,7 +266,7 @@ function SummarizePageContent() {
                   <div className="space-y-2">
                     <Label>Загрузите документ</Label>
                     <FileUploadZone
-                      label="Документ для резюмирования"
+                      label="Документ для рерайта"
                       description="Загрузите .docx, .pdf или .txt файл"
                       acceptedTypes={TEXT_DOCUMENT_CONFIG.acceptedTypes}
                       acceptedExtensions={TEXT_DOCUMENT_CONFIG.acceptedExtensions}
@@ -308,18 +286,18 @@ function SummarizePageContent() {
                   </div>
                 )}
 
-                {/* Target length */}
+                {/* Rewrite mode */}
                 <div className="space-y-2">
-                  <Label>Длина резюме</Label>
+                  <Label>Глубина рерайта</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {LENGTH_OPTIONS.map((option) => (
+                    {MODE_OPTIONS.map((option) => (
                       <button
                         key={option.value}
                         type="button"
-                        onClick={() => setTargetLength(option.value)}
+                        onClick={() => setRewriteMode(option.value)}
                         disabled={isGenerating}
                         className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-sm transition-all ${
-                          targetLength === option.value
+                          rewriteMode === option.value
                             ? "border-primary bg-primary/10 text-primary font-medium"
                             : "border-surface-border bg-surface hover:bg-surface-hover text-muted-foreground"
                         }`}
@@ -329,6 +307,25 @@ function SummarizePageContent() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Preserve terms */}
+                <div className="space-y-2">
+                  <Label htmlFor="terms">
+                    Сохранить термины{" "}
+                    <span className="text-muted-foreground font-normal">(необязательно)</span>
+                  </Label>
+                  <Input
+                    id="terms"
+                    placeholder="NPV, EBITDA, рентабельность"
+                    value={preserveTerms}
+                    onChange={(e) => setPreserveTerms(e.target.value)}
+                    maxLength={500}
+                    disabled={isGenerating}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Через запятую — эти слова останутся без изменений
+                  </p>
                 </div>
 
                 {/* Error */}
@@ -354,12 +351,12 @@ function SummarizePageContent() {
                     ) : isGenerating ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Генерируем резюме...
+                        Переписываем...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5 mr-2" />
-                        Сгенерировать резюме
+                        Переписать текст
                       </>
                     )}
                   </ShimmerButton>
@@ -369,21 +366,21 @@ function SummarizePageContent() {
           </BlurFade>
 
           {/* Result */}
-          {summary && (
+          {rewritten && (
             <BlurFade delay={0.1} inView>
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-emerald-500" />
-                    Краткое содержание
+                    <Pencil className="w-5 h-5 text-amber-500" />
+                    Результат
                   </CardTitle>
                   <CardDescription>
-                    {LENGTH_OPTIONS.find((o) => o.value === targetLength)?.label} резюме
+                    {MODE_OPTIONS.find((o) => o.value === rewriteMode)?.label} рерайт
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
-                    {summary}
+                    {rewritten}
                   </pre>
 
                   <div className="flex flex-wrap gap-2 justify-center">
@@ -405,35 +402,13 @@ function SummarizePageContent() {
                       )}
                     </Button>
 
-                    {targetLength !== "short" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleShorter}
-                      >
-                        <Minus className="w-4 h-4 mr-1" />
-                        Ещё короче
-                      </Button>
-                    )}
-
-                    {targetLength !== "detailed" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLonger}
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Подробнее
-                      </Button>
-                    )}
-
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleReset}
                     >
                       <RefreshCw className="w-4 h-4 mr-1" />
-                      Заново
+                      Ещё раз
                     </Button>
                   </div>
                 </CardContent>
@@ -442,9 +417,9 @@ function SummarizePageContent() {
           )}
 
           {/* CTA block */}
-          {summary && (
+          {rewritten && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
+              <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?

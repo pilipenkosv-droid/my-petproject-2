@@ -281,6 +281,20 @@ export default function ResultPage({ params }: ResultPageProps) {
           {/* CSAT виджет */}
           <CSATWidget jobId={jobId} />
 
+          {/* CTA: Повысить уникальность */}
+          <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+            <CardContent className="py-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Нужно повысить уникальность?
+              </p>
+              <Link href="/rewrite">
+                <Button variant="outline" size="sm">
+                  Переписать текст для уникальности
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           {/* CTA: Краткое содержание */}
           <Card className="border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">
             <CardContent className="py-4 text-center">

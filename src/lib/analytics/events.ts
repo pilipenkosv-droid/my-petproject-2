@@ -19,6 +19,7 @@ export type FunnelEvent =
   | "chat_question"         // User asked question about guidelines
   | "blog_share"            // User shared a blog post
   | "summarize_generate"    // User generated text summary
+  | "rewrite_generate"      // User generated rewritten text
   | "gost_mode_selected"    // User switched to standard GOST mode
   | "work_type_selected";   // User selected work type
 
