@@ -15,7 +15,7 @@ export function Mascot({ src, alt, width, height, className, priority }: MascotP
       <div className="relative">
         {/* White blob background — visible in both themes to mask imperfect cutouts */}
         <div
-          className="absolute inset-0 bg-white rounded-[50%] scale-75 blur-md opacity-60"
+          className="absolute inset-0 bg-white rounded-[50%] scale-105 blur-xl opacity-60"
           aria-hidden="true"
         />
         <Image
