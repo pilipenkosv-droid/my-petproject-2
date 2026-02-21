@@ -37,7 +37,7 @@ export default function LandingPage() {
                 alt="Дипломированный диплодок — маскот Diplox"
                 width={1536}
                 height={1024}
-                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl"
+                className="w-72 sm:w-96 md:w-[31rem] lg:w-[36rem] xl:w-[42rem] h-auto drop-shadow-2xl"
                 priority
               />
             </BlurFade>
