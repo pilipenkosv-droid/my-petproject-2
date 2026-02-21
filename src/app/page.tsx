@@ -36,18 +36,18 @@ export default function LandingPage() {
               <Image
                 src="/mascot/hero-light.png"
                 alt="Дипломированный диплодок — маскот Diplox"
-                width={649}
-                height={800}
-                className="w-48 sm:w-56 md:w-72 lg:w-80 xl:w-[22rem] h-auto drop-shadow-2xl dark:hidden"
+                width={1536}
+                height={1024}
+                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl dark:hidden"
                 priority
               />
               {/* Dark theme mascot */}
               <Image
                 src="/mascot/hero-dark.png"
                 alt="Дипломированный диплодок — маскот Diplox"
-                width={649}
-                height={800}
-                className="w-48 sm:w-56 md:w-72 lg:w-80 xl:w-[22rem] h-auto drop-shadow-2xl hidden dark:block"
+                width={1536}
+                height={1024}
+                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl hidden dark:block"
                 priority
               />
             </BlurFade>
