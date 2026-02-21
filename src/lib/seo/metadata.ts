@@ -3,9 +3,7 @@
  */
 
 import { Metadata } from 'next'
-
-const BASE_URL = 'https://sformat.online'
-const SITE_NAME = 'SmartFormat'
+import { SITE_URL, SITE_NAME } from '@/lib/config/site'
 
 interface PageMetadataOptions {
   title: string
@@ -27,7 +25,7 @@ export function generatePageMetadata({
   noIndex = false,
   ogImage,
 }: PageMetadataOptions): Metadata {
-  const url = `${BASE_URL}${path}`
+  const url = `${SITE_URL}${path}`
   const fullTitle = path === '' ? title : `${title} | ${SITE_NAME}`
 
   const defaultKeywords = [
@@ -35,7 +33,7 @@ export function generatePageMetadata({
     'оформление диплома',
     'оформление курсовой',
     'автоматическое форматирование',
-    'SmartFormat',
+    'Diplox',
     'ГОСТ 7.32-2017',
     'оформление научных работ',
     'оформление диссертации',

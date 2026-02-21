@@ -61,8 +61,8 @@ export async function searchCrossRef(
 
   const mailto = process.env.CROSSREF_MAILTO || "";
   const userAgent = mailto
-    ? `SmartFormat/1.0 (mailto:${mailto})`
-    : "SmartFormat/1.0";
+    ? `Diplox/1.0 (mailto:${mailto})`
+    : "Diplox/1.0";
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

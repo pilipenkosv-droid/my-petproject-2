@@ -103,7 +103,7 @@ function ContainerTextFlip({
 
 export function HeroSubtitle() {
   return (
-    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 flex flex-col items-center justify-center gap-y-3">
+    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 flex flex-col items-center md:items-start justify-center gap-y-3">
       <span className="text-foreground">Идеальное оформление</span>
       <ContainerTextFlip
         words={[

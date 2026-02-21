@@ -2,12 +2,11 @@ import { ImageResponse } from "next/og";
 import { getPostBySlug } from "@/lib/blog/posts";
 
 export const runtime = "edge";
-export const alt = "SmartFormat — Блог";
+export const alt = "Diplox — Блог";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const FLOW_PATH =
-  "M8 20 C8 13, 13 10, 16 10 C19.5 10, 19.5 14.5, 16 16.5 C12.5 18.5, 12.5 23, 16 23 C20 23, 24 18, 24 12";
+import { D_ICON_WHITE_BASE64 } from "@/lib/logo/constants";
 
 // Full beam grid (all 56 paths from BackgroundBeams component)
 const ALL_BEAMS =
@@ -49,7 +48,7 @@ export default async function Image({
 }) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
-  const title = post?.title || "SmartFormat — Блог";
+  const title = post?.title || "Diplox — Блог";
 
   const fontSize = title.length > 60 ? 40 : title.length > 40 ? 48 : 56;
 
@@ -117,15 +116,12 @@ export default async function Image({
               gap: "12px",
             }}
           >
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path
-                d={FLOW_PATH}
-                stroke="white"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeOpacity="0.8"
-              />
-            </svg>
+            <img
+              src={D_ICON_WHITE_BASE64}
+              width={32}
+              height={32}
+              style={{ objectFit: "contain" }}
+            />
             <span
               style={{
                 fontSize: "24px",
@@ -135,7 +131,7 @@ export default async function Image({
                 letterSpacing: "-0.5px",
               }}
             >
-              SmartFormat
+              Diplox
             </span>
           </div>
           <div
@@ -189,7 +185,7 @@ export default async function Image({
               color: "rgba(255,255,255,0.3)",
             }}
           >
-            sformat.online
+            diplox.online
           </span>
         </div>
       </div>

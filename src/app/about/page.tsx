@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { getBreadcrumbSchema, getHowToSchema } from "@/lib/seo/schemas";
+import { SITE_URL } from "@/lib/config/site";
 import {
   Sparkles,
   FileText,
@@ -16,17 +17,17 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "О сервисе SmartFormat — автоформатирование по ГОСТу",
+  title: "О сервисе Diplox — автоформатирование по ГОСТу",
   description:
-    "SmartFormat — сервис автоматического форматирования научных работ по ГОСТу и методичке вуза. AI-анализ требований, мгновенная обработка, сохранение структуры текста.",
+    "Diplox — сервис автоматического форматирования научных работ по ГОСТу и методичке вуза. AI-анализ требований, мгновенная обработка, сохранение структуры текста.",
   keywords: [
-    "о сервисе SmartFormat",
+    "о сервисе Diplox",
     "автоформатирование по ГОСТу",
     "AI форматирование документов",
-    "как работает SmartFormat",
+    "как работает Diplox",
   ],
   alternates: {
-    canonical: "https://sformat.online/about",
+    canonical: `${SITE_URL}/about`,
   },
 };
 
@@ -105,7 +106,7 @@ export default function AboutPage() {
       />
       <JsonLd
         data={getHowToSchema(
-          "Как отформатировать работу по ГОСТу в SmartFormat",
+          "Как отформатировать работу по ГОСТу в Diplox",
           "Пошаговая инструкция по автоматическому форматированию научной работы",
           howItWorks.map((item) => ({
             name: item.title,
@@ -127,7 +128,7 @@ export default function AboutPage() {
             научных работ по ГОСТу
           </h1>
           <p className="text-on-surface-muted text-lg max-w-2xl mx-auto">
-            SmartFormat использует искусственный интеллект для анализа
+            Diplox использует искусственный интеллект для анализа
             методических указаний вашего вуза и автоматического применения
             требований к оформлению документа.
           </p>
@@ -224,7 +225,7 @@ export default function AboutPage() {
 
           <div className="bg-surface rounded-xl border border-surface-border p-6">
             <p className="text-on-surface-muted leading-relaxed mb-4">
-              SmartFormat использует современные языковые модели для анализа
+              Diplox использует современные языковые модели для анализа
               текстовых документов. Система способна понимать естественный язык
               методических указаний и извлекать из них конкретные параметры
               форматирования.

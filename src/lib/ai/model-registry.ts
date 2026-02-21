@@ -100,8 +100,8 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 8,
     extraParams: {
       headers: {
-        "HTTP-Referer": "https://sformat.online",
-        "X-Title": "SmartFormat",
+        "HTTP-Referer": "https://diplox.online",
+        "X-Title": "Diplox",
       },
     },
   },
@@ -117,8 +117,8 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 9,
     extraParams: {
       headers: {
-        "HTTP-Referer": "https://sformat.online",
-        "X-Title": "SmartFormat",
+        "HTTP-Referer": "https://diplox.online",
+        "X-Title": "Diplox",
       },
     },
   },

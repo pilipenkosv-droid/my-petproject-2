@@ -209,9 +209,9 @@ async function createMarkedOriginal(
       comments.push(
         createNode("w:comment", {
           "w:id": String(currentCommentId),
-          "w:author": "SmartFormat",
+          "w:author": "Diplox",
           "w:date": new Date().toISOString(),
-          "w:initials": "SF",
+          "w:initials": "DX",
         }, [
           createNode("w:p", undefined, [
             createNode("w:pPr", undefined, [

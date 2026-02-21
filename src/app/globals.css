@@ -8,13 +8,13 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════
-   Design tokens для SmartFormat
+   Design tokens для Diplox
    Light theme = :root, Dark theme = .dark
    ═══════════════════════════════════════════════════ */
 
 :root {
   /* Градиенты (общие для обеих тем) */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-primary: linear-gradient(135deg, #18CCFC 0%, #AE48FF 100%);
   --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 

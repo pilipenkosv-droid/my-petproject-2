@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/blog/posts'
 
-const BASE_URL = 'https://sformat.online'
+import { SITE_URL } from '@/lib/config/site'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString()
@@ -9,31 +9,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Основные страницы
   const mainPages: MetadataRoute.Sitemap = [
     {
-      url: BASE_URL,
+      url: SITE_URL,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: `${BASE_URL}/pricing`,
+      url: `${SITE_URL}/pricing`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/faq`,
+      url: `${SITE_URL}/faq`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/about`,
+      url: `${SITE_URL}/about`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/create`,
+      url: `${SITE_URL}/create`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -43,43 +43,43 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Landing pages по типам работ
   const workTypePages: MetadataRoute.Sitemap = [
     {
-      url: `${BASE_URL}/diplom`,
+      url: `${SITE_URL}/diplom`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/kursovaya`,
+      url: `${SITE_URL}/kursovaya`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/referat`,
+      url: `${SITE_URL}/referat`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/esse`,
+      url: `${SITE_URL}/esse`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/otchet-po-praktike`,
+      url: `${SITE_URL}/otchet-po-praktike`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/vkr`,
+      url: `${SITE_URL}/vkr`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/magisterskaya`,
+      url: `${SITE_URL}/magisterskaya`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -89,31 +89,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Инструменты (tool pages)
   const toolPages: MetadataRoute.Sitemap = [
     {
-      url: `${BASE_URL}/grammar`,
+      url: `${SITE_URL}/grammar`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/sources`,
+      url: `${SITE_URL}/sources`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/summarize`,
+      url: `${SITE_URL}/summarize`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/rewrite`,
+      url: `${SITE_URL}/rewrite`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/outline`,
+      url: `${SITE_URL}/outline`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -123,7 +123,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Блог
   const blogPage: MetadataRoute.Sitemap = [
     {
-      url: `${BASE_URL}/blog`,
+      url: `${SITE_URL}/blog`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.7,
@@ -133,7 +133,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Статьи блога (автоматически из posts.ts)
   const allPosts = getAllPosts()
   const blogPostPages: MetadataRoute.Sitemap = allPosts.map((post) => ({
-    url: `${BASE_URL}/blog/${post.slug}`,
+    url: `${SITE_URL}/blog/${post.slug}`,
     lastModified: post.dateModified || post.datePublished,
     changeFrequency: 'monthly' as const,
     priority: 0.6,

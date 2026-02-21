@@ -1,7 +1,8 @@
 import { Metadata } from "next";
+import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Краткое содержание текста — аннотация с помощью ИИ | SmartFormat",
+  title: "Краткое содержание текста — аннотация с помощью ИИ | Diplox",
   description:
     "Создайте аннотацию или краткое содержание научной работы с помощью ИИ. Три длины резюме: короткое, среднее, подробное. Загрузите текст или файл.",
   keywords: [
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
     "аннотация к диплому",
   ],
   alternates: {
-    canonical: "https://sformat.online/summarize",
+    canonical: `${SITE_URL}/summarize`,
   },
   openGraph: {
-    title: "Краткое содержание текста — SmartFormat",
+    title: "Краткое содержание текста — Diplox",
     description:
       "Создайте аннотацию к научной работе с помощью ИИ. Короткое, среднее или подробное резюме.",
-    url: "https://sformat.online/summarize",
+    url: `${SITE_URL}/summarize`,
   },
 };
 

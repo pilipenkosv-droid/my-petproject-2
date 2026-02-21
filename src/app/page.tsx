@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -26,38 +27,65 @@ export default function LandingPage() {
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/15 rounded-full blur-[150px]" />
         </div>
         
-        <div className="relative z-10 mx-auto max-w-4xl text-center">
-          {/* Badge */}
-          <BlurFade delay={0.1} inView>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border backdrop-blur-sm mb-8">
-              <Sparkles className="w-4 h-4 text-violet-400" />
-              <span className="text-sm text-on-surface">Powered by AI</span>
-            </div>
-          </BlurFade>
-          
-          <BlurFade delay={0.2} inView>
-            <HeroSubtitle />
-          </BlurFade>
-          
-          <BlurFade delay={0.4} inView>
-            <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
-              Загрузите курсовую или диплом в .docx и методичку вашего вуза —
-              нейросеть автоматически оформит отступы, шрифты, заголовки и список литературы по ГОСТу.
-            </p>
-          </BlurFade>
-          
-          <BlurFade delay={0.5} inView>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="w-full sm:w-auto">
-                <CtaButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8" />
-              </div>
-              <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-6 sm:py-7 w-full sm:w-auto" asChild>
-                <a href="#how-it-works">Как это работает</a>
-              </Button>
-            </div>
-          </BlurFade>
+        <div className="relative z-10 mx-auto max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+          {/* Mascot column — mobile: top, desktop: right */}
+          <div className="order-1 md:order-2 flex justify-center">
+            <BlurFade delay={0.3} inView>
+              {/* Light theme: transparent bg mascot */}
+              <Image
+                src="/mascot/hero.png"
+                alt="Дипломированный диплодок — маскот Diplox"
+                width={649}
+                height={800}
+                className="w-48 sm:w-56 md:w-72 lg:w-80 xl:w-[22rem] h-auto drop-shadow-2xl dark:hidden"
+                priority
+              />
+              {/* Dark theme: mascot with fireflies on dark bg */}
+              <Image
+                src="/mascot/hero-dark.png"
+                alt="Дипломированный диплодок — маскот Diplox"
+                width={800}
+                height={533}
+                className="hidden dark:block w-56 sm:w-64 md:w-80 lg:w-96 xl:w-[26rem] h-auto drop-shadow-2xl rounded-2xl"
+                priority
+              />
+            </BlurFade>
+          </div>
 
-          <StatsCounter />
+          {/* Text column — mobile: bottom, desktop: left */}
+          <div className="order-2 md:order-1 text-center md:text-left">
+            {/* Badge */}
+            <BlurFade delay={0.1} inView>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border backdrop-blur-sm mb-8">
+                <Sparkles className="w-4 h-4 text-violet-400" />
+                <span className="text-sm text-on-surface">Powered by AI</span>
+              </div>
+            </BlurFade>
+
+            <BlurFade delay={0.2} inView>
+              <HeroSubtitle />
+            </BlurFade>
+
+            <BlurFade delay={0.4} inView>
+              <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
+                Загрузите курсовую или диплом в .docx и методичку вашего вуза —
+                нейросеть автоматически оформит отступы, шрифты, заголовки и список литературы по ГОСТу.
+              </p>
+            </BlurFade>
+
+            <BlurFade delay={0.5} inView>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
+                <div className="w-full sm:w-auto">
+                  <CtaButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8" />
+                </div>
+                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-6 sm:py-7 w-full sm:w-auto" asChild>
+                  <a href="#how-it-works">Как это работает</a>
+                </Button>
+              </div>
+            </BlurFade>
+
+            <StatsCounter />
+          </div>
         </div>
       </section>
 
@@ -323,7 +351,7 @@ export default function LandingPage() {
                   Не попадает в базы антиплагиата
                 </h2>
                 <p className="text-on-surface-muted mb-4 leading-relaxed max-w-2xl">
-                  SmartFormat — сервис форматирования, не система проверки.
+                  Diplox — сервис форматирования, не система проверки.
                   Мы используем Google Gemini и Groq для анализа методички, но не имеем
                   доступа к Антиплагиат.ВУЗ и не передаём документы в университетские базы.
                   Оригинальность вашей работы не изменится.

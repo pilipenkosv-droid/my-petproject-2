@@ -2,7 +2,7 @@
  * JSON-LD Schema генераторы для SEO/GEO оптимизации
  */
 
-const BASE_URL = 'https://sformat.online'
+import { SITE_URL, SITE_NAME } from '@/lib/config/site'
 
 export interface FAQItem {
   question: string
@@ -30,7 +30,7 @@ export function getSoftwareApplicationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'SmartFormat',
+    name: SITE_NAME,
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
     offers: {
@@ -41,7 +41,7 @@ export function getSoftwareApplicationSchema() {
     },
     description:
       'Сервис для подготовки научных работ: автоматическое форматирование по ГОСТу, проверка грамматики, подбор литературы, генерация плана и аннотации, повышение уникальности текста.',
-    url: BASE_URL,
+    url: SITE_URL,
     featureList: [
       'Автоматическое форматирование по ГОСТу',
       'Анализ методических указаний',
@@ -58,7 +58,7 @@ export function getSoftwareApplicationSchema() {
       'Повышение уникальности текста (рерайт)',
       'Генератор плана работы с разделами и подразделами',
     ],
-    screenshot: `${BASE_URL}/og-image.png`,
+    screenshot: `${SITE_URL}/og-image.png`,
   }
 }
 
@@ -69,15 +69,15 @@ export function getWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'SmartFormat',
-    url: BASE_URL,
+    name: SITE_NAME,
+    url: SITE_URL,
     description:
       'Автоматическое форматирование научных работ по ГОСТу и методическим указаниям',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${BASE_URL}/blog?search={search_term_string}`,
+        urlTemplate: `${SITE_URL}/blog?search={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -111,23 +111,23 @@ export function getArticleSchema(post: BlogPost) {
     '@type': 'Article',
     headline: post.title,
     description: post.description,
-    url: `${BASE_URL}/blog/${post.slug}`,
+    url: `${SITE_URL}/blog/${post.slug}`,
     datePublished: post.datePublished,
     dateModified: post.dateModified || post.datePublished,
-    image: post.image || `${BASE_URL}/og-image.png`,
+    image: post.image || `${SITE_URL}/og-image.png`,
     author: {
       '@type': 'Organization',
-      name: 'SmartFormat',
-      url: BASE_URL,
+      name: SITE_NAME,
+      url: SITE_URL,
     },
     publisher: {
       '@type': 'Organization',
-      name: 'SmartFormat',
-      url: BASE_URL,
+      name: SITE_NAME,
+      url: SITE_URL,
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `${BASE_URL}/blog/${post.slug}`,
+      '@id': `${SITE_URL}/blog/${post.slug}`,
     },
   }
 }
@@ -143,7 +143,7 @@ export function getBreadcrumbSchema(items: BreadcrumbItem[]) {
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
-      item: item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`,
+      item: item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`,
     })),
   }
 }
@@ -167,7 +167,7 @@ export function getProductSchema(
       price: price.toString(),
       priceCurrency,
       availability: 'https://schema.org/InStock',
-      url: `${BASE_URL}/pricing`,
+      url: `${SITE_URL}/pricing`,
     },
   }
 }

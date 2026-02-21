@@ -29,7 +29,7 @@ const stats = [
 export function StatsCounter() {
   return (
     <BlurFade delay={0.6} inView>
-      <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 mt-16">
+      <div className="flex flex-wrap items-center justify-center md:justify-start gap-8 sm:gap-12 mt-16">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (

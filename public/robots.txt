@@ -31,4 +31,4 @@ Disallow: /result/
 Disallow: /confirm-rules/
 Disallow: /payment/
 
-Sitemap: https://sformat.online/sitemap.xml
+Sitemap: https://diplox.online/sitemap.xml

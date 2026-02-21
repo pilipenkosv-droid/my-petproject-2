@@ -67,7 +67,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} SmartFormat
+            © {new Date().getFullYear()} Diplox
           </p>
           <p className="text-xs text-muted-foreground">
             Сервис автоматического форматирования документов

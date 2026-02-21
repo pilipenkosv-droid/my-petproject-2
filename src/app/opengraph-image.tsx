@@ -2,13 +2,11 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const alt =
-  "SmartFormat — Идеальное оформление научной работы по методичке";
+  "Diplox — Идеальное оформление научной работы по методичке";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/* S-curve path from Logo component (white mark only) */
-const FLOW_PATH =
-  "M8 20 C8 13, 13 10, 16 10 C19.5 10, 19.5 14.5, 16 16.5 C12.5 18.5, 12.5 23, 16 23 C20 23, 24 18, 24 12";
+import { D_ICON_WHITE_BASE64 } from "@/lib/logo/constants";
 
 // Full beam grid (all 56 paths from BackgroundBeams component)
 const ALL_BEAMS =
@@ -92,7 +90,7 @@ export default async function Image() {
           }}
         />
 
-        {/* Top: Logo icon + SmartFormat name (small, left-aligned) */}
+        {/* Top: Logo icon + Diplox name (small, left-aligned) */}
         <div
           style={{
             display: "flex",
@@ -102,16 +100,13 @@ export default async function Image() {
             position: "relative",
           }}
         >
-          {/* White S-curve icon only (no purple bg) */}
-          <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
-            <path
-              d={FLOW_PATH}
-              stroke="white"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeOpacity="0.8"
-            />
-          </svg>
+          {/* White D icon */}
+          <img
+            src={D_ICON_WHITE_BASE64}
+            width={36}
+            height={36}
+            style={{ objectFit: "contain" }}
+          />
           <span
             style={{
               fontSize: "28px",
@@ -121,7 +116,7 @@ export default async function Image() {
               letterSpacing: "-0.5px",
             }}
           >
-            SmartFormat
+            Diplox
           </span>
         </div>
 

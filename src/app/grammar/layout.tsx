@@ -1,7 +1,8 @@
 import { Metadata } from "next";
+import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Проверка грамматики онлайн — SmartFormat",
+  title: "Проверка грамматики онлайн — Diplox",
   description:
     "Бесплатная онлайн-проверка текста на грамматические, орфографические и пунктуационные ошибки. Загрузите текст или файл — получите подробный отчёт с исправлениями.",
   keywords: [
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
     "проверка стилистики текста",
   ],
   alternates: {
-    canonical: "https://sformat.online/grammar",
+    canonical: `${SITE_URL}/grammar`,
   },
   openGraph: {
-    title: "Проверка грамматики онлайн — SmartFormat",
+    title: "Проверка грамматики онлайн — Diplox",
     description:
       "Проверьте текст на орфографические, пунктуационные и стилистические ошибки. Подробный отчёт с вариантами исправления.",
-    url: "https://sformat.online/grammar",
+    url: `${SITE_URL}/grammar`,
   },
 };
 

@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getBreadcrumbSchema, getArticleSchema } from "@/lib/seo/schemas";
 import { getPostBySlug, getAllPosts } from "@/lib/blog/posts";
+import { SITE_URL } from "@/lib/config/site";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen, SpellCheck, Pencil, FileText } from "lucide-react";
 import { ShareButtons } from "@/components/ShareButtons";
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     description: post.description,
     keywords: post.keywords,
     alternates: {
-      canonical: `https://sformat.online/blog/${slug}`,
+      canonical: `${SITE_URL}/blog/${slug}`,
     },
     openGraph: {
       title: post.title,
@@ -44,9 +45,9 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       type: "article",
       publishedTime: post.datePublished,
       modifiedTime: post.dateModified || post.datePublished,
-      url: `https://sformat.online/blog/${slug}`,
+      url: `${SITE_URL}/blog/${slug}`,
       ...(post.coverImage && {
-        images: [{ url: `https://sformat.online${post.coverImage}`, width: 1792, height: 1024 }],
+        images: [{ url: `${SITE_URL}${post.coverImage}`, width: 1792, height: 1024 }],
       }),
     },
   };
@@ -172,7 +173,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             Поделиться статьёй
           </div>
           <ShareButtons
-            url={`https://sformat.online/blog/${slug}`}
+            url={`${SITE_URL}/blog/${slug}`}
             title={post.title}
             description={post.description}
           />
@@ -218,7 +219,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               Не хотите разбираться в правилах?
             </h2>
             <p className="text-on-surface-muted mb-6">
-              SmartFormat автоматически оформит работу по методичке вашего вуза
+              Diplox автоматически оформит работу по методичке вашего вуза
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

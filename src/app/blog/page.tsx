@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { getBreadcrumbSchema } from "@/lib/seo/schemas";
 import { getAllPosts } from "@/lib/blog/posts";
+import { SITE_URL } from "@/lib/config/site";
 import { BookOpen, Clock, ArrowRight, Sparkles, SpellCheck, Pencil, FileText } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
   description:
     "Полезные статьи о форматировании дипломов, курсовых и рефератов. Требования ГОСТ, оформление списка литературы, отступы и интервалы.",
   keywords: [
-    "блог SmartFormat",
+    "блог Diplox",
     "статьи об оформлении",
     "ГОСТ научные работы",
     "форматирование по ГОСТу",
   ],
   alternates: {
-    canonical: "https://sformat.online/blog",
+    canonical: `${SITE_URL}/blog`,
   },
 };
 
@@ -104,7 +105,7 @@ export default function BlogPage() {
               <div className="absolute bottom-4 right-4">
                 <ShareButtons
                   variant="compact"
-                  url={`https://sformat.online/blog/${post.slug}`}
+                  url={`${SITE_URL}/blog/${post.slug}`}
                   title={post.title}
                 />
               </div>
@@ -144,7 +145,7 @@ export default function BlogPage() {
               Не хотите разбираться в ГОСТах?
             </h2>
             <p className="text-on-surface-muted mb-6">
-              SmartFormat автоматически оформит работу по методичке вашего вуза
+              Diplox автоматически оформит работу по методичке вашего вуза
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

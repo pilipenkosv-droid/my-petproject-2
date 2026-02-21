@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
   title: "Тарифы — форматирование научных работ по ГОСТу",
@@ -7,18 +8,18 @@ export const metadata: Metadata = {
   keywords: [
     "цена форматирования диплома",
     "стоимость оформления курсовой",
-    "тарифы SmartFormat",
+    "тарифы Diplox",
     "форматирование по ГОСТу цена",
     "оформление научной работы стоимость",
   ],
   alternates: {
-    canonical: "https://sformat.online/pricing",
+    canonical: `${SITE_URL}/pricing`,
   },
   openGraph: {
-    title: "Тарифы SmartFormat — оформление работ по ГОСТу",
+    title: "Тарифы Diplox — оформление работ по ГОСТу",
     description:
       "Пробный период бесплатно. Разовая обработка — 159₽. Безлимитная подписка — 399₽/месяц.",
-    url: "https://sformat.online/pricing",
+    url: `${SITE_URL}/pricing`,
   },
 };
 

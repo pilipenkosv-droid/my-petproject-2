@@ -36,7 +36,7 @@ export function Testimonials() {
             Что говорят студенты
           </h2>
           <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
-            Отзывы пользователей SmartFormat
+            Отзывы пользователей Diplox
           </p>
         </BlurFade>
 

@@ -7,15 +7,14 @@ import { JsonLd } from "@/components/JsonLd";
 import { YandexMetrika } from "@/components/analytics/YandexMetrika";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
+import { SITE_URL, SITE_NAME } from "@/lib/config/site";
 import "./globals.css";
 
-const BASE_URL = "https://sformat.online";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(BASE_URL),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "SmartFormat — Автоматическое форматирование научных работ по методичке онлайн",
-    template: "%s | SmartFormat",
+    default: "Diplox — Автоматическое форматирование научных работ по методичке онлайн",
+    template: "%s | Diplox",
   },
   description:
     "Загрузите работу в .docx и методичку — ИИ-сервис автоматически оформит текст по ГОСТу и требованиям вуза за несколько минут. Отступы, шрифты, заголовки, список литературы.",
@@ -36,20 +35,20 @@ export const metadata: Metadata = {
     "требования к научной работе 2026",
   ],
   alternates: {
-    canonical: BASE_URL,
+    canonical: SITE_URL,
   },
   openGraph: {
-    title: "SmartFormat — Идеальное оформление научной работы по методичке",
+    title: "Diplox — Идеальное оформление научной работы по методичке",
     description:
       "Загрузите работу и методичку — ИИ автоматически оформит документ по ГОСТу и требованиям вашего вуза.",
-    siteName: "SmartFormat",
+    siteName: "Diplox",
     locale: "ru_RU",
     type: "website",
-    url: BASE_URL,
+    url: SITE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "SmartFormat — Форматирование научных работ по ГОСТу",
+    title: "Diplox — Форматирование научных работ по ГОСТу",
     description: "ИИ-сервис автоматического оформления дипломов, курсовых и рефератов по методичке вуза.",
   },
   robots: {

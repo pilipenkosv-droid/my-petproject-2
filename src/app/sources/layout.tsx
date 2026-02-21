@@ -1,7 +1,8 @@
 import { Metadata } from "next";
+import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Подбор литературы для научной работы — SmartFormat",
+  title: "Подбор литературы для научной работы — Diplox",
   description:
     "Подберите научные источники по теме вашей работы. Поиск по базам OpenAlex и CrossRef — реальные статьи, книги и публикации с оформлением по ГОСТу.",
   keywords: [
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
     "литература для диплома",
   ],
   alternates: {
-    canonical: "https://sformat.online/sources",
+    canonical: `${SITE_URL}/sources`,
   },
   openGraph: {
-    title: "Подбор литературы для научной работы — SmartFormat",
+    title: "Подбор литературы для научной работы — Diplox",
     description:
       "Найдите реальные научные источники по теме работы. Поиск по OpenAlex и CrossRef с оформлением по ГОСТу.",
-    url: "https://sformat.online/sources",
+    url: `${SITE_URL}/sources`,
   },
 };
 

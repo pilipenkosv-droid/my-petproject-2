@@ -98,7 +98,7 @@ export function WorkTypeLanding({
               <CheckCircle className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
-              Что делает SmartFormat
+              Что делает Diplox
             </h2>
           </div>
 

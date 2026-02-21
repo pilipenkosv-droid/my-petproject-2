@@ -2,7 +2,7 @@ import { reachGoal } from "@/components/analytics/YandexMetrika";
 import { sendGAEvent } from "@/components/analytics/GoogleAnalytics";
 
 /**
- * Funnel events for SmartFormat conversion tracking.
+ * Funnel events for Diplox conversion tracking.
  *
  * Funnel: visit → upload → processing → preview → payment → download
  */
