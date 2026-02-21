@@ -420,6 +420,56 @@ h1, h2, h3, h4, h5, h6 {
   --color-on-surface-subtle: var(--on-surface-subtle);
 }
 
+/* Fireflies easter egg */
+.firefly-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(174, 72, 255, 0.9) 0%, rgba(24, 204, 252, 0.6) 50%, transparent 70%);
+  box-shadow:
+    0 0 6px 2px rgba(174, 72, 255, 0.5),
+    0 0 12px 4px rgba(24, 204, 252, 0.3);
+  animation:
+    firefly-drift var(--duration) var(--delay) ease-out forwards,
+    firefly-glow var(--duration) var(--delay) ease-in-out forwards;
+  opacity: 0;
+}
+
+@keyframes firefly-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--drift-x), var(--drift-y)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes firefly-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 4px 1px rgba(174, 72, 255, 0.3),
+      0 0 8px 2px rgba(24, 204, 252, 0.15);
+  }
+  30% {
+    box-shadow:
+      0 0 8px 3px rgba(174, 72, 255, 0.7),
+      0 0 20px 6px rgba(24, 204, 252, 0.4);
+  }
+  60% {
+    box-shadow:
+      0 0 6px 2px rgba(174, 72, 255, 0.5),
+      0 0 14px 4px rgba(24, 204, 252, 0.25);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
 import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
+import { HeroMascot } from "@/components/HeroMascot";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { Footer } from "@/components/Footer";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -28,19 +29,8 @@ export default function LandingPage() {
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/15 rounded-full blur-[150px]" />
         </div>
         
-        {/* Mascot — fixed bottom-left, looking at hero text (desktop only) */}
-        <div className="hidden md:block absolute bottom-0 left-0 z-20 pointer-events-none">
-          <BlurFade delay={0.6} inView>
-            <Image
-              src="/mascot/hero-light.png"
-              alt="Дипломированный диплодок — маскот Diplox"
-              width={1536}
-              height={1024}
-              className="w-48 lg:w-64 xl:w-72 h-auto drop-shadow-2xl"
-              priority
-            />
-          </BlurFade>
-        </div>
+        {/* Mascot — bottom-left with fireflies easter egg (desktop only) */}
+        <HeroMascot />
 
         <div className="relative z-10 mx-auto max-w-4xl w-full">
           {/* Text column — centered */}
