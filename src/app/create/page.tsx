@@ -220,7 +220,7 @@ function ConstructorPageContent() {
               alt="Диплодок за ноутбуком"
               width={460}
               height={368}
-              className="mx-auto mb-2 w-32 sm:w-auto hidden sm:block"
+              className="mx-auto mb-2 w-32 sm:w-48 md:w-56 hidden sm:block"
             />
 
             {/* Описание */}
