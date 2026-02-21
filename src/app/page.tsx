@@ -349,7 +349,7 @@ export default function LandingPage() {
                 alt="Диплодок с щитом защиты"
                 width={402}
                 height={385}
-                className="shrink-0 w-16 sm:w-24 md:w-32"
+                className="shrink-0 w-16 sm:w-20 md:w-24"
               />
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">

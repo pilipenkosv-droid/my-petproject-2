@@ -80,7 +80,7 @@ function PaymentSuccessContent() {
                 alt="Диплодок ждёт оплату"
                 width={406}
                 height={344}
-                className="mx-auto mb-4 w-28 sm:w-auto"
+                className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
               />
               <Loader2 className="w-10 h-10 text-violet-400 animate-spin mx-auto" />
               <h1 className="text-2xl font-bold text-foreground">

@@ -353,7 +353,7 @@ function GrammarPageContent() {
                     alt="Диплодок не нашёл ошибок"
                     width={360}
                     height={328}
-                    className="mx-auto mb-3 w-24 sm:w-36 md:w-auto"
+                    className="mx-auto mb-3 w-24 sm:w-32 md:w-40"
                   />
                   <p className="text-foreground font-medium mb-1">
                     Текст без ошибок!

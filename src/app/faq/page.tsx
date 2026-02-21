@@ -458,7 +458,7 @@ export default function FAQPage() {
               alt="Диплодок с документом"
               width={452}
               height={414}
-              className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+              className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
             />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Остались вопросы?

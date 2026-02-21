@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
-import { Mascot } from "@/components/Mascot";
 
 type InputMode = "text" | "file";
 type TargetLength = "short" | "medium" | "detailed";
@@ -220,13 +219,9 @@ function SummarizePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <Mascot
-                src="/mascot/thinking2.png"
-                alt="Диплодок размышляет"
-                width={419}
-                height={434}
-                className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
-              />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Краткое содержание
               </h1>

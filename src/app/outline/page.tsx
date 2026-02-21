@@ -27,7 +27,6 @@ import {
   ArrowRight,
   FileText,
 } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
@@ -138,13 +137,9 @@ function OutlinePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <Mascot
-                src="/mascot/thinking.png"
-                alt="Диплодок обдумывает план"
-                width={438}
-                height={405}
-                className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
-              />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 mb-4">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Генератор плана работы
               </h1>

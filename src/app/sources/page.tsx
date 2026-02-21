@@ -305,7 +305,7 @@ function SourcesPageContent() {
                       alt="Диплодок и робот ищут вместе"
                       width={490}
                       height={340}
-                      className="mx-auto mb-3 w-28 sm:w-48 md:w-auto"
+                      className="mx-auto mb-3 w-24 sm:w-32 md:w-40"
                     />
                     <p className="text-foreground font-medium mb-1">
                       Источники не найдены

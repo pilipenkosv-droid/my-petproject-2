@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -214,14 +213,6 @@ function ConstructorPageContent() {
               </BlurFade>
             )}
 
-            {/* Маскот */}
-            <Mascot
-              src="/mascot/writing.png"
-              alt="Диплодок за ноутбуком"
-              width={460}
-              height={368}
-              className="mx-auto mb-2 w-32 sm:w-48 md:w-56 hidden sm:block"
-            />
 
             {/* Описание */}
             <div className="text-center">

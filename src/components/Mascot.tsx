@@ -12,14 +12,21 @@ interface MascotProps {
 export function Mascot({ src, alt, width, height, className, priority }: MascotProps) {
   return (
     <div style={{ maxWidth: width }} className={className}>
-      <Image
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        className="w-full h-auto drop-shadow-lg"
-        priority={priority}
-      />
+      <div className="relative">
+        {/* White blob background — visible in both themes to mask imperfect cutouts */}
+        <div
+          className="absolute inset-0 bg-white rounded-[50%] scale-75 blur-md opacity-60"
+          aria-hidden="true"
+        />
+        <Image
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          className="relative w-full h-auto drop-shadow-lg"
+          priority={priority}
+        />
+      </div>
     </div>
   );
 }

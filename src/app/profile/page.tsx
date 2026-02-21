@@ -210,7 +210,7 @@ export default async function ProfilePage() {
                   alt="Диплодок спит на бумагах"
                   width={474}
                   height={311}
-                  className="mx-auto mb-4 w-32 sm:w-56 md:w-auto"
+                  className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
                 />
                 <p className="text-on-surface-muted mb-4">
                   У вас пока нет обработанных документов

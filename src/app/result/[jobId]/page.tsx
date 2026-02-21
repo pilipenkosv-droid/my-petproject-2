@@ -159,7 +159,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               alt="Диплодок празднует успех"
               width={409}
               height={447}
-              className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+              className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
             />
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Документ успешно обработан
