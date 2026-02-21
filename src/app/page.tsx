@@ -36,27 +36,13 @@ export default function LandingPage() {
               alt="Дипломированный диплодок — маскот Diplox"
               width={1536}
               height={1024}
-              className="w-48 lg:w-64 xl:w-72 h-auto drop-shadow-2xl -scale-x-100"
+              className="w-48 lg:w-64 xl:w-72 h-auto drop-shadow-2xl"
               priority
             />
           </BlurFade>
         </div>
 
         <div className="relative z-10 mx-auto max-w-4xl w-full">
-          {/* Mobile mascot */}
-          <div className="md:hidden flex justify-center mb-6">
-            <BlurFade delay={0.3} inView>
-              <Image
-                src="/mascot/hero-light.png"
-                alt="Дипломированный диплодок — маскот Diplox"
-                width={1536}
-                height={1024}
-                className="w-56 sm:w-72 h-auto drop-shadow-2xl"
-                priority
-              />
-            </BlurFade>
-          </div>
-
           {/* Text column — centered */}
           <div className="text-center md:text-left">
             {/* Badge */}
