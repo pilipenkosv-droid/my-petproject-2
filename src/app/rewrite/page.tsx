@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { Mascot } from "@/components/Mascot";
 
 type InputMode = "text" | "file";
 type RewriteMode = "light" | "medium" | "heavy";
@@ -197,9 +198,13 @@ function RewritePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 mb-4">
-                <Pencil className="w-8 h-8 text-white" />
-              </div>
+              <Mascot
+                src="/mascot/speed.png"
+                alt="Диплодок на ракете"
+                width={512}
+                height={408}
+                className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+              />
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Повышение уникальности
               </h1>

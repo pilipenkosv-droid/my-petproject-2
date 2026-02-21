@@ -35,6 +35,7 @@ import {
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { Mascot } from "@/components/Mascot";
 import { useSourceSearch } from "@/features/sources/hooks/useSourceSearch";
 import { SourcesTable } from "@/features/sources/components/SourcesTable";
 
@@ -299,6 +300,13 @@ function SourcesPageContent() {
               <BlurFade delay={0.1} inView>
                 <Card>
                   <CardContent className="py-8 text-center">
+                    <Mascot
+                      src="/mascot/teamwork.png"
+                      alt="Диплодок и робот ищут вместе"
+                      width={490}
+                      height={340}
+                      className="mx-auto mb-3 w-28 sm:w-48 md:w-auto"
+                    />
                     <p className="text-foreground font-medium mb-1">
                       Источники не найдены
                     </p>

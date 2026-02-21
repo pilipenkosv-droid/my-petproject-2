@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { Mascot } from "@/components/Mascot";
 
 type InputMode = "text" | "file";
 
@@ -347,9 +348,13 @@ function GrammarPageContent() {
             <BlurFade delay={0.15} inView>
               <Card>
                 <CardContent className="py-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 mb-3">
-                    <Check className="w-6 h-6 text-emerald-500" />
-                  </div>
+                  <Mascot
+                    src="/mascot/comparing.png"
+                    alt="Диплодок не нашёл ошибок"
+                    width={360}
+                    height={328}
+                    className="mx-auto mb-3 w-24 sm:w-36 md:w-auto"
+                  />
                   <p className="text-foreground font-medium mb-1">
                     Текст без ошибок!
                   </p>

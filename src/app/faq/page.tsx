@@ -11,12 +11,12 @@ import {
   Shield,
   ShieldCheck,
   Settings,
-  Sparkles,
   BookOpen,
   ChevronRight,
   Wrench,
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { Mascot } from "@/components/Mascot";
 
 export const metadata: Metadata = {
   title: "Вопросы и ответы — Diplox",
@@ -453,7 +453,13 @@ export default function FAQPage() {
         {/* CTA секция */}
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
-            <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-4" />
+            <Mascot
+              src="/mascot/presenting.png"
+              alt="Диплодок с документом"
+              width={452}
+              height={414}
+              className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+            />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Остались вопросы?
             </h2>

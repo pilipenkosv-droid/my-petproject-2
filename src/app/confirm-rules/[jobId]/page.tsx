@@ -14,7 +14,6 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import {
   ArrowLeft,
-  CheckCircle,
   Sparkles,
   Zap,
   RefreshCw,
@@ -22,6 +21,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
+import { Mascot } from "@/components/Mascot";
 import { trackEvent } from "@/lib/analytics/events";
 
 interface ConfirmRulesPageProps {
@@ -286,9 +286,13 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           {/* Заголовок */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
+              <Mascot
+                src="/mascot/reading.png"
+                alt="Диплодок изучает требования"
+                width={368}
+                height={432}
+                className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+              />
               <h2 className="text-2xl font-bold mb-2 text-foreground">
                 Проверьте требования к форматированию
               </h2>

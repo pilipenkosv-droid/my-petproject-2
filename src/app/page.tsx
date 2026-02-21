@@ -5,7 +5,8 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { FileText, Sparkles, Zap, Download, ShieldCheck, ArrowRight, BookOpen, SpellCheck, Pencil } from "lucide-react";
+import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil } from "lucide-react";
+import { Mascot } from "@/components/Mascot";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { Footer } from "@/components/Footer";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -343,9 +344,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl">
           <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent rounded-2xl border border-emerald-500/20 p-8 md:p-10">
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <ShieldCheck className="w-7 h-7 text-emerald-400" />
-              </div>
+              <Mascot
+                src="/mascot/security.png"
+                alt="Диплодок с щитом защиты"
+                width={402}
+                height={385}
+                className="shrink-0 w-16 sm:w-24 md:w-32"
+              />
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
                   Не попадает в базы антиплагиата

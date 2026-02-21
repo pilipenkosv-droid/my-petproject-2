@@ -6,7 +6,8 @@ import { getUserAccess } from "@/lib/payment/access";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, Sparkles } from "lucide-react";
+import { Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles } from "lucide-react";
+import { Mascot } from "@/components/Mascot";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
 
@@ -204,7 +205,13 @@ export default async function ProfilePage() {
           <CardContent>
             {jobs.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-muted-foreground/60 mx-auto mb-4" />
+                <Mascot
+                  src="/mascot/sleeping.png"
+                  alt="Диплодок спит на бумагах"
+                  width={474}
+                  height={311}
+                  className="mx-auto mb-4 w-32 sm:w-56 md:w-auto"
+                />
                 <p className="text-on-surface-muted mb-4">
                   У вас пока нет обработанных документов
                 </p>

@@ -9,6 +9,7 @@ import { ProcessingStatus } from "@/features/constructor/components/ProcessingSt
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
+import { Mascot } from "@/components/Mascot";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { trackEvent } from "@/lib/analytics/events";
@@ -153,9 +154,13 @@ export default function ResultPage({ params }: ResultPageProps) {
         <div className="space-y-6">
           {/* Success header */}
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
-              <CheckCircle className="w-8 h-8 text-white" />
-            </div>
+            <Mascot
+              src="/mascot/celebrating.png"
+              alt="Диплодок празднует успех"
+              width={409}
+              height={447}
+              className="mx-auto mb-4 w-24 sm:w-36 md:w-auto"
+            />
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Документ успешно обработан
             </h2>

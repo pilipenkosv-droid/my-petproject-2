@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { trackEvent } from "@/lib/analytics/events";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Mascot } from "@/components/Mascot";
 
 type PaymentState = "polling" | "completed" | "failed" | "timeout";
 
@@ -74,7 +75,14 @@ function PaymentSuccessContent() {
       <div className="text-center space-y-6">
         {state === "polling" && (
             <>
-              <Loader2 className="w-16 h-16 text-violet-400 animate-spin mx-auto" />
+              <Mascot
+                src="/mascot/waiting.png"
+                alt="Диплодок ждёт оплату"
+                width={406}
+                height={344}
+                className="mx-auto mb-4 w-28 sm:w-auto"
+              />
+              <Loader2 className="w-10 h-10 text-violet-400 animate-spin mx-auto" />
               <h1 className="text-2xl font-bold text-foreground">
                 Обрабатываем оплату...
               </h1>
