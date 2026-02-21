@@ -28,23 +28,37 @@ export default function LandingPage() {
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/15 rounded-full blur-[150px]" />
         </div>
         
-        <div className="relative z-10 mx-auto max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-          {/* Mascot column — mobile: top, desktop: right */}
-          <div className="order-1 md:order-2 flex justify-center">
+        {/* Mascot — fixed bottom-left, looking at hero text (desktop only) */}
+        <div className="hidden md:block absolute bottom-0 left-0 z-20 pointer-events-none">
+          <BlurFade delay={0.6} inView>
+            <Image
+              src="/mascot/hero-light.png"
+              alt="Дипломированный диплодок — маскот Diplox"
+              width={1536}
+              height={1024}
+              className="w-48 lg:w-64 xl:w-72 h-auto drop-shadow-2xl -scale-x-100"
+              priority
+            />
+          </BlurFade>
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-4xl w-full">
+          {/* Mobile mascot */}
+          <div className="md:hidden flex justify-center mb-6">
             <BlurFade delay={0.3} inView>
               <Image
                 src="/mascot/hero-light.png"
                 alt="Дипломированный диплодок — маскот Diplox"
                 width={1536}
                 height={1024}
-                className="w-72 sm:w-96 md:w-[31rem] lg:w-[36rem] xl:w-[42rem] h-auto drop-shadow-2xl"
+                className="w-56 sm:w-72 h-auto drop-shadow-2xl"
                 priority
               />
             </BlurFade>
           </div>
 
-          {/* Text column — mobile: bottom, desktop: left */}
-          <div className="order-2 md:order-1 text-center md:text-left">
+          {/* Text column — centered */}
+          <div className="text-center md:text-left">
             {/* Badge */}
             <BlurFade delay={0.1} inView>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border backdrop-blur-sm mb-8">
