@@ -9,7 +9,6 @@ import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pe
 import { Mascot } from "@/components/Mascot";
 import { HeroMascot } from "@/components/HeroMascot";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
-import { Footer } from "@/components/Footer";
 import { StatsCounter } from "@/components/StatsCounter";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Testimonials } from "@/components/Testimonials";
@@ -383,7 +382,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <Footer />
     </main>
   );
 }

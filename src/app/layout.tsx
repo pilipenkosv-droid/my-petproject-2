@@ -8,6 +8,7 @@ import { YandexMetrika } from "@/components/analytics/YandexMetrika";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
 import { SITE_URL, SITE_NAME } from "@/lib/config/site";
+import { Footer } from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -82,6 +83,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider initialSession={null}>
             {children}
+            <Footer />
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
