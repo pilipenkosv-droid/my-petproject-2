@@ -32,22 +32,12 @@ export default function LandingPage() {
           {/* Mascot column — mobile: top, desktop: right */}
           <div className="order-1 md:order-2 flex justify-center">
             <BlurFade delay={0.3} inView>
-              {/* Light theme mascot */}
               <Image
                 src="/mascot/hero-light.png"
                 alt="Дипломированный диплодок — маскот Diplox"
                 width={1536}
                 height={1024}
-                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl dark:hidden"
-                priority
-              />
-              {/* Dark theme mascot */}
-              <Image
-                src="/mascot/hero-dark.png"
-                alt="Дипломированный диплодок — маскот Diplox"
-                width={1536}
-                height={1024}
-                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl hidden dark:block"
+                className="w-56 sm:w-72 md:w-96 lg:w-[28rem] xl:w-[32rem] h-auto drop-shadow-2xl"
                 priority
               />
             </BlurFade>
