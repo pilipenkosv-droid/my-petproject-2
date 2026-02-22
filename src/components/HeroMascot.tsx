@@ -27,11 +27,15 @@ function spawnFireflies(originX: number, originY: number): Firefly[] {
   }));
 }
 
+const MAX_BURSTS = 3;
+const COOLDOWN_MS = 500;
+
 export function HeroMascot() {
   const [bursts, setBursts] = useState<{ id: number; flies: Firefly[] }[]>([]);
   const [visible, setVisible] = useState(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastClickRef = useRef(0);
 
   // Hide mascot when hero section scrolls out of view
   useEffect(() => {
@@ -47,15 +51,27 @@ export function HeroMascot() {
   }, []);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
-    const burstId = Date.now();
-    // Spawn fireflies at click position relative to viewport
-    const x = e.clientX;
-    const y = e.clientY;
-    setBursts((prev) => [...prev, { id: burstId, flies: spawnFireflies(x, y) }]);
+    const now = Date.now();
 
-    setTimeout(() => {
-      setBursts((prev) => prev.filter((b) => b.id !== burstId));
-    }, 6000);
+    // Cooldown between clicks
+    if (now - lastClickRef.current < COOLDOWN_MS) return;
+    lastClickRef.current = now;
+
+    // Limit concurrent bursts
+    setBursts((prev) => {
+      if (prev.length >= MAX_BURSTS) return prev;
+
+      const burstId = now;
+      const x = e.clientX;
+      const y = e.clientY;
+      const newBursts = [...prev, { id: burstId, flies: spawnFireflies(x, y) }];
+
+      setTimeout(() => {
+        setBursts((p) => p.filter((b) => b.id !== burstId));
+      }, 6000);
+
+      return newBursts;
+    });
   }, []);
 
   return (
