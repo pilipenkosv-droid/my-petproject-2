@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
-  Zap,
-  FileText,
+  FileCheck,
+  ListTree,
   SpellCheck,
   Pencil,
   BookOpen,
@@ -14,7 +14,7 @@ const TOOLS = [
     href: "/create",
     label: "Форматирование по ГОСТу",
     description: "Автоматическое оформление документа",
-    icon: Zap,
+    icon: FileCheck,
     gradient: "from-brand-2 to-brand-3",
   },
   {
@@ -22,8 +22,8 @@ const TOOLS = [
     href: "/outline",
     label: "Генератор плана",
     description: "Структура работы с разделами",
-    icon: FileText,
-    gradient: "from-brand-3 to-brand-2",
+    icon: ListTree,
+    gradient: "from-brand-teal to-brand-teal-dark",
   },
   {
     slug: "grammar",
@@ -31,7 +31,7 @@ const TOOLS = [
     label: "Проверка грамматики",
     description: "Орфография, пунктуация, стиль",
     icon: SpellCheck,
-    gradient: "from-red-500 to-rose-600",
+    gradient: "from-brand-1 to-brand-2",
   },
   {
     slug: "rewrite",
@@ -39,7 +39,7 @@ const TOOLS = [
     label: "Повышение уникальности",
     description: "Рерайт с сохранением смысла",
     icon: Pencil,
-    gradient: "from-amber-500 to-orange-600",
+    gradient: "from-brand-teal-dark to-brand-3",
   },
   {
     slug: "summarize",
@@ -47,7 +47,7 @@ const TOOLS = [
     label: "Краткое содержание",
     description: "AI-аннотация вашей работы",
     icon: Sparkles,
-    gradient: "from-emerald-500 to-teal-600",
+    gradient: "from-brand-teal-light to-brand-teal",
   },
   {
     slug: "sources",
@@ -55,7 +55,7 @@ const TOOLS = [
     label: "Подбор литературы",
     description: "Научные источники по теме",
     icon: BookOpen,
-    gradient: "from-teal-500 to-cyan-600",
+    gradient: "from-brand-3 to-brand-2",
   },
 ];
 

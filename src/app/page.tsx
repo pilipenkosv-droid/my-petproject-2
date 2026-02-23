@@ -117,7 +117,7 @@ export default function LandingPage() {
                 icon: Download,
                 title: "Скачайте результат",
                 description: "Получите идеально оформленный документ, готовый к сдаче",
-                gradient: "from-emerald-500 to-teal-600",
+                gradient: "from-brand-teal to-brand-teal-dark",
                 delay: 0.6,
               },
             ].map((item, index) => (
@@ -321,7 +321,7 @@ export default function LandingPage() {
       {/* Безопасность от антиплагиата */}
       <section className="relative py-16 px-6">
         <div className="mx-auto max-w-4xl">
-          <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent rounded-2xl border border-emerald-500/20 p-8 md:p-10">
+          <div className="bg-gradient-to-br from-brand-teal/10 via-brand-teal-dark/5 to-transparent rounded-2xl border border-brand-teal/20 p-8 md:p-10">
             <div className="flex flex-col md:flex-row items-start gap-6">
               <Mascot
                 src="/mascot/security.png"

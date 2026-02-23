@@ -125,7 +125,7 @@ function SourcesPageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/25 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25 mb-4">
                 <BookOpen className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
@@ -321,7 +321,7 @@ function SourcesPageContent() {
           {/* CTA block */}
           {hasResult && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+              <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?

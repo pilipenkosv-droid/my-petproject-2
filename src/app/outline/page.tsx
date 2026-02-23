@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Loader2,
   ArrowRight,
+  ListTree,
   FileText,
 } from "lucide-react";
 import { WORK_TYPES } from "@/types/work-types";
@@ -137,8 +138,8 @@ function OutlinePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25 mb-4">
-                <FileText className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-teal to-brand-teal-dark shadow-lg shadow-brand-teal/25 mb-4">
+                <ListTree className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Генератор плана работы
@@ -258,7 +259,7 @@ function OutlinePageContent() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-indigo-500" />
+                    <FileText className="w-5 h-5 text-brand-2" />
                     План работы
                   </CardTitle>
                   <CardDescription>
@@ -305,7 +306,7 @@ function OutlinePageContent() {
           {/* CTA: Подбор литературы */}
           {outline && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+              <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
                 <CardContent className="py-4 text-center space-y-2">
                   <p className="text-sm text-muted-foreground">
                     Подберём реальные источники для этой темы?
@@ -325,7 +326,7 @@ function OutlinePageContent() {
           {/* CTA: Форматирование */}
           {outline && (
             <BlurFade delay={0.25} inView>
-              <Card className="border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">
+              <Card className="border-brand-2/20 bg-gradient-to-r from-brand-2/5 to-brand-3/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Готовый план? Отформатируйте работу по ГОСТу автоматически!

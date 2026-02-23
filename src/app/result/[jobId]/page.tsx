@@ -245,7 +245,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                   onClick={() => handleDownload("original")}
                   className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-1 to-brand-2 flex items-center justify-center shadow-lg">
                     <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-center">
@@ -263,9 +263,9 @@ export default function ResultPage({ params }: ResultPageProps) {
                 {/* Formatted */}
                 <button
                   onClick={() => handleDownload("formatted")}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 transition-all duration-200 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-left ring-1 ring-emerald-500/20"
+                  className="flex flex-col items-center gap-3 rounded-xl border border-brand-teal/30 bg-brand-teal/5 p-6 transition-all duration-200 hover:bg-brand-teal/10 hover:border-brand-teal/40 text-left ring-1 ring-brand-teal/20"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-teal to-brand-teal-dark flex items-center justify-center shadow-lg shadow-brand-teal/25">
                     <FileCheck className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-center">
@@ -274,7 +274,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                       Автоматически отформатированный документ, готовый к сдаче
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-emerald-400/70">
+                  <div className="flex items-center gap-2 text-xs text-brand-teal/70">
                     <Download className="h-3 w-3" />
                     <span>.docx</span>
                   </div>
@@ -287,7 +287,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           <CSATWidget jobId={jobId} />
 
           {/* CTA: Повысить уникальность */}
-          <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+          <Card className="border-brand-teal-dark/20 bg-gradient-to-r from-brand-teal-dark/5 to-brand-3/5">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужно повысить уникальность?
@@ -315,7 +315,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Проверка грамматики */}
-          <Card className="border-red-500/20 bg-gradient-to-r from-red-500/5 to-rose-500/5">
+          <Card className="border-brand-1/20 bg-gradient-to-r from-brand-1/5 to-brand-2/5">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Хотите проверить текст на ошибки?
@@ -329,7 +329,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Подбор литературы */}
-          <Card className="border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-cyan-500/5">
+          <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужен список литературы?

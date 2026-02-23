@@ -34,14 +34,14 @@ export function StatisticsPanel({
       label: "Найдено нарушений",
       value: violationsCount,
       icon: AlertTriangle,
-      gradient: "from-red-500 to-rose-600",
+      gradient: "from-brand-1 to-brand-2",
       delay: 0.2,
     },
     {
       label: "Исправлено",
       value: fixesApplied,
       icon: CheckCircle,
-      gradient: "from-emerald-500 to-teal-600",
+      gradient: "from-brand-teal to-brand-teal-dark",
       delay: 0.3,
     },
   ];

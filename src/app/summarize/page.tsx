@@ -219,8 +219,8 @@ function SummarizePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4">
-                <FileText className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-teal-light to-brand-teal shadow-lg shadow-brand-teal/25 mb-4">
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Краткое содержание
@@ -375,7 +375,7 @@ function SummarizePageContent() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-emerald-500" />
+                    <Sparkles className="w-5 h-5 text-brand-teal" />
                     Краткое содержание
                   </CardTitle>
                   <CardDescription>
@@ -445,7 +445,7 @@ function SummarizePageContent() {
           {/* CTA block */}
           {summary && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
+              <Card className="border-brand-teal/20 bg-gradient-to-r from-brand-teal-light/5 to-brand-teal/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?
