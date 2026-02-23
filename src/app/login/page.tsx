@@ -136,8 +136,8 @@ function LoginForm() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
-            <span className="gradient-text">Smart</span>
-            <span className="text-foreground">Format</span>
+            <span className="gradient-text">Dip</span>
+            <span className="text-foreground">lox</span>
           </CardTitle>
           <CardDescription>
             {mode === "login"
