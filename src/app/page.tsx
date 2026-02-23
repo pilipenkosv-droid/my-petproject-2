@@ -5,7 +5,7 @@ import { AuroraText } from "@/components/ui/aurora-text";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil } from "lucide-react";
+import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { HeroMascot } from "@/components/HeroMascot";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
@@ -203,7 +203,7 @@ export default function LandingPage() {
             {[
               {
                 href: "/create",
-                icon: FileText,
+                icon: FileCheck,
                 label: "Форматирование по ГОСТу",
                 desc: "Загрузите документ и методичку — ИИ оформит по стандарту",
                 gradient: "from-brand-2 to-brand-3",
@@ -211,10 +211,10 @@ export default function LandingPage() {
               },
               {
                 href: "/outline",
-                icon: FileText,
+                icon: ListTree,
                 label: "Генератор плана",
                 desc: "Создайте структуру курсовой или диплома с помощью ИИ",
-                gradient: "from-brand-3 to-brand-2",
+                gradient: "from-brand-teal to-brand-teal-dark",
                 delay: 0.35,
               },
               {
@@ -222,7 +222,7 @@ export default function LandingPage() {
                 icon: SpellCheck,
                 label: "Проверка грамматики",
                 desc: "Проверьте текст на орфографические и пунктуационные ошибки",
-                gradient: "from-red-500 to-rose-600",
+                gradient: "from-brand-1 to-brand-2",
                 delay: 0.4,
               },
               {
@@ -230,7 +230,7 @@ export default function LandingPage() {
                 icon: Pencil,
                 label: "Повышение уникальности",
                 desc: "Перепишите текст с сохранением смысла для антиплагиата",
-                gradient: "from-amber-500 to-orange-600",
+                gradient: "from-brand-teal-dark to-brand-3",
                 delay: 0.45,
               },
               {
@@ -238,7 +238,7 @@ export default function LandingPage() {
                 icon: Sparkles,
                 label: "Краткое содержание",
                 desc: "Сгенерируйте аннотацию или резюме вашей работы",
-                gradient: "from-emerald-500 to-teal-600",
+                gradient: "from-brand-teal-light to-brand-teal",
                 delay: 0.5,
               },
               {
@@ -246,7 +246,7 @@ export default function LandingPage() {
                 icon: BookOpen,
                 label: "Подбор литературы",
                 desc: "Найдите реальные научные источники из OpenAlex и CrossRef",
-                gradient: "from-teal-500 to-cyan-600",
+                gradient: "from-brand-3 to-brand-2",
                 delay: 0.55,
               },
             ].map((tool) => {
