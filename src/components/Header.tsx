@@ -123,7 +123,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           )}
           <Link href="/" className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Logo variant="favicon" size={28} withText />
-            <sup className="ml-0.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-gradient-to-r from-violet-600 to-indigo-600 text-white/90 leading-none">
+            <sup className="ml-0.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-gradient-to-r from-brand-2 to-brand-1 text-white/90 leading-none">
               beta
             </sup>
           </Link>
@@ -204,10 +204,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center rounded-full p-1 hover:bg-surface-hover transition-colors">
                   {isPro ? (
-                    <div className="p-[3px] rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-500 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.5)]">
+                    <div className="p-[3px] rounded-full bg-gradient-to-br from-brand-teal via-brand-1 to-brand-2 shadow-[0_0_10px_rgba(112,41,248,0.5)]">
                       <Avatar className="h-8 w-8 ring-[2px] ring-background">
                         {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                        <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                        <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
@@ -215,7 +215,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   ) : (
                     <Avatar className="h-8 w-8">
                       {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                      <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                      <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -364,10 +364,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1">
                       {isPro ? (
-                        <div className="p-[3px] rounded-full bg-gradient-to-br from-violet-400 via-fuchsia-500 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.5)] shrink-0">
+                        <div className="p-[3px] rounded-full bg-gradient-to-br from-brand-teal via-brand-1 to-brand-2 shadow-[0_0_10px_rgba(112,41,248,0.5)] shrink-0">
                           <Avatar className="h-9 w-9 ring-[2px] ring-background">
                             {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                            <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                            <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
@@ -375,7 +375,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                       ) : (
                         <Avatar className="h-9 w-9 shrink-0">
                           {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                          <AvatarFallback className="text-primary-foreground text-xs bg-violet-600">
+                          <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
                             {initials}
                           </AvatarFallback>
                         </Avatar>

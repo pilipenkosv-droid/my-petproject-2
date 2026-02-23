@@ -15,7 +15,7 @@ const TOOLS = [
     label: "Форматирование по ГОСТу",
     description: "Автоматическое оформление документа",
     icon: Zap,
-    gradient: "from-violet-500 to-indigo-600",
+    gradient: "from-brand-2 to-brand-3",
   },
   {
     slug: "outline",
@@ -23,7 +23,7 @@ const TOOLS = [
     label: "Генератор плана",
     description: "Структура работы с разделами",
     icon: FileText,
-    gradient: "from-indigo-500 to-violet-600",
+    gradient: "from-brand-3 to-brand-2",
   },
   {
     slug: "grammar",

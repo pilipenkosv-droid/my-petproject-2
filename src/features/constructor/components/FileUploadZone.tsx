@@ -105,7 +105,7 @@ export function FileUploadZone({
           className={cn(
             "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
             isDragging
-              ? "border-violet-400 border-solid bg-violet-500/10"
+              ? "border-brand-1 border-solid bg-brand-2/10"
               : "border-surface-border hover:border-surface-border hover:bg-surface",
             disabled && "cursor-not-allowed opacity-50"
           )}

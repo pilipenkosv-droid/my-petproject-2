@@ -69,7 +69,7 @@ export function WorkTypeLanding({
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
             <FileText className="w-4 h-4" />
             {type}
           </div>
@@ -152,7 +152,7 @@ export function WorkTypeLanding({
         <section className="mb-12">
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
-              <Clock className="w-8 h-8 text-violet-400 mx-auto mb-3" />
+              <Clock className="w-8 h-8 text-brand-1 mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Быстро</h3>
               <p className="text-on-surface-subtle text-sm">Обработка за 3-5 минут</p>
             </div>
@@ -163,7 +163,7 @@ export function WorkTypeLanding({
               <p className="text-muted-foreground/60 text-xs">Файлы удаляются через 24ч</p>
             </div>
             <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
-              <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-3" />
+              <Sparkles className="w-8 h-8 text-brand-1 mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Точно</h3>
               <p className="text-on-surface-subtle text-sm">AI-анализ методички</p>
             </div>
@@ -236,7 +236,7 @@ export function WorkTypeLanding({
                 label: "Генератор плана",
                 desc: "Создайте структуру работы с помощью ИИ",
                 icon: FileText,
-                gradient: "from-indigo-500 to-violet-600",
+                gradient: "from-brand-3 to-brand-2",
               },
               {
                 href: "/sources",
@@ -286,8 +286,8 @@ export function WorkTypeLanding({
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
-            <Sparkles className="w-8 h-8 text-violet-400 mx-auto mb-4" />
+          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
+            <Sparkles className="w-8 h-8 text-brand-1 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Готовы оформить работу?
             </h2>
@@ -297,7 +297,7 @@ export function WorkTypeLanding({
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href={`/create?type=${slug}`}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
               >
                 Начать форматирование
                 <ArrowRight className="w-4 h-4" />

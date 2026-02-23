@@ -237,7 +237,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 Форматирование документа
@@ -286,7 +286,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           {/* Заголовок */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25 mb-4">
                 <CheckCircle className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl font-bold mb-2 text-foreground">

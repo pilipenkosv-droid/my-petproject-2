@@ -69,13 +69,13 @@ export default async function ProfilePage() {
         </div>
 
         {/* Access info card */}
-        <Card className={`mb-8 ${access.accessType === "subscription" || access.accessType === "admin" ? "border-violet-500/30 bg-violet-500/5" : ""}`}>
+        <Card className={`mb-8 ${access.accessType === "subscription" || access.accessType === "admin" ? "border-brand-2/30 bg-brand-2/5" : ""}`}>
           <CardContent className="pt-6">
             {access.accessType === "admin" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-violet-400" />
+                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-brand-1" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Pro — безлимитный доступ</p>
@@ -84,13 +84,13 @@ export default async function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-violet-400 font-medium">Активна</span>
+                <span className="text-sm text-brand-1 font-medium">Активна</span>
               </div>
             ) : access.accessType === "subscription" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-violet-400" />
+                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-brand-1" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Подписка Pro</p>
@@ -106,7 +106,7 @@ export default async function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-violet-400 font-medium">Активна</span>
+                <span className="text-sm text-brand-1 font-medium">Активна</span>
               </div>
             ) : access.accessType === "one_time" ? (
               <div className="flex items-center justify-between">

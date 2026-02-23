@@ -367,7 +367,7 @@ export default function FAQPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
             <HelpCircle className="w-4 h-4" />
             FAQ
           </div>
@@ -452,7 +452,7 @@ export default function FAQPage() {
 
         {/* CTA секция */}
         <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
+          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
             <Mascot
               src="/mascot/presenting.png"
               alt="Диплодок с документом"
@@ -470,7 +470,7 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
               >
                 Попробовать бесплатно
               </Link>

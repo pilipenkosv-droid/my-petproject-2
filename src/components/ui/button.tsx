@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gradient-to-r from-brand-2 to-brand-1 text-white shadow-lg shadow-brand-2/25 hover:shadow-brand-2/40 hover:scale-[1.02] active:scale-[0.98]",
         destructive:
           "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02]",
         outline:
@@ -21,7 +21,7 @@ const buttonVariants = cva(
         link:
           "text-primary underline-offset-4 hover:underline hover:text-primary/80",
         glow:
-          "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)] hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gradient-to-r from-brand-2 to-brand-1 text-white shadow-[0_0_20px_rgba(112,41,248,0.5)] hover:shadow-[0_0_30px_rgba(112,41,248,0.7)] hover:scale-[1.02] active:scale-[0.98]",
       },
       size: {
         default: "h-11 px-5 py-2",

@@ -57,7 +57,7 @@ export function ProcessingStatus({
 
     if (index === currentStepIndex) {
       return (
-        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/25">
+        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-brand-2 to-brand-3 shadow-lg shadow-brand-2/25">
           <Loader2 className="h-4 w-4 text-white animate-spin" />
         </div>
       );

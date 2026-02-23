@@ -64,7 +64,7 @@ const shareButtons = [
 ];
 
 const btnBase =
-  "group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-surface-border backdrop-blur-sm text-on-surface-muted text-sm font-medium hover:bg-surface-hover hover:border-surface-border hover:text-foreground active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
+  "group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-surface-border backdrop-blur-sm text-on-surface-muted text-sm font-medium hover:bg-surface-hover hover:border-surface-border hover:text-foreground active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-2 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
 
 export function ShareButtons({
   url,
@@ -144,7 +144,7 @@ export function ShareButtons({
           }}
           aria-label="Поделиться"
           aria-expanded={isOpen}
-          className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-surface-border text-muted-foreground hover:bg-surface-hover hover:text-on-surface-muted hover:border-surface-border active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-surface-border text-muted-foreground hover:bg-surface-hover hover:text-on-surface-muted hover:border-surface-border active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-2"
         >
           <Share2 className="w-3.5 h-3.5" />
         </button>

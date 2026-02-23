@@ -42,7 +42,7 @@ export default function BlogPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-primary text-sm mb-6">
             <BookOpen className="w-4 h-4" />
             Блог
           </div>
@@ -58,7 +58,7 @@ export default function BlogPage() {
           {posts.map((post) => (
             <div
               key={post.slug}
-              className="relative bg-surface rounded-xl border border-surface-border hover:bg-surface-hover hover:border-violet-500/30 transition-all group"
+              className="relative bg-surface rounded-xl border border-surface-border hover:bg-surface-hover hover:border-brand-2/30 transition-all group"
             >
               <Link
                 href={`/blog/${post.slug}`}
@@ -139,7 +139,7 @@ export default function BlogPage() {
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
+          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
             <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Не хотите разбираться в ГОСТах?
@@ -150,7 +150,7 @@ export default function BlogPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
               >
                 Попробовать бесплатно
                 <ArrowRight className="w-4 h-4" />

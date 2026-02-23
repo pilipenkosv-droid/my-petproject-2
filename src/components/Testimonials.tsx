@@ -72,7 +72,7 @@ export function Testimonials() {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center text-white text-sm font-bold">
                       {t.name.charAt(0)}
                     </div>
                   )}

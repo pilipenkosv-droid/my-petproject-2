@@ -197,7 +197,7 @@ function RewritePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-2 to-brand-3 shadow-lg shadow-brand-2/25 mb-4">
                 <Pencil className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">

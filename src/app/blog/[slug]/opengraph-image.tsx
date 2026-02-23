@@ -28,15 +28,15 @@ const METEOR_10 = "M-44 -573C-44 -573 24 -168 488 -41C952 86 1020 491 1020 491";
 function buildBeamsSvg(): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 696 316" fill="none" overflow="visible">
 <path d="${ALL_BEAMS}" stroke="#d4d4d4" stroke-opacity="0.08" stroke-width="0.5"/>
-<path d="${METEOR_1}" stroke="#18CCFC" stroke-opacity="0.3" stroke-width="0.5"/>
+<path d="${METEOR_1}" stroke="#32C6A5" stroke-opacity="0.3" stroke-width="0.5"/>
 <path d="${METEOR_2}" stroke="#6344F5" stroke-opacity="0.4" stroke-width="0.5"/>
-<path d="${METEOR_3}" stroke="#AE48FF" stroke-opacity="0.25" stroke-width="0.5"/>
-<path d="${METEOR_4}" stroke="#8B5CF6" stroke-opacity="0.35" stroke-width="0.5"/>
-<path d="${METEOR_5}" stroke="#18CCFC" stroke-opacity="0.4" stroke-width="0.5"/>
+<path d="${METEOR_3}" stroke="#7029F8" stroke-opacity="0.25" stroke-width="0.5"/>
+<path d="${METEOR_4}" stroke="#925FF6" stroke-opacity="0.35" stroke-width="0.5"/>
+<path d="${METEOR_5}" stroke="#32C6A5" stroke-opacity="0.4" stroke-width="0.5"/>
 <path d="${METEOR_6}" stroke="#6344F5" stroke-opacity="0.3" stroke-width="0.5"/>
-<path d="${METEOR_7}" stroke="#AE48FF" stroke-opacity="0.35" stroke-width="0.5"/>
-<path d="${METEOR_8}" stroke="#18CCFC" stroke-opacity="0.25" stroke-width="0.5"/>
-<path d="${METEOR_9}" stroke="#8B5CF6" stroke-opacity="0.4" stroke-width="0.5"/>
+<path d="${METEOR_7}" stroke="#7029F8" stroke-opacity="0.35" stroke-width="0.5"/>
+<path d="${METEOR_8}" stroke="#32C6A5" stroke-opacity="0.25" stroke-width="0.5"/>
+<path d="${METEOR_9}" stroke="#925FF6" stroke-opacity="0.4" stroke-width="0.5"/>
 <path d="${METEOR_10}" stroke="#6344F5" stroke-opacity="0.3" stroke-width="0.5"/>
 </svg>`;
 }
@@ -95,7 +95,7 @@ export default async function Image({
             height: "700px",
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(146,95,246,0.25) 0%, transparent 70%)",
             display: "flex",
           }}
         />
@@ -139,12 +139,12 @@ export default async function Image({
               display: "flex",
               padding: "6px 16px",
               borderRadius: "8px",
-              background: "rgba(139,92,246,0.15)",
-              border: "1px solid rgba(139,92,246,0.3)",
+              background: "rgba(146,95,246,0.15)",
+              border: "1px solid rgba(146,95,246,0.3)",
               fontSize: "16px",
               fontWeight: 600,
               fontFamily: "Geologica",
-              color: "rgba(139,92,246,0.9)",
+              color: "rgba(146,95,246,0.9)",
             }}
           >
             Блог

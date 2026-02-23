@@ -82,7 +82,7 @@ function PaymentSuccessContent() {
                 height={344}
                 className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
               />
-              <Loader2 className="w-10 h-10 text-violet-400 animate-spin mx-auto" />
+              <Loader2 className="w-10 h-10 text-brand-1 animate-spin mx-auto" />
               <h1 className="text-2xl font-bold text-foreground">
                 Обрабатываем оплату...
               </h1>
@@ -175,7 +175,7 @@ export default function PaymentSuccessPage() {
       <Suspense fallback={
         <main className="mx-auto max-w-lg px-6 py-24">
           <div className="text-center">
-            <Loader2 className="w-16 h-16 text-violet-400 animate-spin mx-auto" />
+            <Loader2 className="w-16 h-16 text-brand-1 animate-spin mx-auto" />
           </div>
         </main>
       }>

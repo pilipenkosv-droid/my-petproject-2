@@ -118,7 +118,7 @@ export default function AboutPage() {
       <main className="mx-auto max-w-4xl px-6 py-16">
         {/* Hero секция */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
             <Sparkles className="w-4 h-4" />
             О сервисе
           </div>
@@ -266,7 +266,7 @@ export default function AboutPage() {
               <Link
                 key={index}
                 href={item.href}
-                className="bg-surface rounded-xl border border-surface-border p-4 text-center hover:bg-surface-hover hover:border-violet-500/30 transition-colors group"
+                className="bg-surface rounded-xl border border-surface-border p-4 text-center hover:bg-surface-hover hover:border-brand-2/30 transition-colors group"
               >
                 <span className="text-on-surface group-hover:text-foreground transition-colors">
                   {item.name}
@@ -278,8 +278,8 @@ export default function AboutPage() {
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
-            <Clock className="w-8 h-8 text-violet-400 mx-auto mb-4" />
+          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
+            <Clock className="w-8 h-8 text-brand-1 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Готовы попробовать?
             </h2>
@@ -290,7 +290,7 @@ export default function AboutPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
               >
                 Начать форматирование
                 <ArrowRight className="w-4 h-4" />

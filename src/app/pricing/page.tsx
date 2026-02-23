@@ -129,7 +129,7 @@ function PricingContent() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
             <Sparkles className="w-4 h-4" />
             Тарифы
           </div>
@@ -141,9 +141,9 @@ function PricingContent() {
       <main className="mx-auto max-w-4xl px-6 py-12">
         {/* Баннер разблокировки полной версии */}
         {unlockJobId && (
-          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-500/30">
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-brand-2/20 to-brand-3/20 border border-brand-2/30">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center shrink-0">
                 <FileCheck className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -165,12 +165,12 @@ function PricingContent() {
                 key={plan.id}
                 className={`relative transition-all ${
                   plan.accent
-                    ? "bg-violet-500/10 border-violet-500/30 shadow-xl shadow-violet-500/20 scale-105 z-10"
+                    ? "bg-brand-2/10 border-brand-2/30 shadow-xl shadow-brand-2/20 scale-105 z-10"
                     : "bg-surface border-surface-border opacity-[0.9]"
                 }`}
               >
                 {plan.accent && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-xs font-semibold z-10">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-brand-2 to-brand-3 text-white text-xs font-semibold z-10">
                     Популярное
                   </span>
                 )}
@@ -180,7 +180,7 @@ function PricingContent() {
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                         plan.accent
-                          ? "bg-violet-500/20 text-violet-400"
+                          ? "bg-brand-2/20 text-brand-1"
                           : "bg-surface-hover text-on-surface-muted"
                       }`}
                     >
@@ -239,7 +239,7 @@ function PricingContent() {
         {/* FAQ секция */}
         <div className="mt-16 pt-12 border-t border-surface-border">
           <div className="flex items-center justify-center gap-2 mb-8">
-            <HelpCircle className="w-5 h-5 text-violet-400" />
+            <HelpCircle className="w-5 h-5 text-brand-1" />
             <h2 className="text-xl font-semibold text-foreground">Частые вопросы об оплате</h2>
           </div>
 

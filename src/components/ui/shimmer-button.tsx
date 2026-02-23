@@ -22,7 +22,7 @@ export const ShimmerButton = React.forwardRef<
       shimmerSize = "0.05em",
       shimmerDuration = "3s",
       borderRadius = "100px",
-      background = "linear-gradient(135deg, #18CCFC 0%, #AE48FF 100%)",
+      background = "linear-gradient(135deg, #32C6A5 0%, #7029F8 100%)",
       className,
       children,
       ...props
@@ -45,8 +45,8 @@ export const ShimmerButton = React.forwardRef<
           "group relative z-0 flex cursor-pointer items-center justify-center overflow-hidden whitespace-nowrap px-8 py-4 text-white font-semibold",
           "[border-radius:var(--radius)] [background:var(--bg)]",
           "transform-gpu transition-all duration-300 ease-in-out hover:scale-[1.02]",
-          "active:scale-[0.97] active:brightness-110 active:shadow-[0_0_35px_rgba(139,92,246,0.8)] active:duration-100",
-          "shadow-[0_0_20px_rgba(139,92,246,0.5)] hover:shadow-[0_0_30px_rgba(139,92,246,0.7)]",
+          "active:scale-[0.97] active:brightness-110 active:shadow-[0_0_35px_rgba(112,41,248,0.8)] active:duration-100",
+          "shadow-[0_0_20px_rgba(112,41,248,0.5)] hover:shadow-[0_0_30px_rgba(112,41,248,0.7)]",
           "disabled:pointer-events-none disabled:opacity-80",
           className
         )}

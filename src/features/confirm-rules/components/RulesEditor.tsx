@@ -225,7 +225,7 @@ export function RulesEditor({
           "document",
           "Параметры страницы",
           <FileText className="h-5 w-5 text-white" />,
-          "from-violet-500 to-purple-600",
+          "from-brand-2 to-brand-3",
           <div className="space-y-1">
             {renderField("Размер страницы", rules.document.pageSize, ["document", "pageSize"], "text")}
             {renderField("Ориентация", rules.document.orientation === "portrait" ? "Книжная" : "Альбомная", ["document", "orientation"], "text")}
@@ -241,7 +241,7 @@ export function RulesEditor({
           "text",
           "Основной текст",
           <Type className="h-5 w-5 text-white" />,
-          "from-indigo-500 to-blue-600",
+          "from-brand-3 to-brand-2",
           <div className="space-y-1">
             {renderField("Шрифт", rules.text.fontFamily, ["text", "fontFamily"], "text")}
             {renderField("Размер шрифта (pt)", rules.text.fontSize, ["text", "fontSize"], "number")}

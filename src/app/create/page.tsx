@@ -184,7 +184,7 @@ function ConstructorPageContent() {
             {/* Баннер: триал заблокирован */}
             {trialBlocked && (
               <BlurFade inView>
-                <Card className="border-violet-500/30 bg-violet-500/10">
+                <Card className="border-brand-2/30 bg-brand-2/10">
                   <CardContent className="pt-6 text-center">
                     <p className="text-foreground mb-3">
                       Бесплатная попытка использована. Зарегистрируйтесь для продолжения.
@@ -229,7 +229,7 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 shadow-lg shadow-brand-2/25">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
                     <span>Исходный документ</span>
@@ -290,7 +290,7 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 shadow-lg shadow-indigo-500/25">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <span>Требования к оформлению</span>
@@ -390,7 +390,7 @@ function ConstructorPageContent() {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 {processingTitle}

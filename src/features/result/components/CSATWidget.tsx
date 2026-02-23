@@ -126,7 +126,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Например: не исправлены инициалы в списке литературы, неверное форматирование заголовков..."
-              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-brand-2/50"
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground">

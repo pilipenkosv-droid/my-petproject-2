@@ -117,8 +117,8 @@ export function HeroSubtitle() {
         ]}
         interval={2500}
         animationDuration={600}
-        className="text-3xl sm:text-5xl md:text-6xl font-extrabold px-5 py-1.5 [background:linear-gradient(to_bottom,#ede9fe,#ddd6fe)] shadow-[inset_0_-1px_#c4b5fd,inset_0_0_0_1px_#c4b5fd,0_4px_8px_rgba(139,92,246,0.15)] dark:[background:linear-gradient(to_bottom,rgba(139,92,246,0.2),rgba(99,102,241,0.15))] dark:shadow-[inset_0_-1px_rgba(139,92,246,0.4),inset_0_0_0_1px_rgba(139,92,246,0.3),0_4px_12px_rgba(139,92,246,0.2)]"
-        textClassName="text-violet-700 dark:text-violet-300"
+        className="text-3xl sm:text-5xl md:text-6xl font-extrabold px-5 py-1.5 [background:linear-gradient(to_bottom,#ede9fe,#ddd6fe)] shadow-[inset_0_-1px_#b49af8,inset_0_0_0_1px_#b49af8,0_4px_8px_rgba(112,41,248,0.15)] dark:[background:linear-gradient(to_bottom,rgba(112,41,248,0.2),rgba(146,95,246,0.15))] dark:shadow-[inset_0_-1px_rgba(112,41,248,0.4),inset_0_0_0_1px_rgba(112,41,248,0.3),0_4px_12px_rgba(112,41,248,0.2)]"
+        textClassName="text-brand-3 dark:text-brand-1"
       />
       <span className="text-foreground">по методичке</span>
     </h1>

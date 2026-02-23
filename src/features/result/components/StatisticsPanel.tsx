@@ -20,14 +20,14 @@ export function StatisticsPanel({
       label: "Символов",
       value: statistics.totalCharacters,
       icon: FileText,
-      gradient: "from-violet-500 to-purple-600",
+      gradient: "from-brand-2 to-brand-3",
       delay: 0,
     },
     {
       label: "Страниц",
       value: statistics.pageCount,
       icon: BookOpen,
-      gradient: "from-indigo-500 to-blue-600",
+      gradient: "from-brand-3 to-brand-2",
       delay: 0.1,
     },
     {

@@ -14,7 +14,7 @@ export function getCategoryHighlight(category: GrammarCategory): string {
     case "PUNCTUATION":
       return "bg-blue-500/15 border-b-2 border-blue-500 cursor-pointer";
     case "GRAMMAR":
-      return "bg-purple-500/15 border-b-2 border-purple-500 cursor-pointer";
+      return "bg-brand-1/15 border-b-2 border-brand-1 cursor-pointer";
     case "CASING":
     case "OTHER":
     default:
@@ -53,9 +53,9 @@ export function getCategoryColor(category: GrammarCategory): {
       };
     case "GRAMMAR":
       return {
-        bg: "bg-purple-500/15",
-        text: "text-purple-600 dark:text-purple-400",
-        dot: "bg-purple-500",
+        bg: "bg-brand-1/15",
+        text: "text-brand-2 dark:text-brand-1",
+        dot: "bg-brand-1",
       };
     case "CASING":
     case "OTHER":

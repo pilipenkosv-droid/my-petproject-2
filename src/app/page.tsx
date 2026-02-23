@@ -25,7 +25,7 @@ export default function LandingPage() {
 
         {/* Single soft glow accent */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-500/15 rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-2/15 rounded-full blur-[150px]" />
         </div>
         
         {/* Mascot — bottom-left with fireflies easter egg (desktop only) */}
@@ -37,7 +37,7 @@ export default function LandingPage() {
             {/* Badge */}
             <BlurFade delay={0.1} inView>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border backdrop-blur-sm mb-8">
-                <Sparkles className="w-4 h-4 text-violet-400" />
+                <Sparkles className="w-4 h-4 text-brand-1" />
                 <span className="text-sm text-on-surface">Powered by AI</span>
               </div>
             </BlurFade>
@@ -74,7 +74,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <BlurFade delay={0.1} inView>
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-              <AuroraText colors={["#7928CA", "#FF0080", "#0070F3"]}>
+              <AuroraText colors={["#7029F8", "#925FF6", "#32C6A5"]}>
                 Как это работает
               </AuroraText>
             </h2>
@@ -93,7 +93,7 @@ export default function LandingPage() {
                 icon: FileText,
                 title: "Загрузите документ",
                 description: "Отправьте курсовую, диплом или научную работу в формате .docx",
-                gradient: "from-violet-500 to-purple-600",
+                gradient: "from-brand-2 to-brand-3",
                 delay: 0.3,
               },
               {
@@ -101,7 +101,7 @@ export default function LandingPage() {
                 icon: FileText,
                 title: "Добавьте методичку",
                 description: "Загрузите методические указания или требования к оформлению от вашего вуза",
-                gradient: "from-indigo-500 to-blue-600",
+                gradient: "from-brand-3 to-brand-2",
                 delay: 0.4,
               },
               {
@@ -109,7 +109,7 @@ export default function LandingPage() {
                 icon: Sparkles,
                 title: "ИИ-обработка",
                 description: "Нейросеть считывает требования и автоматически исправляет форматирование по ГОСТу",
-                gradient: "from-fuchsia-500 to-pink-600",
+                gradient: "from-brand-1 to-brand-teal",
                 delay: 0.5,
               },
               {
@@ -134,7 +134,7 @@ export default function LandingPage() {
                     )}
                   </div>
                   {/* Right: card content */}
-                  <div className={`group p-5 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] flex-1 ${index < 3 ? "mb-4" : ""}`}>
+                  <div className={`group p-5 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:shadow-[0_20px_40px_rgba(112,41,248,0.15)] flex-1 ${index < 3 ? "mb-4" : ""}`}>
                     <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
                       <item.icon className="w-6 h-6" />
                     </div>
@@ -164,7 +164,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   {/* Bottom: card */}
-                  <div className="group p-6 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(139,92,246,0.15)] w-full flex-1">
+                  <div className="group p-6 rounded-2xl bg-surface border border-surface-border backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-hover hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(112,41,248,0.15)] w-full flex-1">
                     <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-lg font-bold mb-4 shadow-lg`}>
                       <item.icon className="w-6 h-6" />
                     </div>
@@ -188,7 +188,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <BlurFade delay={0.1} inView>
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-              <AuroraText colors={["#7928CA", "#FF0080", "#0070F3"]}>
+              <AuroraText colors={["#7029F8", "#925FF6", "#32C6A5"]}>
                 Все инструменты для вашей работы
               </AuroraText>
             </h2>
@@ -206,7 +206,7 @@ export default function LandingPage() {
                 icon: FileText,
                 label: "Форматирование по ГОСТу",
                 desc: "Загрузите документ и методичку — ИИ оформит по стандарту",
-                gradient: "from-violet-500 to-purple-600",
+                gradient: "from-brand-2 to-brand-3",
                 delay: 0.3,
               },
               {
@@ -214,7 +214,7 @@ export default function LandingPage() {
                 icon: FileText,
                 label: "Генератор плана",
                 desc: "Создайте структуру курсовой или диплома с помощью ИИ",
-                gradient: "from-indigo-500 to-violet-600",
+                gradient: "from-brand-3 to-brand-2",
                 delay: 0.35,
               },
               {
@@ -255,7 +255,7 @@ export default function LandingPage() {
                 <BlurFade key={tool.href} delay={tool.delay} inView>
                   <Link
                     href={tool.href}
-                    className="flex items-start gap-4 bg-surface rounded-2xl border border-surface-border p-5 hover:bg-surface-hover hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(139,92,246,0.1)] transition-all duration-300 group h-full"
+                    className="flex items-start gap-4 bg-surface rounded-2xl border border-surface-border p-5 hover:bg-surface-hover hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(112,41,248,0.1)] transition-all duration-300 group h-full"
                   >
                     <div
                       className={`w-11 h-11 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0 shadow-lg`}
@@ -280,7 +280,7 @@ export default function LandingPage() {
 
       {/* Pain points */}
       <section className="relative py-24 px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-brand-2/5 to-transparent" />
         
         <div className="relative mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
@@ -303,7 +303,7 @@ export default function LandingPage() {
             ].map((pain, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-xl bg-surface border border-surface-border p-4 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-red-500/5 hover:border-red-500/20 group"
+                className="flex items-start gap-3 rounded-xl bg-surface border border-surface-border p-4 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/5 hover:border-destructive/20 group"
               >
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
                   <span className="text-red-400 text-sm">✕</span>
@@ -360,7 +360,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-3xl">
           <div className="relative rounded-3xl p-12 overflow-hidden">
             {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-indigo-600/20 to-fuchsia-600/20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-2/20 via-brand-3/20 to-brand-1/20" />
             <div className="absolute inset-0 backdrop-blur-xl" />
             <div className="absolute inset-0 border border-surface-border rounded-3xl" />
             

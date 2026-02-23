@@ -146,7 +146,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               [&_table]:w-full [&_table]:border-collapse [&_table]:mb-4
               [&_th]:bg-surface-hover [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:text-foreground [&_th]:font-medium [&_th]:border [&_th]:border-surface-border
               [&_td]:px-4 [&_td]:py-2 [&_td]:text-on-surface-muted [&_td]:border [&_td]:border-surface-border
-              [&_blockquote]:border-l-4 [&_blockquote]:border-violet-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-on-surface-muted
+              [&_blockquote]:border-l-4 [&_blockquote]:border-brand-2 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-on-surface-muted
               [&_code]:bg-surface-hover [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-primary [&_code]:text-sm
             "
             dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
@@ -213,7 +213,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-violet-500/10 to-indigo-500/10 rounded-2xl border border-violet-500/20 p-8">
+          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
             <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Не хотите разбираться в правилах?
@@ -224,7 +224,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
               >
                 Попробовать бесплатно
                 <ArrowRight className="w-4 h-4" />

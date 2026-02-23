@@ -108,7 +108,7 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
       >
         <CardTitle className="flex items-center justify-between text-base">
           <span className="flex items-center gap-2">
-            <MessageCircleQuestion className="w-5 h-5 text-indigo-500" />
+            <MessageCircleQuestion className="w-5 h-5 text-brand-3" />
             Спросить у методички
           </span>
           {isExpanded ? (
@@ -133,15 +133,15 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
                   )}
                 >
                   {msg.role === "assistant" && (
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center mt-0.5">
-                      <Bot className="w-4 h-4 text-indigo-500" />
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-3/10 flex items-center justify-center mt-0.5">
+                      <Bot className="w-4 h-4 text-brand-3" />
                     </div>
                   )}
                   <div
                     className={cn(
                       "rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap",
                       msg.role === "user"
-                        ? "bg-indigo-500/10 text-foreground"
+                        ? "bg-brand-3/10 text-foreground"
                         : "bg-muted text-foreground"
                     )}
                   >
@@ -157,8 +157,8 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
 
               {isLoading && (
                 <div className="flex gap-2 justify-start">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center mt-0.5">
-                    <Bot className="w-4 h-4 text-indigo-500" />
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-3/10 flex items-center justify-center mt-0.5">
+                    <Bot className="w-4 h-4 text-brand-3" />
                   </div>
                   <div className="bg-muted rounded-lg px-3 py-2">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />

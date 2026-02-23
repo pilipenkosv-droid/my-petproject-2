@@ -91,7 +91,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 Обработка документа
@@ -180,11 +180,11 @@ export default function ResultPage({ params }: ResultPageProps) {
 
           {/* Hook-offer: полная версия уже готова */}
           {job.statistics?.wasTruncated && job.hasFullVersion && (
-            <Card className="border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
+            <Card className="border-brand-2/30 bg-gradient-to-br from-brand-2/10 to-brand-3/10 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-2/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
               <CardContent className="pt-6 relative">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25 shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center shadow-lg shadow-brand-2/25 shrink-0">
                     <Gift className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
@@ -301,7 +301,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Краткое содержание */}
-          <Card className="border-indigo-500/20 bg-gradient-to-r from-indigo-500/5 to-violet-500/5">
+          <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужна аннотация к работе?
