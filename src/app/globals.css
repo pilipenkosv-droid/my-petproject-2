@@ -214,6 +214,10 @@ h1, h2, h3, h4, h5, h6 {
   font-family: "Geologica", "Inter", sans-serif;
 }
 
+.font-logo {
+  font-family: "Play", "Inter", sans-serif;
+}
+
 /* Glassmorphism utilities */
 .glass {
   background: var(--card);

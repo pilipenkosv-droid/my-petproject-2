@@ -80,7 +80,7 @@ export function Logo({
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       {icon}
-      <span className={`font-bold leading-tight ${textSize}`}>
+      <span className={`font-bold leading-tight font-logo ${textSize}`}>
         <span className="gradient-text">Diplox</span>
       </span>
     </span>
