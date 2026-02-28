@@ -7,7 +7,6 @@ import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
 import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
-import { HeroMascot } from "@/components/HeroMascot";
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { StatsCounter } from "@/components/StatsCounter";
 import { BeforeAfter } from "@/components/BeforeAfter";
@@ -28,9 +27,6 @@ export default function LandingPage() {
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-2/15 rounded-full blur-[150px]" />
         </div>
         
-        {/* Mascot — bottom-left with fireflies easter egg (desktop only) */}
-        <HeroMascot />
-
         <div className="relative z-10 mx-auto max-w-4xl w-full">
           {/* Text column — centered */}
           <div className="text-center md:text-left">
