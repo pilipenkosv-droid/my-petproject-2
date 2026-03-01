@@ -19,6 +19,7 @@ export interface UserAccess {
   accessType: "trial" | "one_time" | "subscription" | "admin" | "none";
   remainingUses: number;
   subscriptionActiveUntil: string | null;
+  botDeepLink: string | null;
 }
 
 /**
@@ -59,6 +60,7 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
       accessType: "admin",
       remainingUses: 999999,
       subscriptionActiveUntil: "2099-12-31T23:59:59Z",
+      botDeepLink: null,
     };
   }
 
@@ -75,6 +77,7 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
       accessType: "trial",
       remainingUses: LAVA_CONFIG.freeTrialUses,
       subscriptionActiveUntil: null,
+      botDeepLink: null,
     };
   }
 
@@ -86,6 +89,7 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
       accessType: isActive ? "subscription" : "none",
       remainingUses: isActive ? data.remaining_uses : 0,
       subscriptionActiveUntil: data.subscription_active_until,
+      botDeepLink: data.bot_deep_link || null,
     };
   }
 
@@ -96,6 +100,7 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
       accessType: data.remaining_uses > 0 ? "one_time" : "none",
       remainingUses: data.remaining_uses,
       subscriptionActiveUntil: null,
+      botDeepLink: data.bot_deep_link || null,
     };
   }
 
@@ -104,6 +109,7 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
     accessType: "none",
     remainingUses: 0,
     subscriptionActiveUntil: null,
+    botDeepLink: data.bot_deep_link || null,
   };
 }
 

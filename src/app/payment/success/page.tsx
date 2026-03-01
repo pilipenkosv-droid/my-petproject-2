@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { trackEvent } from "@/lib/analytics/events";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock, MessageCircle } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 
 type PaymentState = "polling" | "completed" | "failed" | "timeout";
@@ -20,6 +20,7 @@ function PaymentSuccessContent() {
 
   const [state, setState] = useState<PaymentState>("polling");
   const [offerType, setOfferType] = useState<string | null>(null);
+  const [botDeepLink, setBotDeepLink] = useState<string | null>(null);
 
   const checkPayment = useCallback(async () => {
     if (!invoiceId) return null;
@@ -56,6 +57,9 @@ function PaymentSuccessContent() {
       if (result.status === "completed") {
         setState("completed");
         setOfferType(result.offerType);
+        if (result.botDeepLink) {
+          setBotDeepLink(result.botDeepLink);
+        }
         trackEvent("payment_complete", { offer_type: result.offerType });
         clearInterval(timer);
       } else if (result.status === "failed") {
@@ -105,8 +109,25 @@ function PaymentSuccessContent() {
                   ? "Подписка активирована. Безлимитные обработки уже доступны."
                   : "Обработка документа добавлена в ваш аккаунт."}
               </p>
+
+              {botDeepLink && (
+                <div className="mt-6 p-4 rounded-xl border border-brand-2/30 bg-brand-2/5">
+                  <p className="text-sm text-on-surface-muted mb-3">
+                    🎉 Вам доступен <strong>Diplox AI-бот</strong> в Telegram — ваш личный помощник для учёбы!
+                  </p>
+                  <Button
+                    variant="glow"
+                    onClick={() => window.open(botDeepLink, "_blank")}
+                    className="w-full"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Открыть бота в Telegram
+                  </Button>
+                </div>
+              )}
+
               <Button
-                variant="glow"
+                variant={botDeepLink ? "outline" : "glow"}
                 onClick={() => router.push("/")}
                 className="mt-4"
               >

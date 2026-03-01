@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 import { getInvoiceStatus } from "@/lib/payment/lava-client";
 import { activateAccess } from "@/lib/payment/access";
+import { canGrantBotAccess, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 
 export async function GET(
   _request: NextRequest,
@@ -60,9 +61,39 @@ export async function GET(
 
           console.log(`✅ Payment verified via API: ${payment.offer_type} for user ${payment.user_id}`);
 
+          // Бот-провижнинг для подписчиков Pro (первые 10)
+          let botDeepLink: string | null = null;
+          if (payment.offer_type === "subscription") {
+            try {
+              const canGrant = await canGrantBotAccess(admin);
+              if (canGrant) {
+                const { data: profile } = await admin
+                  .from("profiles")
+                  .select("full_name, email")
+                  .eq("id", payment.user_id)
+                  .single();
+
+                if (profile?.email) {
+                  const result = await provisionBotUser(
+                    profile.email,
+                    profile.full_name || "Студент"
+                  );
+                  if (result?.success) {
+                    await storeBotAccess(admin, payment.user_id, result.deepLink);
+                    botDeepLink = result.deepLink;
+                    console.log(`🤖 Bot access granted for user ${payment.user_id}`);
+                  }
+                }
+              }
+            } catch (botError) {
+              console.error("Bot provisioning failed (non-critical):", botError);
+            }
+          }
+
           return NextResponse.json({
             status: "completed",
             offerType: payment.offer_type,
+            botDeepLink,
           });
         }
 

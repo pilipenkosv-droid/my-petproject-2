@@ -6,7 +6,7 @@ import { getUserAccess } from "@/lib/payment/access";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles } from "lucide-react";
+import { Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles, MessageCircle } from "lucide-react";
 import { Mascot } from "@/components/Mascot";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
@@ -149,6 +149,33 @@ export default async function ProfilePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Bot access card for Pro subscribers */}
+        {access.botDeepLink && (access.accessType === "subscription" || access.accessType === "admin") && (
+          <Card className="mb-8 border-brand-2/30 bg-brand-2/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
+                    <MessageCircle className="h-5 w-5 text-brand-1" />
+                  </div>
+                  <div>
+                    <p className="text-foreground font-medium">Diplox AI-бот</p>
+                    <p className="text-sm text-on-surface-muted">
+                      Ваш личный помощник в Telegram
+                    </p>
+                  </div>
+                </div>
+                <a href={access.botDeepLink} target="_blank" rel="noopener noreferrer">
+                  <Button variant="glow" size="sm">
+                    <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                    Открыть бота
+                  </Button>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Verify pending payments */}
         {access.accessType !== "subscription" && access.accessType !== "admin" && (

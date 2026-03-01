@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { activateAccess } from "@/lib/payment/access";
 import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
 import { updateJob } from "@/lib/storage/job-store";
+import { canGrantBotAccess, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 
 interface LavaWebhookPayload {
   type: string;
@@ -103,6 +104,36 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`✅ Payment completed: ${payment.offer_type} for user ${payment.user_id}`);
+
+        // Бот-провижнинг для подписчиков Pro (первые 10)
+        if (payment.offer_type === "subscription") {
+          try {
+            const canGrant = await canGrantBotAccess(supabase);
+            if (canGrant) {
+              // Получаем данные пользователя для провижнинга
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("full_name, email")
+                .eq("id", payment.user_id)
+                .single();
+
+              if (profile?.email) {
+                const result = await provisionBotUser(
+                  profile.email,
+                  profile.full_name || "Студент"
+                );
+                if (result?.success) {
+                  await storeBotAccess(supabase, payment.user_id, result.deepLink);
+                  console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);
+                }
+              }
+            }
+          } catch (botError) {
+            // Сбой бота не должен ломать оплату
+            console.error("Bot provisioning failed (non-critical):", botError);
+          }
+        }
+
         break;
       }
 
