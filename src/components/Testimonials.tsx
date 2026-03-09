@@ -43,7 +43,7 @@ export function Testimonials() {
         <div className="grid gap-6 md:grid-cols-3">
           {testimonials.map((t, i) => (
             <BlurFade key={i} delay={0.2 + i * 0.1} inView>
-              <div className="bg-surface rounded-2xl border border-surface-border p-6 h-full flex flex-col">
+              <div className="bg-surface border border-surface-border p-6 h-full flex flex-col">
                 {/* Rating */}
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: 5 }).map((_, starIdx) => (

@@ -261,6 +261,19 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--background);
 }
 
+/* Film grain overlay — applied via GrainOverlay component */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.dark .grain-overlay {
+  opacity: 0.25;
+}
+
 @theme inline {
   --font-sans: "Manrope", Arial, "Helvetica Neue", Helvetica, FreeSans, sans-serif;
   --font-heading: "Unbounded", "Manrope", sans-serif;

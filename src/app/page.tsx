@@ -3,16 +3,18 @@ import { Button } from "@/components/ui/button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { FileText, Sparkles, Zap, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck } from "lucide-react";
+import { FileText, Sparkles, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck, ShieldCheck } from "lucide-react";
 
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { StatsCounter } from "@/components/StatsCounter";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Testimonials } from "@/components/Testimonials";
+import { GrainOverlay } from "@/components/GrainOverlay";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
+      <GrainOverlay />
       <Header />
 
       {/* Hero Section */}
@@ -38,7 +40,7 @@ export default function LandingPage() {
                 <div className="w-full sm:w-auto">
                   <CtaButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8" />
                 </div>
-                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 py-6 sm:py-7 w-full sm:w-auto" asChild>
+                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto" asChild>
                   <a href="#how-it-works">Как это работает</a>
                 </Button>
               </div>
@@ -129,7 +131,7 @@ export default function LandingPage() {
             </p>
           </BlurFade>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 grid-rows-[1fr_1fr]">
             {[
               {
                 href: "/create",
@@ -182,10 +184,10 @@ export default function LandingPage() {
             ].map((tool) => {
               const ToolIcon = tool.icon;
               return (
-                <BlurFade key={tool.href} delay={tool.delay} inView>
+                <BlurFade key={tool.href} delay={tool.delay} inView className="h-full">
                   <Link
                     href={tool.href}
-                    className="flex items-start gap-4 bg-surface rounded-2xl border border-surface-border p-5 hover:bg-surface-hover hover:-translate-y-1 hover:shadow-md transition-all duration-300 group h-full"
+                    className="flex items-start gap-4 bg-surface border border-surface-border p-5 hover:bg-surface-hover hover:-translate-y-1 hover:shadow-md transition-all duration-300 group h-full"
                   >
                     <div className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center shrink-0">
                       <ToolIcon className="w-5 h-5 text-background" />
@@ -218,35 +220,24 @@ export default function LandingPage() {
           </p>
           
           <div className="border border-border">
-            <div className="grid md:grid-cols-2 divide-y md:divide-y-0">
-              {/* Left column */}
-              <div className="divide-y divide-border md:border-r md:border-border">
-                {[
-                  "Где нет неразрывных пробелов перед единицами измерения",
-                  "Где неверные межстрочные интервалы и абзацные отступы",
-                  "Где не соблюдены поля документа",
-                  "Где неправильный шрифт или его размер",
-                ].map((pain, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+            <div className="grid md:grid-cols-2">
+              {[
+                ["Где нет неразрывных пробелов перед единицами измерения", "Где заголовки оформлены не по требованиям"],
+                ["Где неверные межстрочные интервалы и абзацные отступы", "Где нарушено оформление списка литературы"],
+                ["Где не соблюдены поля документа", "Где рисунки и таблицы подписаны не по стандарту"],
+                ["Где неправильный шрифт или его размер", "Где нумерация страниц начинается не с того места"],
+              ].map(([left, right], i) => (
+                <div key={i} className="grid md:grid-cols-subgrid md:col-span-2">
+                  <div className={`flex items-center gap-3 px-4 py-3.5 md:border-r border-border ${i > 0 ? "border-t" : ""}`}>
                     <span className="text-red-400 text-xs font-mono shrink-0">✕</span>
-                    <span className="text-sm text-muted-foreground">{pain}</span>
+                    <span className="text-sm text-muted-foreground">{left}</span>
                   </div>
-                ))}
-              </div>
-              {/* Right column */}
-              <div className="divide-y divide-border">
-                {[
-                  "Где заголовки оформлены не по требованиям",
-                  "Где нарушено оформление списка литературы",
-                  "Где рисунки и таблицы подписаны не по стандарту",
-                  "Где нумерация страниц начинается не с того места",
-                ].map((pain, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+                  <div className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""}`}>
                     <span className="text-red-400 text-xs font-mono shrink-0">✕</span>
-                    <span className="text-sm text-muted-foreground">{pain}</span>
+                    <span className="text-sm text-muted-foreground">{right}</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -258,8 +249,11 @@ export default function LandingPage() {
       {/* Безопасность от антиплагиата */}
       <section className="relative py-16 px-6">
         <div className="mx-auto max-w-4xl">
-          <div className="bg-surface rounded-2xl border border-surface-border p-8 md:p-10">
-            <div className="flex flex-col items-start gap-4">
+          <div className="bg-surface border border-surface-border p-8 md:p-10">
+            <div className="flex items-start gap-5">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center shrink-0 mt-1">
+                <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
                   Не попадает в базы антиплагиата
@@ -296,12 +290,7 @@ export default function LandingPage() {
               <p className="text-on-surface-muted mb-8 max-w-md mx-auto">
                 Загрузите документ и методичку — получите идеально оформленную работу по ГОСТу
               </p>
-              <Link href="/create" className="w-full sm:w-auto">
-                <Button size="lg" variant="default" className="w-full sm:w-auto">
-                  <Zap className="w-5 h-5" />
-                  Начать форматирование
-                </Button>
-              </Link>
+              <CtaButton className="w-full sm:w-auto" />
             </div>
           </div>
         </div>

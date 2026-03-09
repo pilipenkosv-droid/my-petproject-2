@@ -50,7 +50,7 @@ export function Logo({
           alt=""
           width={Math.round(size * 0.76)}
           height={Math.round(size * 0.76)}
-          className="object-contain"
+          className="object-contain dark:invert"
           unoptimized
         />
       </span>

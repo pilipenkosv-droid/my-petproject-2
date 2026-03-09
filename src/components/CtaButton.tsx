@@ -44,11 +44,11 @@ export function CtaButton({
       </Button>
       {!loading && (
         <BorderBeam
-          size={60}
-          duration={4}
-          colorFrom="hsl(var(--foreground))"
-          colorTo="hsl(var(--muted-foreground))"
-          borderWidth={1.5}
+          size={80}
+          duration={5}
+          colorFrom="#a855f7"
+          colorTo="#6366f1"
+          borderWidth={2}
         />
       )}
     </div>
