@@ -25,13 +25,13 @@ export function HeroSubtitle() {
       </h1>
 
       {/* Spinning "AI powered inside" badge — superscript position */}
-      <div className="absolute -top-10 -right-4 sm:-top-12 sm:-right-2 md:-top-14 md:right-0 hidden sm:block">
+      <div className="absolute -top-8 -right-8 sm:-top-10 sm:-right-6 md:-top-12 md:-right-4 hidden sm:block">
         <SpinningText
-          radius={3.5}
+          radius={4.2}
           duration={8}
-          className="w-20 h-20 sm:w-24 sm:h-24 text-[10px] sm:text-xs font-medium text-purple-500 tracking-widest uppercase"
+          className="w-20 h-20 sm:w-24 sm:h-24 text-[10px] sm:text-xs font-medium text-purple-700 dark:text-purple-400 tracking-[0.25em] uppercase"
         >
-          {`AI powered inside · `}
+          {`AI  powered  inside · `}
         </SpinningText>
       </div>
     </div>
