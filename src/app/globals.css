@@ -202,20 +202,24 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Inter", Arial, "Helvetica Neue", Helvetica, FreeSans, sans-serif;
+  font-family: "Manrope", Arial, "Helvetica Neue", Helvetica, FreeSans, sans-serif;
 }
 
-/* Typography: Geologica for headings & display */
+/* Typography: Geist for headings & display */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Geologica", "Inter", sans-serif;
+  font-family: "Geist", "Manrope", sans-serif;
 }
 
 .font-display {
-  font-family: "Geologica", "Inter", sans-serif;
+  font-family: "Geist", "Manrope", sans-serif;
 }
 
 .font-logo {
-  font-family: "Play", "Inter", sans-serif;
+  font-family: "Play", "Manrope", sans-serif;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
 }
 
 /* Glassmorphism utilities */
@@ -239,12 +243,12 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-family: "Geologica", "Inter", sans-serif;
+  font-family: "Geist", "Manrope", sans-serif;
 }
 
 /* Pro badge */
 .pro-badge {
-  font-family: "Geologica", "Inter", sans-serif;
+  font-family: "Geist", "Manrope", sans-serif;
   background: linear-gradient(135deg, #491990, #7029F8, #925FF6);
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -377,6 +381,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @theme inline {
+  --font-sans: "Manrope", Arial, "Helvetica Neue", Helvetica, FreeSans, sans-serif;
+  --font-heading: "Geist", "Manrope", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
