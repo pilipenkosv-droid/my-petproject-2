@@ -36,7 +36,7 @@ export function StatsCounter() {
             <div key={stat.label} className="flex items-center gap-3">
               <Icon className="w-5 h-5 text-muted-foreground" />
               <div>
-                <div className="flex items-baseline gap-0.5">
+                <div className="flex items-baseline gap-0.5 font-mono">
                   <NumberTicker
                     value={stat.value}
                     decimalPlaces={stat.decimalPlaces || 0}
@@ -44,7 +44,7 @@ export function StatsCounter() {
                   />
                   <span className="text-xl font-bold text-foreground">{stat.suffix}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-xs text-muted-foreground font-mono">{stat.label}</p>
               </div>
             </div>
           );
