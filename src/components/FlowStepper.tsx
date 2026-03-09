@@ -32,7 +32,7 @@ export function FlowStepper({ currentStep, steps = DEFAULT_STEPS }: FlowStepperP
                   "flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all shrink-0",
                   isCompleted && "bg-emerald-500 text-white",
                   isCurrent &&
-                    "bg-gradient-to-br from-brand-2 to-brand-1 text-white ring-4 ring-brand-2/20",
+                    "bg-foreground text-background ring-4 ring-foreground/20",
                   isFuture && "bg-muted text-muted-foreground"
                 )}
               >

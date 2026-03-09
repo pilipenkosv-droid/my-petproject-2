@@ -16,7 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
-import { Mascot } from "@/components/Mascot";
+
 
 export const metadata: Metadata = {
   title: "Вопросы и ответы — Diplox",
@@ -367,7 +367,7 @@ export default function FAQPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-primary text-sm mb-6">
             <HelpCircle className="w-4 h-4" />
             FAQ
           </div>
@@ -452,14 +452,7 @@ export default function FAQPage() {
 
         {/* CTA секция */}
         <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
-            <Mascot
-              src="/mascot/presenting.png"
-              alt="Диплодок с документом"
-              width={452}
-              height={414}
-              className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
-            />
+          <div className="bg-muted rounded-2xl border border-border p-8">
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Остались вопросы?
             </h2>
@@ -470,7 +463,7 @@ export default function FAQPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/create"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
               >
                 Попробовать бесплатно
               </Link>

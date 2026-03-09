@@ -170,7 +170,7 @@ export function RulesEditor({
           className="w-full flex items-center justify-between p-4 hover:bg-surface transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+            <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
               {icon}
             </div>
             <span className="font-medium text-foreground">{title}</span>
@@ -224,8 +224,8 @@ export function RulesEditor({
         {renderSection(
           "document",
           "Параметры страницы",
-          <FileText className="h-5 w-5 text-white" />,
-          "from-brand-2 to-brand-3",
+          <FileText className="h-5 w-5 text-background" />,
+          "",
           <div className="space-y-1">
             {renderField("Размер страницы", rules.document.pageSize, ["document", "pageSize"], "text")}
             {renderField("Ориентация", rules.document.orientation === "portrait" ? "Книжная" : "Альбомная", ["document", "orientation"], "text")}
@@ -240,8 +240,8 @@ export function RulesEditor({
         {renderSection(
           "text",
           "Основной текст",
-          <Type className="h-5 w-5 text-white" />,
-          "from-brand-3 to-brand-2",
+          <Type className="h-5 w-5 text-background" />,
+          "",
           <div className="space-y-1">
             {renderField("Шрифт", rules.text.fontFamily, ["text", "fontFamily"], "text")}
             {renderField("Размер шрифта (pt)", rules.text.fontSize, ["text", "fontSize"], "number")}
@@ -255,7 +255,7 @@ export function RulesEditor({
         {renderSection(
           "headings",
           "Заголовки",
-          <AlignJustify className="h-5 w-5 text-white" />,
+          <AlignJustify className="h-5 w-5 text-background" />,
           "from-emerald-500 to-teal-600",
           <div className="space-y-4">
             <div>
@@ -290,7 +290,7 @@ export function RulesEditor({
         {renderSection(
           "lists",
           "Списки",
-          <List className="h-5 w-5 text-white" />,
+          <List className="h-5 w-5 text-background" />,
           "from-rose-500 to-pink-600",
           <div className="space-y-1">
             {renderField("Маркер списка", rules.lists.bulletStyle, ["lists", "bulletStyle"], "text")}
@@ -303,7 +303,7 @@ export function RulesEditor({
         {renderSection(
           "special",
           "Специальные элементы",
-          <BookOpen className="h-5 w-5 text-white" />,
+          <BookOpen className="h-5 w-5 text-background" />,
           "from-amber-500 to-orange-600",
           <div className="space-y-4">
             {rules.specialElements.bibliography && (

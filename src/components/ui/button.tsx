@@ -4,30 +4,30 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-brand-2 to-brand-1 text-white shadow-lg shadow-brand-2/25 hover:shadow-brand-2/40 hover:scale-[1.02] active:scale-[0.98]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:bg-primary/80",
         destructive:
-          "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02]",
+          "bg-destructive text-white shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-[var(--border)] bg-transparent backdrop-blur-sm hover:bg-surface hover:border-surface-border active:scale-[0.97] active:bg-surface-hover text-[var(--foreground)]",
+          "border border-border bg-transparent hover:bg-surface-hover text-foreground",
         secondary:
-          "bg-surface-hover backdrop-blur-sm text-[var(--foreground)] hover:bg-surface border border-surface-border",
+          "bg-secondary text-secondary-foreground border border-border hover:bg-surface-hover",
         ghost:
-          "hover:bg-surface-hover text-[var(--foreground)]",
+          "hover:bg-surface-hover text-foreground",
         link:
-          "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+          "text-foreground underline-offset-4 hover:underline",
         glow:
-          "bg-gradient-to-r from-brand-2 to-brand-1 text-white shadow-[0_0_20px_rgba(112,41,248,0.5)] hover:shadow-[0_0_30px_rgba(112,41,248,0.7)] hover:scale-[1.02] active:scale-[0.98]",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:bg-primary/80",
       },
       size: {
-        default: "h-11 px-5 py-2",
-        sm: "h-9 rounded-lg px-4 text-xs",
-        lg: "h-14 rounded-2xl px-10 text-base font-bold",
-        icon: "h-11 w-11 rounded-xl",
+        default: "h-10 px-5 py-2",
+        sm: "h-9 rounded-md px-4 text-xs",
+        lg: "h-12 rounded-lg px-8 text-base font-bold",
+        icon: "h-10 w-10 rounded-lg",
       },
     },
     defaultVariants: {

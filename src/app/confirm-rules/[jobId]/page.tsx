@@ -11,7 +11,6 @@ import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/h
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import {
   ArrowLeft,
   CheckCircle,
@@ -237,8 +236,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-background" />
                 </div>
                 Форматирование документа
               </CardTitle>
@@ -286,8 +285,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
           {/* Заголовок */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25 mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+                <CheckCircle className="w-8 h-8 text-background" />
               </div>
               <h2 className="text-2xl font-bold mb-2 text-foreground">
                 Проверьте требования к форматированию
@@ -326,12 +325,12 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
                 </Button>
               </Link>
 
-              <ShimmerButton
+              <Button size="lg"
                 onClick={handleConfirm}
               >
                 <Zap className="w-5 h-5 mr-2" />
                 Подтвердить и обработать
-              </ShimmerButton>
+              </Button>
             </div>
           </BlurFade>
         </div>

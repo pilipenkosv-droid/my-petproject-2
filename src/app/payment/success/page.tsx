@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { trackEvent } from "@/lib/analytics/events";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Clock, MessageCircle } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
+
 
 type PaymentState = "polling" | "completed" | "failed" | "timeout";
 
@@ -79,14 +79,7 @@ function PaymentSuccessContent() {
       <div className="text-center space-y-6">
         {state === "polling" && (
             <>
-              <Mascot
-                src="/mascot/waiting.png"
-                alt="Диплодок ждёт оплату"
-                width={406}
-                height={344}
-                className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
-              />
-              <Loader2 className="w-10 h-10 text-brand-1 animate-spin mx-auto" />
+              <Loader2 className="w-10 h-10 text-foreground animate-spin mx-auto" />
               <h1 className="text-2xl font-bold text-foreground">
                 Обрабатываем оплату...
               </h1>
@@ -111,7 +104,7 @@ function PaymentSuccessContent() {
               </p>
 
               {botDeepLink && (
-                <div className="mt-6 p-4 rounded-xl border border-brand-2/30 bg-brand-2/5">
+                <div className="mt-6 p-4 rounded-xl border border-border bg-muted">
                   <p className="text-sm text-on-surface-muted mb-3">
                     🎉 Вам доступен <strong>Diplox AI-бот</strong> в Telegram — ваш личный помощник для учёбы!
                   </p>
@@ -196,7 +189,7 @@ export default function PaymentSuccessPage() {
       <Suspense fallback={
         <main className="mx-auto max-w-lg px-6 py-24">
           <div className="text-center">
-            <Loader2 className="w-16 h-16 text-brand-1 animate-spin mx-auto" />
+            <Loader2 className="w-16 h-16 text-foreground animate-spin mx-auto" />
           </div>
         </main>
       }>

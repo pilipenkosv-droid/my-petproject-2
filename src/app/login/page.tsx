@@ -317,14 +317,9 @@ export default function LoginPage() {
     <main className="min-h-screen relative flex items-center justify-center px-6 py-12">
       {/* Background */}
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-brand-2/20 rounded-full blur-[100px] animate-pulse-glow" />
-        <div className="absolute bottom-40 left-20 w-80 h-80 bg-brand-3/15 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: "2s" }} />
-      </div>
-
       <Suspense fallback={
         <div className="relative z-10 w-full max-w-md flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-1" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }>
         <LoginForm />

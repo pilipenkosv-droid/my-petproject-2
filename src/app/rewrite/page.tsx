@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
 import { useDocumentUpload, TEXT_DOCUMENT_CONFIG } from "@/features/constructor/hooks/useDocumentUpload";
@@ -197,8 +196,8 @@ function RewritePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-teal-dark to-brand-3 shadow-lg shadow-brand-teal-dark/25 mb-4">
-                <Pencil className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+                <Pencil className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Повышение уникальности
@@ -336,7 +335,7 @@ function RewritePageContent() {
 
                 {/* Submit */}
                 <div className="flex justify-center pt-2">
-                  <ShimmerButton
+                  <Button size="lg"
                     onClick={handleGenerate}
                     disabled={
                       isGenerating ||
@@ -360,7 +359,7 @@ function RewritePageContent() {
                         Переписать текст
                       </>
                     )}
-                  </ShimmerButton>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -420,7 +419,7 @@ function RewritePageContent() {
           {/* CTA block */}
           {rewritten && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-brand-teal-dark/20 bg-gradient-to-r from-brand-teal-dark/5 to-brand-3/5">
+              <Card className="border-border bg-muted">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?

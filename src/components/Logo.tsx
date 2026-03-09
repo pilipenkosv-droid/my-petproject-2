@@ -38,11 +38,10 @@ export function Logo({
   const icon =
     variant === "favicon" ? (
       <span
-        className="inline-flex items-center justify-center rounded-lg overflow-hidden"
+        className="inline-flex items-center justify-center rounded-lg overflow-hidden bg-foreground"
         style={{
           width: size,
           height: size,
-          background: "var(--gradient-primary)",
           padding: Math.round(size * 0.12),
         }}
       >

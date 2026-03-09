@@ -11,6 +11,8 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
   NavigationMenuLink,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import {
@@ -36,10 +38,23 @@ import {
   LogOut,
   Crown,
   UserPlus,
-  ChevronDown,
   Sparkles,
   Menu,
+  GraduationCap,
+  BookOpen,
+  Award,
+  FileText,
+  File,
+  PenTool,
+  ClipboardList,
+  AlignLeft,
+  ListTree,
+  Layers,
+  Wand2,
+  SpellCheck,
+  BookMarked,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -50,24 +65,60 @@ interface HeaderProps {
 
 type AccessType = "trial" | "one_time" | "subscription" | "admin" | "none";
 
-const workLinks = [
-  { href: "/diplom", label: "Дипломная работа" },
-  { href: "/vkr", label: "ВКР" },
-  { href: "/magisterskaya", label: "Магистерская диссертация" },
-  { href: "/kursovaya", label: "Курсовая работа" },
-  { href: "/referat", label: "Реферат" },
-  { href: "/esse", label: "Эссе" },
-  { href: "/otchet-po-praktike", label: "Отчёт по практике" },
+interface NavLink {
+  href: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+interface NavGroup {
+  heading: string;
+  links: NavLink[];
+}
+
+const workGroups: NavGroup[] = [
+  {
+    heading: "Выпускные",
+    links: [
+      { href: "/diplom", label: "Дипломная работа", description: "Оформление по ГОСТ", icon: GraduationCap },
+      { href: "/vkr", label: "ВКР", description: "Выпускная квалификационная", icon: BookOpen },
+      { href: "/magisterskaya", label: "Магистерская", description: "Диссертация магистра", icon: Award },
+    ],
+  },
+  {
+    heading: "Учебные",
+    links: [
+      { href: "/kursovaya", label: "Курсовая работа", description: "Оформление курсовой", icon: FileText },
+      { href: "/referat", label: "Реферат", description: "Реферат по стандартам", icon: File },
+      { href: "/esse", label: "Эссе", description: "Эссе и сочинения", icon: PenTool },
+      { href: "/otchet-po-praktike", label: "Отчёт по практике", description: "Отчёт и дневник", icon: ClipboardList },
+    ],
+  },
 ];
 
-const toolLinks = [
-  { href: "/create", label: "Форматирование по ГОСТу" },
-  { href: "/outline", label: "Генератор плана" },
-  { href: "/summarize", label: "Краткое содержание" },
-  { href: "/rewrite", label: "Повысить уникальность" },
-  { href: "/grammar", label: "Проверка грамматики" },
-  { href: "/sources", label: "Подбор литературы" },
+const toolGroups: NavGroup[] = [
+  {
+    heading: "Оформление",
+    links: [
+      { href: "/create", label: "Форматирование", description: "Автоформат по ГОСТу", icon: AlignLeft },
+      { href: "/outline", label: "Генератор плана", description: "Структура и содержание", icon: ListTree },
+    ],
+  },
+  {
+    heading: "Текст",
+    links: [
+      { href: "/summarize", label: "Краткое содержание", description: "Суммаризация текста", icon: Layers },
+      { href: "/rewrite", label: "Уникальность", description: "Рерайт для антиплагиата", icon: Wand2 },
+      { href: "/grammar", label: "Грамматика", description: "Орфография и пунктуация", icon: SpellCheck },
+      { href: "/sources", label: "Литература", description: "Поиск научных источников", icon: BookMarked },
+    ],
+  },
 ];
+
+// Flat arrays for mobile menu
+const workLinks = workGroups.flatMap((g) => g.links);
+const toolLinks = toolGroups.flatMap((g) => g.links);
 
 export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const router = useRouter();
@@ -75,6 +126,11 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const { user, isLoading, signOut } = useAuth();
   const [accessType, setAccessType] = useState<AccessType | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close sheet on route change
   useEffect(() => {
@@ -108,9 +164,21 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const isPro = accessType === "subscription" || accessType === "admin";
 
+  if (!mounted) {
+    return (
+      <>
+        <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 shadow-sm h-[44px]" />
+        </header>
+        <div className="h-20" aria-hidden="true" />
+      </>
+    );
+  }
+
   return (
-    <header className="relative z-10 border-b border-surface-border bg-surface backdrop-blur-xl">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
+    <>
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 shadow-sm">
         {/* Left: Back + Logo */}
         <div className="flex items-center gap-4">
           {showBack && (
@@ -123,7 +191,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           )}
           <Link href="/" className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Logo variant="favicon" size={28} withText />
-            <sup className="ml-0.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-gradient-to-r from-brand-2 to-brand-1 text-white/90 leading-none">
+            <sup className="ml-0.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-foreground text-background leading-none">
               beta
             </sup>
           </Link>
@@ -133,38 +201,68 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={`${navigationMenuTriggerStyle()} flex items-center gap-1`}>
-                    Работы
-                    <ChevronDown className="h-3 w-3" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {workLinks.map((link) => (
-                    <DropdownMenuItem key={link.href} asChild>
-                      <Link href={link.href}>{link.label}</Link>
-                    </DropdownMenuItem>
+              <NavigationMenuTrigger>Работы</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="grid gap-x-6 gap-y-1 p-4 md:grid-cols-2 md:w-[480px]">
+                  {workGroups.map((group) => (
+                    <div key={group.heading}>
+                      <h5 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.heading}
+                      </h5>
+                      <ul className="space-y-0.5">
+                        {group.links.map((link) => (
+                          <li key={link.href}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={link.href}
+                                className="group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-surface-hover"
+                              >
+                                <link.icon className="h-4 w-4 shrink-0 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                                <div>
+                                  <div className="font-medium text-foreground leading-tight">{link.label}</div>
+                                  <p className="text-xs text-muted-foreground leading-tight">{link.description}</p>
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </div>
+              </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={`${navigationMenuTriggerStyle()} flex items-center gap-1`}>
-                    Инструменты
-                    <ChevronDown className="h-3 w-3" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {toolLinks.map((link) => (
-                    <DropdownMenuItem key={link.href} asChild>
-                      <Link href={link.href}>{link.label}</Link>
-                    </DropdownMenuItem>
+              <NavigationMenuTrigger>Инструменты</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="grid gap-x-6 gap-y-1 p-4 md:grid-cols-2 md:w-[480px]">
+                  {toolGroups.map((group) => (
+                    <div key={group.heading}>
+                      <h5 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.heading}
+                      </h5>
+                      <ul className="space-y-0.5">
+                        {group.links.map((link) => (
+                          <li key={link.href}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={link.href}
+                                className="group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-surface-hover"
+                              >
+                                <link.icon className="h-4 w-4 shrink-0 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                                <div>
+                                  <div className="font-medium text-foreground leading-tight">{link.label}</div>
+                                  <p className="text-xs text-muted-foreground leading-tight">{link.description}</p>
+                                </div>
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </div>
+              </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -204,10 +302,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center rounded-full p-1 hover:bg-surface-hover transition-colors">
                   {isPro ? (
-                    <div className="p-[3px] rounded-full bg-gradient-to-br from-brand-teal via-brand-1 to-brand-2 shadow-[0_0_10px_rgba(112,41,248,0.5)]">
+                    <div className="p-[2px] rounded-full bg-foreground">
                       <Avatar className="h-8 w-8 ring-[2px] ring-background">
                         {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                        <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
+                        <AvatarFallback className="text-primary-foreground text-xs bg-primary">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
@@ -215,7 +313,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                   ) : (
                     <Avatar className="h-8 w-8">
                       {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                      <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
+                      <AvatarFallback className="text-primary-foreground text-xs bg-primary">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -256,7 +354,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                 </Button>
               </Link>
               <Link href="/login">
-                <Button variant="outline" size="sm">
+                <Button size="sm" className="bg-foreground text-background rounded-full hover:bg-foreground/90">
                   <LogIn className="mr-1.5 h-4 w-4" />
                   Войти
                 </Button>
@@ -364,10 +462,10 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1">
                       {isPro ? (
-                        <div className="p-[3px] rounded-full bg-gradient-to-br from-brand-teal via-brand-1 to-brand-2 shadow-[0_0_10px_rgba(112,41,248,0.5)] shrink-0">
+                        <div className="p-[2px] rounded-full bg-foreground shrink-0">
                           <Avatar className="h-9 w-9 ring-[2px] ring-background">
                             {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                            <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
+                            <AvatarFallback className="text-primary-foreground text-xs bg-primary">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
@@ -375,7 +473,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                       ) : (
                         <Avatar className="h-9 w-9 shrink-0">
                           {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
-                          <AvatarFallback className="text-primary-foreground text-xs bg-brand-2">
+                          <AvatarFallback className="text-primary-foreground text-xs bg-primary">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
@@ -439,5 +537,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
         </div>
       </div>
     </header>
+    <div className="h-20" aria-hidden="true" />
+    </>
   );
 }

@@ -54,7 +54,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
 
   if (isSubmitted) {
     return (
-      <Card className="bg-surface border-surface-border backdrop-blur-sm">
+      <Card className="bg-surface border-surface-border">
         <CardContent className="py-6">
           <div className="flex items-center gap-3 text-emerald-400">
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -73,7 +73,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
   }
 
   return (
-    <Card className="bg-surface border-surface-border backdrop-blur-sm">
+    <Card className="bg-surface border-surface-border">
       <CardHeader>
         <CardTitle className="text-foreground">Оцените качество форматирования</CardTitle>
         <CardDescription>
@@ -126,7 +126,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Например: не исправлены инициалы в списке литературы, неверное форматирование заголовков..."
-              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-brand-2/50"
+              className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles, MessageCircle } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
 
@@ -69,13 +69,13 @@ export default async function ProfilePage() {
         </div>
 
         {/* Access info card */}
-        <Card className={`mb-8 ${access.accessType === "subscription" || access.accessType === "admin" ? "border-brand-2/30 bg-brand-2/5" : ""}`}>
+        <Card className={`mb-8 ${access.accessType === "subscription" || access.accessType === "admin" ? "border-border bg-muted" : ""}`}>
           <CardContent className="pt-6">
             {access.accessType === "admin" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-brand-1" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Pro — безлимитный доступ</p>
@@ -84,13 +84,13 @@ export default async function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-brand-1 font-medium">Активна</span>
+                <span className="text-sm text-foreground font-medium">Активна</span>
               </div>
             ) : access.accessType === "subscription" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-brand-1" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Подписка Pro</p>
@@ -106,7 +106,7 @@ export default async function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-sm text-brand-1 font-medium">Активна</span>
+                <span className="text-sm text-foreground font-medium">Активна</span>
               </div>
             ) : access.accessType === "one_time" ? (
               <div className="flex items-center justify-between">
@@ -152,12 +152,12 @@ export default async function ProfilePage() {
 
         {/* Bot access card for Pro subscribers */}
         {access.botDeepLink && (access.accessType === "subscription" || access.accessType === "admin") && (
-          <Card className="mb-8 border-brand-2/30 bg-brand-2/5">
+          <Card className="mb-8 border-border bg-muted">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-brand-2/20 flex items-center justify-center">
-                    <MessageCircle className="h-5 w-5 text-brand-1" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <MessageCircle className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Diplox AI-бот</p>
@@ -232,13 +232,6 @@ export default async function ProfilePage() {
           <CardContent>
             {jobs.length === 0 ? (
               <div className="text-center py-12">
-                <Mascot
-                  src="/mascot/sleeping.png"
-                  alt="Диплодок спит на бумагах"
-                  width={474}
-                  height={311}
-                  className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
-                />
                 <p className="text-on-surface-muted mb-4">
                   У вас пока нет обработанных документов
                 </p>

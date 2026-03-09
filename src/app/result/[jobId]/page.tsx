@@ -9,7 +9,7 @@ import { ProcessingStatus } from "@/features/constructor/components/ProcessingSt
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
-import { Mascot } from "@/components/Mascot";
+
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { trackEvent } from "@/lib/analytics/events";
@@ -91,8 +91,8 @@ export default function ResultPage({ params }: ResultPageProps) {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-background" />
                 </div>
                 Обработка документа
               </CardTitle>
@@ -154,13 +154,7 @@ export default function ResultPage({ params }: ResultPageProps) {
         <div className="space-y-6">
           {/* Success header */}
           <div className="text-center">
-            <Mascot
-              src="/mascot/celebrating.png"
-              alt="Диплодок празднует успех"
-              width={409}
-              height={447}
-              className="mx-auto mb-4 w-24 sm:w-32 md:w-40"
-            />
+            <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Документ успешно обработан
             </h2>
@@ -180,12 +174,12 @@ export default function ResultPage({ params }: ResultPageProps) {
 
           {/* Hook-offer: полная версия уже готова */}
           {job.statistics?.wasTruncated && job.hasFullVersion && (
-            <Card className="border-brand-2/30 bg-gradient-to-br from-brand-2/10 to-brand-3/10 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-2/20 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
+            <Card className="border-border bg-muted overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-muted rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
               <CardContent className="pt-6 relative">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center shadow-lg shadow-brand-2/25 shrink-0">
-                    <Gift className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm shrink-0">
+                    <Gift className="w-6 h-6 text-background" />
                   </div>
                   <div className="flex-1">
                     <p className="text-foreground font-semibold text-lg mb-1">
@@ -245,8 +239,8 @@ export default function ResultPage({ params }: ResultPageProps) {
                   onClick={() => handleDownload("original")}
                   className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-1 to-brand-2 flex items-center justify-center shadow-lg">
-                    <FileText className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm">
+                    <FileText className="w-6 h-6 text-background" />
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground">С пометками</p>
@@ -265,8 +259,8 @@ export default function ResultPage({ params }: ResultPageProps) {
                   onClick={() => handleDownload("formatted")}
                   className="flex flex-col items-center gap-3 rounded-xl border border-brand-teal/30 bg-brand-teal/5 p-6 transition-all duration-200 hover:bg-brand-teal/10 hover:border-brand-teal/40 text-left ring-1 ring-brand-teal/20"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-teal to-brand-teal-dark flex items-center justify-center shadow-lg shadow-brand-teal/25">
-                    <FileCheck className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm">
+                    <FileCheck className="w-6 h-6 text-background" />
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground">Исправленный</p>
@@ -287,7 +281,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           <CSATWidget jobId={jobId} />
 
           {/* CTA: Повысить уникальность */}
-          <Card className="border-brand-teal-dark/20 bg-gradient-to-r from-brand-teal-dark/5 to-brand-3/5">
+          <Card className="border-border bg-muted">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужно повысить уникальность?
@@ -301,7 +295,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Краткое содержание */}
-          <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
+          <Card className="border-border bg-surface">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужна аннотация к работе?
@@ -315,7 +309,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Проверка грамматики */}
-          <Card className="border-brand-1/20 bg-gradient-to-r from-brand-1/5 to-brand-2/5">
+          <Card className="border-border bg-surface">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Хотите проверить текст на ошибки?
@@ -329,7 +323,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CTA: Подбор литературы */}
-          <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
+          <Card className="border-border bg-surface">
             <CardContent className="py-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
                 Нужен список литературы?

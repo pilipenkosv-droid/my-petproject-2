@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
 import { useDocumentUpload, TEXT_DOCUMENT_CONFIG } from "@/features/constructor/hooks/useDocumentUpload";
@@ -219,8 +218,8 @@ function SummarizePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-teal-light to-brand-teal shadow-lg shadow-brand-teal/25 mb-4">
-                <Sparkles className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+                <Sparkles className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Краткое содержание
@@ -339,7 +338,7 @@ function SummarizePageContent() {
 
                 {/* Submit */}
                 <div className="flex justify-center pt-2">
-                  <ShimmerButton
+                  <Button size="lg"
                     onClick={handleGenerate}
                     disabled={
                       isGenerating ||
@@ -363,7 +362,7 @@ function SummarizePageContent() {
                         Сгенерировать резюме
                       </>
                     )}
-                  </ShimmerButton>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

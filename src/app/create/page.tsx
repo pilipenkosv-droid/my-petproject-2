@@ -14,7 +14,6 @@ import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/h
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -184,7 +183,7 @@ function ConstructorPageContent() {
             {/* Баннер: триал заблокирован */}
             {trialBlocked && (
               <BlurFade inView>
-                <Card className="border-brand-2/30 bg-brand-2/10">
+                <Card className="border-border bg-primary/10">
                   <CardContent className="pt-6 text-center">
                     <p className="text-foreground mb-3">
                       Бесплатная попытка использована. Зарегистрируйтесь для продолжения.
@@ -229,8 +228,8 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 shadow-lg shadow-brand-2/25">
-                      <FileText className="h-5 w-5 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-foreground shadow-sm">
+                      <FileText className="h-5 w-5 text-background" />
                     </div>
                     <span>Исходный документ</span>
                   </CardTitle>
@@ -290,8 +289,8 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25">
-                      <Sparkles className="h-5 w-5 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-foreground shadow-sm">
+                      <Sparkles className="h-5 w-5 text-background" />
                     </div>
                     <span>Требования к оформлению</span>
                   </CardTitle>
@@ -329,7 +328,7 @@ function ConstructorPageContent() {
                     </TabsContent>
 
                     <TabsContent value="gost" className="mt-4">
-                      <div className="rounded-lg border border-surface-border bg-surface/50 p-4 space-y-3">
+                      <div className="rounded-lg border border-surface-border bg-surface p-4 space-y-3">
                         <p className="text-sm text-foreground font-medium">
                           Будет применён стандартный ГОСТ 7.32-2017:
                         </p>
@@ -368,14 +367,14 @@ function ConstructorPageContent() {
             {/* Кнопка обработки */}
             <BlurFade delay={0.4} inView>
               <div className="flex flex-col items-center gap-4">
-                <ShimmerButton
+                <Button size="lg"
                   onClick={handleProcess}
                   disabled={!canProcess}
                   className={!canProcess ? "opacity-50 pointer-events-none" : ""}
                 >
                   <Zap className="w-5 h-5 mr-2" />
                   Обработать документ
-                </ShimmerButton>
+                </Button>
 
                 {/* Подсказка */}
                 {!canProcess && sourceDoc.uploadedFile && requirementsMode === "upload" && (
@@ -390,8 +389,8 @@ function ConstructorPageContent() {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-2 to-brand-3 flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-background" />
                 </div>
                 {processingTitle}
               </CardTitle>

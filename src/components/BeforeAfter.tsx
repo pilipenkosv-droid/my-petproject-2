@@ -3,21 +3,21 @@
 import { BlurFade } from "@/components/ui/blur-fade";
 
 const beforeErrors = [
-  { text: "Шрифт Arial, 12 pt", error: true },
-  { text: "Одинарный интервал", error: true },
-  { text: "Поля: 10-10-10-10 мм", error: true },
-  { text: "Без абзацного отступа", error: true },
-  { text: "Заголовки не выделены", error: true },
-  { text: "Нумерация с 1 стр.", error: true },
+  "Шрифт Arial, 12 pt",
+  "Одинарный интервал",
+  "Поля: 10-10-10-10 мм",
+  "Без абзацного отступа",
+  "Заголовки не выделены",
+  "Нумерация с 1 стр.",
 ];
 
 const afterFixes = [
-  { text: "Times New Roman, 14 pt", fixed: true },
-  { text: "Полуторный интервал", fixed: true },
-  { text: "Поля: 20-30-15-15 мм", fixed: true },
-  { text: "Отступ 1.25 см", fixed: true },
-  { text: "Заголовки по ГОСТу", fixed: true },
-  { text: "Нумерация с 3 стр.", fixed: true },
+  "Times New Roman, 14 pt",
+  "Полуторный интервал",
+  "Поля: 20-30-15-15 мм",
+  "Отступ 1.25 см",
+  "Заголовки по ГОСТу",
+  "Нумерация с 3 стр.",
 ];
 
 export function BeforeAfter() {
@@ -34,42 +34,44 @@ export function BeforeAfter() {
         </BlurFade>
 
         <BlurFade delay={0.2} inView>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Before */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-sm font-medium text-red-400">До обработки</span>
+          <div className="border border-border">
+            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+              {/* Before */}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-sm font-medium text-muted-foreground">До обработки</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {beforeErrors.map((text, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 py-3"
+                    >
+                      <span className="text-red-400 text-xs font-mono shrink-0">✕</span>
+                      <span className="text-sm text-muted-foreground line-through decoration-red-400/40">{text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="rounded-xl border border-red-500/20 bg-surface p-6 space-y-3">
-                {beforeErrors.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/10"
-                  >
-                    <span className="text-red-400 text-xs font-mono">✕</span>
-                    <span className="text-sm text-on-surface-muted line-through decoration-red-400/50">{item.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* After */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-sm font-medium text-emerald-400">После обработки</span>
-              </div>
-              <div className="rounded-xl border border-emerald-500/20 bg-surface p-6 space-y-3">
-                {afterFixes.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10"
-                  >
-                    <span className="text-emerald-400 text-xs font-mono">✓</span>
-                    <span className="text-sm text-foreground">{item.text}</span>
-                  </div>
-                ))}
+              {/* After */}
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm font-medium text-muted-foreground">После обработки</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {afterFixes.map((text, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 py-3"
+                    >
+                      <span className="text-emerald-500 text-xs font-mono shrink-0">✓</span>
+                      <span className="text-sm text-foreground">{text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

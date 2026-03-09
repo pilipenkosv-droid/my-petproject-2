@@ -52,8 +52,8 @@ export default async function Image({
 
   const fontSize = title.length > 60 ? 40 : title.length > 40 ? 48 : 56;
 
-  const geist = await fetch(
-    "https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_Re-Q4nQ.ttf"
+  const unbounded = await fetch(
+    "https://fonts.gstatic.com/s/unbounded/v12/Yq6F-LOTXCb04q32xlpat-6uR42XTqtG6__2040.ttf"
   ).then((res) => res.arrayBuffer());
 
   const beamsSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildBeamsSvg())}`;
@@ -126,7 +126,7 @@ export default async function Image({
               style={{
                 fontSize: "24px",
                 fontWeight: 700,
-                fontFamily: "Geist",
+                fontFamily: "Unbounded",
                 color: "rgba(255,255,255,0.7)",
                 letterSpacing: "-0.5px",
               }}
@@ -143,7 +143,7 @@ export default async function Image({
               border: "1px solid rgba(146,95,246,0.3)",
               fontSize: "16px",
               fontWeight: 600,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "rgba(146,95,246,0.9)",
             }}
           >
@@ -166,7 +166,7 @@ export default async function Image({
             style={{
               fontSize: `${fontSize}px`,
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "white",
               lineHeight: 1.2,
               letterSpacing: "-1.5px",
@@ -181,7 +181,7 @@ export default async function Image({
           <span
             style={{
               fontSize: "18px",
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "rgba(255,255,255,0.3)",
             }}
           >
@@ -194,8 +194,8 @@ export default async function Image({
       ...size,
       fonts: [
         {
-          name: "Geist",
-          data: geist,
+          name: "Unbounded",
+          data: unbounded,
           style: "normal",
           weight: 700,
         },

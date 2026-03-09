@@ -20,28 +20,28 @@ export function StatisticsPanel({
       label: "Символов",
       value: statistics.totalCharacters,
       icon: FileText,
-      gradient: "from-brand-2 to-brand-3",
+      gradient: "",
       delay: 0,
     },
     {
       label: "Страниц",
       value: statistics.pageCount,
       icon: BookOpen,
-      gradient: "from-brand-3 to-brand-2",
+      gradient: "",
       delay: 0.1,
     },
     {
       label: "Найдено нарушений",
       value: violationsCount,
       icon: AlertTriangle,
-      gradient: "from-brand-1 to-brand-2",
+      gradient: "",
       delay: 0.2,
     },
     {
       label: "Исправлено",
       value: fixesApplied,
       icon: CheckCircle,
-      gradient: "from-brand-teal to-brand-teal-dark",
+      gradient: "",
       delay: 0.3,
     },
   ];
@@ -51,10 +51,10 @@ export function StatisticsPanel({
       {stats.map((stat) => (
         <div 
           key={stat.label} 
-          className="rounded-2xl bg-surface border border-surface-border backdrop-blur-sm p-4 transition-all duration-300 hover:bg-surface-hover hover:border-surface-border"
+          className="rounded-2xl bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-surface-hover hover:border-surface-border"
         >
-          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center mb-3 shadow-lg`}>
-            <stat.icon className="h-5 w-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center mb-3 shadow-sm">
+            <stat.icon className="h-5 w-5 text-background" />
           </div>
           <div className="text-2xl font-bold text-foreground">
             <NumberTicker value={stat.value} delay={stat.delay} />

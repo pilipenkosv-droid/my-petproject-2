@@ -57,8 +57,8 @@ export function ProcessingStatus({
 
     if (index === currentStepIndex) {
       return (
-        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-brand-2 to-brand-3 shadow-lg shadow-brand-2/25">
-          <Loader2 className="h-4 w-4 text-white animate-spin" />
+        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-foreground shadow-lg">
+          <Loader2 className="h-4 w-4 text-background animate-spin" />
         </div>
       );
     }
@@ -105,7 +105,7 @@ export function ProcessingStatus({
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 backdrop-blur-sm p-4">
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
           <p className="text-sm text-red-400 font-medium">
             Ошибка обработки
           </p>

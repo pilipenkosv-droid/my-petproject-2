@@ -42,8 +42,8 @@ function buildBeamsSvg(): string {
 }
 
 export default async function Image() {
-  const geist = await fetch(
-    "https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_Re-Q4nQ.ttf"
+  const unbounded = await fetch(
+    "https://fonts.gstatic.com/s/unbounded/v12/Yq6F-LOTXCb04q32xlpat-6uR42XTqtG6__2040.ttf"
   ).then((res) => res.arrayBuffer());
 
   const beamsSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildBeamsSvg())}`;
@@ -111,7 +111,7 @@ export default async function Image() {
             style={{
               fontSize: "28px",
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "rgba(255,255,255,0.7)",
               letterSpacing: "-0.5px",
             }}
@@ -134,7 +134,7 @@ export default async function Image() {
             style={{
               fontSize: "72px",
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "white",
               lineHeight: 1.1,
               letterSpacing: "-2px",
@@ -146,7 +146,7 @@ export default async function Image() {
             style={{
               fontSize: "72px",
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "white",
               lineHeight: 1.1,
               letterSpacing: "-2px",
@@ -158,7 +158,7 @@ export default async function Image() {
             style={{
               fontSize: "72px",
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "rgba(255,255,255,0.5)",
               lineHeight: 1.1,
               letterSpacing: "-2px",
@@ -179,7 +179,7 @@ export default async function Image() {
               background: "rgba(255,255,255,0.95)",
               fontSize: "20px",
               fontWeight: 700,
-              fontFamily: "Geist",
+              fontFamily: "Unbounded",
               color: "#0a0a0f",
               letterSpacing: "-0.3px",
             }}
@@ -193,8 +193,8 @@ export default async function Image() {
       ...size,
       fonts: [
         {
-          name: "Geist",
-          data: geist,
+          name: "Unbounded",
+          data: unbounded,
           style: "normal",
           weight: 700,
         },

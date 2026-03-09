@@ -1,6 +1,6 @@
 "use client"
 
-import { ComponentPropsWithoutRef, useEffect, useRef } from "react"
+import { ComponentPropsWithoutRef, useEffect, useRef, useState } from "react"
 import { useInView, useMotionValue, useSpring } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -23,6 +23,7 @@ export function NumberTicker({
   ...props
 }: NumberTickerProps) {
   const ref = useRef<HTMLSpanElement>(null)
+  const [mounted, setMounted] = useState(false)
   const motionValue = useMotionValue(direction === "down" ? value : startValue)
   const springValue = useSpring(motionValue, {
     damping: 60,
@@ -31,13 +32,17 @@ export function NumberTicker({
   const isInView = useInView(ref, { once: true, margin: "0px" })
 
   useEffect(() => {
-    if (isInView) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && isInView) {
       const timer = setTimeout(() => {
         motionValue.set(direction === "down" ? startValue : value)
       }, delay * 1000)
       return () => clearTimeout(timer)
     }
-  }, [motionValue, isInView, delay, value, direction, startValue])
+  }, [motionValue, isInView, delay, value, direction, startValue, mounted])
 
   useEffect(
     () =>
@@ -52,6 +57,11 @@ export function NumberTicker({
     [springValue, decimalPlaces]
   )
 
+  const formattedStart = Intl.NumberFormat("ru-RU", {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  }).format(startValue)
+
   return (
     <span
       ref={ref}
@@ -61,7 +71,7 @@ export function NumberTicker({
       )}
       {...props}
     >
-      {startValue}
+      {formattedStart}
     </span>
   )
 }

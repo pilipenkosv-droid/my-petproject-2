@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
 import { useDocumentUpload, TEXT_DOCUMENT_CONFIG } from "@/features/constructor/hooks/useDocumentUpload";
@@ -27,7 +26,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
-import { Mascot } from "@/components/Mascot";
+
 
 type InputMode = "text" | "file";
 
@@ -157,8 +156,8 @@ function GrammarPageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-1 to-brand-2 shadow-lg shadow-brand-1/25 mb-4">
-                <SpellCheck className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+                <SpellCheck className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Проверка грамматики
@@ -254,7 +253,7 @@ function GrammarPageContent() {
 
                 {/* Submit */}
                 <div className="flex justify-center pt-2">
-                  <ShimmerButton
+                  <Button size="lg"
                     onClick={handleCheck}
                     disabled={
                       grammar.isChecking ||
@@ -278,7 +277,7 @@ function GrammarPageContent() {
                         Проверить текст
                       </>
                     )}
-                  </ShimmerButton>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -348,13 +347,6 @@ function GrammarPageContent() {
             <BlurFade delay={0.15} inView>
               <Card>
                 <CardContent className="py-8 text-center">
-                  <Mascot
-                    src="/mascot/comparing.png"
-                    alt="Диплодок не нашёл ошибок"
-                    width={360}
-                    height={328}
-                    className="mx-auto mb-3 w-24 sm:w-32 md:w-40"
-                  />
                   <p className="text-foreground font-medium mb-1">
                     Текст без ошибок!
                   </p>
@@ -369,7 +361,7 @@ function GrammarPageContent() {
           {/* CTA block */}
           {hasResult && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-brand-1/20 bg-gradient-to-r from-brand-1/5 to-brand-2/5">
+              <Card className="border-border bg-muted">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?

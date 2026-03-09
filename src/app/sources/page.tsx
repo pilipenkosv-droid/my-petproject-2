@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import {
   Select,
@@ -35,7 +34,7 @@ import {
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
-import { Mascot } from "@/components/Mascot";
+
 import { useSourceSearch } from "@/features/sources/hooks/useSourceSearch";
 import { SourcesTable } from "@/features/sources/components/SourcesTable";
 
@@ -125,8 +124,8 @@ function SourcesPageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-3 to-brand-2 shadow-lg shadow-brand-3/25 mb-4">
-                <BookOpen className="w-8 h-8 text-white" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+                <BookOpen className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
                 Подбор литературы
@@ -209,7 +208,7 @@ function SourcesPageContent() {
 
                 {/* Submit */}
                 <div className="flex justify-center pt-2">
-                  <ShimmerButton
+                  <Button size="lg"
                     onClick={handleSearch}
                     disabled={!canSearch || sourceSearch.isSearching}
                   >
@@ -224,7 +223,7 @@ function SourcesPageContent() {
                         Найти источники
                       </>
                     )}
-                  </ShimmerButton>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -300,13 +299,6 @@ function SourcesPageContent() {
               <BlurFade delay={0.1} inView>
                 <Card>
                   <CardContent className="py-8 text-center">
-                    <Mascot
-                      src="/mascot/teamwork.png"
-                      alt="Диплодок и робот ищут вместе"
-                      width={490}
-                      height={340}
-                      className="mx-auto mb-3 w-24 sm:w-32 md:w-40"
-                    />
                     <p className="text-foreground font-medium mb-1">
                       Источники не найдены
                     </p>
@@ -321,7 +313,7 @@ function SourcesPageContent() {
           {/* CTA block */}
           {hasResult && (
             <BlurFade delay={0.2} inView>
-              <Card className="border-brand-3/20 bg-gradient-to-r from-brand-3/5 to-brand-2/5">
+              <Card className="border-border bg-muted">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Нужно отформатировать работу по ГОСТу?

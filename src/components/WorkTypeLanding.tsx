@@ -70,7 +70,7 @@ export function WorkTypeLanding({
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-2/10 border border-brand-2/20 text-brand-1 text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-border text-primary text-sm mb-6">
             <FileText className="w-4 h-4" />
             {type}
           </div>
@@ -153,7 +153,7 @@ export function WorkTypeLanding({
         <section className="mb-12">
           <div className="grid sm:grid-cols-3 gap-4">
             <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
-              <Clock className="w-8 h-8 text-brand-1 mx-auto mb-3" />
+              <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Быстро</h3>
               <p className="text-on-surface-subtle text-sm">Обработка за 3-5 минут</p>
             </div>
@@ -164,7 +164,7 @@ export function WorkTypeLanding({
               <p className="text-muted-foreground/60 text-xs">Файлы удаляются через 24ч</p>
             </div>
             <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
-              <Sparkles className="w-8 h-8 text-brand-1 mx-auto mb-3" />
+              <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Точно</h3>
               <p className="text-on-surface-subtle text-sm">AI-анализ методички</p>
             </div>
@@ -237,28 +237,28 @@ export function WorkTypeLanding({
                 label: "Генератор плана",
                 desc: "Создайте структуру работы с помощью ИИ",
                 icon: ListTree,
-                gradient: "from-brand-teal to-brand-teal-dark",
+                gradient: "",
               },
               {
                 href: "/sources",
                 label: "Подбор литературы",
                 desc: "Найдите научные источники по теме",
                 icon: BookOpen,
-                gradient: "from-brand-3 to-brand-2",
+                gradient: "",
               },
               {
                 href: "/grammar",
                 label: "Проверка грамматики",
                 desc: "Проверьте текст на ошибки",
                 icon: SpellCheck,
-                gradient: "from-brand-1 to-brand-2",
+                gradient: "",
               },
               {
                 href: "/rewrite",
                 label: "Повышение уникальности",
                 desc: "Перепишите текст для антиплагиата",
                 icon: Pencil,
-                gradient: "from-brand-teal-dark to-brand-3",
+                gradient: "",
               },
             ].map((tool) => {
               const ToolIcon = tool.icon;
@@ -269,9 +269,9 @@ export function WorkTypeLanding({
                   className="flex items-center gap-4 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0`}
+                    className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center shrink-0"
                   >
-                    <ToolIcon className="w-5 h-5 text-white" />
+                    <ToolIcon className="w-5 h-5 text-background" />
                   </div>
                   <div>
                     <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
@@ -287,8 +287,8 @@ export function WorkTypeLanding({
 
         {/* CTA */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-brand-2/10 to-brand-3/10 rounded-2xl border border-brand-2/20 p-8">
-            <Sparkles className="w-8 h-8 text-brand-1 mx-auto mb-4" />
+          <div className="bg-muted rounded-2xl border border-border p-8">
+            <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Готовы оформить работу?
             </h2>
@@ -298,7 +298,7 @@ export function WorkTypeLanding({
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href={`/create?type=${slug}`}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-2 text-white font-medium hover:bg-brand-3 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
               >
                 Начать форматирование
                 <ArrowRight className="w-4 h-4" />

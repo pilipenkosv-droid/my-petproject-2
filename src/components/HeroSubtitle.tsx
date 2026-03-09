@@ -1,126 +1,39 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
-
-function ContainerTextFlip({
-  words = ["better", "modern", "beautiful", "awesome"],
-  interval = 3000,
-  className,
-  textClassName,
-  animationDuration = 700,
-}: {
-  words?: string[];
-  interval?: number;
-  className?: string;
-  textClassName?: string;
-  animationDuration?: number;
-}) {
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const measuredWidths = useRef<number[]>([]);
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [width, setWidth] = useState<number | undefined>(undefined);
-
-  // Measure all words once on mount
-  useEffect(() => {
-    if (!measureRef.current) return;
-    const el = measureRef.current;
-    const widths: number[] = [];
-    for (const word of words) {
-      el.textContent = word;
-      widths.push(el.scrollWidth);
-    }
-    el.textContent = "";
-    measuredWidths.current = widths;
-    setWidth(widths[0]);
-  }, [words]);
-
-  useEffect(() => {
-    if (measuredWidths.current.length > 0) {
-      setWidth(measuredWidths.current[currentWordIndex]);
-    }
-  }, [currentWordIndex]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentWordIndex((prev) => (prev + 1) % words.length);
-        setIsAnimating(false);
-      }, animationDuration);
-    }, interval);
-    return () => clearInterval(id);
-  }, [words, interval, animationDuration]);
-
-  const dur = animationDuration / 1000;
-
-  return (
-    <span
-      suppressHydrationWarning
-      className={cn(
-        "relative inline-flex items-center justify-center overflow-hidden rounded-lg pt-2 pb-3 text-center",
-        className
-      )}
-      style={
-        width
-          ? { width: `${width + 44}px`, transition: `width ${dur / 2}s ease` }
-          : undefined
-      }
-    >
-      {/* Hidden measurer — same font classes, no animation */}
-      <span
-        ref={measureRef}
-        aria-hidden
-        className={cn("absolute invisible whitespace-nowrap", textClassName)}
-      />
-      <span
-        className={cn("inline-block whitespace-nowrap", textClassName)}
-        style={{
-          transition: `opacity ${dur}s ease, transform ${dur}s ease, filter ${dur}s ease`,
-          opacity: isAnimating ? 0 : 1,
-          transform: isAnimating ? "translateY(-8px)" : "translateY(0)",
-          filter: isAnimating ? "blur(8px)" : "blur(0px)",
-        }}
-      >
-        {words[currentWordIndex].split("").map((letter, index) => (
-          <span
-            key={`${currentWordIndex}-${index}`}
-            style={{
-              display: "inline-block",
-              animation: isAnimating
-                ? "none"
-                : `textFlipIn ${dur}s ease ${index * 0.02}s both`,
-            }}
-          >
-            {letter}
-          </span>
-        ))}
-      </span>
-    </span>
-  );
-}
+import { WordRotate } from "@/components/ui/word-rotate";
+import { SpinningText } from "@/components/ui/spinning-text";
 
 export function HeroSubtitle() {
   return (
-    <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 flex flex-col items-center md:items-start justify-center gap-y-3">
-      <span className="text-foreground">Идеальное оформление</span>
-      <ContainerTextFlip
-        words={[
-          "дипломной",
-          "курсовой",
-          "магистерской",
-          "реферата",
-          "эссе",
-          "отчёта",
-          "ВКР",
-        ]}
-        interval={2500}
-        animationDuration={600}
-        className="font-mono text-3xl sm:text-5xl md:text-6xl font-extrabold px-5 py-1.5 [background:linear-gradient(to_bottom,#ede9fe,#ddd6fe)] shadow-[inset_0_-1px_#b49af8,inset_0_0_0_1px_#b49af8,0_4px_8px_rgba(112,41,248,0.15)] dark:[background:linear-gradient(to_bottom,rgba(112,41,248,0.2),rgba(146,95,246,0.15))] dark:shadow-[inset_0_-1px_rgba(112,41,248,0.4),inset_0_0_0_1px_rgba(112,41,248,0.3),0_4px_12px_rgba(112,41,248,0.2)]"
-        textClassName="text-brand-3 dark:text-brand-1"
-      />
-      <span className="text-foreground">по методичке</span>
-    </h1>
+    <div className="relative inline-block">
+      <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 flex flex-col items-center md:items-start justify-center gap-y-2">
+        <span className="text-foreground">Идеальное оформление</span>
+        <WordRotate
+          words={[
+            "дипломной",
+            "курсовой",
+            "магистерской",
+            "реферата",
+            "эссе",
+            "отчёта",
+            "ВКР",
+          ]}
+          duration={2500}
+          className="font-mono text-3xl sm:text-5xl md:text-6xl font-extrabold text-foreground"
+        />
+        <span className="text-foreground">по методичке</span>
+      </h1>
+
+      {/* Spinning "AI powered inside" badge — superscript position */}
+      <div className="absolute -top-2 -right-16 sm:-right-20 md:-right-24 hidden sm:block">
+        <SpinningText
+          radius={3.5}
+          duration={8}
+          className="w-20 h-20 sm:w-24 sm:h-24 text-[10px] sm:text-xs font-medium text-muted-foreground tracking-widest uppercase"
+        >
+          {`AI powered inside · `}
+        </SpinningText>
+      </div>
+    </div>
   );
 }

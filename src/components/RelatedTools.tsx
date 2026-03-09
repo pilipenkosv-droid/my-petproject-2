@@ -15,7 +15,7 @@ const TOOLS = [
     label: "Форматирование по ГОСТу",
     description: "Автоматическое оформление документа",
     icon: FileCheck,
-    gradient: "from-brand-2 to-brand-3",
+    gradient: "",
   },
   {
     slug: "outline",
@@ -23,7 +23,7 @@ const TOOLS = [
     label: "Генератор плана",
     description: "Структура работы с разделами",
     icon: ListTree,
-    gradient: "from-brand-teal to-brand-teal-dark",
+    gradient: "",
   },
   {
     slug: "grammar",
@@ -31,7 +31,7 @@ const TOOLS = [
     label: "Проверка грамматики",
     description: "Орфография, пунктуация, стиль",
     icon: SpellCheck,
-    gradient: "from-brand-1 to-brand-2",
+    gradient: "",
   },
   {
     slug: "rewrite",
@@ -39,7 +39,7 @@ const TOOLS = [
     label: "Повышение уникальности",
     description: "Рерайт с сохранением смысла",
     icon: Pencil,
-    gradient: "from-brand-teal-dark to-brand-3",
+    gradient: "",
   },
   {
     slug: "summarize",
@@ -47,7 +47,7 @@ const TOOLS = [
     label: "Краткое содержание",
     description: "AI-аннотация вашей работы",
     icon: Sparkles,
-    gradient: "from-brand-teal-light to-brand-teal",
+    gradient: "",
   },
   {
     slug: "sources",
@@ -55,7 +55,7 @@ const TOOLS = [
     label: "Подбор литературы",
     description: "Научные источники по теме",
     icon: BookOpen,
-    gradient: "from-brand-3 to-brand-2",
+    gradient: "",
   },
 ];
 
@@ -85,9 +85,9 @@ export function RelatedTools({
               className="flex items-center gap-4 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
             >
               <div
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shrink-0`}
+                className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center shrink-0"
               >
-                <Icon className="w-5 h-5 text-white" />
+                <Icon className="w-5 h-5 text-background" />
               </div>
               <div className="min-w-0">
                 <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
