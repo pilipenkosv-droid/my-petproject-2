@@ -25,7 +25,7 @@ export function HeroSubtitle() {
       </h1>
 
       {/* Spinning "AI powered inside" badge — superscript position */}
-      <div className="absolute -top-8 -right-8 sm:-top-10 sm:-right-6 md:-top-12 md:-right-4 hidden sm:block">
+      <div className="absolute -top-20 left-0 sm:-top-24 sm:left-0 md:-top-28 md:left-0 hidden sm:block">
         <SpinningText
           radius={4.2}
           duration={8}
