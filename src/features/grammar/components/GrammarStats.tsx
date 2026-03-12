@@ -14,7 +14,7 @@ export function GrammarStats({ stats }: GrammarStatsProps) {
 
   if (stats.total === 0) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+      <div className="flex items-center gap-3 border border-emerald-500/30 bg-emerald-500/10 p-4">
         <div className="w-3 h-3 rounded-full bg-emerald-500" />
         <p className="text-sm font-medium text-foreground">
           Ошибок не найдено!
@@ -24,7 +24,7 @@ export function GrammarStats({ stats }: GrammarStatsProps) {
   }
 
   return (
-    <div className="rounded-xl border border-surface-border bg-surface p-4 space-y-3">
+    <div className="border border-surface-border bg-surface p-4 space-y-3">
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-bold text-foreground">
           {stats.total}

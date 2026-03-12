@@ -42,7 +42,7 @@ export default function BlogPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-primary text-sm mb-6">
             <BookOpen className="w-4 h-4" />
             Блог
           </div>
@@ -58,14 +58,14 @@ export default function BlogPage() {
           {posts.map((post) => (
             <div
               key={post.slug}
-              className="relative bg-surface rounded-xl border border-surface-border hover:bg-surface-hover hover:border-border transition-all group"
+              className="relative bg-surface border border-surface-border hover:bg-surface-hover hover:border-border transition-all group"
             >
               <Link
                 href={`/blog/${post.slug}`}
                 className="block"
               >
                 {post.coverImage && (
-                  <div className="overflow-hidden rounded-t-xl">
+                  <div className="overflow-hidden">
                     <Image
                       src={post.coverImage}
                       alt={post.title}
@@ -129,7 +129,7 @@ export default function BlogPage() {
             ].map((tag) => (
               <span
                 key={tag}
-                className="px-4 py-2 rounded-full bg-surface border border-surface-border text-on-surface-muted text-sm"
+                className="px-4 py-2 bg-surface border border-surface-border text-on-surface-muted text-sm"
               >
                 {tag}
               </span>
@@ -173,7 +173,7 @@ export default function BlogPage() {
                 <Link
                   key={tool.href}
                   href={tool.href}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-surface-border text-xs text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
                 >
                   <tool.icon className="w-3 h-3" />
                   {tool.label}

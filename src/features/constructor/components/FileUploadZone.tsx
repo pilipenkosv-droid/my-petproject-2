@@ -103,14 +103,14 @@ export function FileUploadZone({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
+            "relative flex flex-col items-center justify-center border-2 border-dashed p-8 transition-all duration-300",
             isDragging
               ? "border-primary border-solid bg-primary/10"
               : "border-surface-border hover:border-surface-border hover:bg-surface",
             disabled && "cursor-not-allowed opacity-50"
           )}
         >
-          <div className="w-14 h-14 rounded-2xl bg-surface border border-surface-border flex items-center justify-center mb-4">
+          <div className="w-14 h-14 bg-surface border border-surface-border flex items-center justify-center mb-4">
             <Upload className="h-6 w-6 text-on-surface-subtle" />
           </div>
           <p className="text-sm text-on-surface-muted text-center mb-3">
@@ -135,7 +135,7 @@ export function FileUploadZone({
       ) : (
         <div
           className={cn(
-            "flex items-center gap-4 rounded-xl border p-4 transition-all duration-300",
+            "flex items-center gap-4 border p-4 transition-all duration-300",
             uploadedFile.status === "invalid"
               ? "border-red-500/30 bg-red-500/10 animate-shake"
               : uploadedFile.status === "valid"
@@ -144,7 +144,7 @@ export function FileUploadZone({
           )}
         >
           <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center",
+            "w-10 h-10 flex items-center justify-center",
             uploadedFile.status === "valid" ? "bg-emerald-500/20" : 
             uploadedFile.status === "invalid" ? "bg-red-500/20" : "bg-surface-hover"
           )}>

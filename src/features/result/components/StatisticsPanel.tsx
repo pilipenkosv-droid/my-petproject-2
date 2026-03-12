@@ -51,9 +51,9 @@ export function StatisticsPanel({
       {stats.map((stat) => (
         <div 
           key={stat.label} 
-          className="rounded-2xl bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-surface-hover hover:border-surface-border"
+          className="bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-surface-hover hover:border-surface-border"
         >
-          <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center mb-3 shadow-sm">
+          <div className="w-10 h-10 bg-foreground flex items-center justify-center mb-3 shadow-sm">
             <stat.icon className="h-5 w-5 text-background" />
           </div>
           <div className="text-2xl font-bold text-foreground">

@@ -41,7 +41,7 @@ export function ProcessingStatus({
   const getStepIcon = (index: number) => {
     if (error && index === currentStepIndex) {
       return (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
+        <div className="flex h-6 w-6 items-center justify-center bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
           <span className="text-xs font-bold">!</span>
         </div>
       );
@@ -49,7 +49,7 @@ export function ProcessingStatus({
 
     if (index < currentStepIndex) {
       return (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+        <div className="flex h-6 w-6 items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
           <CheckCircle className="h-4 w-4 text-white" />
         </div>
       );
@@ -57,14 +57,14 @@ export function ProcessingStatus({
 
     if (index === currentStepIndex) {
       return (
-        <div className="relative flex h-6 w-6 items-center justify-center rounded-full bg-foreground shadow-lg">
+        <div className="relative flex h-6 w-6 items-center justify-center bg-foreground shadow-lg">
           <Loader2 className="h-4 w-4 text-background animate-spin" />
         </div>
       );
     }
 
     return (
-      <div className="flex h-6 w-6 items-center justify-center rounded-full border border-surface-border bg-surface">
+      <div className="flex h-6 w-6 items-center justify-center border border-surface-border bg-surface">
         <Circle className="h-3 w-3 text-muted-foreground/60" />
       </div>
     );
@@ -105,7 +105,7 @@ export function ProcessingStatus({
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+        <div className="bg-red-500/10 border border-red-500/20 p-4">
           <p className="text-sm text-red-400 font-medium">
             Ошибка обработки
           </p>

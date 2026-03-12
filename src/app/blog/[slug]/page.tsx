@@ -120,7 +120,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Обложка */}
         {post.coverImage && (
-          <div className="mb-8 rounded-xl overflow-hidden">
+          <div className="mb-8 overflow-hidden">
             <Image
               src={post.coverImage}
               alt={post.title}
@@ -159,7 +159,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {post.keywords.map((keyword) => (
               <span
                 key={keyword}
-                className="px-3 py-1 rounded-full bg-surface border border-surface-border text-on-surface-subtle text-sm"
+                className="px-3 py-1 bg-surface border border-surface-border text-on-surface-subtle text-sm"
               >
                 {keyword}
               </span>
@@ -184,7 +184,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {prevPost && (
             <Link
               href={`/blog/${prevPost.slug}`}
-              className="flex items-center gap-3 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
+              className="flex items-center gap-3 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
             >
               <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               <div className="flex-1 min-w-0">
@@ -198,7 +198,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {nextPost && (
             <Link
               href={`/blog/${nextPost.slug}`}
-              className="flex items-center gap-3 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group sm:text-right"
+              className="flex items-center gap-3 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group sm:text-right"
             >
               <div className="flex-1 min-w-0">
                 <div className="text-muted-foreground text-xs mb-1">Следующая статья</div>
@@ -248,7 +248,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <Link
                   key={tool.href}
                   href={tool.href}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-surface-border text-xs text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
                 >
                   <tool.icon className="w-3 h-3" />
                   {tool.label}

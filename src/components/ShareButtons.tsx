@@ -64,7 +64,7 @@ const shareButtons = [
 ];
 
 const btnBase =
-  "group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-surface-border text-on-surface-muted text-sm font-medium hover:bg-surface-hover hover:border-surface-border hover:text-foreground active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
+  "group relative flex items-center gap-2 px-4 py-2 bg-surface border border-surface-border text-on-surface-muted text-sm font-medium hover:bg-surface-hover hover:border-surface-border hover:text-foreground active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
 
 export function ShareButtons({
   url,
@@ -144,18 +144,18 @@ export function ShareButtons({
           }}
           aria-label="Поделиться"
           aria-expanded={isOpen}
-          className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-surface-border text-muted-foreground hover:bg-surface-hover hover:text-on-surface-muted hover:border-surface-border active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center justify-center w-8 h-8 bg-surface border border-surface-border text-muted-foreground hover:bg-surface-hover hover:text-on-surface-muted hover:border-surface-border active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Share2 className="w-3.5 h-3.5" />
         </button>
 
         {isOpen && (
-          <div className="absolute bottom-full right-0 mb-2 z-50 flex items-center gap-1 p-1.5 rounded-xl bg-popover border border-surface-border shadow-xl shadow-black/20 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="absolute bottom-full right-0 mb-2 z-50 flex items-center gap-1 p-1.5 bg-popover border border-surface-border shadow-xl shadow-black/20 animate-in fade-in slide-in-from-bottom-2 duration-200">
             {/* Копировать */}
             <button
               onClick={handleCopy}
               aria-label={copied ? "Ссылка скопирована" : "Скопировать ссылку"}
-              className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 active:scale-90 ${
+              className={`flex items-center justify-center w-8 h-8 transition-all duration-300 active:scale-90 ${
                 copied
                   ? "bg-green-500/20 text-green-400"
                   : "text-on-surface-muted hover:bg-surface-hover hover:text-foreground"
@@ -173,7 +173,7 @@ export function ShareButtons({
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Поделиться в ${btn.label}`}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-muted hover:bg-surface-hover transition-all duration-300 active:scale-90 ${btn.hoverColor}`}
+                className={`flex items-center justify-center w-8 h-8 text-on-surface-muted hover:bg-surface-hover transition-all duration-300 active:scale-90 ${btn.hoverColor}`}
               >
                 <btn.icon className="w-3.5 h-3.5" />
               </a>
@@ -184,7 +184,7 @@ export function ShareButtons({
               <button
                 onClick={handleNativeShare}
                 aria-label="Поделиться"
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-muted hover:bg-surface-hover hover:text-foreground transition-all duration-300 active:scale-90 md:hidden"
+                className="flex items-center justify-center w-8 h-8 text-on-surface-muted hover:bg-surface-hover hover:text-foreground transition-all duration-300 active:scale-90 md:hidden"
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>

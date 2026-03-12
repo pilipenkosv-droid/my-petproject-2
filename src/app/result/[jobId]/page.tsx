@@ -45,8 +45,8 @@ export default function ResultPage({ params }: ResultPageProps) {
           <Card className="max-w-md mx-auto">
             <CardContent className="py-12 text-center">
               <div className="animate-pulse">
-                <div className="h-4 bg-surface-hover rounded w-3/4 mx-auto mb-4"></div>
-                <div className="h-4 bg-surface-hover rounded w-1/2 mx-auto"></div>
+                <div className="h-4 bg-surface-hover w-3/4 mx-auto mb-4"></div>
+                <div className="h-4 bg-surface-hover w-1/2 mx-auto"></div>
               </div>
             </CardContent>
           </Card>
@@ -91,7 +91,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 bg-foreground flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-background" />
                 </div>
                 Обработка документа
@@ -178,7 +178,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               <div className="absolute top-0 right-0 w-32 h-32 bg-muted rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
               <CardContent className="pt-6 relative">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm shrink-0">
+                  <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm shrink-0">
                     <Gift className="w-6 h-6 text-background" />
                   </div>
                   <div className="flex-1">
@@ -237,9 +237,9 @@ export default function ResultPage({ params }: ResultPageProps) {
                 {/* Marked original */}
                 <button
                   onClick={() => handleDownload("original")}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
+                  className="flex flex-col items-center gap-3 border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm">
+                  <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm">
                     <FileText className="w-6 h-6 text-background" />
                   </div>
                   <div className="text-center">
@@ -257,9 +257,9 @@ export default function ResultPage({ params }: ResultPageProps) {
                 {/* Formatted */}
                 <button
                   onClick={() => handleDownload("formatted")}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-brand-teal/30 bg-brand-teal/5 p-6 transition-all duration-200 hover:bg-brand-teal/10 hover:border-brand-teal/40 text-left ring-1 ring-brand-teal/20"
+                  className="flex flex-col items-center gap-3 border border-brand-teal/30 bg-brand-teal/5 p-6 transition-all duration-200 hover:bg-brand-teal/10 hover:border-brand-teal/40 text-left ring-1 ring-brand-teal/20"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shadow-sm">
+                  <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm">
                     <FileCheck className="w-6 h-6 text-background" />
                   </div>
                   <div className="text-center">

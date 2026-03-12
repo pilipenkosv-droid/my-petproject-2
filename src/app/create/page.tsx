@@ -200,7 +200,7 @@ function ConstructorPageContent() {
             {/* Баннер: анонимный пользователь, триал доступен */}
             {!authLoading && !user && !trialBlocked && (
               <BlurFade inView>
-                <div className="text-center p-3 rounded-lg bg-surface border border-surface-border">
+                <div className="text-center p-3 bg-surface border border-surface-border">
                   <p className="text-sm text-on-surface-muted">
                     У вас <span className="text-primary font-medium">1 бесплатная обработка</span> без регистрации (первые 30 страниц).{" "}
                     <button onClick={() => router.push("/login")} className="text-primary hover:text-primary/80 underline">
@@ -228,7 +228,7 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-foreground shadow-sm">
+                    <div className="flex items-center justify-center w-10 h-10 bg-foreground shadow-sm">
                       <FileText className="h-5 w-5 text-background" />
                     </div>
                     <span>Исходный документ</span>
@@ -289,7 +289,7 @@ function ConstructorPageContent() {
               <Card className="group relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-foreground shadow-sm">
+                    <div className="flex items-center justify-center w-10 h-10 bg-foreground shadow-sm">
                       <Sparkles className="h-5 w-5 text-background" />
                     </div>
                     <span>Требования к оформлению</span>
@@ -328,7 +328,7 @@ function ConstructorPageContent() {
                     </TabsContent>
 
                     <TabsContent value="gost" className="mt-4">
-                      <div className="rounded-lg border border-surface-border bg-surface p-4 space-y-3">
+                      <div className="border border-surface-border bg-surface p-4 space-y-3">
                         <p className="text-sm text-foreground font-medium">
                           Будет применён стандартный ГОСТ 7.32-2017:
                         </p>
@@ -389,7 +389,7 @@ function ConstructorPageContent() {
           <Card className="max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center animate-pulse">
+                <div className="w-10 h-10 bg-foreground flex items-center justify-center animate-pulse">
                   <Sparkles className="w-5 h-5 text-background" />
                 </div>
                 {processingTitle}
@@ -428,8 +428,8 @@ export default function ConstructorPage() {
         <Header showBack />
         <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
           <div className="text-center">
-            <div className="h-8 w-48 mx-auto bg-muted rounded animate-pulse mb-4" />
-            <div className="h-4 w-64 mx-auto bg-muted rounded animate-pulse" />
+            <div className="h-8 w-48 mx-auto bg-muted animate-pulse mb-4" />
+            <div className="h-4 w-64 mx-auto bg-muted animate-pulse" />
           </div>
         </div>
       </main>

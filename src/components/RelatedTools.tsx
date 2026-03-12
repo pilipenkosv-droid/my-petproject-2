@@ -82,10 +82,10 @@ export function RelatedTools({
             <Link
               key={tool.slug}
               href={tool.href}
-              className="flex items-center gap-4 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
+              className="flex items-center gap-4 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
             >
               <div
-                className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center shrink-0"
+                className="w-10 h-10 bg-foreground flex items-center justify-center shrink-0"
               >
                 <Icon className="w-5 h-5 text-background" />
               </div>

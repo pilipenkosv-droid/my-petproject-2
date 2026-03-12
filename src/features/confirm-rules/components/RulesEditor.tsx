@@ -109,7 +109,7 @@ export function RulesEditor({
                 <select
                   value={tempValue}
                   onChange={(e) => setTempValue(e.target.value)}
-                  className="bg-surface-hover border border-surface-border rounded px-2 py-1 text-sm text-foreground"
+                  className="bg-surface-hover border border-surface-border px-2 py-1 text-sm text-foreground"
                 >
                   <option value="true">Да</option>
                   <option value="false">Нет</option>
@@ -119,19 +119,19 @@ export function RulesEditor({
                   type={type === "number" ? "number" : "text"}
                   value={tempValue}
                   onChange={(e) => setTempValue(e.target.value)}
-                  className="w-32 bg-surface-hover border border-surface-border rounded px-2 py-1 text-sm text-foreground"
+                  className="w-32 bg-surface-hover border border-surface-border px-2 py-1 text-sm text-foreground"
                   autoFocus
                 />
               )}
               <button
                 onClick={() => saveEdit(path, type)}
-                className="p-1 hover:bg-emerald-500/20 rounded transition-colors"
+                className="p-1 hover:bg-emerald-500/20 transition-colors"
               >
                 <Check className="h-4 w-4 text-emerald-400" />
               </button>
               <button
                 onClick={cancelEditing}
-                className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                className="p-1 hover:bg-red-500/20 transition-colors"
               >
                 <X className="h-4 w-4 text-red-400" />
               </button>
@@ -142,7 +142,7 @@ export function RulesEditor({
               {value !== undefined && (
                 <button
                   onClick={() => startEditing(pathStr, value)}
-                  className="p-1 hover:bg-surface-hover rounded transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-1 hover:bg-surface-hover transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <Edit2 className="h-3 w-3 text-on-surface-subtle" />
                 </button>
@@ -164,13 +164,13 @@ export function RulesEditor({
     const isExpanded = expandedSections.has(id);
 
     return (
-      <div className="rounded-xl bg-surface border border-surface-border overflow-hidden">
+      <div className="bg-surface border border-surface-border overflow-hidden">
         <button
           onClick={() => toggleSection(id)}
           className="w-full flex items-center justify-between p-4 hover:bg-surface transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+            <div className="w-10 h-10 bg-foreground flex items-center justify-center">
               {icon}
             </div>
             <span className="font-medium text-foreground">{title}</span>

@@ -29,14 +29,14 @@ export function HighlightedText({
 
   if (errors.length === 0) {
     return (
-      <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
+      <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
         {text}
       </div>
     );
   }
 
   return (
-    <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
+    <div className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
       {segments.map((segment, i) => {
         if (segment.type === "text") {
           return <span key={i}>{segment.content}</span>;
@@ -49,7 +49,7 @@ export function HighlightedText({
           <Popover key={error.id}>
             <PopoverTrigger asChild>
               <span
-                className={`${highlightClass} rounded-sm px-0.5 -mx-0.5 inline`}
+                className={`${highlightClass} px-0.5 -mx-0.5 inline`}
                 role="button"
                 tabIndex={0}
               >

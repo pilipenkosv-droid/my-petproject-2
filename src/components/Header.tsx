@@ -184,7 +184,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           {showBack && (
             <Link
               href={backHref}
-              className="flex items-center justify-center w-9 h-9 rounded-lg bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-all"
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>

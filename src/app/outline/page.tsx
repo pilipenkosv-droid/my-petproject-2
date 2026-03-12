@@ -137,7 +137,7 @@ function OutlinePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-foreground shadow-sm mb-4">
                 <ListTree className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
@@ -266,7 +266,7 @@ function OutlinePageContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
                     {outline}
                   </pre>
 

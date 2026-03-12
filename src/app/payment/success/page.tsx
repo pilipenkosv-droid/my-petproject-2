@@ -104,7 +104,7 @@ function PaymentSuccessContent() {
               </p>
 
               {botDeepLink && (
-                <div className="mt-6 p-4 rounded-xl border border-border bg-muted">
+                <div className="mt-6 p-4 border border-border bg-muted">
                   <p className="text-sm text-on-surface-muted mb-3">
                     🎉 Вам доступен <strong>Diplox AI-бот</strong> в Telegram — ваш личный помощник для учёбы!
                   </p>

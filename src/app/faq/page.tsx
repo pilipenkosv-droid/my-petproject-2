@@ -367,7 +367,7 @@ export default function FAQPage() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-primary text-sm mb-6">
             <HelpCircle className="w-4 h-4" />
             FAQ
           </div>
@@ -386,7 +386,7 @@ export default function FAQPage() {
               <a
                 key={category.id}
                 href={`#${category.id}`}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-colors text-sm"
               >
                 <Icon className="w-4 h-4" />
                 {category.title}
@@ -402,7 +402,7 @@ export default function FAQPage() {
             return (
               <section key={category.id} id={category.id}>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 bg-muted flex items-center justify-center">
                     <Icon className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <h2 className="text-xl font-semibold text-foreground">
@@ -411,7 +411,7 @@ export default function FAQPage() {
                 </div>
 
                 {category.id === "security" && (
-                  <div className="mb-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20">
                     <div className="flex items-start gap-3">
                       <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                       <p className="text-sm text-on-surface-muted">
@@ -429,7 +429,7 @@ export default function FAQPage() {
                   {category.questions.map((item, index) => (
                     <details
                       key={index}
-                      className="group bg-surface rounded-xl border border-surface-border overflow-hidden"
+                      className="group bg-surface border border-surface-border overflow-hidden"
                     >
                       <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface transition-colors">
                         <h3 className="font-medium text-foreground pr-4">

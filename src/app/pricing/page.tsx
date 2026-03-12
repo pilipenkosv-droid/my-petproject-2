@@ -6,9 +6,10 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown, Gift, HelpCircle, FileCheck } from "lucide-react";
+import { Check, Sparkles, Zap, GraduationCap, Gift, HelpCircle, FileCheck } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
+import { BorderBeam } from "@/components/ui/border-beam";
 import { trackEvent } from "@/lib/analytics/events";
 
 const plans = [
@@ -51,7 +52,7 @@ const plans = [
     name: "Pro",
     price: "399 ₽",
     period: "/ месяц",
-    icon: Crown,
+    icon: GraduationCap,
     description: "10 обработок в месяц",
     features: [
       "10 обработок в месяц",
@@ -129,7 +130,7 @@ function PricingContent() {
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-primary text-sm mb-6">
             <Sparkles className="w-4 h-4" />
             Тарифы
           </div>
@@ -141,9 +142,9 @@ function PricingContent() {
       <main className="mx-auto max-w-4xl px-6 py-12">
         {/* Баннер разблокировки полной версии */}
         {unlockJobId && (
-          <div className="mb-8 p-6 rounded-2xl bg-muted border border-border">
+          <div className="mb-8 p-6 bg-muted border border-border">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-foreground flex items-center justify-center shrink-0">
                 <FileCheck className="w-6 h-6 text-background" />
               </div>
               <div>
@@ -163,35 +164,27 @@ function PricingContent() {
             return (
               <Card
                 key={plan.id}
-                className={`relative transition-all ${
+                className={`relative flex flex-col transition-all ${
                   plan.accent
                     ? "bg-muted border-border shadow-sm scale-105 z-10"
                     : "bg-surface border-surface-border opacity-[0.9]"
                 }`}
               >
                 {plan.accent && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-foreground text-background text-xs font-semibold z-10">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-foreground text-background text-xs font-semibold z-10">
                     Популярное
                   </span>
                 )}
 
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        plan.accent
-                          ? "bg-primary/10 text-primary"
-                          : "bg-surface-hover text-on-surface-muted"
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
+                    <Icon className={`w-5 h-5 ${plan.accent ? "text-primary" : "text-on-surface-muted"}`} />
                     <CardTitle className="text-foreground text-lg">{plan.name}</CardTitle>
                   </div>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="flex flex-col flex-1 space-y-6">
                   {/* Цена */}
                   <div>
                     <span className="text-3xl font-bold text-foreground">{plan.price}</span>
@@ -199,7 +192,7 @@ function PricingContent() {
                   </div>
 
                   {/* Фичи */}
-                  <ul className="space-y-3">
+                  <ul className="space-y-3 flex-1">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-3 text-sm text-on-surface">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -209,20 +202,40 @@ function PricingContent() {
                   </ul>
 
                   {/* Кнопка */}
-                  <Button
-                    className="w-full"
-                    variant={plan.accent ? "glow" : "outline"}
-                    onClick={() => handlePurchase(plan.id)}
-                    disabled={loading !== null}
-                  >
-                    {loading === plan.id
-                      ? "Перенаправление..."
-                      : plan.id === "trial"
-                        ? "Попробовать бесплатно"
-                        : plan.accent
-                          ? "Оформить подписку"
+                  {plan.accent ? (
+                    <div className="relative inline-flex overflow-hidden rounded-lg w-full">
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => handlePurchase(plan.id)}
+                        disabled={loading !== null}
+                      >
+                        {loading === plan.id ? "Перенаправление..." : "Оформить подписку"}
+                      </Button>
+                      {loading !== plan.id && (
+                        <BorderBeam
+                          size={80}
+                          duration={5}
+                          colorFrom="#a855f7"
+                          colorTo="#6366f1"
+                          borderWidth={2}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full rounded-none"
+                      variant="outline"
+                      onClick={() => handlePurchase(plan.id)}
+                      disabled={loading !== null}
+                    >
+                      {loading === plan.id
+                        ? "Перенаправление..."
+                        : plan.id === "trial"
+                          ? "Попробовать бесплатно"
                           : "Купить"}
-                  </Button>
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -244,21 +257,21 @@ function PricingContent() {
           </div>
 
           <div className="grid gap-6 max-w-2xl mx-auto">
-            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+            <div className="bg-surface p-6 border border-surface-border">
               <h3 className="font-medium text-foreground mb-2">Какие способы оплаты доступны?</h3>
               <p className="text-on-surface-muted text-sm">
                 Принимаем банковские карты (Visa, MasterCard, МИР), а также оплату через СБП и электронные кошельки.
               </p>
             </div>
 
-            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+            <div className="bg-surface p-6 border border-surface-border">
               <h3 className="font-medium text-foreground mb-2">Как работает пробный период?</h3>
               <p className="text-on-surface-muted text-sm">
                 Первый документ обрабатывается бесплатно без привязки карты. Вы сможете оценить качество форматирования перед покупкой.
               </p>
             </div>
 
-            <div className="bg-surface rounded-xl p-6 border border-surface-border">
+            <div className="bg-surface p-6 border border-surface-border">
               <h3 className="font-medium text-foreground mb-2">Можно ли отменить подписку?</h3>
               <p className="text-on-surface-muted text-sm">
                 Да, подписку можно отменить в любой момент. Доступ сохранится до конца оплаченного периода.

@@ -118,7 +118,7 @@ export default function AboutPage() {
       <main className="mx-auto max-w-4xl px-6 py-16">
         {/* Hero секция */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted border border-border text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-primary text-sm mb-6">
             <Sparkles className="w-4 h-4" />
             О сервисе
           </div>
@@ -139,7 +139,7 @@ export default function AboutPage() {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-surface rounded-xl border border-surface-border p-4 text-center"
+              className="bg-surface border border-surface-border p-4 text-center"
             >
               <div className="text-2xl font-bold text-foreground mb-1">
                 {stat.value}
@@ -152,7 +152,7 @@ export default function AboutPage() {
         {/* Как это работает */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+            <div className="w-10 h-10 bg-muted flex items-center justify-center">
               <Target className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
@@ -164,10 +164,10 @@ export default function AboutPage() {
             {howItWorks.map((item) => (
               <div
                 key={item.step}
-                className="bg-surface rounded-xl border border-surface-border p-6"
+                className="bg-surface border border-surface-border p-6"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold shrink-0">
+                  <div className="w-8 h-8 bg-muted flex items-center justify-center text-muted-foreground font-semibold shrink-0">
                     {item.step}
                   </div>
                   <div>
@@ -183,7 +183,7 @@ export default function AboutPage() {
         {/* Возможности */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+            <div className="w-10 h-10 bg-muted flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
@@ -197,9 +197,9 @@ export default function AboutPage() {
               return (
                 <div
                   key={index}
-                  className="bg-surface rounded-xl border border-surface-border p-6"
+                  className="bg-surface border border-surface-border p-6"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 bg-muted flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <h3 className="font-medium text-foreground mb-2">
@@ -215,7 +215,7 @@ export default function AboutPage() {
         {/* AI технологии */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+            <div className="w-10 h-10 bg-muted flex items-center justify-center">
               <Cpu className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
@@ -223,7 +223,7 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div className="bg-surface rounded-xl border border-surface-border p-6">
+          <div className="bg-surface border border-surface-border p-6">
             <p className="text-on-surface-muted leading-relaxed mb-4">
               Diplox использует современные языковые модели для анализа
               текстовых документов. Система способна понимать естественный язык
@@ -246,7 +246,7 @@ export default function AboutPage() {
         {/* Поддерживаемые типы работ */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+            <div className="w-10 h-10 bg-muted flex items-center justify-center">
               <FileText className="w-5 h-5 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold text-foreground">
@@ -266,7 +266,7 @@ export default function AboutPage() {
               <Link
                 key={index}
                 href={item.href}
-                className="bg-surface rounded-xl border border-surface-border p-4 text-center hover:bg-surface-hover hover:border-border transition-colors group"
+                className="bg-surface border border-surface-border p-4 text-center hover:bg-surface-hover hover:border-border transition-colors group"
               >
                 <span className="text-on-surface group-hover:text-foreground transition-colors">
                   {item.name}

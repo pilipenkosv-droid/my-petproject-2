@@ -29,7 +29,7 @@ export function SourcesTable({
   return (
     <div className="space-y-3">
       {/* Select all row */}
-      <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50 border border-surface-border">
+      <div className="flex items-center gap-3 px-3 py-2 bg-muted/50 border border-surface-border">
         <Checkbox
           checked={allSelected}
           ref={(el) => {
@@ -74,7 +74,7 @@ interface SourceRowProps {
 function SourceRow({ source, index, selected, onToggle }: SourceRowProps) {
   return (
     <div
-      className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+      className={`flex items-start gap-3 p-3 border transition-colors ${
         selected
           ? "border-teal-500/30 bg-teal-500/5"
           : "border-surface-border bg-surface hover:bg-surface-hover"

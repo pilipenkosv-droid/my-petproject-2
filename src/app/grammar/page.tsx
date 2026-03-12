@@ -156,7 +156,7 @@ function GrammarPageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-foreground shadow-sm mb-4">
                 <SpellCheck className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
@@ -173,7 +173,7 @@ function GrammarPageContent() {
             <Card>
               <CardContent className="pt-6 space-y-4">
                 {/* Input mode toggle */}
-                <div className="flex rounded-lg border border-surface-border overflow-hidden">
+                <div className="flex border border-surface-border overflow-hidden">
                   <button
                     type="button"
                     onClick={() => handleModeSwitch("text")}

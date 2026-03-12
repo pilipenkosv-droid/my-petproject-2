@@ -139,7 +139,7 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
                   )}
                   <div
                     className={cn(
-                      "rounded-lg px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap",
+                      "px-3 py-2 text-sm max-w-[85%] whitespace-pre-wrap",
                       msg.role === "user"
                         ? "bg-primary/10 text-foreground"
                         : "bg-muted text-foreground"
@@ -160,7 +160,7 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
                   <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
                     <Bot className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="bg-muted rounded-lg px-3 py-2">
+                  <div className="bg-muted px-3 py-2">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
                     setIsExpanded(true);
                     sendMessage(q);
                   }}
-                  className="text-xs px-3 py-1.5 rounded-full border border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+                  className="text-xs px-3 py-1.5 border border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
                 >
                   {q}
                 </button>
@@ -202,7 +202,7 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
               onKeyDown={handleKeyDown}
               placeholder="Задайте вопрос о методичке..."
               rows={1}
-              className="flex-1 resize-none rounded-md border border-border/50 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+              className="flex-1 resize-none border border-border/50 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
               disabled={isLoading}
             />
             <Button

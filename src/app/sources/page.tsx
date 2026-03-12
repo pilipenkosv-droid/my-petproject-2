@@ -124,7 +124,7 @@ function SourcesPageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-foreground shadow-sm mb-4">
                 <BookOpen className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">

@@ -70,7 +70,7 @@ export function WorkTypeLanding({
 
       <PageHero
         badge={
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-border text-primary text-sm mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-border text-primary text-sm mb-6">
             <FileText className="w-4 h-4" />
             {type}
           </div>
@@ -87,7 +87,7 @@ export function WorkTypeLanding({
 
         {/* Описание */}
         <section className="mb-12">
-          <div className="bg-surface rounded-xl border border-surface-border p-6">
+          <div className="bg-surface border border-surface-border p-6">
             <p className="text-on-surface-muted leading-relaxed">{description}</p>
           </div>
         </section>
@@ -95,9 +95,7 @@ export function WorkTypeLanding({
         {/* Что делает сервис */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-muted-foreground" />
-            </div>
+            <CheckCircle className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">
               Что делает Diplox
             </h2>
@@ -107,7 +105,7 @@ export function WorkTypeLanding({
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="flex items-start gap-3 bg-surface rounded-xl border border-surface-border p-4"
+                className="flex items-start gap-3 bg-surface border border-surface-border p-4"
               >
                 <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <span className="text-on-surface">{feature}</span>
@@ -119,15 +117,13 @@ export function WorkTypeLanding({
         {/* Требования ГОСТ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-              <FileText className="w-5 h-5 text-muted-foreground" />
-            </div>
+            <FileText className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">
               Стандартные требования по ГОСТу
             </h2>
           </div>
 
-          <div className="bg-surface rounded-xl border border-surface-border overflow-hidden">
+          <div className="bg-surface border border-surface-border overflow-hidden">
             <table className="w-full">
               <tbody>
                 {gostRequirements.map((req, index) => (
@@ -152,18 +148,18 @@ export function WorkTypeLanding({
         {/* Преимущества */}
         <section className="mb-12">
           <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
+            <div className="bg-surface border border-surface-border p-5 text-center">
               <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Быстро</h3>
               <p className="text-on-surface-subtle text-sm">Обработка за 3-5 минут</p>
             </div>
-            <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
+            <div className="bg-surface border border-surface-border p-5 text-center">
               <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-2">Безопасно</h3>
               <p className="text-on-surface-subtle text-sm mb-1">Не попадает в Антиплагиат</p>
               <p className="text-muted-foreground/60 text-xs">Файлы удаляются через 24ч</p>
             </div>
-            <div className="bg-surface rounded-xl border border-surface-border p-5 text-center">
+            <div className="bg-surface border border-surface-border p-5 text-center">
               <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
               <h3 className="font-medium text-foreground mb-1">Точно</h3>
               <p className="text-on-surface-subtle text-sm">AI-анализ методички</p>
@@ -174,9 +170,7 @@ export function WorkTypeLanding({
         {/* FAQ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-muted-foreground" />
-            </div>
+            <Sparkles className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">Частые вопросы</h2>
           </div>
 
@@ -184,7 +178,7 @@ export function WorkTypeLanding({
             {faqs.map((item, index) => (
               <details
                 key={index}
-                className="group bg-surface rounded-xl border border-surface-border overflow-hidden"
+                className="group bg-surface border border-surface-border overflow-hidden"
               >
                 <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface transition-colors">
                   <h3 className="font-medium text-foreground pr-4">{item.question}</h3>
@@ -217,7 +211,7 @@ export function WorkTypeLanding({
               <Link
                 key={index}
                 href={item.href}
-                className="px-4 py-2 rounded-full bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-colors text-sm"
+                className="px-4 py-2 bg-surface border border-surface-border text-on-surface-muted hover:text-foreground hover:bg-surface-hover transition-colors text-sm"
               >
                 {item.name}
               </Link>
@@ -266,10 +260,10 @@ export function WorkTypeLanding({
                 <Link
                   key={tool.href}
                   href={tool.href}
-                  className="flex items-center gap-4 bg-surface rounded-xl border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
+                  className="flex items-center gap-4 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
                 >
                   <div
-                    className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center shrink-0"
+                    className="w-10 h-10 bg-foreground flex items-center justify-center shrink-0"
                   >
                     <ToolIcon className="w-5 h-5 text-background" />
                   </div>

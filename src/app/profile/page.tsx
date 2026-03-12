@@ -59,7 +59,7 @@ export default async function ProfilePage() {
               <span className="gradient-text">Профиль</span>
             </h2>
             {(access.accessType === "subscription" || access.accessType === "admin") && (
-              <span className="pro-badge flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold">
+              <span className="pro-badge flex items-center gap-1 px-2.5 py-1 text-xs font-semibold">
                 <Crown className="h-3.5 w-3.5" />
                 PRO
               </span>
@@ -74,7 +74,7 @@ export default async function ProfilePage() {
             {access.accessType === "admin" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 bg-muted flex items-center justify-center">
                     <Crown className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
@@ -89,7 +89,7 @@ export default async function ProfilePage() {
             ) : access.accessType === "subscription" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 bg-muted flex items-center justify-center">
                     <Crown className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
@@ -111,7 +111,7 @@ export default async function ProfilePage() {
             ) : access.accessType === "one_time" ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-surface-hover flex items-center justify-center">
+                  <div className="w-10 h-10 bg-surface-hover flex items-center justify-center">
                     <Zap className="h-5 w-5 text-on-surface-muted" />
                   </div>
                   <div>
@@ -132,7 +132,7 @@ export default async function ProfilePage() {
             ) : (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-surface-hover flex items-center justify-center">
+                  <div className="w-10 h-10 bg-surface-hover flex items-center justify-center">
                     <Zap className="h-5 w-5 text-on-surface-muted" />
                   </div>
                   <div>
@@ -156,7 +156,7 @@ export default async function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="w-10 h-10 bg-muted flex items-center justify-center">
                     <MessageCircle className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
@@ -247,7 +247,7 @@ export default async function ProfilePage() {
                 {jobs.map((job) => (
                   <div
                     key={job.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-lg bg-surface border border-surface-border"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-surface border border-surface-border"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Status icon */}

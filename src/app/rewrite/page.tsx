@@ -196,7 +196,7 @@ function RewritePageContent() {
           {/* Header */}
           <BlurFade delay={0.1} inView>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground shadow-sm mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-foreground shadow-sm mb-4">
                 <Pencil className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
@@ -213,7 +213,7 @@ function RewritePageContent() {
             <Card>
               <CardContent className="pt-6 space-y-4">
                 {/* Input mode toggle */}
-                <div className="flex rounded-lg border border-surface-border overflow-hidden">
+                <div className="flex border border-surface-border overflow-hidden">
                   <button
                     type="button"
                     onClick={() => handleModeSwitch("text")}
@@ -296,7 +296,7 @@ function RewritePageContent() {
                         type="button"
                         onClick={() => setRewriteMode(option.value)}
                         disabled={isGenerating}
-                        className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-sm transition-all ${
+                        className={`flex flex-col items-center gap-1 border px-3 py-3 text-sm transition-all ${
                           rewriteMode === option.value
                             ? "border-primary bg-primary/10 text-primary font-medium"
                             : "border-surface-border bg-surface hover:bg-surface-hover text-muted-foreground"
@@ -379,7 +379,7 @@ function RewritePageContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 rounded-lg p-4 max-h-[500px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
                     {rewritten}
                   </pre>
 

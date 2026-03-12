@@ -20,7 +20,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-24 sm:py-32">
         
-        <div className="relative z-10 mx-auto max-w-4xl w-full">
+        <div className="relative z-10 mx-auto max-w-5xl w-full">
           {/* Text column — centered */}
           <div className="text-center md:text-left">
             {/* Badge */}
