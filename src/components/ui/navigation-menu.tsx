@@ -59,7 +59,7 @@ function NavigationMenuItem({
 }
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-9 w-max items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-on-surface-muted hover:text-foreground hover:bg-surface-hover focus:bg-surface-hover focus:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:text-foreground data-[state=open]:bg-surface-hover outline-none transition-all duration-200"
+  "group inline-flex h-9 w-max items-center justify-center rounded-lg px-4 py-2 text-sm font-medium cursor-pointer text-on-surface-muted hover:text-foreground hover:bg-surface-hover focus:bg-surface-hover focus:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:text-foreground data-[state=open]:bg-surface-hover outline-none transition-all duration-200"
 )
 
 function NavigationMenuTrigger({
@@ -129,7 +129,7 @@ function NavigationMenuLink({
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       className={cn(
-        "data-[active=true]:bg-surface-hover data-[active=true]:text-foreground hover:bg-surface-hover hover:text-foreground focus:bg-surface-hover focus:text-foreground text-on-surface-muted flex gap-1 rounded-lg p-2 text-sm transition-all duration-200 outline-none [&_svg:not([class*='text-'])]:text-on-surface-subtle [&_svg:not([class*='size-'])]:size-4",
+        "data-[active=true]:bg-surface-hover data-[active=true]:text-foreground hover:bg-surface-hover hover:text-foreground focus:bg-surface-hover focus:text-foreground cursor-pointer text-on-surface-muted flex gap-1 rounded-lg p-2 text-sm transition-all duration-200 outline-none [&_svg:not([class*='text-'])]:text-on-surface-subtle [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

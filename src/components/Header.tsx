@@ -300,7 +300,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               </Link>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="hidden md:flex items-center rounded-full p-1 hover:bg-surface-hover transition-colors">
+                <button className="hidden md:flex items-center rounded-full p-1 cursor-pointer hover:bg-surface-hover transition-colors">
                   {isPro ? (
                     <div className="p-[2px] rounded-full bg-foreground">
                       <Avatar className="h-8 w-8 ring-[2px] ring-background">

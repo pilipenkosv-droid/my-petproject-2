@@ -90,7 +90,7 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
               onClick={() => setRating(star)}
               onMouseEnter={() => setHoveredRating(star)}
               onMouseLeave={() => setHoveredRating(null)}
-              className="transition-transform hover:scale-110 active:scale-95 focus:outline-none"
+              className="cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none"
             >
               <Star
                 className={`w-8 h-8 transition-colors ${

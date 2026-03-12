@@ -431,7 +431,7 @@ export default function FAQPage() {
                       key={index}
                       className="group bg-surface border border-surface-border overflow-hidden"
                     >
-                      <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface transition-colors">
+                      <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-hover transition-colors">
                         <h3 className="font-medium text-foreground pr-4">
                           {item.question}
                         </h3>
@@ -469,7 +469,7 @@ export default function FAQPage() {
               </Link>
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface border border-surface-border text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 Посмотреть тарифы
               </Link>

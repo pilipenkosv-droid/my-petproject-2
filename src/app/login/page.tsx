@@ -137,7 +137,7 @@ function LoginForm() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
             <span className="gradient-text">Dip</span>
-            <span className="text-foreground">lox</span>
+            <span className="gradient-text">lox</span>
           </CardTitle>
           <CardDescription>
             {mode === "login"
@@ -191,7 +191,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                  className="text-primary hover:text-primary/80 underline"
+                  className="cursor-pointer text-primary hover:text-primary/80 underline"
                 >
                   Вернуться ко входу
                 </button>
@@ -238,7 +238,7 @@ function LoginForm() {
                       <button
                         type="button"
                         onClick={() => { setMode("forgotPassword"); setError(""); setMessage(""); }}
-                        className="text-xs text-primary hover:text-primary/80"
+                        className="cursor-pointer text-xs text-primary hover:text-primary/80"
                       >
                         Забыли пароль?
                       </button>
@@ -286,7 +286,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => { setMode("signup"); setError(""); setMessage(""); }}
-                      className="text-primary hover:text-primary/80 underline"
+                      className="cursor-pointer text-primary hover:text-primary/80 underline"
                     >
                       Зарегистрироваться
                     </button>
@@ -297,7 +297,7 @@ function LoginForm() {
                     <button
                       type="button"
                       onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                      className="text-primary hover:text-primary/80 underline"
+                      className="cursor-pointer text-primary hover:text-primary/80 underline"
                     >
                       Войти
                     </button>

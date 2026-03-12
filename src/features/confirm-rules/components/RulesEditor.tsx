@@ -125,13 +125,13 @@ export function RulesEditor({
               )}
               <button
                 onClick={() => saveEdit(path, type)}
-                className="p-1 hover:bg-emerald-500/20 transition-colors"
+                className="p-1 cursor-pointer hover:bg-emerald-500/20 transition-colors"
               >
                 <Check className="h-4 w-4 text-emerald-400" />
               </button>
               <button
                 onClick={cancelEditing}
-                className="p-1 hover:bg-red-500/20 transition-colors"
+                className="p-1 cursor-pointer hover:bg-red-500/20 transition-colors"
               >
                 <X className="h-4 w-4 text-red-400" />
               </button>
@@ -142,7 +142,7 @@ export function RulesEditor({
               {value !== undefined && (
                 <button
                   onClick={() => startEditing(pathStr, value)}
-                  className="p-1 hover:bg-surface-hover transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-1 cursor-pointer hover:bg-surface-hover transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <Edit2 className="h-3 w-3 text-on-surface-subtle" />
                 </button>
@@ -167,7 +167,7 @@ export function RulesEditor({
       <div className="bg-surface border border-surface-border overflow-hidden">
         <button
           onClick={() => toggleSection(id)}
-          className="w-full flex items-center justify-between p-4 hover:bg-surface transition-colors"
+          className="w-full flex items-center justify-between p-4 cursor-pointer hover:bg-surface-hover transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-foreground flex items-center justify-center">

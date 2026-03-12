@@ -231,7 +231,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </Link>
               <Link
                 href="/blog"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-hover text-foreground font-medium hover:bg-surface-hover transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface border border-surface-border text-foreground font-medium hover:bg-surface-hover transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
                 Все статьи
