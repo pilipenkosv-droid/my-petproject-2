@@ -6,7 +6,7 @@ import { SpinningText } from "@/components/ui/spinning-text";
 export function HeroSubtitle() {
   return (
     <div className="relative inline-block">
-      <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-6 flex flex-col items-center md:items-start justify-center gap-y-1 sm:gap-y-2">
+      <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 flex flex-col items-center md:items-start justify-center gap-y-1 sm:gap-y-2">
         <span className="text-foreground">Идеальное</span>
         <span className="text-foreground">оформление</span>
         <WordRotate
@@ -20,13 +20,13 @@ export function HeroSubtitle() {
             "ВКР",
           ]}
           duration={2500}
-          className="font-mono text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-foreground"
+          className="font-mono text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground"
         />
         <span className="text-foreground">по методичке</span>
       </h1>
 
       {/* Spinning "AI powered inside" badge — superscript position */}
-      <div className="absolute -top-20 left-0 sm:-top-24 sm:left-0 md:-top-28 md:left-0 lg:-top-32 lg:left-0 hidden sm:block">
+      <div className="absolute -top-16 left-0 sm:-top-20 sm:left-0 md:-top-24 md:left-0 lg:-top-28 lg:left-0 hidden sm:block">
         <SpinningText
           radius={4.2}
           duration={8}
