@@ -179,7 +179,7 @@ function PricingContent() {
                 <CardHeader>
                   <div className="flex items-center gap-3 mb-2">
                     <Icon className={`w-5 h-5 ${plan.accent ? "text-primary" : "text-on-surface-muted"}`} />
-                    <CardTitle className="text-foreground text-lg">{plan.name}</CardTitle>
+                    <CardTitle className={`text-foreground text-lg ${plan.accent ? "font-extrabold" : ""}`}>{plan.name}</CardTitle>
                   </div>
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
