@@ -302,7 +302,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center rounded-full p-1 cursor-pointer hover:bg-surface-hover transition-colors">
                   {isPro ? (
-                    <div className="p-[2px] rounded-full bg-foreground">
+                    <div className="p-[2px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-500">
                       <Avatar className="h-8 w-8 ring-[2px] ring-background">
                         {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
                         <AvatarFallback className="text-primary-foreground text-xs bg-primary">
@@ -462,7 +462,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1">
                       {isPro ? (
-                        <div className="p-[2px] rounded-full bg-foreground shrink-0">
+                        <div className="p-[2px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 shrink-0">
                           <Avatar className="h-9 w-9 ring-[2px] ring-background">
                             {avatarUrl && <AvatarImage src={avatarUrl} alt={user.email || ""} />}
                             <AvatarFallback className="text-primary-foreground text-xs bg-primary">

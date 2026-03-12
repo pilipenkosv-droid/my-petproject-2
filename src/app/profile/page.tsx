@@ -6,7 +6,7 @@ import { getUserAccess } from "@/lib/payment/access";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, CheckCircle, XCircle, Clock, ArrowRight, Crown, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles, MessageCircle } from "lucide-react";
+import { Download, CheckCircle, XCircle, Clock, GraduationCap, Zap, CreditCard, ChevronDown, FileCheck, FileText, Sparkles, MessageCircle } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
@@ -60,7 +60,7 @@ export default async function ProfilePage() {
             </h2>
             {(access.accessType === "subscription" || access.accessType === "admin") && (
               <span className="pro-badge flex items-center gap-1 px-2.5 py-1 text-xs font-semibold">
-                <Crown className="h-3.5 w-3.5" />
+                <GraduationCap className="h-3.5 w-3.5" />
                 PRO
               </span>
             )}
@@ -75,7 +75,7 @@ export default async function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-muted flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-foreground" />
+                    <GraduationCap className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Pro — безлимитный доступ</p>
@@ -90,7 +90,7 @@ export default async function ProfilePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-muted flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-foreground" />
+                    <GraduationCap className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <p className="text-foreground font-medium">Подписка Pro</p>
@@ -232,15 +232,9 @@ export default async function ProfilePage() {
           <CardContent>
             {jobs.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-on-surface-muted mb-4">
+                <p className="text-on-surface-muted">
                   У вас пока нет обработанных документов
                 </p>
-                <Link href="/create">
-                  <Button>
-                    Обработать документ
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
               </div>
             ) : (
               <div className="space-y-3">

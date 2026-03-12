@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { activateAccess } from "@/lib/payment/access";
+import { LAVA_CONFIG } from "@/lib/payment/config";
 import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
 import { updateJob } from "@/lib/storage/job-store";
 import { canGrantBotAccess, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
@@ -77,11 +78,21 @@ export async function POST(request: NextRequest) {
           .eq("id", payment.id);
 
         // Активируем доступ
+        const subId = payload.subscriptionId || payload.contractId || undefined;
         await activateAccess(
           payment.user_id,
           payment.offer_type,
-          payload.subscriptionId
+          subId
         );
+
+        // Если subscriptionId не был передан в activateAccess, но появился позже — допишем
+        if (payment.offer_type === "subscription" && subId) {
+          await supabase
+            .from("user_access")
+            .update({ lava_subscription_id: subId })
+            .eq("user_id", payment.user_id)
+            .is("lava_subscription_id", null);
+        }
 
         // Если есть jobId для разблокировки — разблокируем полную версию
         if (payment.unlock_job_id) {
@@ -151,15 +162,44 @@ export async function POST(request: NextRequest) {
       }
 
       case "subscription.recurring.payment.success": {
-        // Продление подписки — обновляем дату
+        // Продление подписки — обновляем дату и использования
         const subscriptionId = payload.subscriptionId;
         if (!subscriptionId) break;
 
-        const { data: access } = await supabase
+        // Ищем по lava_subscription_id
+        let { data: access } = await supabase
           .from("user_access")
           .select("*")
           .eq("lava_subscription_id", subscriptionId)
           .single();
+
+        // Fallback: ищем по contractId через payments
+        if (!access && payload.contractId) {
+          const { data: payment } = await supabase
+            .from("payments")
+            .select("user_id")
+            .eq("lava_invoice_id", payload.contractId)
+            .single();
+
+          if (payment) {
+            const { data: fallbackAccess } = await supabase
+              .from("user_access")
+              .select("*")
+              .eq("user_id", payment.user_id)
+              .eq("access_type", "subscription")
+              .single();
+
+            if (fallbackAccess) {
+              access = fallbackAccess;
+              // Сохраняем subscriptionId для будущих рекуррентных платежей
+              await supabase
+                .from("user_access")
+                .update({ lava_subscription_id: subscriptionId })
+                .eq("id", fallbackAccess.id);
+              console.log(`🔗 Linked subscription ${subscriptionId} to user ${payment.user_id}`);
+            }
+          }
+        }
 
         if (access) {
           const activeUntil = new Date();
@@ -169,11 +209,14 @@ export async function POST(request: NextRequest) {
             .from("user_access")
             .update({
               subscription_active_until: activeUntil.toISOString(),
+              remaining_uses: LAVA_CONFIG.offers.subscription.uses,
               updated_at: new Date().toISOString(),
             })
             .eq("id", access.id);
 
           console.log(`🔄 Subscription renewed for user ${access.user_id}`);
+        } else {
+          console.error(`user_access not found for subscription ${subscriptionId} — no fallback available`);
         }
         break;
       }
