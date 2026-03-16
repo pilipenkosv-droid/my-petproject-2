@@ -1,12 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, GraduationCap, Gift, HelpCircle, FileCheck } from "lucide-react";
+import { Check, Sparkles, Zap, GraduationCap, Gift, HelpCircle, FileCheck, Bot } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
 import { BorderBeam } from "@/components/ui/border-beam";
@@ -72,9 +72,18 @@ function PricingContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+  const proCardRef = useRef<HTMLDivElement>(null);
 
   // Если есть параметр unlock — пользователь пришёл разблокировать полную версию документа
   const unlockJobId = searchParams.get("unlock");
+  const refParam = searchParams.get("ref");
+  const fromBot = refParam === "bot";
+
+  useEffect(() => {
+    if (fromBot && proCardRef.current) {
+      proCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [fromBot]);
 
   const handlePurchase = async (offerType: "trial" | "one_time" | "subscription") => {
     if (offerType === "trial") {
@@ -140,6 +149,23 @@ function PricingContent() {
       />
 
       <main className="mx-auto max-w-4xl px-6 py-12">
+        {/* Баннер бота — когда пришли с /bot */}
+        {fromBot && (
+          <div className="mb-8 p-6 bg-muted border border-purple-500/30">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-600 flex items-center justify-center shrink-0">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-foreground font-semibold">AI-напарник — закрытый альфа-тест</p>
+                <p className="text-on-surface-muted text-sm">
+                  При оформлении Pro-подписки ты автоматически получишь доступ к боту и ссылку на него
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Баннер разблокировки полной версии */}
         {unlockJobId && (
           <div className="mb-8 p-6 bg-muted border border-border">
@@ -164,9 +190,10 @@ function PricingContent() {
             return (
               <Card
                 key={plan.id}
+                ref={plan.id === "subscription" ? proCardRef : undefined}
                 className={`relative flex flex-col transition-all ${
                   plan.accent
-                    ? "bg-muted border-border shadow-sm scale-105 z-10"
+                    ? `bg-muted shadow-sm scale-105 z-10 ${fromBot ? "border-purple-500 ring-2 ring-purple-500/30" : "border-border"}`
                     : "bg-surface border-surface-border opacity-[0.9]"
                 }`}
               >
