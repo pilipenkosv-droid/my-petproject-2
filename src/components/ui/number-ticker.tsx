@@ -57,10 +57,10 @@ export function NumberTicker({
     [springValue, decimalPlaces]
   )
 
-  const formattedStart = Intl.NumberFormat("ru-RU", {
+  const formattedValue = Intl.NumberFormat("ru-RU", {
     minimumFractionDigits: decimalPlaces,
     maximumFractionDigits: decimalPlaces,
-  }).format(startValue)
+  }).format(mounted ? startValue : value)
 
   return (
     <span
@@ -71,7 +71,7 @@ export function NumberTicker({
       )}
       {...props}
     >
-      {formattedStart}
+      {formattedValue}
     </span>
   )
 }
