@@ -141,7 +141,16 @@ export function WorkTypeLanding({
             </table>
           </div>
           <p className="text-muted-foreground text-sm mt-3">
-            * Параметры могут отличаться в зависимости от требований вашего вуза
+            * Параметры по{" "}
+            <a
+              href="https://docs.cntd.ru/document/1200157208"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              ГОСТ 7.32-2017
+            </a>
+            . Могут отличаться в зависимости от требований вашего вуза.
           </p>
         </section>
 
