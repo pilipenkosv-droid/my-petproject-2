@@ -31,6 +31,7 @@ export const blogPosts: BlogPost[] = [
       "Diplox бот",
     ],
     readingTime: "6 мин",
+    coverImage: "/blog/b1ab0e66-85b7-40e3-b29e-62f5dce96223.jpg",
     content: `
 ## Проблема, которую знает каждый студент
 
