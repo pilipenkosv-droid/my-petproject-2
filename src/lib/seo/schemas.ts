@@ -193,3 +193,46 @@ export function getHowToSchema(
     })),
   }
 }
+
+/**
+ * Schema для Organization (E-E-A-T: идентичность бренда)
+ */
+export function getOrganizationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo/d-icon-full.png`,
+    description:
+      'Сервис автоматического форматирования научных работ по ГОСТу с помощью ИИ. Поддерживает дипломы, курсовые, рефераты, диссертации.',
+    foundingDate: '2025',
+    sameAs: [
+      'https://t.me/diplox_online',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      email: 'support@diplox.online',
+      availableLanguage: ['Russian'],
+    },
+  }
+}
+
+/**
+ * Schema для Person (E-E-A-T: основатель/автор)
+ */
+export function getFounderSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Сергей Пилипенко',
+    jobTitle: 'Founder & Developer',
+    url: 'https://sergejpilipenko.com',
+    worksFor: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  }
+}

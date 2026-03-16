@@ -6,7 +6,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { YandexMetrika } from "@/components/analytics/YandexMetrika";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
-import { getSoftwareApplicationSchema, getWebSiteSchema } from "@/lib/seo/schemas";
+import { getSoftwareApplicationSchema, getWebSiteSchema, getOrganizationSchema } from "@/lib/seo/schemas";
 import { SITE_URL, SITE_NAME } from "@/lib/config/site";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
@@ -78,6 +78,7 @@ export default function RootLayout({
         />
         <JsonLd data={getWebSiteSchema()} />
         <JsonLd data={getSoftwareApplicationSchema()} />
+        <JsonLd data={getOrganizationSchema()} />
       </head>
       <body className="min-h-screen antialiased">
         <ThemeProvider>

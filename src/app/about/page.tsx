@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
-import { getBreadcrumbSchema, getHowToSchema } from "@/lib/seo/schemas";
+import { getBreadcrumbSchema, getHowToSchema, getFounderSchema } from "@/lib/seo/schemas";
 import { SITE_URL } from "@/lib/config/site";
 import {
   Sparkles,
@@ -114,6 +114,7 @@ export default function AboutPage() {
           }))
         )}
       />
+      <JsonLd data={getFounderSchema()} />
 
       <main className="mx-auto max-w-4xl px-6 py-16">
         {/* Hero секция */}
