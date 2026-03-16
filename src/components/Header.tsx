@@ -254,9 +254,9 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                             <NavigationMenuLink asChild>
                               <Link
                                 href={link.href}
-                                className="group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-surface-hover"
+                                className={`group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors ${link.href === "/bot" ? "bg-purple-500/10 hover:bg-purple-500/20" : "hover:bg-surface-hover"}`}
                               >
-                                <link.icon className="h-4 w-4 shrink-0 text-muted-foreground group-hover/item:text-foreground transition-colors" />
+                                <link.icon className={`h-4 w-4 shrink-0 transition-colors ${link.href === "/bot" ? "text-purple-400 group-hover/item:text-purple-300" : "text-muted-foreground group-hover/item:text-foreground"}`} />
                                 <div>
                                   <div className="font-medium text-foreground leading-tight">{link.label}</div>
                                   <p className="text-xs text-muted-foreground leading-tight">{link.description}</p>
