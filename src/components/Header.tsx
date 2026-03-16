@@ -53,6 +53,7 @@ import {
   Wand2,
   SpellCheck,
   BookMarked,
+  Bot,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -112,6 +113,12 @@ const toolGroups: NavGroup[] = [
       { href: "/rewrite", label: "Уникальность", description: "Рерайт для антиплагиата", icon: Wand2 },
       { href: "/grammar", label: "Грамматика", description: "Орфография и пунктуация", icon: SpellCheck },
       { href: "/sources", label: "Литература", description: "Поиск научных источников", icon: BookMarked },
+    ],
+  },
+  {
+    heading: "Новинка",
+    links: [
+      { href: "/bot", label: "AI-напарник", description: "Telegram-бот для студентов", icon: Bot },
     ],
   },
 ];
