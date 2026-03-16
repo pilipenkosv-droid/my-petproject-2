@@ -188,10 +188,10 @@ export default function PrivacyPage() {
             <p>
               По вопросам обработки персональных данных обращайтесь:{" "}
               <a
-                href="mailto:support@diplox.online"
+                href="mailto:hello@diplox.online"
                 className="text-primary hover:text-primary/80"
               >
-                support@diplox.online
+                hello@diplox.online
               </a>
             </p>
           </section>

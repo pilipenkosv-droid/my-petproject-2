@@ -25,6 +25,7 @@ const footerLinks = {
     title: "Поддержка",
     links: [
       { label: "FAQ", href: "/faq" },
+      { label: "hello@diplox.online", href: "mailto:hello@diplox.online" },
     ],
   },
 };

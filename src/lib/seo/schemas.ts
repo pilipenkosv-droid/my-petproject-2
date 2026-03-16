@@ -302,7 +302,7 @@ export function getOrganizationSchema() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'support@diplox.online',
+      email: 'hello@diplox.online',
       availableLanguage: ['Russian'],
     },
   }
