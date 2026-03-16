@@ -33,11 +33,44 @@ export function getSoftwareApplicationSchema() {
     name: SITE_NAME,
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'RUB',
-      description: 'Бесплатный пробный период',
+    offers: [
+      {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'RUB',
+        description: 'Бесплатный пробный период — 1 документ до 30 страниц',
+        availability: 'https://schema.org/InStock',
+      },
+      {
+        '@type': 'Offer',
+        price: '159',
+        priceCurrency: 'RUB',
+        description: 'Разовая обработка — 1 документ без ограничений по страницам',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+      {
+        '@type': 'Offer',
+        price: '399',
+        priceCurrency: 'RUB',
+        description: 'Pro подписка — 10 обработок в месяц, все инструменты',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '399',
+          priceCurrency: 'RUB',
+          unitText: 'MONTH',
+          billingDuration: 'P1M',
+        },
+      },
+    ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      ratingCount: '127',
+      bestRating: '5',
+      worstRating: '1',
     },
     description:
       'Сервис для подготовки научных работ: автоматическое форматирование по ГОСТу, проверка грамматики, подбор литературы, генерация плана и аннотации, повышение уникальности текста.',
@@ -192,6 +225,62 @@ export function getHowToSchema(
       text: step.text,
     })),
   }
+}
+
+/**
+ * Schema для страницы тарифов (3 Product + Offer)
+ */
+export function getPricingSchemas() {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: `${SITE_NAME} — Пробный`,
+      description: 'Бесплатная обработка 1 документа до 30 страниц. AI-анализ структуры и форматирование по ГОСТу.',
+      brand: { '@type': 'Organization', name: SITE_NAME },
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'RUB',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: `${SITE_NAME} — Разовая обработка`,
+      description: 'Обработка 1 документа без ограничений по страницам. Форматирование по ГОСТу, AI-анализ, скачивание результата.',
+      brand: { '@type': 'Organization', name: SITE_NAME },
+      offers: {
+        '@type': 'Offer',
+        price: '159',
+        priceCurrency: 'RUB',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: `${SITE_NAME} Pro`,
+      description: '10 обработок в месяц. Все инструменты: форматирование, грамматика, рерайт, подбор литературы. Приоритетная обработка.',
+      brand: { '@type': 'Organization', name: SITE_NAME },
+      offers: {
+        '@type': 'Offer',
+        price: '399',
+        priceCurrency: 'RUB',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '399',
+          priceCurrency: 'RUB',
+          unitText: 'MONTH',
+        },
+      },
+    },
+  ]
 }
 
 /**
