@@ -19,6 +19,7 @@ interface UseJobStatusOptions {
 /** Расширенный тип для ответа API */
 interface JobApiResponse extends Partial<JobState> {
   violationsCount?: number;
+  fixesApplied?: number;
 }
 
 interface JobStatusResult {

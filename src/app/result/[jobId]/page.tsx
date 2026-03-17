@@ -168,7 +168,7 @@ export default function ResultPage({ params }: ResultPageProps) {
             <StatisticsPanel
               statistics={job.statistics}
               violationsCount={job.violationsCount ?? 0}
-              fixesApplied={job.violationsCount ?? 0}
+              fixesApplied={job.fixesApplied ?? 0}
             />
           )}
 
@@ -229,12 +229,35 @@ export default function ResultPage({ params }: ResultPageProps) {
             <CardHeader>
               <CardTitle>Скачать результаты</CardTitle>
               <CardDescription>
-                Выберите нужную версию документа для скачивания
+                Для сдачи скачайте <strong>Исправленный</strong> — в нём уже применено форматирование
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Marked original */}
+                {/* Formatted — primary action, shown first on mobile */}
+                <button
+                  onClick={() => handleDownload("formatted")}
+                  className="relative flex flex-col items-center gap-3 border border-emerald-500/40 bg-emerald-500/5 p-6 transition-all duration-200 hover:bg-emerald-500/10 hover:border-emerald-500/60 text-left ring-1 ring-emerald-500/20 order-first sm:order-last"
+                >
+                  <span className="absolute top-3 right-3 text-[10px] font-semibold bg-emerald-500/15 text-emerald-500 px-2 py-0.5 rounded-full">
+                    Скачать для сдачи
+                  </span>
+                  <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm">
+                    <FileCheck className="w-6 h-6 text-background" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-foreground">Исправленный</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Форматирование уже применено — шрифты, отступы, интервалы
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-emerald-600">
+                    <Download className="h-3 w-3" />
+                    <span>.docx</span>
+                  </div>
+                </button>
+
+                {/* Marked original — secondary */}
                 <button
                   onClick={() => handleDownload("original")}
                   className="flex flex-col items-center gap-3 border border-surface-border bg-surface p-6 transition-all duration-200 hover:bg-surface-hover hover:border-surface-border text-left"
@@ -245,30 +268,10 @@ export default function ResultPage({ params }: ResultPageProps) {
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground">С пометками</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Исходный документ с выделенными нарушениями и комментариями
+                      Для просмотра: исходный файл с выделенными нарушениями
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-on-surface-subtle">
-                    <Download className="h-3 w-3" />
-                    <span>.docx</span>
-                  </div>
-                </button>
-
-                {/* Formatted */}
-                <button
-                  onClick={() => handleDownload("formatted")}
-                  className="flex flex-col items-center gap-3 border border-brand-teal/30 bg-brand-teal/5 p-6 transition-all duration-200 hover:bg-brand-teal/10 hover:border-brand-teal/40 text-left ring-1 ring-brand-teal/20"
-                >
-                  <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm">
-                    <FileCheck className="w-6 h-6 text-background" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">Исправленный</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Автоматически отформатированный документ, готовый к сдаче
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-brand-teal/70">
                     <Download className="h-3 w-3" />
                     <span>.docx</span>
                   </div>

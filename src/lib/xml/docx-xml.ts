@@ -361,10 +361,22 @@ export function ensureRPr(runNode: OrderedXmlNode): OrderedXmlNode {
 }
 
 /**
- * Получает все w:r (runs) из параграфа
+ * Получает все w:r (runs) из параграфа.
+ * Включает runs вложенные в w:hyperlink, w:ins, w:del — иначе их форматирование не обновляется.
  */
 export function getRuns(paragraphNode: OrderedXmlNode): OrderedXmlNode[] {
-  return findChildren(paragraphNode, "w:r");
+  const directRuns = findChildren(paragraphNode, "w:r");
+
+  // Контейнеры, которые могут содержать дополнительные w:r
+  const wrapperTags = ["w:hyperlink", "w:ins", "w:del"];
+  const wrappedRuns: OrderedXmlNode[] = [];
+  for (const tag of wrapperTags) {
+    for (const wrapper of findChildren(paragraphNode, tag)) {
+      wrappedRuns.push(...findChildren(wrapper, "w:r"));
+    }
+  }
+
+  return [...directRuns, ...wrappedRuns];
 }
 
 /**
