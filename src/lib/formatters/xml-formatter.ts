@@ -95,13 +95,8 @@ export class XmlDocumentFormatter {
     // Не трогаем пустые параграфы и неизвестные типы
     if (blockType === "empty" || blockType === "unknown") return;
 
-    // Не трогаем таблицы, формулы, рисунки — они могут содержать сложную разметку
-    if (
-      blockType === "table" ||
-      blockType === "formula" ||
-      blockType === "figure"
-    )
-      return;
+    // Не трогаем таблицы и рисунки — они могут содержать сложную разметку
+    if (blockType === "table" || blockType === "figure") return;
 
     // Получаем целевые параметры форматирования
     const target = this.getTargetFormatting(blockType, rules);
@@ -426,6 +421,21 @@ export class XmlDocumentFormatter {
           alignment: rules.text.alignment,
           firstLineIndent: rules.text.paragraphIndent,
           lineSpacing: rules.text.lineSpacing,
+        };
+
+      case "formula":
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: rules.text.fontSize,
+          alignment: rules.specialElements?.formulas?.alignment || "center",
+          firstLineIndent: 0,
+          lineSpacing: rules.text.lineSpacing,
+          spaceBefore: rules.specialElements?.formulas?.spacing?.before
+            ? rules.specialElements.formulas.spacing.before / 2.835
+            : undefined,
+          spaceAfter: rules.specialElements?.formulas?.spacing?.after
+            ? rules.specialElements.formulas.spacing.after / 2.835
+            : undefined,
         };
 
       case "page_number":

@@ -894,6 +894,90 @@ function checkSpecialElementFormatting(
 }
 
 /**
+ * Проверить форматирование формул
+ *
+ * Проверяет: выравнивание (центр), отступы до/после,
+ * отсутствие абзацного отступа, шрифт и размер шрифта.
+ */
+function checkFormulaFormatting(
+  paragraphs: DocxParagraph[],
+  rules: FormattingRules
+): FormattingViolation[] {
+  const violations: FormattingViolation[] = [];
+
+  const formulaRules = rules.specialElements?.formulas;
+  if (!formulaRules) return violations;
+
+  paragraphs.forEach((paragraph) => {
+    if (paragraph.blockType !== "formula") return;
+    if (!paragraph.text.trim()) return;
+
+    const props = paragraph.properties;
+    const textSnippet = paragraph.text.slice(0, 50) + (paragraph.text.length > 50 ? "..." : "");
+
+    // Проверка выравнивания формулы (должно быть center)
+    const expectedAlignment = formulaRules.alignment || "center";
+    if (props.alignment) {
+      const actualAlignment = ALIGNMENT_MAP[props.alignment] || props.alignment;
+      if (actualAlignment !== expectedAlignment) {
+        violations.push({
+          ruleId: `formula-align-${paragraph.index}`,
+          rulePath: "specialElements.formulas.alignment",
+          message: "Неверное выравнивание формулы",
+          expected: expectedAlignment,
+          actual: actualAlignment,
+          location: { paragraphIndex: paragraph.index, text: textSnippet },
+          autoFixable: true,
+        });
+      }
+    }
+
+    // Проверка абзацного отступа (формулы не должны иметь абзацный отступ)
+    if (props.indent !== undefined && props.indent > 2) {
+      violations.push({
+        ruleId: `formula-indent-${paragraph.index}`,
+        rulePath: "specialElements.formulas.alignment",
+        message: "Формула не должна иметь абзацный отступ",
+        expected: "0 мм",
+        actual: `${Math.round(props.indent)} мм`,
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+
+    // Проверка шрифта (должен совпадать с основным текстом)
+    const expectedFont = rules.text.fontFamily;
+    if (props.fontFamily && props.fontFamily !== expectedFont) {
+      violations.push({
+        ruleId: `formula-font-${paragraph.index}`,
+        rulePath: "specialElements.formulas.editor",
+        message: "Неверный шрифт формулы",
+        expected: expectedFont,
+        actual: props.fontFamily,
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+
+    // Проверка размера шрифта
+    const expectedSize = rules.text.fontSize;
+    if (props.fontSize && Math.abs(props.fontSize - expectedSize) > 0.5) {
+      violations.push({
+        ruleId: `formula-size-${paragraph.index}`,
+        rulePath: "specialElements.formulas.editor",
+        message: "Неверный размер шрифта формулы",
+        expected: `${expectedSize} pt`,
+        actual: `${props.fontSize} pt`,
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+  });
+
+  return violations;
+}
+
+/**
  * Проверить форматирование внутри таблиц
  */
 function checkTableFormatting(
@@ -1246,6 +1330,7 @@ export async function analyzeDocument(
     ...checkTextFormatting(paragraphs, rules),
     ...checkHeadingFormatting(paragraphs, rules),
     ...checkSpecialElementFormatting(paragraphs, rules),
+    ...checkFormulaFormatting(paragraphs, rules),
     ...checkTableFormatting(docxStructure.tables, rules),
     ...checkMissingCaptions(paragraphs, docxStructure.tables, rules),
     ...checkNonBreakingSpaces(paragraphs, rules),
@@ -1270,6 +1355,8 @@ export async function analyzeDocument(
     "headings.level3",
     "specialElements.figures",
     "specialElements.figures.captionRequired",
+    "specialElements.formulas",
+    "specialElements.formulas.alignment",
     "specialElements.tables",
     "specialElements.tables.captionRequired",
     "additional.nonBreakingSpaces",
