@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BorderBeam } from "@/components/ui/border-beam";
@@ -10,12 +9,20 @@ import { BotFeatures } from "@/components/bot/BotFeatures";
 import { BotHowItWorks } from "@/components/bot/BotHowItWorks";
 import { AlphaSpotsCounter } from "@/components/bot/AlphaSpotsCounter";
 import { Zap } from "lucide-react";
+import { generatePageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "AI-напарник для студентов в Telegram — Diplox",
+export const metadata = generatePageMetadata({
+  title: "AI-напарник для студентов в Telegram",
   description:
     "Telegram-бот для студентов: хранилище заметок, AI-ответы из твоих материалов, план работы, грамматика, рерайт — всё в чате. Закрытый альфа-тест, 10 мест.",
-};
+  path: "/bot",
+  keywords: [
+    "telegram бот для студентов",
+    "AI помощник студентам",
+    "бот для учёбы",
+    "нейросеть для студентов telegram",
+  ],
+});
 
 export default function BotPage() {
   return (

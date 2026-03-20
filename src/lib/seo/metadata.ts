@@ -26,7 +26,8 @@ export function generatePageMetadata({
   ogImage,
 }: PageMetadataOptions): Metadata {
   const url = `${SITE_URL}${path}`
-  const fullTitle = path === '' ? title : `${title} | ${SITE_NAME}`
+  // Не добавляем SITE_NAME — шаблон "%s | Diplox" из layout.tsx добавит его автоматически
+  const fullTitle = title
 
   const defaultKeywords = [
     'форматирование по ГОСТу',
