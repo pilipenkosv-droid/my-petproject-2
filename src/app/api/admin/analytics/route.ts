@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { createSupabaseServer } from "@/lib/supabase/server";
 
 const ADMIN_EMAILS = ["pilipenkosv@gmail.com", "mary_shu@mail.ru"];
 
 export async function GET(request: NextRequest) {
-  // Проверка админского доступа (middleware обновляет сессию для /api/admin/)
-  const supabase = await createSupabaseServer();
+  // Создаём Supabase клиент напрямую из request cookies (не через next/headers)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll() {
+          // read-only в API route — ничего не делаем
+        },
+      },
+    }
+  );
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
-    // Диагностика: показать, есть ли auth-cookies
     const authCookies = request.cookies.getAll().filter((c) => c.name.startsWith("sb-")).map((c) => c.name);
     return NextResponse.json({
       error: "Forbidden",
