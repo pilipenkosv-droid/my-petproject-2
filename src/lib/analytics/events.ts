@@ -23,7 +23,9 @@ export type FunnelEvent =
   | "grammar_check"         // User checked text grammar
   | "sources_search"        // User searched for academic sources
   | "gost_mode_selected"    // User switched to standard GOST mode
-  | "work_type_selected";   // User selected work type
+  | "work_type_selected"    // User selected work type
+  | "subscription_pro_view"    // Pro card scrolled into viewport on pricing page
+  | "subscription_upsell_view"; // Pro upsell banner viewed on result page
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.

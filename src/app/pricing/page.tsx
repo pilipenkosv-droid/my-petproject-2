@@ -6,11 +6,19 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, GraduationCap, Gift, HelpCircle, FileCheck, Bot } from "lucide-react";
+import { Check, Sparkles, Zap, GraduationCap, Gift, FileCheck, Bot } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { ProBotTeaser } from "@/components/ProBotTeaser";
+import { PricingFaq } from "@/components/PricingFaq";
 import { trackEvent } from "@/lib/analytics/events";
+
+interface PlanFeature {
+  text: string;
+  highlight?: boolean;
+  icon?: typeof Bot;
+}
 
 const plans = [
   {
@@ -21,13 +29,13 @@ const plans = [
     icon: Gift,
     description: "Попробуйте бесплатно",
     features: [
-      "1 бесплатная обработка",
-      "Первые 30 страниц документа",
-      "AI-анализ структуры",
-      "Форматирование по ГОСТу",
-      "Базовые инструменты",
-      "Без регистрации",
-    ],
+      { text: "1 бесплатная обработка" },
+      { text: "Первые 30 страниц документа" },
+      { text: "AI-анализ структуры" },
+      { text: "Форматирование по ГОСТу" },
+      { text: "Базовые инструменты" },
+      { text: "Без регистрации" },
+    ] as PlanFeature[],
     accent: false,
   },
   {
@@ -38,13 +46,13 @@ const plans = [
     icon: Zap,
     description: "Обработка одного документа",
     features: [
-      "1 обработка документа",
-      "Без ограничения по страницам",
-      "AI-анализ структуры",
-      "Форматирование по ГОСТу",
-      "Базовые инструменты",
-      "Скачивание результата",
-    ],
+      { text: "1 обработка документа" },
+      { text: "Без ограничения по страницам" },
+      { text: "AI-анализ структуры" },
+      { text: "Форматирование по ГОСТу" },
+      { text: "Базовые инструменты" },
+      { text: "Скачивание результата" },
+    ] as PlanFeature[],
     accent: false,
   },
   {
@@ -53,16 +61,15 @@ const plans = [
     price: "399 ₽",
     period: "/ месяц",
     icon: GraduationCap,
-    description: "10 обработок в месяц",
+    description: "Всё для учёбы в одном тарифе",
     features: [
-      "10 обработок в месяц",
-      "Без ограничения по страницам",
-      "Все инструменты без ограничений",
-      "Форматирование по ГОСТу",
-      "Грамматика, рерайт, подбор литературы",
-      "Скачивание результатов",
-      "Приоритетная обработка",
-    ],
+      { text: "AI-напарник в Telegram — помощник по учёбе", highlight: true, icon: Bot },
+      { text: "10 обработок — 39 ₽ за документ", highlight: true },
+      { text: "Все инструменты без ограничений" },
+      { text: "Без ограничения по страницам" },
+      { text: "Грамматика, рерайт, подбор литературы" },
+      { text: "Приоритетная обработка" },
+    ] as PlanFeature[],
     accent: true,
   },
 ];
@@ -79,11 +86,31 @@ function PricingContent() {
   const refParam = searchParams.get("ref");
   const fromBot = refParam === "bot";
 
+  const proTracked = useRef(false);
+
   useEffect(() => {
     if (fromBot && proCardRef.current) {
       proCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [fromBot]);
+
+  useEffect(() => {
+    const el = proCardRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !proTracked.current) {
+          proTracked.current = true;
+          trackEvent("subscription_pro_view", { ref: refParam || "direct" });
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [refParam]);
 
   const handlePurchase = async (offerType: "trial" | "one_time" | "subscription") => {
     if (offerType === "trial") {
@@ -145,24 +172,14 @@ function PricingContent() {
           </div>
         }
         title="Выберите подходящий тариф"
-        subtitle="Форматирование, проверка грамматики, подбор литературы и другие AI-инструменты для вашей работы"
+        subtitle="Разовая обработка — 159 ₽. С подпиской Pro — 39 ₽ за документ и AI-помощник в Telegram в подарок"
       />
 
       <main className="mx-auto max-w-4xl px-6 py-12">
         {/* Баннер бота — когда пришли с /bot */}
         {fromBot && (
-          <div className="mb-8 p-6 bg-muted border border-purple-500/30">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-600 flex items-center justify-center shrink-0">
-                <Bot className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-foreground font-semibold">AI-напарник — закрытый альфа-тест</p>
-                <p className="text-on-surface-muted text-sm">
-                  При оформлении Pro-подписки ты автоматически получишь доступ к боту и ссылку на него
-                </p>
-              </div>
-            </div>
+          <div className="mb-8 p-4 bg-purple-500/10 border border-purple-500/30 text-sm text-on-surface-muted">
+            При оформлении Pro-подписки ты автоматически получишь доступ к AI-напарнику и ссылку на бота.
           </div>
         )}
 
@@ -199,7 +216,7 @@ function PricingContent() {
               >
                 {plan.accent && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-foreground text-background text-xs font-semibold z-10">
-                    Популярное
+                    Выгоднее в 4 раза
                   </span>
                 )}
 
@@ -218,14 +235,32 @@ function PricingContent() {
                     <span className="text-on-surface-subtle ml-1">{plan.period}</span>
                   </div>
 
+                  {/* Экономия — только для Pro */}
+                  {plan.accent && (
+                    <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+                      <Sparkles className="w-3 h-3 shrink-0" />
+                      39 ₽/документ вместо 159 ₽ — экономия 75%
+                    </div>
+                  )}
+
                   {/* Фичи */}
                   <ul className="space-y-3 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3 text-sm text-on-surface">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
+                    {plan.features.map((feature) => {
+                      const FeatureIcon = feature.icon || Check;
+                      return (
+                        <li
+                          key={feature.text}
+                          className={`flex items-center gap-3 text-sm ${
+                            feature.highlight ? "text-foreground font-medium" : "text-on-surface"
+                          }`}
+                        >
+                          <FeatureIcon className={`w-4 h-4 shrink-0 ${
+                            feature.highlight ? "text-purple-400" : "text-emerald-400"
+                          }`} />
+                          {feature.text}
+                        </li>
+                      );
+                    })}
                   </ul>
 
                   {/* Кнопка */}
@@ -276,45 +311,12 @@ function PricingContent() {
           </p>
         </div>
 
-        {/* FAQ секция */}
-        <div className="mt-16 pt-12 border-t border-surface-border">
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <HelpCircle className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Частые вопросы об оплате</h2>
-          </div>
-
-          <div className="grid gap-6 max-w-2xl mx-auto">
-            <div className="bg-surface p-6 border border-surface-border">
-              <h3 className="font-medium text-foreground mb-2">Какие способы оплаты доступны?</h3>
-              <p className="text-on-surface-muted text-sm">
-                Принимаем банковские карты (Visa, MasterCard, МИР), а также оплату через СБП и электронные кошельки.
-              </p>
-            </div>
-
-            <div className="bg-surface p-6 border border-surface-border">
-              <h3 className="font-medium text-foreground mb-2">Как работает пробный период?</h3>
-              <p className="text-on-surface-muted text-sm">
-                Первый документ обрабатывается бесплатно без привязки карты. Вы сможете оценить качество форматирования перед покупкой.
-              </p>
-            </div>
-
-            <div className="bg-surface p-6 border border-surface-border">
-              <h3 className="font-medium text-foreground mb-2">Можно ли отменить подписку?</h3>
-              <p className="text-on-surface-muted text-sm">
-                Да, подписку можно отменить в любой момент. Доступ сохранится до конца оплаченного периода.
-              </p>
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <Link
-              href="/faq"
-              className="text-primary hover:text-primary/80 text-sm transition-colors"
-            >
-              Все вопросы и ответы →
-            </Link>
-          </div>
+        {/* AI-напарник — всегда видимый блок */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <ProBotTeaser />
         </div>
+
+        <PricingFaq />
       </main>
     </div>
   );
