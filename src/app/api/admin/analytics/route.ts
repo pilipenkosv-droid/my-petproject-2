@@ -10,7 +10,19 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Диагностика: показать, есть ли auth-cookies
+    const authCookies = request.cookies.getAll().filter((c) => c.name.startsWith("sb-")).map((c) => c.name);
+    return NextResponse.json({
+      error: "Forbidden",
+      debug: {
+        userEmail: user?.email ?? null,
+        hasAuthCookies: authCookies.length > 0,
+        cookieNames: authCookies,
+        hint: authCookies.length === 0
+          ? "Вы не залогинены на diplox.online. Сначала залогиньтесь на /login, потом откройте этот URL."
+          : "Cookies есть, но сессия не распознана. Попробуйте перелогиниться.",
+      },
+    }, { status: 403 });
   }
 
   const admin = getSupabaseAdmin();
