@@ -1,40 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 const ADMIN_EMAILS = ["pilipenkosv@gmail.com", "mary_shu@mail.ru"];
 
-export async function GET(request: NextRequest) {
-  // Создаём Supabase клиент напрямую из request cookies (не через next/headers)
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll() {
-          // read-only в API route — ничего не делаем
-        },
-      },
-    }
-  );
-  const { data: { user } } = await supabase.auth.getUser();
+/**
+ * Проверяет админский доступ через Bearer token (Authorization header).
+ * Клиентская страница /admin передаёт access_token из Supabase browser SDK.
+ * Через прокси cookies не доходят, поэтому используем token-based auth.
+ */
+async function getAdminUser(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
-  if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
-    const authCookies = request.cookies.getAll().filter((c) => c.name.startsWith("sb-")).map((c) => c.name);
-    return NextResponse.json({
-      error: "Forbidden",
-      debug: {
-        userEmail: user?.email ?? null,
-        hasAuthCookies: authCookies.length > 0,
-        cookieNames: authCookies,
-        hint: authCookies.length === 0
-          ? "Вы не залогинены на diplox.online. Сначала залогиньтесь на /login, потом откройте этот URL."
-          : "Cookies есть, но сессия не распознана. Попробуйте перелогиниться.",
-      },
-    }, { status: 403 });
+  const token = authHeader.slice(7);
+  const admin = getSupabaseAdmin();
+  const { data: { user } } = await admin.auth.getUser(token);
+
+  if (!user?.email || !ADMIN_EMAILS.includes(user.email)) return null;
+  return user;
+}
+
+export async function GET(request: NextRequest) {
+  const user = await getAdminUser(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Forbidden. Используйте /admin для доступа к аналитике." },
+      { status: 403 }
+    );
   }
 
   const admin = getSupabaseAdmin();
