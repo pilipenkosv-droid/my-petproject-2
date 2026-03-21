@@ -6,7 +6,13 @@ import { Header } from "@/components/Header";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { BotHero } from "@/components/bot/BotHero";
 import { BotFeatures } from "@/components/bot/BotFeatures";
+import { BotUseCases } from "@/components/bot/BotUseCases";
+import { BotChatDemo } from "@/components/bot/BotChatDemo";
+import { BotBeforeAfter } from "@/components/bot/BotBeforeAfter";
+import { BotTestimonials } from "@/components/bot/BotTestimonials";
+import { BotValueProposition } from "@/components/bot/BotValueProposition";
 import { BotHowItWorks } from "@/components/bot/BotHowItWorks";
+import { BotFaq } from "@/components/bot/BotFaq";
 import { AlphaSpotsCounter } from "@/components/bot/AlphaSpotsCounter";
 import { Zap } from "lucide-react";
 import { generatePageMetadata } from "@/lib/seo/metadata";
@@ -32,7 +38,13 @@ export default function BotPage() {
 
       <BotHero />
       <BotFeatures />
+      <BotUseCases />
+      <BotChatDemo />
+      <BotBeforeAfter />
+      <BotTestimonials />
+      <BotValueProposition />
       <BotHowItWorks />
+      <BotFaq />
 
       {/* Final CTA */}
       <section className="relative py-24 px-6">
