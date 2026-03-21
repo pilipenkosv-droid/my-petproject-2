@@ -4,21 +4,12 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 
 const ADMIN_EMAILS = ["pilipenkosv@gmail.com", "mary_shu@mail.ru"];
 
-// Секрет для доступа без auth-сессии (middleware не обновляет сессию для /api/)
-const ANALYTICS_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-12);
-
 export async function GET(request: NextRequest) {
-  // Проверка доступа: auth-сессия (если middleware пропустил) или ?secret=...
-  const secret = request.nextUrl.searchParams.get("secret");
-  let authorized = secret === ANALYTICS_SECRET;
+  // Проверка админского доступа (middleware обновляет сессию для /api/admin/)
+  const supabase = await createSupabaseServer();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!authorized) {
-    const supabase = await createSupabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
-    authorized = !!user?.email && ADMIN_EMAILS.includes(user.email);
-  }
-
-  if (!authorized) {
+  if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
