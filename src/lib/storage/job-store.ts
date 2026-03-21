@@ -59,6 +59,11 @@ export interface JobState {
   // Текст методички (для чата с методичкой)
   guidelinesText?: string;
 
+  // Аналитика: привязка анонимных сессий
+  sessionId?: string;
+  yandexClientId?: string;
+  referrer?: string;
+
   // Ошибка (если status === "failed")
   error?: string;
 
@@ -90,6 +95,9 @@ function rowToJob(row: Record<string, unknown>): JobState {
     workType: row.work_type as string | undefined,
     requirementsMode: row.requirements_mode as string | undefined,
     guidelinesText: row.guidelines_text as string | undefined,
+    sessionId: row.session_id as string | undefined,
+    yandexClientId: row.yandex_client_id as string | undefined,
+    referrer: row.referrer as string | undefined,
     error: row.error as string | undefined,
     createdAt: new Date(row.created_at as string),
     updatedAt: new Date(row.updated_at as string),
@@ -128,6 +136,9 @@ function jobToRow(
   if (updates.workType !== undefined) row.work_type = updates.workType;
   if (updates.requirementsMode !== undefined) row.requirements_mode = updates.requirementsMode;
   if (updates.guidelinesText !== undefined) row.guidelines_text = updates.guidelinesText;
+  if (updates.sessionId !== undefined) row.session_id = updates.sessionId;
+  if (updates.yandexClientId !== undefined) row.yandex_client_id = updates.yandexClientId;
+  if (updates.referrer !== undefined) row.referrer = updates.referrer;
 
   return row;
 }
@@ -135,7 +146,15 @@ function jobToRow(
 /**
  * Создать новую задачу
  */
-export async function createJob(id: string, userId?: string): Promise<JobState> {
+export async function createJob(
+  id: string,
+  opts?: {
+    userId?: string;
+    sessionId?: string;
+    yandexClientId?: string;
+    referrer?: string;
+  }
+): Promise<JobState> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase
@@ -145,7 +164,10 @@ export async function createJob(id: string, userId?: string): Promise<JobState> 
       status: "pending",
       progress: 0,
       status_message: "Задача создана",
-      user_id: userId || null,
+      user_id: opts?.userId || null,
+      session_id: opts?.sessionId || null,
+      yandex_client_id: opts?.yandexClientId || null,
+      referrer: opts?.referrer || null,
     })
     .select()
     .single();
@@ -280,7 +302,7 @@ export async function deleteJob(id: string): Promise<boolean> {
  * Очистить старые задачи
  */
 export async function cleanupOldJobs(
-  maxAgeMs: number = 3600000
+  maxAgeMs: number
 ): Promise<number> {
   const supabase = getSupabaseAdmin();
   const cutoff = new Date(Date.now() - maxAgeMs).toISOString();

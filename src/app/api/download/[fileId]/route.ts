@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResultFile } from "@/lib/storage/file-storage";
+import { getJob } from "@/lib/storage/job-store";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+
+async function logDownload(jobId: string, fileType: string, ymUid: string | null) {
+  try {
+    const job = await getJob(jobId);
+    const supabase = getSupabaseAdmin();
+    await supabase.from("download_events").insert({
+      job_id: jobId,
+      user_id: job?.userId ?? null,
+      file_type: fileType,
+      yandex_client_id: ymUid,
+    });
+  } catch (err) {
+    console.error("[download] Log error:", err);
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -35,8 +52,12 @@ export async function GET(
     );
   }
 
-  const filename = type === "original" 
-    ? "document_with_marks.docx" 
+  // Серверный лог скачивания (fire-and-forget)
+  const ymUid = request.cookies.get("_ym_uid")?.value ?? null;
+  logDownload(jobId, type, ymUid);
+
+  const filename = type === "original"
+    ? "document_with_marks.docx"
     : "document_formatted.docx";
 
   return new NextResponse(new Uint8Array(fileBuffer), {

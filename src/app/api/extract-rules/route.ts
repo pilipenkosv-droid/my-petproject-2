@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
   const jobId = nanoid();
 
   try {
-    await createJob(jobId, userId);
+    const ymUid = request.cookies.get("_ym_uid")?.value ?? undefined;
+    const referer = request.headers.get("referer") ?? undefined;
+    await createJob(jobId, { userId, yandexClientId: ymUid, referrer: referer });
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     const formData = await request.formData();
