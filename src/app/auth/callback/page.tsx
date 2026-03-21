@@ -8,13 +8,14 @@
 
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const processed = useRef(false);
+  const [status, setStatus] = useState("Авторизация...");
 
   useEffect(() => {
     if (processed.current) return;
@@ -34,7 +35,8 @@ export default function AuthCallbackPage() {
     supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
         console.error("[auth/callback] Exchange error:", error.message);
-        router.replace("/login?error=auth_failed");
+        setStatus(`Ошибка: ${error.message}`);
+        setTimeout(() => router.replace("/login?error=auth_failed"), 3000);
       } else {
         router.replace(next);
       }
@@ -43,7 +45,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Авторизация...</p>
+      <p className="text-muted-foreground">{status}</p>
     </div>
   );
 }
