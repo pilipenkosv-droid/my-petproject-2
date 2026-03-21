@@ -28,6 +28,7 @@ export const blogPosts: BlogPost[] = [
       "помощник для студентов",
       "AI напарник diplox",
     ],
+    coverImage: "/blog/zachem-studentu-ai-bot-v-telegram-399-rubley.png",
     readingTime: "8 мин",
     content: `
 ## Сначала честный вопрос
