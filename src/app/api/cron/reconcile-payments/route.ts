@@ -84,10 +84,13 @@ export async function GET(req: NextRequest) {
 
         summary.expired++;
       }
-    } catch {
+    } catch (err) {
+      console.error(`[reconcile] Error processing payment ${payment.id}:`, err);
       summary.errors++;
     }
   }
+
+  console.log(`[reconcile] Done: ${JSON.stringify(summary)}`);
 
   return NextResponse.json({
     ok: true,
