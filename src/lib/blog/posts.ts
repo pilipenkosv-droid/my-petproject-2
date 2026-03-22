@@ -17,7 +17,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "oformlenie-vkr-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/oformlenie-vkr-po-gostu.png",
     title: "Оформление ВКР по ГОСТу: полное руководство 2026",
     description:
       "Как оформить выпускную квалификационную работу (ВКР) по ГОСТ 7.32-2017. Структура, требования, типичные ошибки и пошаговый чек-лист.",
