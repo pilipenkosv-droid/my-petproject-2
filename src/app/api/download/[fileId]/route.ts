@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResultFile } from "@/lib/storage/file-storage";
 import { getJob } from "@/lib/storage/job-store";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 
 async function logDownload(jobId: string, fileType: string, ymUid: string | null) {
   try {
@@ -15,6 +15,43 @@ async function logDownload(jobId: string, fileType: string, ymUid: string | null
     });
   } catch (err) {
     console.error("[download] Log error:", err);
+  }
+}
+
+/**
+ * Проверяет доступ к скачиванию: авторизованный пользователь или валидный email-токен
+ */
+async function validateAccess(request: NextRequest, jobId: string): Promise<boolean> {
+  // Проверка email-токена (для анонимных пользователей через email-capture)
+  const token = request.nextUrl.searchParams.get("token");
+  if (token) {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from("email_captures")
+      .select("id, used, created_at")
+      .eq("token", token)
+      .eq("job_id", jobId)
+      .single();
+
+    if (!data) return false;
+    if (data.used) return false;
+
+    // Токен действует 24 часа
+    const createdAt = new Date(data.created_at).getTime();
+    if (Date.now() - createdAt > 24 * 60 * 60 * 1000) return false;
+
+    // Помечаем токен как использованный (fire-and-forget)
+    supabase.from("email_captures").update({ used: true }).eq("id", data.id).then();
+    return true;
+  }
+
+  // Проверка авторизации через Supabase сессию
+  try {
+    const supabase = await createSupabaseServer();
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user;
+  } catch {
+    return false;
   }
 }
 
@@ -40,6 +77,15 @@ export async function GET(
     return NextResponse.json(
       { error: "Неверный тип файла" },
       { status: 400 }
+    );
+  }
+
+  // Проверяем доступ: авторизация или email-токен
+  const hasAccess = await validateAccess(request, jobId);
+  if (!hasAccess) {
+    return NextResponse.json(
+      { error: "Для скачивания необходимо авторизоваться или получить ссылку на email" },
+      { status: 403 }
     );
   }
 

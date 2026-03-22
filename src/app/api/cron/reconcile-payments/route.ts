@@ -8,10 +8,17 @@ import { updateJob } from "@/lib/storage/job-store";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  // Проверка авторизации через секретный заголовок (кроме локальной разработки)
+  // Проверка авторизации: Vercel Cron (Authorization: Bearer) или ручной вызов (x-cron-secret)
   const isLocal = process.env.NODE_ENV === "development";
-  const secret = req.headers.get("x-cron-secret");
-  if (!isLocal && secret !== process.env.CRON_SECRET) {
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = req.headers.get("x-cron-secret");
+  const expectedSecret = process.env.CRON_SECRET;
+
+  const isAuthorized = isLocal
+    || cronSecret === expectedSecret
+    || authHeader === `Bearer ${expectedSecret}`;
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
