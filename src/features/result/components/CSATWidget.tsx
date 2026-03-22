@@ -14,10 +14,13 @@ import { Button } from "@/components/ui/button";
 
 interface CSATWidgetProps {
   jobId: string;
+  workType?: string;
+  requirementsMode?: string;
+  wasTruncated?: boolean;
   onSubmit?: (rating: number, feedback?: string) => void;
 }
 
-export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
+export function CSATWidget({ jobId, workType, requirementsMode, wasTruncated, onSubmit }: CSATWidgetProps) {
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -38,6 +41,9 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
           jobId,
           rating,
           feedback: feedback.trim() || undefined,
+          workType,
+          requirementsMode,
+          wasTruncated,
           timestamp: new Date().toISOString(),
         }),
       });
@@ -114,18 +120,21 @@ export function CSATWidget({ jobId, onSubmit }: CSATWidgetProps) {
           </p>
         )}
 
-        {/* Поле для комментария (показываем если оценка 3 или ниже) */}
-        {rating !== null && rating <= 3 && (
+        {/* Поле для комментария (показываем для всех оценок) */}
+        {rating !== null && (
           <div className="space-y-2">
             <label htmlFor="feedback" className="text-sm text-on-surface-muted flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
-              Что можно улучшить? (необязательно)
+              {rating <= 3 ? "Что можно улучшить? (необязательно)" : "Что понравилось? (необязательно)"}
             </label>
             <textarea
               id="feedback"
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Например: не исправлены инициалы в списке литературы, неверное форматирование заголовков..."
+              placeholder={rating <= 3
+                ? "Например: не исправлены инициалы в списке литературы, неверное форматирование заголовков..."
+                : "Например: быстро обработал, правильно расставил отступы..."
+              }
               className="w-full min-h-[80px] px-3 py-2 bg-surface border border-surface-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
               maxLength={500}
             />

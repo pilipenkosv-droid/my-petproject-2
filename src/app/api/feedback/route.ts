@@ -10,6 +10,9 @@ interface FeedbackPayload {
   jobId: string;
   rating: number;
   feedback?: string;
+  workType?: string;
+  requirementsMode?: string;
+  wasTruncated?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -42,6 +45,9 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       rating: data.rating,
       comment: data.feedback?.trim() || null,
+      work_type: data.workType || null,
+      requirements_mode: data.requirementsMode || null,
+      was_truncated: data.wasTruncated ?? null,
     });
 
     if (error) {
@@ -52,7 +58,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`📊 CSAT: ${data.rating}/5 for job ${data.jobId}`);
+    // Alert на низкие оценки для диагностики
+    if (data.rating <= 2) {
+      console.warn(`🚨 LOW CSAT: ${data.rating}/5 | job=${data.jobId} | type=${data.workType || "?"} | mode=${data.requirementsMode || "?"} | truncated=${data.wasTruncated ?? "?"} | comment="${data.feedback?.trim() || "нет"}"`);
+    } else {
+      console.log(`📊 CSAT: ${data.rating}/5 for job ${data.jobId}`);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

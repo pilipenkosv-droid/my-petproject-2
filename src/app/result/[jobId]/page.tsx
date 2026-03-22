@@ -1,10 +1,11 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useJobStatus } from "@/features/result/hooks/useJobStatus";
 import { StatisticsPanel } from "@/features/result/components/StatisticsPanel";
 import { CSATWidget } from "@/features/result/components/CSATWidget";
+import { EmailGateModal } from "@/features/result/components/EmailGateModal";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { CrossSellCtas } from "@/features/result/components/CrossSellCtas";
 import { ProUpsellBanner } from "@/features/result/components/ProUpsellBanner";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
 
 interface ResultPageProps {
@@ -23,7 +25,10 @@ interface ResultPageProps {
 export default function ResultPage({ params }: ResultPageProps) {
   const { jobId } = use(params);
   const { job, isLoading, error } = useJobStatus({ jobId });
+  const { user } = useAuth();
   const trackedPreview = useRef(false);
+  const [emailGateOpen, setEmailGateOpen] = useState(false);
+  const [emailGateDownloadType, setEmailGateDownloadType] = useState<"original" | "formatted">("formatted");
 
   useEffect(() => {
     if (job?.status === "completed" && !trackedPreview.current) {
@@ -33,6 +38,12 @@ export default function ResultPage({ params }: ResultPageProps) {
   }, [job?.status]);
 
   const handleDownload = (type: "original" | "formatted") => {
+    // Для анонимных пользователей — показываем email-gate
+    if (!user) {
+      setEmailGateDownloadType(type);
+      setEmailGateOpen(true);
+      return;
+    }
     trackEvent("file_download", { download_type: type });
     const fileId = `${jobId}_${type}`;
     window.open(`/api/download/${fileId}`, "_blank");
@@ -185,15 +196,17 @@ export default function ResultPage({ params }: ResultPageProps) {
                   </div>
                   <div className="flex-1">
                     <p className="text-foreground font-semibold text-lg mb-1">
-                      Полная версия уже готова! 🎉
+                      Полная версия уже готова!
                     </p>
                     <p className="text-on-surface-muted text-sm mb-4">
-                      Мы обработали весь ваш документ (~{job.statistics.originalPageCount} стр.), но показали только первые {job.statistics.pageLimitApplied}.
-                      Получите полную версию прямо сейчас — без повторной обработки!
+                      {(job.violationsCount ?? 0) > 0
+                        ? `Найдено ${job.violationsCount} нарушений на ~${job.statistics.originalPageCount} стр. — все уже исправлены. Вы видите первые ${job.statistics.pageLimitApplied} стр., остальное доступно после оплаты.`
+                        : `Мы обработали весь ваш документ (~${job.statistics.originalPageCount} стр.), но показали только первые ${job.statistics.pageLimitApplied}. Получите полную версию прямо сейчас.`
+                      }
                     </p>
                     <Link href={`/pricing?unlock=${jobId}`}>
                       <Button variant="glow" className="group">
-                        Получить полную версию
+                        Получить полную версию — 159 ₽
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>
@@ -283,7 +296,12 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CSAT виджет */}
-          <CSATWidget jobId={jobId} />
+          <CSATWidget
+            jobId={jobId}
+            workType={job.workType}
+            requirementsMode={job.requirementsMode}
+            wasTruncated={job.statistics?.wasTruncated}
+          />
 
           {/* Апселл Pro-подписки */}
           <ProUpsellBanner />
@@ -301,6 +319,14 @@ export default function ResultPage({ params }: ResultPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Email-gate для анонимных скачиваний */}
+      <EmailGateModal
+        isOpen={emailGateOpen}
+        onClose={() => setEmailGateOpen(false)}
+        jobId={jobId}
+        downloadType={emailGateDownloadType}
+      />
     </main>
   );
 }

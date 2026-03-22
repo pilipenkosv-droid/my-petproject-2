@@ -43,6 +43,35 @@ export async function POST(request: NextRequest) {
         ? LAVA_CONFIG.offers.oneTime
         : LAVA_CONFIG.offers.subscription;
 
+    const admin = getSupabaseAdmin();
+
+    // Дедупликация: ищем pending-платёж за последние 30 минут для того же пользователя/типа
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    let existingQuery = admin
+      .from("payments")
+      .select("lava_invoice_id, payment_url")
+      .eq("user_id", user.id)
+      .eq("offer_type", offerType)
+      .eq("status", "pending")
+      .gte("created_at", thirtyMinAgo)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    // Если unlock_job_id передан — ищем точно для этого job
+    if (unlockJobId) {
+      existingQuery = existingQuery.eq("unlock_job_id", unlockJobId);
+    }
+
+    const { data: existingPending } = await existingQuery.maybeSingle();
+
+    if (existingPending?.payment_url) {
+      console.log("[payment/create] Reusing existing pending payment:", existingPending.lava_invoice_id);
+      return NextResponse.json({
+        paymentUrl: existingPending.payment_url,
+        invoiceId: existingPending.lava_invoice_id,
+      });
+    }
+
     console.log("[payment/create] Step 4: Creating Lava invoice...", { offerId: offer.offerId });
 
     // Создаём invoice в Lava.top
@@ -61,8 +90,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[payment/create] Step 6: Saving to DB...");
 
-    // Сохраняем платёж в БД
-    const admin = getSupabaseAdmin();
+    // Сохраняем платёж в БД (с paymentUrl для дедупликации)
     const { error: dbError } = await admin.from("payments").insert({
       user_id: user.id,
       lava_invoice_id: invoice.id,
@@ -70,7 +98,7 @@ export async function POST(request: NextRequest) {
       amount: offer.price,
       currency: offer.currency,
       status: "pending",
-      // Если есть jobId для разблокировки — сохраняем его
+      payment_url: invoice.paymentUrl,
       ...(unlockJobId && { unlock_job_id: unlockJobId }),
     });
 

@@ -11,7 +11,8 @@ import { Loader2, CheckCircle2, XCircle, Clock, MessageCircle } from "lucide-rea
 type PaymentState = "polling" | "completed" | "failed" | "timeout";
 
 const POLL_INTERVAL = 3000;
-const MAX_POLL_TIME = 5 * 60 * 1000; // 5 минут
+const MAX_POLL_TIME = 10 * 60 * 1000; // 10 минут
+const LONG_WAIT_THRESHOLD = 60 * 1000; // 60 секунд
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -21,6 +22,7 @@ function PaymentSuccessContent() {
   const [state, setState] = useState<PaymentState>("polling");
   const [offerType, setOfferType] = useState<string | null>(null);
   const [botDeepLink, setBotDeepLink] = useState<string | null>(null);
+  const [longWait, setLongWait] = useState(false);
 
   const checkPayment = useCallback(async () => {
     if (!invoiceId) return null;
@@ -45,7 +47,11 @@ function PaymentSuccessContent() {
     let timer: ReturnType<typeof setInterval>;
 
     const poll = async () => {
-      if (Date.now() - startTime > MAX_POLL_TIME) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > LONG_WAIT_THRESHOLD) {
+        setLongWait(true);
+      }
+      if (elapsed > MAX_POLL_TIME) {
         setState("timeout");
         clearInterval(timer);
         return;
@@ -83,11 +89,22 @@ function PaymentSuccessContent() {
               <h1 className="text-2xl font-bold text-foreground">
                 Обрабатываем оплату...
               </h1>
-              <p className="text-on-surface-muted">
-                Пожалуйста, подождите. Обычно это занимает несколько секунд.
-                <br />
-                Не закрывайте эту страницу.
-              </p>
+              {longWait ? (
+                <div className="space-y-3">
+                  <p className="text-on-surface-muted">
+                    Платёж обрабатывается. Если деньги были списаны, доступ откроется автоматически в течение 5 минут.
+                  </p>
+                  <p className="text-on-surface-muted text-sm">
+                    Можете обновить страницу позже или написать нам: <a href="mailto:hello@diplox.online" className="text-primary hover:underline">hello@diplox.online</a>
+                  </p>
+                </div>
+              ) : (
+                <p className="text-on-surface-muted">
+                  Пожалуйста, подождите. Обычно это занимает несколько секунд.
+                  <br />
+                  Не закрывайте эту страницу.
+                </p>
+              )}
             </>
           )}
 

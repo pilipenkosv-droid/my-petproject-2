@@ -65,7 +65,7 @@ function ConstructorPageContent() {
     requirementsDoc.handleFileSelect(file);
   }, [requirementsDoc]);
 
-  const canProcess = sourceDoc.isValid && (requirementsMode === "gost" || requirementsDoc.isValid);
+  const canProcess = sourceDoc.isValid && workType !== "" && (requirementsMode === "gost" || requirementsDoc.isValid);
 
   const activeSteps = requirementsMode === "gost" ? GOST_STEPS : UPLOAD_STEPS;
 
@@ -260,7 +260,7 @@ function ConstructorPageContent() {
                 </label>
                 <Select value={workType} onValueChange={handleWorkTypeChange}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Выберите тип работы (опционально)" />
+                    <SelectValue placeholder="Выберите тип работы" />
                   </SelectTrigger>
                   <SelectContent>
                     {WORK_TYPES.map((wt) => (

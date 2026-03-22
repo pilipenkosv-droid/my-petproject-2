@@ -25,7 +25,8 @@ export type FunnelEvent =
   | "gost_mode_selected"    // User switched to standard GOST mode
   | "work_type_selected"    // User selected work type
   | "subscription_pro_view"    // Pro card scrolled into viewport on pricing page
-  | "subscription_upsell_view"; // Pro upsell banner viewed on result page
+  | "subscription_upsell_view"  // Pro upsell banner viewed on result page
+  | "email_capture_submit";     // Anonymous user submitted email to get download link
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.

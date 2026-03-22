@@ -37,6 +37,7 @@ const plans = [
       { text: "Без регистрации" },
     ] as PlanFeature[],
     accent: false,
+    badge: null,
   },
   {
     id: "one_time" as const,
@@ -54,6 +55,7 @@ const plans = [
       { text: "Скачивание результата" },
     ] as PlanFeature[],
     accent: false,
+    badge: "Популярно",
   },
   {
     id: "subscription" as const,
@@ -71,6 +73,7 @@ const plans = [
       { text: "Приоритетная обработка" },
     ] as PlanFeature[],
     accent: true,
+    badge: null,
   },
 ];
 
@@ -217,6 +220,11 @@ function PricingContent() {
                 {plan.accent && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-foreground text-background text-xs font-semibold z-10">
                     Выгоднее в 4 раза
+                  </span>
+                )}
+                {plan.badge && !plan.accent && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-muted border border-border text-foreground text-xs font-medium z-10">
+                    {plan.badge}
                   </span>
                 )}
 
