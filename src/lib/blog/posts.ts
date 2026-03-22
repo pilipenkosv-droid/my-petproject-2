@@ -29,6 +29,7 @@ export const blogPosts: BlogPost[] = [
       "Diplox бот фото",
       "OCR конспекты",
     ],
+    coverImage: "/blog/bot-teper-ponimaet-foto.png",
     readingTime: "4 мин",
     content: `
 ## Коротко: что нового
