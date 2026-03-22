@@ -4,6 +4,8 @@ import { getInvoiceStatus } from "@/lib/payment/lava-client";
 import { activateAccess } from "@/lib/payment/access";
 import { unlockFullVersion } from "@/lib/storage/file-storage";
 import { updateJob } from "@/lib/storage/job-store";
+import { getAllPosts } from "@/lib/blog/posts";
+import { distributeAll } from "@/lib/distribution/distributor";
 
 export const dynamic = "force-dynamic";
 
@@ -94,10 +96,26 @@ export async function GET(req: NextRequest) {
 
   console.log(`[reconcile] Done: ${JSON.stringify(summary)}`);
 
+  // Дистрибуция новых статей блога на внешние площадки
+  let distributionSummary = { distributed: 0, failed: 0, skipped: 0 };
+  try {
+    const posts = getAllPosts();
+    const { results } = await distributeAll(posts);
+    distributionSummary = {
+      distributed: results.filter((r) => r.ok).length,
+      failed: results.filter((r) => !r.ok && r.error !== "not_configured").length,
+      skipped: results.filter((r) => r.error === "not_configured").length,
+    };
+    console.log(`[distribute-blog] Done: ${JSON.stringify(distributionSummary)}`);
+  } catch (err) {
+    console.error("[distribute-blog] Error:", err);
+  }
+
   return NextResponse.json({
     ok: true,
     processed: payments?.length ?? 0,
     summary,
+    distribution: distributionSummary,
     timestamp: now.toISOString(),
   });
 }

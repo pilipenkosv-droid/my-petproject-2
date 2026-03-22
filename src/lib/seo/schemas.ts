@@ -297,7 +297,9 @@ export function getOrganizationSchema() {
       'Сервис автоматического форматирования научных работ по ГОСТу с помощью ИИ. Поддерживает дипломы, курсовые, рефераты, диссертации.',
     foundingDate: '2025',
     sameAs: [
-      'https://t.me/diplox_online',
+      'https://t.me/diplox_blog',
+      'https://vk.com/club236935612',
+      'https://dzen.ru/id/69bffa464441903916c18282',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
