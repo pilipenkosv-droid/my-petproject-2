@@ -9,7 +9,7 @@ import { activateAccess } from "@/lib/payment/access";
 import { LAVA_CONFIG } from "@/lib/payment/config";
 import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
 import { updateJob } from "@/lib/storage/job-store";
-import { canGrantBotAccess, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
+import { canGrantBotAccess, getUserProfile, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 
 interface LavaWebhookPayload {
   type: string;
@@ -121,18 +121,9 @@ export async function POST(request: NextRequest) {
           try {
             const canGrant = await canGrantBotAccess(supabase);
             if (canGrant) {
-              // Получаем данные пользователя для провижнинга
-              const { data: profile } = await supabase
-                .from("profiles")
-                .select("full_name, email")
-                .eq("id", payment.user_id)
-                .single();
-
-              if (profile?.email) {
-                const result = await provisionBotUser(
-                  profile.email,
-                  profile.full_name || "Студент"
-                );
+              const profile = await getUserProfile(supabase, payment.user_id);
+              if (profile) {
+                const result = await provisionBotUser(profile.email, profile.name);
                 if (result?.success) {
                   await storeBotAccess(supabase, payment.user_id, result.deepLink);
                   console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);

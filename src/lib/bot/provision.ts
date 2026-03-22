@@ -72,6 +72,25 @@ export async function provisionBotUser(
 }
 
 /**
+ * Get user email and name from Supabase Auth (auth.users).
+ */
+export async function getUserProfile(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ email: string; name: string } | null> {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.admin.getUserById(userId);
+  if (error || !user?.email) return null;
+  const name =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    "Студент";
+  return { email: user.email, name };
+}
+
+/**
  * Store bot access grant in Supabase user_access.
  */
 export async function storeBotAccess(

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 import { getInvoiceStatus } from "@/lib/payment/lava-client";
 import { activateAccess } from "@/lib/payment/access";
-import { canGrantBotAccess, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
+import { canGrantBotAccess, getUserProfile, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 
 export async function GET(
   _request: NextRequest,
@@ -67,17 +67,9 @@ export async function GET(
             try {
               const canGrant = await canGrantBotAccess(admin);
               if (canGrant) {
-                const { data: profile } = await admin
-                  .from("profiles")
-                  .select("full_name, email")
-                  .eq("id", payment.user_id)
-                  .single();
-
-                if (profile?.email) {
-                  const result = await provisionBotUser(
-                    profile.email,
-                    profile.full_name || "Студент"
-                  );
+                const profile = await getUserProfile(admin, payment.user_id);
+                if (profile) {
+                  const result = await provisionBotUser(profile.email, profile.name);
                   if (result?.success) {
                     await storeBotAccess(admin, payment.user_id, result.deepLink);
                     botDeepLink = result.deepLink;
