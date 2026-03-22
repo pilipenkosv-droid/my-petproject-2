@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { populateUserAttribution } from "@/lib/analytics/attribution";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://diplox.online";
 
@@ -23,6 +24,16 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (!error) {
+        // Привязываем анонимную сессию к пользователю
+        const sessionId = request.cookies.get("dlx_sid")?.value;
+        const ymUid = request.cookies.get("_ym_uid")?.value;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (sessionId && user) {
+          populateUserAttribution(user.id, sessionId, ymUid).catch((err) =>
+            console.error("[auth/callback] Attribution error:", err)
+          );
+        }
+
         return NextResponse.redirect(`${SITE_URL}${next}`);
       }
 

@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
     // userAccessType остаётся "trial" для анонимных
     // Создаём задачу
     const ymUid = request.cookies.get("_ym_uid")?.value ?? undefined;
+    const sessionId = request.cookies.get("dlx_sid")?.value ?? undefined;
     const referer = request.headers.get("referer") ?? undefined;
-    await createJob(jobId, { userId: user?.id, yandexClientId: ymUid, referrer: referer });
+    await createJob(jobId, { userId: user?.id, sessionId, yandexClientId: ymUid, referrer: referer });
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     // Получаем файлы из FormData
