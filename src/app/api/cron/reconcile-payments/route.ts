@@ -27,12 +27,14 @@ export async function GET(req: NextRequest) {
   const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Получаем все зависшие платежи старше 30 минут
+  // Получаем зависшие платежи старше 30 минут (лимит 3 для Hobby 10s таймаута)
   const { data: payments, error } = await supabase
     .from("payments")
     .select("*")
     .eq("status", "pending")
-    .lt("created_at", thirtyMinutesAgo.toISOString());
+    .lt("created_at", thirtyMinutesAgo.toISOString())
+    .order("created_at", { ascending: true })
+    .limit(3);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
