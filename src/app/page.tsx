@@ -61,11 +61,13 @@ export default function LandingPage() {
             </BlurFade>
 
             {/* Text ribbon — before/after animation */}
-            <div className="mt-14 -mx-4 sm:-mx-6">
+            <div className="mt-12 -mx-4 sm:-mx-6">
               <TextRibbonSection />
             </div>
 
-            <StatsCounter />
+            <div className="mt-12">
+              <StatsCounter />
+            </div>
           </div>
         </div>
       </section>
