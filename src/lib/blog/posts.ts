@@ -17,7 +17,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "oformlenie-magisterskoj-dissertacii",
-    coverImage: undefined,
+    coverImage: "/blog/oformlenie-magisterskoj-dissertacii.png",
     title: "Оформление магистерской диссертации по ГОСТу: требования 2026",
     description:
       "Как оформить магистерскую диссертацию по ГОСТ Р 7.0.11-2011 и ГОСТ 7.32-2017. Структура, объём, требования к оформлению и типичные ошибки.",
