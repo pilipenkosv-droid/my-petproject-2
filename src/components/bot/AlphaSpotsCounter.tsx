@@ -10,7 +10,12 @@ interface AlphaStatus {
   remaining: number;
 }
 
-export function AlphaSpotsCounter() {
+interface AlphaSpotsCounterProps {
+  /** "block" — полноценный блок со стилями, "inline" — компактная строка для баннера */
+  variant?: "block" | "inline";
+}
+
+export function AlphaSpotsCounter({ variant = "block" }: AlphaSpotsCounterProps) {
   const [status, setStatus] = useState<AlphaStatus>({ provisioned: 0, limit: 10, remaining: 10 });
 
   useEffect(() => {
@@ -19,6 +24,19 @@ export function AlphaSpotsCounter() {
       .then(setStatus)
       .catch(() => {});
   }, []);
+
+  if (variant === "inline") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm">
+        <span className="text-on-surface-muted">занято</span>
+        <span className="font-mono font-bold text-foreground">
+          <NumberTicker value={status.provisioned} className="text-foreground font-bold" />
+          <span> из {status.limit}</span>
+        </span>
+        <span className="text-on-surface-muted">мест</span>
+      </span>
+    );
+  }
 
   return (
     <div className="inline-flex items-center gap-3 px-4 py-3 bg-surface border border-surface-border text-sm">

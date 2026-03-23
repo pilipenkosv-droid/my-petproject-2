@@ -5,6 +5,8 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { BotHero } from "@/components/bot/BotHero";
+import { BotTextRibbon } from "@/components/bot/BotTextRibbon";
+import { BotIdentitySection } from "@/components/bot/BotIdentitySection";
 import { BotFeatures } from "@/components/bot/BotFeatures";
 import { BotUseCases } from "@/components/bot/BotUseCases";
 import { BotChatDemo } from "@/components/bot/BotChatDemo";
@@ -37,6 +39,8 @@ export default function BotPage() {
       <Header />
 
       <BotHero />
+      <BotTextRibbon />
+      <BotIdentitySection />
       <BotFeatures />
       <BotUseCases />
       <BotChatDemo />

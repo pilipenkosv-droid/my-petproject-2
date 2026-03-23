@@ -4,26 +4,30 @@ import { Archive, MessageCircleQuestion, Wrench, BookOpen } from "lucide-react";
 const features = [
   {
     icon: Archive,
-    title: "Хранилище заметок",
-    description: "Отправляй текст, голосовые сообщения, PDF и DOCX — бот сохраняет всё в личный архив.",
+    title: "Одно место для всего",
+    description:
+      "Голосовые, текст, PDF, DOCX — всё в одном чате. Через месяц твой архив станет умнее тебя.",
     delay: 0.2,
   },
   {
     icon: MessageCircleQuestion,
-    title: "AI-ответы из заметок",
-    description: "/ask «Что я учил про методологию?» — бот ответит, используя только твои записи.",
+    title: "Спрашивай у прошлого себя",
+    description:
+      '/ask «Что я учил про выборку?» — и бот находит твои же слова. Как шпаргалка, которую написал ты сам.',
     delay: 0.25,
   },
   {
     icon: Wrench,
-    title: "Инструменты в чате",
-    description: "План работы, проверка грамматики, рерайт, аннотация, поиск литературы — без перехода на сайт.",
+    title: "Всё — не выходя из Telegram",
+    description:
+      "План, грамматика, рерайт, аннотация — ты уже открыл Telegram. Зачем переходить на другой сайт?",
     delay: 0.3,
   },
   {
     icon: BookOpen,
-    title: "Дневной конспект",
-    description: "/process — структурированный конспект дня: ключевые идеи, открытые вопросы, что повторить.",
+    title: "Конспект, который пишется сам",
+    description:
+      "/process — и хаос из голосовых и сообщений становится структурой: идеи, вопросы, что повторить.",
     delay: 0.35,
   },
 ];
@@ -34,12 +38,12 @@ export function BotFeatures() {
       <div className="mx-auto max-w-5xl">
         <BlurFade delay={0.1} inView>
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-            Всё для учёбы — в одном боте
+            Меньше хаоса. Больше знаний.
           </h2>
         </BlurFade>
         <BlurFade delay={0.15} inView>
           <p className="text-center text-on-surface-subtle mb-16 max-w-xl mx-auto">
-            AI-напарник помогает накапливать знания и использовать их тогда, когда нужно
+            Четыре привычки, которые изменят твою учёбу за один семестр
           </p>
         </BlurFade>
 

@@ -10,6 +10,8 @@ import { StatsCounter } from "@/components/StatsCounter";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Testimonials } from "@/components/Testimonials";
 import { GrainOverlay } from "@/components/GrainOverlay";
+import { TextRibbonSection } from "@/components/TextRibbonSection";
+import { TransformationStory } from "@/components/TransformationStory";
 
 export default function LandingPage() {
   return (
@@ -30,7 +32,7 @@ export default function LandingPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 py-24 sm:py-32">
+      <section className="relative flex items-center justify-center px-4 sm:px-6 py-16 sm:py-24">
         
         <div className="relative z-10 mx-auto max-w-5xl w-full">
           {/* Text column — centered */}
@@ -42,8 +44,8 @@ export default function LandingPage() {
 
             <BlurFade delay={0.4} inView>
               <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
-                Загрузите курсовую или диплом в .docx и методичку вашего вуза —
-                нейросеть автоматически оформит отступы, шрифты, заголовки и список литературы по ГОСТу.
+                Ты написал работу. Диплом оформим мы — по твоей методичке, по ГОСТу, за 3 минуты.
+                Сдаёшь. Первый раз — без замечаний.
               </p>
             </BlurFade>
 
@@ -57,6 +59,11 @@ export default function LandingPage() {
                 </Button>
               </div>
             </BlurFade>
+
+            {/* Text ribbon — before/after animation */}
+            <div className="mt-14 -mx-4 sm:-mx-6">
+              <TextRibbonSection />
+            </div>
 
             <StatsCounter />
           </div>
@@ -129,17 +136,20 @@ export default function LandingPage() {
       {/* Before / After */}
       <BeforeAfter />
 
+      {/* Transformation Story */}
+      <TransformationStory />
+
       {/* Tools showcase */}
       <section className="relative py-24 px-6">
         <div className="mx-auto max-w-5xl">
           <BlurFade delay={0.1} inView>
             <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-Все инструменты для вашей работы
+Всё, что нужно, чтобы сдать без замечаний
             </h2>
           </BlurFade>
           <BlurFade delay={0.2} inView>
             <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
-              Форматирование, проверка грамматики, подбор литературы и другие AI-инструменты — всё в одном сервисе
+              Шесть проблем — шесть решений. Без лишних шагов.
             </p>
           </BlurFade>
 
@@ -149,7 +159,7 @@ export default function LandingPage() {
                 href: "/create",
                 icon: FileCheck,
                 label: "Форматирование по ГОСТу",
-                desc: "Загрузите документ и методичку — ИИ оформит по стандарту",
+                desc: "Нормоконтроль пройдён. С первого раза.",
                 gradient: "from-foreground to-foreground",
                 delay: 0.3,
               },
@@ -157,7 +167,7 @@ export default function LandingPage() {
                 href: "/outline",
                 icon: ListTree,
                 label: "Генератор плана",
-                desc: "Создайте структуру курсовой или диплома с помощью ИИ",
+                desc: "Чистый лист → готовая структура за 60 секунд",
                 gradient: "from-brand-teal to-brand-teal-dark",
                 delay: 0.35,
               },
@@ -165,7 +175,7 @@ export default function LandingPage() {
                 href: "/grammar",
                 icon: SpellCheck,
                 label: "Проверка грамматики",
-                desc: "Проверьте текст на орфографические и пунктуационные ошибки",
+                desc: "Преподаватель не найдёт, что подчеркнуть красным",
                 gradient: "from-foreground to-foreground",
                 delay: 0.4,
               },
@@ -173,7 +183,7 @@ export default function LandingPage() {
                 href: "/rewrite",
                 icon: Pencil,
                 label: "Повышение уникальности",
-                desc: "Перепишите текст с сохранением смысла для антиплагиата",
+                desc: "Твой текст, твои мысли — уникальность растёт",
                 gradient: "from-brand-teal-dark to-brand-teal",
                 delay: 0.45,
               },
@@ -181,7 +191,7 @@ export default function LandingPage() {
                 href: "/summarize",
                 icon: Sparkles,
                 label: "Краткое содержание",
-                desc: "Сгенерируйте аннотацию или резюме вашей работы",
+                desc: "Аннотация за 30 секунд — не за час",
                 gradient: "from-brand-teal-light to-brand-teal",
                 delay: 0.5,
               },
@@ -189,7 +199,7 @@ export default function LandingPage() {
                 href: "/sources",
                 icon: BookOpen,
                 label: "Подбор литературы",
-                desc: "Найдите реальные научные источники из OpenAlex и CrossRef",
+                desc: "Реальные источники. Не выдуманные ссылки.",
                 gradient: "from-foreground to-foreground",
                 delay: 0.55,
               },
@@ -216,41 +226,6 @@ export default function LandingPage() {
                 </BlurFade>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* Pain points */}
-      <section className="relative py-24 px-6">
-        
-        <div className="relative mx-auto max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-            Забудьте о ручной настройке отступов и шрифтов
-          </h2>
-          <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
-            Больше не нужно вручную искать ошибки форматирования — ИИ сделает это за вас
-          </p>
-          
-          <div className="border border-border">
-            <div className="grid md:grid-cols-2">
-              {[
-                ["Где нет неразрывных пробелов перед единицами измерения", "Где заголовки оформлены не по требованиям"],
-                ["Где неверные межстрочные интервалы и абзацные отступы", "Где нарушено оформление списка литературы"],
-                ["Где не соблюдены поля документа", "Где рисунки и таблицы подписаны не по стандарту"],
-                ["Где неправильный шрифт или его размер", "Где нумерация страниц начинается не с того места"],
-              ].map(([left, right], i) => (
-                <div key={i} className="grid md:grid-cols-subgrid md:col-span-2">
-                  <div className={`flex items-center gap-3 px-4 py-3.5 md:border-r border-border ${i > 0 ? "border-t" : ""}`}>
-                    <span className="text-red-400 text-xs font-mono shrink-0">✕</span>
-                    <span className="text-sm text-muted-foreground">{left}</span>
-                  </div>
-                  <div className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""}`}>
-                    <span className="text-red-400 text-xs font-mono shrink-0">✕</span>
-                    <span className="text-sm text-muted-foreground">{right}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -297,10 +272,10 @@ export default function LandingPage() {
           <div className="rounded-3xl p-12 bg-surface border border-surface-border">
             <div className="text-center">
               <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                Готовы сэкономить время?
+                Следующую работу сдашь с первого раза.
               </h2>
               <p className="text-on-surface-muted mb-8 max-w-md mx-auto">
-                Загрузите документ и методичку — получите идеально оформленную работу по ГОСТу
+                Попробуй бесплатно — первая обработка в подарок. Без риска.
               </p>
               <CtaButton className="w-full sm:w-auto" />
             </div>

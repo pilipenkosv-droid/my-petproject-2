@@ -104,10 +104,10 @@ export function Testimonials() {
                     <img
                       src={t.avatar}
                       alt={t.name}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background text-sm font-bold">
+                    <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background text-sm font-bold shrink-0">
                       {t.name.charAt(0)}
                     </div>
                   )}

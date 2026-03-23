@@ -30,12 +30,12 @@ export function BotValueProposition() {
       <div className="mx-auto max-w-5xl">
         <BlurFade delay={0.1} inView>
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-            Почему это стоит своих денег
+            399 ₽ — это не расход. Это инвестиция в свой семестр.
           </h2>
         </BlurFade>
         <BlurFade delay={0.15} inView>
           <p className="text-center text-on-surface-subtle mb-16 max-w-xl mx-auto">
-            399 ₽/мес = меньше 13 ₽ в день за напарника, который не забывает ничего
+            Меньше 13 ₽ в день за напарника, который не забывает ничего
           </p>
         </BlurFade>
 
@@ -57,7 +57,7 @@ export function BotValueProposition() {
         </div>
 
         <BlurFade delay={0.5} inView>
-          <div className="text-center bg-purple-500/5 border border-purple-500/20 p-6">
+          <div className="text-center bg-purple-500/5 border border-purple-500/20 p-6 mb-4">
             <p className="text-on-surface-muted text-sm">
               Для сравнения: один час репетитора — от 1 500 ₽. Одна страница редактуры — от 500 ₽.
               <br />
@@ -66,6 +66,13 @@ export function BotValueProposition() {
               </span>
             </p>
           </div>
+        </BlurFade>
+        <BlurFade delay={0.6} inView>
+          <p className="text-center text-sm text-muted-foreground max-w-lg mx-auto italic">
+            Студенты, которые платят за свои инструменты, — сдают иначе.
+            Не потому что инструмент магический. Потому что они решили:
+            «Я берусь за это всерьёз.»
+          </p>
         </BlurFade>
       </div>
     </section>

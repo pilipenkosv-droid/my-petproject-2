@@ -198,9 +198,6 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
           )}
           <Link href="/" className="group flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Logo variant="favicon" size={28} withText />
-            <sup className="ml-0.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-foreground text-background leading-none">
-              beta
-            </sup>
           </Link>
         </div>
 

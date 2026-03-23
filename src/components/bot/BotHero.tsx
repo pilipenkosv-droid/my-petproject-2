@@ -9,41 +9,36 @@ import { Bot, Zap } from "lucide-react";
 
 export function BotHero() {
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center px-4 sm:px-6 py-24 sm:py-32">
+    <section className="relative flex items-center justify-center px-4 sm:px-6 py-16 sm:py-24">
       <div className="relative z-10 mx-auto max-w-3xl w-full text-center">
-        {/* Alpha badge */}
+        {/* Alpha badge — объединённый баннер с счётчиком мест */}
         <BlurFade delay={0.1} inView>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-primary text-sm mb-6">
-            <Bot className="w-4 h-4" />
-            Закрытый альфа-тест · только 10 мест
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted border border-border text-sm mb-6">
+            <Bot className="w-4 h-4 text-primary" />
+            <span className="text-foreground font-medium">Закрытый альфа-тест</span>
+            <span className="text-on-surface-muted">·</span>
+            <AlphaSpotsCounter variant="inline" />
           </div>
         </BlurFade>
 
         {/* H1 */}
         <BlurFade delay={0.2} inView>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
-            Твой AI-напарник<br />
-            <span className="text-primary">в Telegram</span>
+            Перестань терять<br />
+            <span className="text-primary">то, что уже знаешь.</span>
           </h1>
         </BlurFade>
 
         {/* Subtitle */}
         <BlurFade delay={0.3} inView>
           <p className="text-lg text-on-surface-subtle max-w-xl mx-auto mb-8 leading-relaxed">
-            Сохраняй заметки голосом и текстом, задавай вопросы — бот ответит из твоих материалов.
-            Плюс все инструменты Diplox прямо в чате.
+            Ты учишься каждый день. Но половина знаний теряется к следующей неделе.
+            AI-напарник в Telegram сохраняет всё — и находит за секунду, когда нужно.
           </p>
         </BlurFade>
 
-        {/* Spots counter */}
-        <BlurFade delay={0.4} inView>
-          <div className="flex justify-center mb-8">
-            <AlphaSpotsCounter />
-          </div>
-        </BlurFade>
-
         {/* CTA */}
-        <BlurFade delay={0.5} inView>
+        <BlurFade delay={0.4} inView>
           <div className="relative inline-flex overflow-hidden rounded-lg">
             <Button size="lg" className="text-base sm:text-lg px-8" asChild>
               <Link href="/pricing?plan=subscription&ref=bot">
