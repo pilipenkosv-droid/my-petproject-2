@@ -35,21 +35,22 @@ export default function LandingPage() {
         
         <div className="relative z-10 mx-auto max-w-5xl w-full">
           {/* Text column — centered */}
-          <div className="text-center md:text-left">
+          <div className="text-center">
             {/* Badge */}
             <BlurFade delay={0.2} inView>
               <HeroSubtitle />
             </BlurFade>
 
             <BlurFade delay={0.4} inView>
-              <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto md:mx-0 mb-10 leading-relaxed">
-                Ты написал работу. Диплом оформим мы — по твоей методичке, по ГОСТу, за 3 минуты.
-                Сдаёшь. Первый раз — без замечаний.
+              <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
+                Ты написал работу. Диплом оформим мы — по твоей методичке, по ГОСТу.
+                <br />
+                За три минуты. Сдаёшь с первого раза — без замечаний.
               </p>
             </BlurFade>
 
             <BlurFade delay={0.5} inView>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <div className="w-full sm:w-auto">
                   <CtaButton className="text-base sm:text-lg w-full sm:w-auto px-6 sm:px-8" />
                 </div>

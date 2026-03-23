@@ -261,17 +261,18 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--background);
 }
 
-/* Film grain overlay — applied via GrainOverlay component */
+/* Film grain overlay — applied via GrainOverlay component
+   z-index: 1 — ниже навбара (z-50) и интерактивных элементов */
 .grain-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 1;
   pointer-events: none;
-  opacity: 0.2;
+  opacity: 0.12;
 }
 
 .dark .grain-overlay {
-  opacity: 0.25;
+  opacity: 0.15;
 }
 
 @theme inline {
