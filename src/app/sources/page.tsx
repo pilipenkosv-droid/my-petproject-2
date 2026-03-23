@@ -128,11 +128,10 @@ function SourcesPageContent() {
                 <BookOpen className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Подбор литературы
+                Список литературы. Правильно оформленный.
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Введите тему — найдём реальные научные источники, проверим
-                релевантность и оформим по ГОСТ
+                Введи тему — AI найдёт реальные источники и оформит по ГОСТ 7.1
               </p>
             </div>
           </BlurFade>
@@ -316,11 +315,11 @@ function SourcesPageContent() {
               <Card className="border-border bg-muted">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Нужно отформатировать работу по ГОСТу?
+                    Источники есть. Оформи всю работу по ГОСТу — за 3 минуты.
                   </p>
                   <Link href="/create">
                     <Button>
-                      Начать форматирование
+                      Оформить работу
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>

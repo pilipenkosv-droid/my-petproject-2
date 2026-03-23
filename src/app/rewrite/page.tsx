@@ -200,10 +200,10 @@ function RewritePageContent() {
                 <Pencil className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Повышение уникальности
+                Антиплагиат пройдёт. Смысл останется.
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Вставьте текст или загрузите файл — AI перепишет его с сохранением смысла для повышения уникальности
+                Вставь текст или загрузи файл — получишь переписанный вариант с уникальностью 80-95%
               </p>
             </div>
           </BlurFade>
@@ -422,11 +422,11 @@ function RewritePageContent() {
               <Card className="border-border bg-muted">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Нужно отформатировать работу по ГОСТу?
+                    Текст готов. Оформи работу по ГОСТу — за 3 минуты.
                   </p>
                   <Link href="/create">
                     <Button>
-                      Начать форматирование
+                      Оформить работу
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>

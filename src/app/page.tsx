@@ -9,14 +9,13 @@ import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { StatsCounter } from "@/components/StatsCounter";
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { Testimonials } from "@/components/Testimonials";
-import { GrainOverlay } from "@/components/GrainOverlay";
+
 import { TextRibbonSection } from "@/components/TextRibbonSection";
 import { TransformationStory } from "@/components/TransformationStory";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
-      <GrainOverlay />
       <Header />
 
       {/* Bot announcement banner */}

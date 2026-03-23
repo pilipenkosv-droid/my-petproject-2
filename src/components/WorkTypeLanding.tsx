@@ -8,8 +8,6 @@ import {
   ArrowRight,
   ListTree,
   FileText,
-  Clock,
-  ShieldCheck,
   ChevronRight,
   BookOpen,
   SpellCheck,
@@ -17,6 +15,14 @@ import {
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { CtaButton } from "@/components/CtaButton";
+import {
+  WorkTypeBenefits,
+  type WorkTypeBenefit,
+} from "@/components/WorkTypeBenefits";
+import {
+  WorkTypeTestimonials,
+  type WorkTypeTestimonial,
+} from "@/components/WorkTypeTestimonials";
 
 export interface WorkTypeFAQ {
   question: string;
@@ -40,6 +46,14 @@ export interface WorkTypeLandingProps {
   gostRequirements: WorkTypeGostRequirement[];
   faqs: WorkTypeFAQ[];
   relatedTypes: { name: string; href: string }[];
+  // Godin props
+  identityLine?: string;
+  benefits?: WorkTypeBenefit[];
+  testimonials?: WorkTypeTestimonial[];
+  featuresTitle?: string;
+  bottomCtaTitle?: string;
+  bottomCtaSubtitle?: string;
+  bottomCtaLabel?: string;
 }
 
 export function WorkTypeLanding({
@@ -54,12 +68,18 @@ export function WorkTypeLanding({
   gostRequirements,
   faqs,
   relatedTypes,
+  identityLine,
+  benefits,
+  testimonials,
+  featuresTitle,
+  bottomCtaTitle,
+  bottomCtaSubtitle,
+  bottomCtaLabel,
 }: WorkTypeLandingProps) {
   return (
     <div className="min-h-screen">
       <Header showBack backHref="/" />
 
-      {/* JSON-LD Schema */}
       <JsonLd
         data={getBreadcrumbSchema([
           { name: "Главная", url: "/" },
@@ -78,6 +98,11 @@ export function WorkTypeLanding({
         title={title}
         subtitle={subtitle}
       >
+        {identityLine && (
+          <p className="text-on-surface-muted italic text-base mt-4 max-w-lg mx-auto">
+            {identityLine}
+          </p>
+        )}
         <div className="mt-8 flex justify-center">
           <CtaButton className="text-base sm:text-lg px-6 sm:px-8" workType={slug} />
         </div>
@@ -85,19 +110,24 @@ export function WorkTypeLanding({
 
       <main className="mx-auto max-w-4xl px-6 py-12">
 
-        {/* Описание */}
+        {/* 1. Соц. доказательство (Година: после идентичности) */}
+        {testimonials && testimonials.length > 0 && (
+          <WorkTypeTestimonials testimonials={testimonials} />
+        )}
+
+        {/* 2. Описание */}
         <section className="mb-12">
           <div className="bg-surface border border-surface-border p-6">
             <p className="text-on-surface-muted leading-relaxed">{description}</p>
           </div>
         </section>
 
-        {/* Что делает сервис */}
+        {/* 3. Механизм — что делает сервис */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <CheckCircle className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">
-              Что делает Diplox
+              {featuresTitle || "Что делает Diplox"}
             </h2>
           </div>
 
@@ -114,7 +144,12 @@ export function WorkTypeLanding({
           </div>
         </section>
 
-        {/* Требования ГОСТ */}
+        {/* 4. Выгоды (уникальные для типа) */}
+        {benefits && benefits.length > 0 && (
+          <WorkTypeBenefits benefits={benefits} />
+        )}
+
+        {/* 5. Требования ГОСТ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <FileText className="w-5 h-5 text-muted-foreground" />
@@ -154,29 +189,7 @@ export function WorkTypeLanding({
           </p>
         </section>
 
-        {/* Преимущества */}
-        <section className="mb-12">
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-surface border border-surface-border p-5 text-center">
-              <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-medium text-foreground mb-1">Быстро</h3>
-              <p className="text-on-surface-subtle text-sm">Обработка за 3-5 минут</p>
-            </div>
-            <div className="bg-surface border border-surface-border p-5 text-center">
-              <ShieldCheck className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
-              <h3 className="font-medium text-foreground mb-2">Безопасно</h3>
-              <p className="text-on-surface-subtle text-sm mb-1">Не попадает в Антиплагиат</p>
-              <p className="text-muted-foreground/60 text-xs">Файлы удаляются через 24ч</p>
-            </div>
-            <div className="bg-surface border border-surface-border p-5 text-center">
-              <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="font-medium text-foreground mb-1">Точно</h3>
-              <p className="text-on-surface-subtle text-sm">AI-анализ методички</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
+        {/* 6. FAQ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Sparkles className="w-5 h-5 text-muted-foreground" />
@@ -210,7 +223,35 @@ export function WorkTypeLanding({
           </div>
         </section>
 
-        {/* Другие типы работ */}
+        {/* 7. Bottom CTA */}
+        <div className="text-center mb-12">
+          <div className="bg-muted rounded-2xl border border-border p-8">
+            <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              {bottomCtaTitle || "Готовы оформить работу?"}
+            </h2>
+            <p className="text-on-surface-muted mb-6">
+              {bottomCtaSubtitle || "Первый документ форматируется бесплатно — оцените качество"}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href={`/create?type=${slug}`}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
+              >
+                {bottomCtaLabel || "Начать форматирование"}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface border border-surface-border text-foreground font-medium hover:bg-surface-hover transition-colors"
+              >
+                Посмотреть тарифы
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* 8. Другие типы работ */}
         <section className="mb-12">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Другие типы работ
@@ -228,7 +269,7 @@ export function WorkTypeLanding({
           </div>
         </section>
 
-        {/* Полезные инструменты */}
+        {/* 9. Полезные инструменты */}
         <section className="mb-12">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Полезные инструменты
@@ -238,30 +279,26 @@ export function WorkTypeLanding({
               {
                 href: "/outline",
                 label: "Генератор плана",
-                desc: "Создайте структуру работы с помощью ИИ",
+                desc: "Готовая структура работы за 60 секунд",
                 icon: ListTree,
-                gradient: "",
               },
               {
                 href: "/sources",
                 label: "Подбор литературы",
-                desc: "Найдите научные источники по теме",
+                desc: "Реальные источники по ГОСТ 7.1",
                 icon: BookOpen,
-                gradient: "",
               },
               {
                 href: "/grammar",
                 label: "Проверка грамматики",
-                desc: "Проверьте текст на ошибки",
+                desc: "Преподаватель не найдёт ошибок",
                 icon: SpellCheck,
-                gradient: "",
               },
               {
                 href: "/rewrite",
                 label: "Повышение уникальности",
-                desc: "Перепишите текст для антиплагиата",
+                desc: "Твой текст — уникальность растёт",
                 icon: Pencil,
-                gradient: "",
               },
             ].map((tool) => {
               const ToolIcon = tool.icon;
@@ -271,9 +308,7 @@ export function WorkTypeLanding({
                   href={tool.href}
                   className="flex items-center gap-4 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
                 >
-                  <div
-                    className="w-10 h-10 bg-foreground flex items-center justify-center shrink-0"
-                  >
+                  <div className="w-10 h-10 bg-foreground flex items-center justify-center shrink-0">
                     <ToolIcon className="w-5 h-5 text-background" />
                   </div>
                   <div>
@@ -287,34 +322,6 @@ export function WorkTypeLanding({
             })}
           </div>
         </section>
-
-        {/* CTA */}
-        <div className="text-center">
-          <div className="bg-muted rounded-2xl border border-border p-8">
-            <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              Готовы оформить работу?
-            </h2>
-            <p className="text-on-surface-muted mb-6">
-              Первый документ форматируется бесплатно — оцените качество
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href={`/create?type=${slug}`}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
-              >
-                Начать форматирование
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-surface border border-surface-border text-foreground font-medium hover:bg-surface-hover transition-colors"
-              >
-                Посмотреть тарифы
-              </Link>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );

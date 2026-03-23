@@ -10,6 +10,7 @@ import { PageTracker } from "@/components/analytics/PageTracker";
 import { getSoftwareApplicationSchema, getWebSiteSchema, getOrganizationSchema } from "@/lib/seo/schemas";
 import { SITE_URL, SITE_NAME } from "@/lib/config/site";
 import { Footer } from "@/components/Footer";
+import { GrainOverlay } from "@/components/GrainOverlay";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -88,6 +89,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <ThemeProvider>
           <AuthProvider initialSession={null}>
+            <GrainOverlay />
             {children}
             <Footer />
           </AuthProvider>

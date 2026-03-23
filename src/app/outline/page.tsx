@@ -141,10 +141,10 @@ function OutlinePageContent() {
                 <ListTree className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Генератор плана работы
+                План работы. Готов за минуту.
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Введите тему и тип работы — AI сгенерирует структуру с разделами, подразделами и рекомендуемым объёмом
+                Введи тему — AI сгенерирует структуру с главами, подглавами и объёмами
               </p>
             </div>
           </BlurFade>
@@ -328,11 +328,11 @@ function OutlinePageContent() {
               <Card className="border-border bg-surface">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Готовый план? Отформатируйте работу по ГОСТу автоматически!
+                    План есть. Когда напишешь — оформим за 3 минуты.
                   </p>
                   <Link href={workType ? `/create?type=${workType}` : "/create"}>
                     <Button>
-                      Начать форматирование
+                      Оформить работу
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>

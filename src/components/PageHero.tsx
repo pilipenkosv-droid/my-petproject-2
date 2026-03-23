@@ -12,7 +12,7 @@ interface PageHeroProps {
 
 export function PageHero({ badge, title, subtitle, children }: PageHeroProps) {
   return (
-    <div className="relative overflow-hidden min-h-[70vh] flex items-center justify-center">
+    <div className="relative min-h-[70vh] flex items-center justify-center">
       <div className="relative z-10 mx-auto max-w-4xl px-6 py-24 sm:py-32 text-center">
         {badge}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-6">

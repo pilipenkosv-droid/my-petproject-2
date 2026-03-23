@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
-import { GrainOverlay } from "@/components/GrainOverlay";
+
 import { BotHero } from "@/components/bot/BotHero";
 import { BotTextRibbon } from "@/components/bot/BotTextRibbon";
 import { BotIdentitySection } from "@/components/bot/BotIdentitySection";
@@ -35,7 +35,6 @@ export const metadata = generatePageMetadata({
 export default function BotPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
-      <GrainOverlay />
       <Header />
 
       <BotHero />

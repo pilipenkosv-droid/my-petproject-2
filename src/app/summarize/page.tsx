@@ -222,10 +222,10 @@ function SummarizePageContent() {
                 <Sparkles className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Краткое содержание
+                Аннотация за 30 секунд
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Вставьте текст или загрузите файл — AI создаст аннотацию или краткое содержание вашей работы
+                Загрузи главу или всю работу — получишь аннотацию, которую примет научрук
               </p>
             </div>
           </BlurFade>
@@ -447,11 +447,11 @@ function SummarizePageContent() {
               <Card className="border-brand-teal/20 bg-gradient-to-r from-brand-teal-light/5 to-brand-teal/5">
                 <CardContent className="py-6 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Нужно отформатировать работу по ГОСТу?
+                    Аннотация готова. Оформи всю работу по ГОСТу — за 3 минуты.
                   </p>
                   <Link href="/create">
                     <Button>
-                      Начать форматирование
+                      Оформить работу
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>

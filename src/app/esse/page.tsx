@@ -1,9 +1,12 @@
 import { Metadata } from "next";
+import { Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { WorkTypeLanding } from "@/components/WorkTypeLanding";
+import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
+import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Форматирование эссе по стандартам онлайн",
+  title: "Эссе оформлено за 40 секунд — форматирование по требованиям онлайн",
   description:
     "Автоматическое форматирование эссе по требованиям вуза. Загрузите эссе и методические указания — система применит все необходимые параметры оформления.",
   keywords: [
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/esse`,
   },
   openGraph: {
-    title: "Форматирование эссе — Diplox",
+    title: "Эссе оформлено за 40 секунд — Diplox",
     description:
       "Загрузите эссе и требования — AI оформит документ по стандартам за минуты.",
     url: `${SITE_URL}/esse`,
@@ -26,14 +29,45 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  "Настройка полей и размера страницы",
-  "Форматирование заголовка эссе",
-  "Настройка шрифта и размера текста",
-  "Оформление абзацных отступов",
-  "Настройка межстрочных интервалов",
-  "Выравнивание текста",
-  "Нумерация страниц (при необходимости)",
-  "Форматирование списка источников",
+  "Поля и шрифт по требованиям преподавателя — автоматически",
+  "Заголовок эссе оформлен за секунды",
+  "Интервалы и отступы — единообразно по всему тексту",
+  "Нумерация страниц выставлена правильно",
+  "Список источников оформлен по стандарту",
+  "Выравнивание текста — без ручной правки",
+  "Результат — файл, готовый к сдаче",
+  "Быстрее, чем открыть настройки Word",
+];
+
+const benefits: WorkTypeBenefit[] = [
+  {
+    icon: Clock,
+    title: "На эссе",
+    stat: "40 сек",
+    detail: "Быстрее, чем открыть настройки Word",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Не в Антиплагиате",
+    stat: "0%",
+    detail: "Файлы удаляются через 24 часа",
+  },
+  {
+    icon: Sparkles,
+    title: "По требованиям преподавателя",
+    stat: "Точно",
+    detail: "Загрузи требования — AI применит",
+  },
+];
+
+const testimonials: WorkTypeTestimonial[] = [
+  {
+    name: "Мария С.",
+    university: "ВШЭ",
+    workType: "Реферат · 15 страниц",
+    rating: 5,
+    text: "Раньше тратила 40-60 минут на оформление каждого реферата. Теперь загружаю файл — через 2 минуты всё готово: шрифт, интервалы, нумерация. За семестр сэкономила около 8 часов на 12 работах.",
+  },
 ];
 
 const gostRequirements = [
@@ -90,15 +124,22 @@ export default function EssePage() {
     <WorkTypeLanding
       slug="esse"
       type="Эссе"
-      title="Форматирование эссе по стандартам"
-      subtitle="Загрузите эссе и требования — AI автоматически оформит документ по стандартам вуза"
+      title="Эссе оформлено. За 40 секунд."
+      subtitle="Загрузи эссе — AI применит требования преподавателя. Один клик вместо часа возни."
+      identityLine="Эссе готово, осталось «привести в порядок оформление»?"
       description="Эссе — особый жанр академического письма, но и к нему предъявляются требования по оформлению. Diplox анализирует требования преподавателя или вуза и применяет их к вашему тексту: настраивает поля, шрифты, интервалы и отступы. Процесс занимает меньше минуты, а результат соответствует ожиданиям."
       breadcrumbName="Форматирование эссе"
       breadcrumbPath="/esse"
       features={features}
+      benefits={benefits}
+      testimonials={testimonials}
       gostRequirements={gostRequirements}
       faqs={faqs}
       relatedTypes={relatedTypes}
+      featuresTitle="Как Diplox оформляет эссе"
+      bottomCtaTitle="Оформление — за 40 секунд"
+      bottomCtaSubtitle="Первый документ бесплатно."
+      bottomCtaLabel="Оформить эссе"
     />
   );
 }

@@ -1,9 +1,12 @@
 import { Metadata } from "next";
+import { Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { WorkTypeLanding } from "@/components/WorkTypeLanding";
+import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
+import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Форматирование реферата по ГОСТу онлайн",
+  title: "Форматирование реферата по ГОСТу онлайн — без ручной правки",
   description:
     "Быстрое форматирование реферата по ГОСТу. Загрузите реферат — получите правильно оформленный документ с корректными полями, шрифтами и отступами.",
   keywords: [
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/referat`,
   },
   openGraph: {
-    title: "Форматирование реферата по ГОСТу — Diplox",
+    title: "Реферат за 2 минуты — Diplox",
     description:
       "Загрузите реферат — AI оформит документ по требованиям за минуты. Поля, шрифты, отступы по стандарту.",
     url: `${SITE_URL}/referat`,
@@ -26,14 +29,45 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  "Настройка полей и размера страницы",
-  "Форматирование заголовков разделов",
-  "Настройка шрифта и размера текста",
-  "Оформление абзацных отступов",
-  "Форматирование списка литературы",
-  "Настройка межстрочных интервалов",
-  "Нумерация страниц",
-  "Оформление содержания",
+  "Поля и шрифт — по требованиям кафедры, без ручной настройки",
+  "Заголовки разделов переформатированы за секунды",
+  "Список литературы по ГОСТ 7.1 — одним кликом",
+  "Нумерация страниц выставлена правильно с первой попытки",
+  "Содержание сформировано автоматически",
+  "Интервалы и отступы — единообразно по всему тексту",
+  "Результат — файл, готовый к сдаче",
+  "Экономия 40 минут на каждом реферате",
+];
+
+const benefits: WorkTypeBenefit[] = [
+  {
+    icon: Clock,
+    title: "На реферат 15 стр.",
+    stat: "2 мин",
+    detail: "Вместо 40 минут каждый раз",
+  },
+  {
+    icon: ShieldCheck,
+    title: "За семестр",
+    stat: "8 часов",
+    detail: "Экономия на 12 работах",
+  },
+  {
+    icon: Sparkles,
+    title: "Шрифт, интервалы, нумерация",
+    stat: "Всё сразу",
+    detail: "Один клик — один результат",
+  },
+];
+
+const testimonials: WorkTypeTestimonial[] = [
+  {
+    name: "Мария С.",
+    university: "ВШЭ",
+    workType: "Реферат · 15 страниц",
+    rating: 5,
+    text: "Раньше тратила 40-60 минут на оформление каждого реферата. Теперь загружаю файл — через 2 минуты всё готово: шрифт, интервалы, нумерация. За семестр сэкономила около 8 часов на 12 работах.",
+  },
 ];
 
 const gostRequirements = [
@@ -90,15 +124,22 @@ export default function ReferatPage() {
     <WorkTypeLanding
       slug="referat"
       type="Реферат"
-      title="Форматирование реферата по ГОСТу"
-      subtitle="Загрузите реферат — получите правильно оформленный документ с корректными полями, шрифтами и отступами"
+      title="Каждый реферат — без ручного форматирования"
+      subtitle="Загрузи реферат — получишь готовый файл за 2 минуты. Экономь 8 часов за семестр."
+      identityLine="Двенадцатый реферат за семестр. Серьёзно, опять вручную?"
       description="Даже небольшой реферат требует правильного оформления по ГОСТу. Diplox быстро форматирует рефераты любого объема: настраивает поля страницы, шрифты, межстрочные интервалы, абзацные отступы и список литературы. Загрузите работу и методичку — получите готовый документ за пару минут."
       breadcrumbName="Форматирование реферата"
       breadcrumbPath="/referat"
       features={features}
+      benefits={benefits}
+      testimonials={testimonials}
       gostRequirements={gostRequirements}
       faqs={faqs}
       relatedTypes={relatedTypes}
+      featuresTitle="Как Diplox оформляет реферат"
+      bottomCtaTitle="Следующий реферат — за 2 минуты"
+      bottomCtaSubtitle="Первый документ бесплатно."
+      bottomCtaLabel="Оформить реферат"
     />
   );
 }

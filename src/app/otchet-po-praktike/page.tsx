@@ -1,9 +1,12 @@
 import { Metadata } from "next";
+import { Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { WorkTypeLanding } from "@/components/WorkTypeLanding";
+import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
+import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Форматирование отчета по практике по ГОСТу онлайн",
+  title: "Отчёт по практике оформлен за 2 минуты — по ГОСТу онлайн",
   description:
     "Автоматическое форматирование отчета по практике по ГОСТу и методичке. Загрузите отчет — получите документ с правильным оформлением титульного листа, содержания и основной части.",
   keywords: [
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
     canonical: `${SITE_URL}/otchet-po-praktike`,
   },
   openGraph: {
-    title: "Форматирование отчета по практике — Diplox",
+    title: "Отчёт по практике за 2 минуты — Diplox",
     description:
       "Загрузите отчет по практике и методичку — AI оформит документ по требованиям за минуты.",
     url: `${SITE_URL}/otchet-po-praktike`,
@@ -26,14 +29,45 @@ export const metadata: Metadata = {
 };
 
 const features = [
-  "Форматирование титульного листа",
-  "Оформление содержания (оглавления)",
-  "Настройка полей и размера страницы",
-  "Форматирование заголовков разделов",
-  "Настройка шрифтов и интервалов",
-  "Оформление приложений",
-  "Форматирование списка литературы",
-  "Нумерация страниц",
+  "Титульный лист оформлен по методичке — автоматически",
+  "Содержание сформировано и пронумеровано за секунды",
+  "Поля и шрифт выставлены точно по требованиям вуза",
+  "Заголовки разделов переформатированы без ручной правки",
+  "Приложения оформлены с правильной нумерацией",
+  "Список литературы по ГОСТ 7.1 — одним кликом",
+  "Нумерация страниц — корректная с первой попытки",
+  "Результат — файл, готовый к сдаче",
+];
+
+const benefits: WorkTypeBenefit[] = [
+  {
+    icon: Clock,
+    title: "На отчёт 30 стр.",
+    stat: "2 мин",
+    detail: "Даже с титульным листом",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Не в Антиплагиате",
+    stat: "0%",
+    detail: "Файлы удаляются через 24 часа",
+  },
+  {
+    icon: Sparkles,
+    title: "Титульный + содержание",
+    stat: "Всё сразу",
+    detail: "Приложения тоже оформлены",
+  },
+];
+
+const testimonials: WorkTypeTestimonial[] = [
+  {
+    name: "Игорь Т.",
+    university: "Бауманка",
+    workType: "Отчёт по практике · 28 страниц",
+    rating: 4,
+    text: "Нужно было срочно сдать отчёт по практике — оставалось 2 часа до дедлайна, а оформление даже не начинал. Загрузил в Diplox, через 2 минуты получил готовый файл. Единственное — пришлось вручную поправить пару подписей к рисункам.",
+  },
 ];
 
 const gostRequirements = [
@@ -90,15 +124,22 @@ export default function OtchetPoPraktikePage() {
     <WorkTypeLanding
       slug="otchet-po-praktike"
       type="Отчет по практике"
-      title="Форматирование отчета по практике по ГОСТу"
-      subtitle="Загрузите отчет и методичку — AI автоматически оформит документ с титульным листом, содержанием и приложениями"
+      title="Отчёт по практике — оформлен за 2 минуты"
+      subtitle="Загрузи отчёт и методичку — AI оформит титульный лист, содержание и приложения."
+      identityLine="2 часа до дедлайна, а оформление даже не начинал?"
       description="Отчет по практике — обязательный документ, который требует правильного оформления по ГОСТу и методичке вуза. Diplox анализирует требования вашей кафедры и форматирует все элементы отчета: титульный лист, содержание, основную часть, список литературы и приложения. Загрузите отчет и методичку — получите готовый документ за несколько минут."
       breadcrumbName="Форматирование отчета по практике"
       breadcrumbPath="/otchet-po-praktike"
       features={features}
+      benefits={benefits}
+      testimonials={testimonials}
       gostRequirements={gostRequirements}
       faqs={faqs}
       relatedTypes={relatedTypes}
+      featuresTitle="Как Diplox оформляет отчёт по практике"
+      bottomCtaTitle="Отчёт оформлен. Можно сдавать."
+      bottomCtaSubtitle="Первый документ бесплатно."
+      bottomCtaLabel="Оформить отчёт"
     />
   );
 }
