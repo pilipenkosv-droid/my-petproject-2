@@ -92,8 +92,8 @@ export class XmlDocumentFormatter {
 
     const p = this.paragraphPositions[index].node;
 
-    // Не трогаем пустые параграфы и неизвестные типы
-    if (blockType === "empty" || blockType === "unknown") return;
+    // Не трогаем пустые параграфы
+    if (blockType === "empty") return;
 
     // Не трогаем таблицы и рисунки — они могут содержать сложную разметку
     if (blockType === "table" || blockType === "figure") return;
@@ -454,8 +454,14 @@ export class XmlDocumentFormatter {
             rules.text.paragraphIndent,
         };
 
+      case "unknown":
       default:
-        return null;
+        // Fallback: применяем базовое форматирование body_text вместо пропуска
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: rules.text.fontSize,
+          lineSpacing: rules.text.lineSpacing,
+        };
     }
   }
 
@@ -464,10 +470,12 @@ export class XmlDocumentFormatter {
    */
   applyTableFormatting(rules: FormattingRules): void {
     const tableRules = rules.specialElements?.tables;
-    if (!tableRules?.fontSize?.default) return;
+    const fontFamily = rules.text.fontFamily;
+    if (!tableRules?.fontSize?.default && !fontFamily) return;
 
-    const expectedFontSize = tableRules.fontSize.default;
-    const sizeHalf = expectedFontSize * HALF_POINTS_PER_PT;
+    const sizeHalf = tableRules?.fontSize?.default
+      ? tableRules.fontSize.default * HALF_POINTS_PER_PT
+      : undefined;
 
     const bodyNodes = children(this.body);
     for (const node of bodyNodes) {
@@ -482,8 +490,17 @@ export class XmlDocumentFormatter {
             const runs = getRuns(p);
             for (const run of runs) {
               const rPr = ensureRPr(run);
-              setOrderedProp(rPr, "w:sz", { "w:val": String(sizeHalf) });
-              setOrderedProp(rPr, "w:szCs", { "w:val": String(sizeHalf) });
+              if (sizeHalf !== undefined) {
+                setOrderedProp(rPr, "w:sz", { "w:val": String(sizeHalf) });
+                setOrderedProp(rPr, "w:szCs", { "w:val": String(sizeHalf) });
+              }
+              if (fontFamily) {
+                setOrderedProp(rPr, "w:rFonts", {
+                  "w:ascii": fontFamily,
+                  "w:hAnsi": fontFamily,
+                  "w:cs": fontFamily,
+                });
+              }
             }
           }
         }
