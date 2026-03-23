@@ -3,6 +3,14 @@ import { getResultFile } from "@/lib/storage/file-storage";
 import { getJob } from "@/lib/storage/job-store";
 import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 
+/** JSON-ответ с явным charset=utf-8 (исправляет кракозябры на мобильных) */
+function jsonResponse(body: Record<string, unknown>, status: number) {
+  return new NextResponse(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+}
+
 async function logDownload(jobId: string, fileType: string, ymUid: string | null) {
   try {
     const job = await getJob(jobId);
@@ -34,14 +42,15 @@ async function validateAccess(request: NextRequest, jobId: string): Promise<bool
       .single();
 
     if (!data) return false;
-    if (data.used) return false;
 
-    // Токен действует 24 часа
+    // Токен действует 24 часа (многоразовый в пределах этого окна)
     const createdAt = new Date(data.created_at).getTime();
     if (Date.now() - createdAt > 24 * 60 * 60 * 1000) return false;
 
-    // Помечаем токен как использованный (fire-and-forget)
-    supabase.from("email_captures").update({ used: true }).eq("id", data.id).then();
+    // Помечаем токен как использованный (для аналитики, не блокирует повторное скачивание)
+    if (!data.used) {
+      supabase.from("email_captures").update({ used: true }).eq("id", data.id).then();
+    }
     return true;
   }
 
@@ -64,38 +73,29 @@ export async function GET(
   // fileId имеет формат: {jobId}_{type} (например: abc123_original или abc123_formatted)
   const parts = fileId.split("_");
   if (parts.length < 2) {
-    return NextResponse.json(
-      { error: "Неверный идентификатор файла" },
-      { status: 400 }
-    );
+    return jsonResponse({ error: "Неверный идентификатор файла" }, 400);
   }
 
   const jobId = parts.slice(0, -1).join("_");
   const type = parts[parts.length - 1] as "original" | "formatted";
 
   if (type !== "original" && type !== "formatted") {
-    return NextResponse.json(
-      { error: "Неверный тип файла" },
-      { status: 400 }
-    );
+    return jsonResponse({ error: "Неверный тип файла" }, 400);
   }
 
   // Проверяем доступ: авторизация или email-токен
   const hasAccess = await validateAccess(request, jobId);
   if (!hasAccess) {
-    return NextResponse.json(
+    return jsonResponse(
       { error: "Для скачивания необходимо авторизоваться или получить ссылку на email" },
-      { status: 403 }
+      403
     );
   }
 
   const fileBuffer = await getResultFile(jobId, type);
 
   if (!fileBuffer) {
-    return NextResponse.json(
-      { error: "Файл не найден" },
-      { status: 404 }
-    );
+    return jsonResponse({ error: "Файл не найден" }, 404);
   }
 
   // Серверный лог скачивания (fire-and-forget)
