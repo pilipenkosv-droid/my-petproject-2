@@ -123,7 +123,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "kursovoj-proekt-otlichiya-i-oformlenie",
-    coverImage: undefined,
+    coverImage: "/blog/kursovoj-proekt-otlichiya-i-oformlenie.png",
     title: "Курсовой проект: чем отличается от курсовой работы и как оформить",
     description:
       "Чем курсовой проект отличается от курсовой работы, какая структура и требования к оформлению по ГОСТ 7.32-2017. Расчётная часть, чертежи, типичные ошибки.",
