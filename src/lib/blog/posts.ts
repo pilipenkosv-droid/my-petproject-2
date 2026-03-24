@@ -17,7 +17,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "formatirovanie-word-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/formatirovanie-word-po-gostu.png",
     title: "Форматирование в Word по ГОСТу: как оформить работу быстро и без ошибок",
     description:
       "Пошаговое руководство по форматированию курсовой, диплома или ВКР в Word по ГОСТу. Шрифты, отступы, стили — и как автоматизировать рутину.",
