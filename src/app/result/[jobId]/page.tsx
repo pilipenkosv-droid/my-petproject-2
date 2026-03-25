@@ -14,6 +14,7 @@ import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertT
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { CrossSellCtas } from "@/features/result/components/CrossSellCtas";
+import { ChangesSummary } from "@/features/result/components/ChangesSummary";
 import { ProUpsellBanner } from "@/features/result/components/ProUpsellBanner";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
@@ -185,6 +186,14 @@ export default function ResultPage({ params }: ResultPageProps) {
             />
           )}
 
+          {/* Сводка изменений — что конкретно было исправлено */}
+          {job.changesSummary && job.changesSummary.length > 0 && (
+            <ChangesSummary
+              changes={job.changesSummary}
+              totalFixes={job.fixesApplied ?? 0}
+            />
+          )}
+
           {/* Hook-offer: полная версия уже готова */}
           {job.statistics?.wasTruncated && job.hasFullVersion && (
             <Card className="border-border bg-muted overflow-hidden relative">
@@ -254,7 +263,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                   onClick={() => handleDownload("formatted")}
                   className="relative flex flex-col items-center gap-3 border border-emerald-500/40 bg-emerald-500/5 p-6 transition-all duration-200 hover:bg-emerald-500/10 hover:border-emerald-500/60 text-left ring-1 ring-emerald-500/20 order-first sm:order-last"
                 >
-                  <span className="absolute top-3 right-3 text-[10px] font-semibold bg-emerald-500/15 text-emerald-500 px-2 py-0.5 rounded-full">
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold bg-emerald-500 text-white px-3 py-0.5 rounded-full shadow-sm whitespace-nowrap">
                     Скачать для сдачи
                   </span>
                   <div className="w-12 h-12 bg-foreground flex items-center justify-center shadow-sm">

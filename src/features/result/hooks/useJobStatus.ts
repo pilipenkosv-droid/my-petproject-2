@@ -16,10 +16,18 @@ interface UseJobStatusOptions {
   maxConsecutiveErrors?: number;
 }
 
+export interface ChangeSummaryItem {
+  type: string;
+  count: number;
+  before: string;
+  after: string;
+}
+
 /** Расширенный тип для ответа API */
 interface JobApiResponse extends Partial<JobState> {
   violationsCount?: number;
   fixesApplied?: number;
+  changesSummary?: ChangeSummaryItem[];
 }
 
 interface JobStatusResult {

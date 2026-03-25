@@ -34,6 +34,7 @@ import {
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { CSATWidget } from "@/features/result/components/CSATWidget";
 
 import { useSourceSearch } from "@/features/sources/hooks/useSourceSearch";
 import { SourcesTable } from "@/features/sources/components/SourcesTable";
@@ -328,7 +329,13 @@ function SourcesPageContent() {
             </BlurFade>
           )}
 
-          <BlurFade delay={0.25} inView>
+          {hasResult && (
+            <BlurFade delay={0.25} inView>
+              <CSATWidget toolType="sources" title="Оцените качество подбора" />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.3} inView>
             <RelatedTools currentTool="sources" />
           </BlurFade>
         </div>

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { CSATWidget } from "@/features/result/components/CSATWidget";
 
 
 type InputMode = "text" | "file";
@@ -377,7 +378,13 @@ function GrammarPageContent() {
             </BlurFade>
           )}
 
-          <BlurFade delay={0.25} inView>
+          {hasResult && (
+            <BlurFade delay={0.25} inView>
+              <CSATWidget toolType="grammar" title="Оцените качество проверки" />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.3} inView>
             <RelatedTools currentTool="grammar" />
           </BlurFade>
         </div>

@@ -30,6 +30,7 @@ import {
 import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { CSATWidget } from "@/features/result/components/CSATWidget";
 
 const OUTLINE_WORK_TYPES = WORK_TYPES.filter((wt) => wt.slug !== "other");
 
@@ -341,7 +342,13 @@ function OutlinePageContent() {
             </BlurFade>
           )}
 
-          <BlurFade delay={0.3} inView>
+          {outline && (
+            <BlurFade delay={0.3} inView>
+              <CSATWidget toolType="outline" title="Оцените качество содержания" />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.35} inView>
             <RelatedTools currentTool="outline" />
           </BlurFade>
         </div>

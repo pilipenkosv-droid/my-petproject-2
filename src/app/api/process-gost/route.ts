@@ -8,7 +8,7 @@ import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { DEFAULT_GOST_RULES } from "@/types/formatting-rules";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
-import { getUserAccess } from "@/lib/payment/access";
+import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { LAVA_CONFIG } from "@/lib/payment/config";
 
 export const maxDuration = 60;
@@ -82,6 +82,17 @@ export async function POST(request: NextRequest) {
     if (userId) {
       const access = await getUserAccess(userId);
       userAccessType = access.accessType;
+      if (!access.hasAccess) {
+        await failJob(jobId, "Лимит обработок исчерпан");
+        return NextResponse.json(
+          { error: "Лимит обработок исчерпан. Приобретите тариф.", redirectTo: "/pricing" },
+          { status: 402 }
+        );
+      }
+      // Списываем использование (для разовых/триала), кроме подписки и админа
+      if (access.accessType !== "subscription" && access.accessType !== "admin") {
+        await consumeUse(userId);
+      }
     }
 
     const rules = DEFAULT_GOST_RULES;

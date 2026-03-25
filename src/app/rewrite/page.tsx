@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { CSATWidget } from "@/features/result/components/CSATWidget";
 
 type InputMode = "text" | "file";
 type RewriteMode = "light" | "medium" | "heavy";
@@ -435,7 +436,13 @@ function RewritePageContent() {
             </BlurFade>
           )}
 
-          <BlurFade delay={0.25} inView>
+          {rewritten && (
+            <BlurFade delay={0.25} inView>
+              <CSATWidget toolType="rewrite" title="Оцените качество рерайта" />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.3} inView>
             <RelatedTools currentTool="rewrite" />
           </BlurFade>
         </div>

@@ -1,65 +1,51 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { RefreshCw, FileText, SpellCheck, BookOpen } from "lucide-react";
+
+const ctas = [
+  {
+    label: "Уникальность",
+    description: "Переписать текст",
+    href: "/rewrite",
+    icon: RefreshCw,
+  },
+  {
+    label: "Аннотация",
+    description: "Создать с помощью AI",
+    href: "/summarize",
+    icon: FileText,
+  },
+  {
+    label: "Грамматика",
+    description: "Проверить на ошибки",
+    href: "/grammar",
+    icon: SpellCheck,
+  },
+  {
+    label: "Источники",
+    description: "Подобрать литературу",
+    href: "/sources",
+    icon: BookOpen,
+  },
+];
 
 export function CrossSellCtas() {
   return (
-    <>
-      {/* CTA: Повысить уникальность */}
-      <Card className="border-border bg-muted">
-        <CardContent className="py-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Нужно повысить уникальность?
-          </p>
-          <Link href="/rewrite">
-            <Button variant="outline" size="sm">
-              Переписать текст для уникальности
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* CTA: Краткое содержание */}
-      <Card className="border-border bg-surface">
-        <CardContent className="py-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Нужна аннотация к работе?
-          </p>
-          <Link href="/summarize">
-            <Button variant="outline" size="sm">
-              Создать аннотацию с помощью AI
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* CTA: Проверка грамматики */}
-      <Card className="border-border bg-surface">
-        <CardContent className="py-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Хотите проверить текст на ошибки?
-          </p>
-          <Link href="/grammar">
-            <Button variant="outline" size="sm">
-              Проверить грамматику
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      {/* CTA: Подбор литературы */}
-      <Card className="border-border bg-surface">
-        <CardContent className="py-4 text-center">
-          <p className="text-sm text-muted-foreground mb-2">
-            Нужен список литературы?
-          </p>
-          <Link href="/sources">
-            <Button variant="outline" size="sm">
-              Подобрать источники
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-    </>
+    <div className="grid grid-cols-2 gap-3">
+      {ctas.map((cta) => (
+        <Link
+          key={cta.href}
+          href={cta.href}
+          className="flex items-center gap-3 border border-surface-border bg-surface p-4 transition-all duration-200 hover:bg-surface-hover hover:border-foreground/20"
+        >
+          <div className="w-9 h-9 bg-foreground flex items-center justify-center shrink-0">
+            <cta.icon className="w-4 h-4 text-background" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">{cta.label}</p>
+            <p className="text-xs text-on-surface-subtle truncate">{cta.description}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }

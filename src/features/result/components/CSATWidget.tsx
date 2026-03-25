@@ -13,14 +13,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 
 interface CSATWidgetProps {
-  jobId: string;
+  jobId?: string;
+  /** Тип инструмента для аналитики (formatting, rewrite, grammar, summarize, outline, sources) */
+  toolType?: string;
   workType?: string;
   requirementsMode?: string;
   wasTruncated?: boolean;
+  /** Заголовок виджета (по умолчанию "Оцените качество") */
+  title?: string;
   onSubmit?: (rating: number, feedback?: string) => void;
 }
 
-export function CSATWidget({ jobId, workType, requirementsMode, wasTruncated, onSubmit }: CSATWidgetProps) {
+export function CSATWidget({ jobId, toolType = "formatting", workType, requirementsMode, wasTruncated, title = "Оцените качество", onSubmit }: CSATWidgetProps) {
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -38,10 +42,10 @@ export function CSATWidget({ jobId, workType, requirementsMode, wasTruncated, on
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobId,
+          jobId: jobId || `${toolType}_${Date.now()}`,
           rating,
           feedback: feedback.trim() || undefined,
-          workType,
+          workType: workType || toolType,
           requirementsMode,
           wasTruncated,
           timestamp: new Date().toISOString(),
@@ -80,15 +84,15 @@ export function CSATWidget({ jobId, workType, requirementsMode, wasTruncated, on
 
   return (
     <Card className="bg-surface border-surface-border">
-      <CardHeader>
-        <CardTitle className="text-foreground">Оцените качество форматирования</CardTitle>
+      <CardHeader className="text-center">
+        <CardTitle className="text-foreground">{title}</CardTitle>
         <CardDescription>
           Помогите нам стать лучше — поделитесь своими впечатлениями
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Звезды */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}

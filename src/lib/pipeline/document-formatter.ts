@@ -383,6 +383,11 @@ export async function formatDocument(
       : Promise.resolve(buffer), // fallback: return original if no markup
   ]);
 
+  // Проверяем, что форматирование реально изменило документ
+  if (buffer.length === formattedDocument.length && buffer.equals(formattedDocument)) {
+    console.warn(`[formatDocument] Отформатированный документ идентичен оригиналу! Violations: ${violations.length}, enrichedParagraphs: ${enrichedParagraphs?.length ?? 0}`);
+  }
+
   // Для trial — обрезаем оба результата до лимита страниц ПОСЛЕ форматирования
   // Но СОХРАНЯЕМ полные версии для разблокировки после оплаты
   let wasTruncated = false;

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
+import { CSATWidget } from "@/features/result/components/CSATWidget";
 
 type InputMode = "text" | "file";
 type TargetLength = "short" | "medium" | "detailed";
@@ -460,7 +461,13 @@ function SummarizePageContent() {
             </BlurFade>
           )}
 
-          <BlurFade delay={0.25} inView>
+          {summary && (
+            <BlurFade delay={0.25} inView>
+              <CSATWidget toolType="summarize" title="Оцените качество аннотации" />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.3} inView>
             <RelatedTools currentTool="summarize" />
           </BlurFade>
         </div>
