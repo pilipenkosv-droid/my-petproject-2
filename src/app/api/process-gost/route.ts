@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
-      // Списываем использование (для разовых/триала), кроме подписки и админа
-      if (access.accessType !== "subscription" && access.accessType !== "admin") {
+      // Списываем использование (для разовых/триала/подписки), кроме админа
+      if (access.accessType !== "admin") {
         await consumeUse(userId);
       }
     }
