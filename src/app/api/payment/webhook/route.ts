@@ -10,6 +10,8 @@ import { LAVA_CONFIG } from "@/lib/payment/config";
 import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
 import { updateJob } from "@/lib/storage/job-store";
 import { canGrantBotAccess, getUserProfile, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
+import { sendEmail } from "@/lib/email/transport";
+import { subscriptionWelcomeEmail, oneTimePurchaseEmail } from "@/lib/email/templates";
 
 interface LavaWebhookPayload {
   type: string;
@@ -28,8 +30,9 @@ function verifyBasicAuth(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Basic ")) return false;
 
-  const expectedLogin = process.env.LAVA_WEBHOOK_LOGIN || "smartformat";
-  const expectedPassword = process.env.LAVA_WEBHOOK_PASSWORD || "sf_webhook_2024";
+  const expectedLogin = process.env.LAVA_WEBHOOK_LOGIN;
+  const expectedPassword = process.env.LAVA_WEBHOOK_PASSWORD;
+  if (!expectedLogin || !expectedPassword) return false;
 
   const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
   const [login, password] = decoded.split(":");
@@ -65,6 +68,12 @@ export async function POST(request: NextRequest) {
 
         if (!payment) {
           console.error(`Payment not found for invoice ${invoiceId}`);
+          break;
+        }
+
+        // Идемпотентность: если уже обработан — пропускаем
+        if (payment.status === "completed") {
+          console.log(`Webhook: payment ${payment.id} already completed, skipping`);
           break;
         }
 
@@ -116,23 +125,55 @@ export async function POST(request: NextRequest) {
 
         console.log(`✅ Payment completed: ${payment.offer_type} for user ${payment.user_id}`);
 
+        // Получаем профиль юзера (переиспользуем для бота и email)
+        let profile: { email: string; name: string } | null = null;
+        try {
+          profile = await getUserProfile(supabase, payment.user_id);
+        } catch {
+          console.error("Failed to get user profile for post-payment actions");
+        }
+
         // Бот-провижнинг для подписчиков Pro (первые 10)
         if (payment.offer_type === "subscription") {
           try {
             const canGrant = await canGrantBotAccess(supabase);
-            if (canGrant) {
-              const profile = await getUserProfile(supabase, payment.user_id);
-              if (profile) {
-                const result = await provisionBotUser(profile.email, profile.name);
-                if (result?.success) {
-                  await storeBotAccess(supabase, payment.user_id, result.deepLink);
-                  console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);
-                }
+            if (canGrant && profile) {
+              const result = await provisionBotUser(profile.email, profile.name);
+              if (result?.success) {
+                await storeBotAccess(supabase, payment.user_id, result.deepLink);
+                console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);
               }
             }
           } catch (botError) {
-            // Сбой бота не должен ломать оплату
             console.error("Bot provisioning failed (non-critical):", botError);
+          }
+        }
+
+        // Welcome-email после оплаты
+        if (profile) {
+          try {
+            if (payment.offer_type === "subscription") {
+              const { data: access } = await supabase
+                .from("user_access")
+                .select("bot_deep_link")
+                .eq("user_id", payment.user_id)
+                .single();
+
+              await sendEmail({
+                to: profile.email,
+                subject: "Подписка Pro активирована — Diplox",
+                html: subscriptionWelcomeEmail({ botDeepLink: access?.bot_deep_link }),
+              });
+            } else {
+              await sendEmail({
+                to: profile.email,
+                subject: "Спасибо за покупку — Diplox",
+                html: oneTimePurchaseEmail(),
+              });
+            }
+            console.log(`📧 Welcome email sent to ${profile.email}`);
+          } catch (emailError) {
+            console.error("Welcome email failed (non-critical):", emailError);
           }
         }
 

@@ -299,6 +299,42 @@ export async function deleteJob(id: string): Promise<boolean> {
 }
 
 /**
+ * Маркировать зависшие задачи как failed
+ * (промежуточные статусы без обновления дольше stuckAfterMs)
+ */
+export async function resetStuckJobs(
+  stuckAfterMs: number = 30 * 60 * 1000
+): Promise<number> {
+  const supabase = getSupabaseAdmin();
+  const cutoff = new Date(Date.now() - stuckAfterMs).toISOString();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({
+      status: "failed",
+      error: "Превышено время обработки",
+      updated_at: new Date().toISOString(),
+    })
+    .in("status", [
+      "pending",
+      "uploading",
+      "extracting_text",
+      "parsing_rules",
+      "analyzing",
+      "formatting",
+    ])
+    .lt("updated_at", cutoff)
+    .select("id");
+
+  if (error) {
+    console.error("[job-store] resetStuckJobs error:", error);
+    return 0;
+  }
+
+  return data?.length ?? 0;
+}
+
+/**
  * Очистить старые задачи
  */
 export async function cleanupOldJobs(
