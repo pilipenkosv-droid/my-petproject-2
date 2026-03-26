@@ -166,6 +166,20 @@ export class XmlDocumentFormatter {
       }
     }
 
+    // Разрыв страницы перед заголовком (newPageForEach)
+    if (blockType.startsWith("heading_")) {
+      const levelStr = blockType.split("_")[1];
+      const levelKey = `level${levelStr}` as keyof typeof rules.headings;
+      const headingStyle = rules.headings[levelKey];
+      if (headingStyle?.newPageForEach) {
+        if (!findChild(pPr, "w:pageBreakBefore")) {
+          children(pPr).unshift(createNode("w:pageBreakBefore"));
+        }
+      } else {
+        removeChild(pPr, "w:pageBreakBefore");
+      }
+    }
+
     // Применяем форматирование runs (шрифт, размер, bold)
     const runs = getRuns(p);
     for (const run of runs) {
@@ -236,6 +250,118 @@ export class XmlDocumentFormatter {
       "w:left": String(Math.round(margins.left * TWIPS_PER_MM)),
       "w:right": String(Math.round(margins.right * TWIPS_PER_MM)),
     });
+  }
+
+  /**
+   * Добавляет нумерацию страниц через footer (если ещё нет)
+   *
+   * Создаёт word/footer1.xml с полем PAGE, добавляет relationship и content type,
+   * привязывает footer к sectPr. Паттерн аналогичен comments.xml в document-formatter.ts.
+   */
+  async applyPageNumbering(rules: FormattingRules): Promise<void> {
+    // Проверяем, есть ли уже footer в _rels
+    const relsPath = "word/_rels/document.xml.rels";
+    const relsXml = await this.zip.file(relsPath)?.async("string");
+    if (!relsXml) return;
+
+    const relsData = parseDocxXml(relsXml);
+    const relsRoot = relsData.find((n) => "Relationships" in n);
+    if (!relsRoot) return;
+
+    const rels = children(relsRoot);
+    const hasFooterRel = rels.some((r) => {
+      const type = r[":@"]?.["@_Type"];
+      return typeof type === "string" && type.includes("/footer");
+    });
+
+    // Если footer уже есть — не перезаписываем (сохраняем оригинальный)
+    if (hasFooterRel) return;
+
+    // Генерируем footer XML
+    const { buildPageNumberFooterXml, FOOTER_RELATIONSHIP_TYPE, FOOTER_CONTENT_TYPE } =
+      await import("./page-numbering");
+
+    const footerXml = buildPageNumberFooterXml(rules);
+    this.zip.file("word/footer1.xml", footerXml);
+
+    // Добавляем relationship
+    let maxId = 0;
+    rels.forEach((r) => {
+      const id = r[":@"]?.["@_Id"];
+      if (typeof id === "string") {
+        const num = parseInt(id.replace("rId", "") || "0");
+        if (num > maxId) maxId = num;
+      }
+    });
+
+    const footerRId = `rId${maxId + 1}`;
+    rels.push(
+      createNode("Relationship", {
+        Id: footerRId,
+        Type: FOOTER_RELATIONSHIP_TYPE,
+        Target: "footer1.xml",
+      })
+    );
+
+    const newRelsXml = buildDocxXml(relsData);
+    this.zip.file(relsPath, newRelsXml);
+
+    // Добавляем content type
+    const contentTypesXml = await this.zip
+      .file("[Content_Types].xml")
+      ?.async("string");
+    if (contentTypesXml) {
+      const contentTypes = parseDocxXml(contentTypesXml);
+      const typesRoot = contentTypes.find((n) => "Types" in n);
+      if (typesRoot) {
+        const overrides = children(typesRoot);
+        const hasFooterOverride = overrides.some(
+          (o) => o[":@"]?.["@_PartName"] === "/word/footer1.xml"
+        );
+
+        if (!hasFooterOverride) {
+          overrides.push(
+            createNode("Override", {
+              PartName: "/word/footer1.xml",
+              ContentType: FOOTER_CONTENT_TYPE,
+            })
+          );
+        }
+
+        const newContentTypesXml = buildDocxXml(contentTypes);
+        this.zip.file("[Content_Types].xml", newContentTypesXml);
+      }
+    }
+
+    // Привязываем footer к body-level sectPr
+    let sectPr = getSectPr(this.body);
+    if (!sectPr) {
+      const lastP = this.paragraphPositions[this.paragraphPositions.length - 1]?.node;
+      if (lastP) {
+        const pPr = findChild(lastP, "w:pPr");
+        if (pPr) sectPr = findChild(pPr, "w:sectPr");
+      }
+    }
+    if (!sectPr) {
+      sectPr = createNode("w:sectPr");
+      children(this.body).push(sectPr);
+    }
+
+    // w:footerReference type="default"
+    children(sectPr).unshift(
+      createNode("w:footerReference", {
+        "w:type": "default",
+        "r:id": footerRId,
+      })
+    );
+
+    // w:pgNumType — начало нумерации
+    const startFrom = rules.additional?.pageNumbering?.startFrom;
+    if (startFrom !== undefined && startFrom > 1) {
+      setOrderedProp(sectPr, "w:pgNumType", {
+        "w:start": String(startFrom),
+      });
+    }
   }
 
   /**

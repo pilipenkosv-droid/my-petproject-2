@@ -49,6 +49,8 @@ export interface DocxParagraph {
     indent?: number;
     lineSpacing?: number;
   };
+  hasPageBreakBefore?: boolean;
+  hasManualPageBreak?: boolean;
   blockType?: BlockType;
   blockMetadata?: {
     language?: "ru" | "en" | "mixed";
@@ -74,13 +76,18 @@ export interface DocxTable {
   rows: DocxTableRow[];
 }
 
+export interface DocxSection {
+  margins: { top: number; bottom: number; left: number; right: number };
+  pageSize: { width: number; height: number };
+  breakType?: "nextPage" | "continuous" | "evenPage" | "oddPage";
+  hasPageNumbering?: boolean;
+  pageNumberStart?: number;
+}
+
 export interface DocxDocument {
   paragraphs: DocxParagraph[];
   tables: DocxTable[];
-  sections: {
-    margins: { top: number; bottom: number; left: number; right: number };
-    pageSize: { width: number; height: number };
-  }[];
+  sections: DocxSection[];
 }
 
 /**
@@ -286,6 +293,7 @@ export async function parseDocxStructure(buffer: Buffer): Promise<DocxDocument> 
     sections.push({
       margins: { top: 20, bottom: 20, left: 30, right: 15 },
       pageSize: { width: 210, height: 297 },
+      breakType: "nextPage",
     });
   }
 
@@ -331,6 +339,15 @@ function parseParagraphNode(pNode: OrderedXmlNode, index: number): DocxParagraph
   const lineVal = spacingNode ? getAttr(spacingNode, "w:line") : undefined;
   const lineSpacing = lineVal ? parseInt(lineVal) / 240 : undefined;
 
+  // Разрыв страницы перед параграфом (w:pageBreakBefore в pPr)
+  const hasPageBreakBefore = pPr ? !!findChild(pPr, "w:pageBreakBefore") : false;
+
+  // Ручной разрыв страницы внутри runs (w:br w:type="page")
+  const hasManualPageBreak = runs.some((r) => {
+    const br = findChild(r, "w:br");
+    return br ? getAttr(br, "w:type") === "page" : false;
+  });
+
   return {
     index,
     text,
@@ -344,6 +361,8 @@ function parseParagraphNode(pNode: OrderedXmlNode, index: number): DocxParagraph
       indent,
       lineSpacing,
     },
+    hasPageBreakBefore,
+    hasManualPageBreak,
   };
 }
 
@@ -391,9 +410,21 @@ function parseTableNode(tblNode: OrderedXmlNode, tableIndex: number, bodyIndex: 
 /**
  * Извлекает данные секции из ordered-узла w:sectPr
  */
-function extractSectionFromNode(sectPr: OrderedXmlNode): DocxDocument["sections"][0] {
+function extractSectionFromNode(sectPr: OrderedXmlNode): DocxSection {
   const pgMar = findChild(sectPr, "w:pgMar");
   const pgSz = findChild(sectPr, "w:pgSz");
+  const typeNode = findChild(sectPr, "w:type");
+  const pgNumType = findChild(sectPr, "w:pgNumType");
+
+  // Тип разрыва секции
+  const breakTypeVal = typeNode ? getAttr(typeNode, "w:val") : undefined;
+  const breakType = (breakTypeVal === "continuous" || breakTypeVal === "evenPage" || breakTypeVal === "oddPage")
+    ? breakTypeVal
+    : "nextPage" as const;
+
+  // Нумерация страниц
+  const hasFooterRef = !!findChild(sectPr, "w:footerReference") || !!findChild(sectPr, "w:headerReference");
+  const pgNumStart = pgNumType ? getAttr(pgNumType, "w:start") : undefined;
 
   return {
     margins: {
@@ -406,6 +437,9 @@ function extractSectionFromNode(sectPr: OrderedXmlNode): DocxDocument["sections"
       width: pgSz ? parseFloat(getAttr(pgSz, "w:w") || "0") / TWIPS_PER_MM : 210,
       height: pgSz ? parseFloat(getAttr(pgSz, "w:h") || "0") / TWIPS_PER_MM : 297,
     },
+    breakType,
+    hasPageNumbering: hasFooterRef,
+    pageNumberStart: pgNumStart ? parseInt(pgNumStart) : undefined,
   };
 }
 
@@ -708,6 +742,19 @@ function checkHeadingFormatting(
         message: `Заголовок уровня ${headingInfo.level} ${h.bold ? "должен быть" : "не должен быть"} полужирным`,
         expected: h.bold ? "полужирный" : "обычный",
         actual: props.bold ? "полужирный" : "обычный",
+        location: { paragraphIndex: paragraph.index, text: textSnippet },
+        autoFixable: true,
+      });
+    }
+
+    // Проверка разрыва страницы перед заголовком
+    if (h.newPageForEach && !paragraph.hasPageBreakBefore && !paragraph.hasManualPageBreak) {
+      violations.push({
+        ruleId: `heading${headingInfo.level}-pagebreak-${paragraph.index}`,
+        rulePath: `headings.level${headingInfo.level}.newPageForEach`,
+        message: `Заголовок уровня ${headingInfo.level} должен начинаться с новой страницы`,
+        expected: "разрыв страницы перед заголовком",
+        actual: "нет разрыва",
         location: { paragraphIndex: paragraph.index, text: textSnippet },
         autoFixable: true,
       });

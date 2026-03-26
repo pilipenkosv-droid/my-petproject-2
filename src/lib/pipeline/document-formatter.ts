@@ -87,6 +87,9 @@ async function createFormattedDocumentXml(
   // Применяем форматирование к таблицам (размер шрифта)
   formatter.applyTableFormatting(rules);
 
+  // Нумерация страниц через footer (если нет существующего)
+  await formatter.applyPageNumbering(rules);
+
   // Для библиографии — дополнительно применяем текстовые замены
   // Нужно загрузить документ заново для работы с текстом через XML
   const intermediateBuffer = await formatter.saveDocument();
