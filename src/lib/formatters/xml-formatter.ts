@@ -599,8 +599,11 @@ export class XmlDocumentFormatter {
     const fontFamily = rules.text.fontFamily;
     if (!tableRules?.fontSize?.default && !fontFamily) return;
 
-    const sizeHalf = tableRules?.fontSize?.default
+    const maxSizeHalf = tableRules?.fontSize?.default
       ? tableRules.fontSize.default * HALF_POINTS_PER_PT
+      : undefined;
+    const minSizeHalf = tableRules?.fontSize?.exceptional
+      ? tableRules.fontSize.exceptional * HALF_POINTS_PER_PT
       : undefined;
 
     const bodyNodes = children(this.body);
@@ -616,10 +619,23 @@ export class XmlDocumentFormatter {
             const runs = getRuns(p);
             for (const run of runs) {
               const rPr = ensureRPr(run);
-              if (sizeHalf !== undefined) {
-                setOrderedProp(rPr, "w:sz", { "w:val": String(sizeHalf) });
-                setOrderedProp(rPr, "w:szCs", { "w:val": String(sizeHalf) });
+
+              // Исправлять шрифт только если он вне допустимого диапазона [exceptional..default]
+              if (maxSizeHalf !== undefined) {
+                const szNode = findChild(rPr, "w:sz");
+                const currentSize = szNode?.[":@"]?.["@_w:val"]
+                  ? Number(szNode[":@"]["@_w:val"])
+                  : undefined;
+                const minAllowed = minSizeHalf ?? maxSizeHalf;
+                const isOutOfRange = currentSize !== undefined
+                  && (currentSize < minAllowed || currentSize > maxSizeHalf);
+
+                if (isOutOfRange || currentSize === undefined) {
+                  setOrderedProp(rPr, "w:sz", { "w:val": String(maxSizeHalf) });
+                  setOrderedProp(rPr, "w:szCs", { "w:val": String(maxSizeHalf) });
+                }
               }
+
               if (fontFamily) {
                 setOrderedProp(rPr, "w:rFonts", {
                   "w:ascii": fontFamily,

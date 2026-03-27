@@ -9,7 +9,7 @@ interface ChangeSummaryItem {
   after: string;
 }
 
-function buildChangesSummary(violations: FormattingViolation[]): ChangeSummaryItem[] {
+function buildChangesSummary(violations: FormattingViolation[]): { items: ChangeSummaryItem[]; uniqueCount: number } {
   const groups = new Map<string, { count: number; before: string; after: string }>();
 
   for (const v of violations) {
@@ -27,15 +27,16 @@ function buildChangesSummary(violations: FormattingViolation[]): ChangeSummaryIt
     }
   }
 
-  return Array.from(groups.entries())
+  const sorted = Array.from(groups.entries())
     .map(([key, g]) => ({
       type: key.split("|")[0],
       count: g.count,
       before: g.before,
       after: g.after,
     }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+    .sort((a, b) => b.count - a.count);
+
+  return { items: sorted.slice(0, 5), uniqueCount: sorted.length };
 }
 
 export async function GET(
@@ -67,7 +68,10 @@ export async function GET(
     });
   }
 
-  const changesSummary = job.violations ? buildChangesSummary(job.violations) : [];
+  const { items: changesSummary, uniqueCount } = job.violations
+    ? buildChangesSummary(job.violations)
+    : { items: [], uniqueCount: 0 };
+  const fixesApplied = job.violations?.filter((v) => v.autoFixable).length ?? 0;
 
   return NextResponse.json({
     id: job.id,
@@ -76,8 +80,8 @@ export async function GET(
     statusMessage: job.statusMessage,
     error: job.error,
     statistics: job.statistics,
-    violationsCount: job.violations?.length ?? 0,
-    fixesApplied: job.violations?.filter((v) => v.autoFixable).length ?? 0,
+    violationsCount: uniqueCount,
+    fixesApplied,
     changesSummary,
     hasFullVersion: job.hasFullVersion,
     createdAt: job.createdAt,

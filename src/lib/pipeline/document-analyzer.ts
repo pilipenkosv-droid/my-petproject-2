@@ -1036,7 +1036,8 @@ function checkTableFormatting(
   const tableRules = rules.specialElements?.tables;
   if (!tableRules) return violations;
 
-  const expectedFontSize = tableRules.fontSize?.default || 12;
+  const maxFontSize = tableRules.fontSize?.default || 12;
+  const minFontSize = tableRules.fontSize?.exceptional || 10;
 
   tables.forEach((table) => {
     table.rows.forEach((row, rowIdx) => {
@@ -1047,13 +1048,13 @@ function checkTableFormatting(
           const props = paragraph.properties;
           const textSnippet = paragraph.text.slice(0, 30) + (paragraph.text.length > 30 ? "..." : "");
 
-          // Проверка размера шрифта в таблице
-          if (props.fontSize && Math.abs(props.fontSize - expectedFontSize) > 0.5) {
+          // Проверка размера шрифта в таблице — допустим диапазон [exceptional..default]
+          if (props.fontSize && (props.fontSize < minFontSize - 0.5 || props.fontSize > maxFontSize + 0.5)) {
             violations.push({
               ruleId: `table-${table.index}-r${rowIdx}-c${cellIdx}-fontsize`,
               rulePath: "specialElements.tables.fontSize.default",
               message: `Неверный размер шрифта в таблице ${table.index + 1}`,
-              expected: `${expectedFontSize} pt`,
+              expected: `${minFontSize}–${maxFontSize} pt`,
               actual: `${props.fontSize} pt`,
               location: {
                 paragraphIndex: -1,
