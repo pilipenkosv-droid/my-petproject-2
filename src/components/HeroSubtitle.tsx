@@ -16,7 +16,7 @@ export function HeroSubtitle() {
             "Без Word, который всё ломает",
           ]}
           duration={2800}
-          className="font-mono text-lg sm:text-2xl md:text-3xl lg:text-4xl font-medium text-muted-foreground"
+          className="font-mono text-sm sm:text-lg md:text-xl lg:text-2xl font-medium text-muted-foreground"
         />
       </h1>
     </div>

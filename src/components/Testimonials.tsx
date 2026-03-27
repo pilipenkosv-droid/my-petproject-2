@@ -64,7 +64,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="relative py-24 px-6">
+    <section id="testimonials" className="relative py-24 px-6 scroll-mt-20">
       <div className="mx-auto max-w-4xl">
         <BlurFade delay={0.1} inView>
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { FileText, Sparkles, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck, ShieldCheck, Bot } from "lucide-react";
 
 import { HeroSubtitle } from "@/components/HeroSubtitle";
@@ -13,7 +14,21 @@ import { Testimonials } from "@/components/Testimonials";
 import { TextRibbonSection } from "@/components/TextRibbonSection";
 import { TransformationStory } from "@/components/TransformationStory";
 
-export default function LandingPage() {
+async function getDocumentsProcessed(): Promise<number> {
+  try {
+    const admin = getSupabaseAdmin();
+    const { count } = await admin
+      .from("jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "completed");
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function LandingPage() {
+  const documentsProcessed = await getDocumentsProcessed();
   return (
     <main className="min-h-screen overflow-x-hidden">
       <Header />
@@ -42,7 +57,7 @@ export default function LandingPage() {
             </BlurFade>
 
             <BlurFade delay={0.4} inView>
-              <p className="text-lg text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
+              <p className="text-sm sm:text-base text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
                 Ты написал работу. Диплом оформим мы — по твоей методичке, по ГОСТу.
                 <br />
                 За три минуты. Сдаёшь с первого раза — без замечаний.
@@ -61,12 +76,12 @@ export default function LandingPage() {
             </BlurFade>
 
             {/* Text ribbon — before/after animation */}
-            <div className="mt-12 -mx-4 sm:-mx-6">
+            <div className="mt-8 -mx-4 sm:-mx-6">
               <TextRibbonSection />
             </div>
 
-            <div className="mt-12">
-              <StatsCounter />
+            <div className="mt-8">
+              <StatsCounter documentsProcessed={documentsProcessed} />
             </div>
           </div>
         </div>

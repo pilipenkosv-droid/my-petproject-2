@@ -38,7 +38,6 @@ import {
   LogOut,
   Crown,
   UserPlus,
-  Sparkles,
   Menu,
   GraduationCap,
   BookOpen,
@@ -295,13 +294,6 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
             <div className="w-8 h-8 rounded-full bg-surface-hover animate-pulse" />
           ) : user ? (
             <>
-              {/* "Начать" button for authenticated users */}
-              <Link href="/create">
-                <Button variant="glow" size="sm">
-                  <Sparkles className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Начать</span>
-                </Button>
-              </Link>
               <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center rounded-full p-1 cursor-pointer hover:bg-surface-hover transition-colors">

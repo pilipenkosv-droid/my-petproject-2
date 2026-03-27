@@ -52,7 +52,7 @@ function CurvedTextSvg({
   const svgContent = `
     <path id="${curveId}" d="${curvePath}"
       ${strokeWidth ? `stroke="${strokeColor || "#a855f7"}" stroke-width="${strokeWidth}" stroke-linecap="round" opacity="${strokeOpacity ?? 0.15}"` : 'stroke="none"'} fill="none" />
-    <text x="0" font-size="30" font-weight="${textWeight || 300}"
+    <text x="0" font-size="38" font-weight="${textWeight || 300}"
       fill="currentColor" opacity="${textOpacity ?? 0.2}">
       <textPath xlink:href="#${curveId}">${escapeHtml(long)}</textPath>
       <animate attributeName="x" dur="${speed}s"
@@ -114,7 +114,7 @@ export function TextRibbon({
 
         {/* Center icon — overlaps both curve ends */}
         {centerIcon && (
-          <div className="relative z-10 shrink-0 mx-[-28px] sm:mx-[-36px]">
+          <div className="relative z-10 shrink-0 mx-[-16px] sm:mx-[-20px]">
             {centerIcon}
           </div>
         )}

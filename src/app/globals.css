@@ -251,6 +251,7 @@ h1, h2, h3, h4, h5, h6 {
   animation: shake 0.3s ease-in-out;
 }
 
+
 /* Backward-compat: old SSR references --gradient-primary for logo background */
 :root {
   --gradient-primary: oklch(0.15 0 0);
