@@ -17,7 +17,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "servis-oformleniya-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/servis-oformleniya-po-gostu.png",
     title: "Сервис оформления по ГОСТу: как автоматизировать форматирование диплома",
     description:
       "Как выбрать сервис оформления по ГОСТу для диплома или курсовой. Сравниваем ручное форматирование, фрилансеров и автоматические инструменты — плюсы, минусы, цены.",
@@ -134,7 +134,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "kak-oformit-prilozheniya-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/kak-oformit-prilozheniya-po-gostu.png",
     title: "Как оформить приложения по ГОСТу: правила, нумерация и примеры",
     description:
       "Как правильно оформить приложения в дипломе, курсовой или ВКР по ГОСТу. Нумерация, обозначение, ссылки в тексте — пошаговая инструкция с примерами.",
@@ -232,7 +232,7 @@ export const blogPosts: BlogPost[] = [
   },
   {
     slug: "kak-oformit-soderzhanie-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/kak-oformit-soderzhanie-po-gostu.png",
     title: "Как оформить содержание по ГОСТу: автособираемое оглавление в Word",
     description:
       "Как правильно оформить содержание курсовой или дипломной работы по ГОСТу. Автособираемое оглавление в Word за 5 минут — пошаговая инструкция.",
