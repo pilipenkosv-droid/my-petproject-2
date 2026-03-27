@@ -60,3 +60,4 @@ docs/*.pdf
 *.cache
 .turbo/
 .vercel
+.env*.local
