@@ -196,7 +196,7 @@ export function downloadLinkEmail({ downloadUrl, downloadType }: DownloadLinkEma
  * Welcome-email для подписчиков Pro (399 ₽/мес).
  * Если botDeepLink передан — показываем блок с ссылкой на Telegram-бота.
  */
-export function subscriptionWelcomeEmail({ botDeepLink }: SubscriptionWelcomeEmailParams): string {
+export function subscriptionWelcomeEmail({ botDeepLink }: SubscriptionWelcomeEmailParams = {}): string {
   const botBlock = botDeepLink
     ? `<!-- Bot access -->
           <tr>
@@ -220,7 +220,27 @@ export function subscriptionWelcomeEmail({ botDeepLink }: SubscriptionWelcomeEma
               </table>
             </td>
           </tr>`
-    : "";
+    : `<!-- Second Brain upsell for Pro buyers -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0a0a0a;">
+                      &#129504; Хочешь AI-помощника для учёбы?
+                    </p>
+                    <p style="margin:0 0 12px;font-size:13px;color:#666666;line-height:1.5;">
+                      Second Brain в Telegram — сохраняй лекции голосом, задавай вопросы по своим материалам, получай конспекты.
+                    </p>
+                    <a href="https://diplox.online/second-brain?ref=email-pro"
+                       style="font-size:12px;color:#0a0a0a;font-weight:600;text-decoration:underline;">
+                      Узнать о Pro Plus &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
 
   return emailLayout("Подписка Pro активирована", `
           <!-- Content -->
@@ -249,7 +269,7 @@ export function subscriptionWelcomeEmail({ botDeepLink }: SubscriptionWelcomeEma
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center">
-                    <a href="https://diplox.online/?ref=welcome-email"
+                    <a href="https://diplox.online/create?ref=welcome-email"
                        target="_blank"
                        style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">
                       Оформить документ
@@ -283,7 +303,7 @@ export function oneTimePurchaseEmail(): string {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
                 <tr>
                   <td align="center">
-                    <a href="https://diplox.online/?ref=welcome-email"
+                    <a href="https://diplox.online/create?ref=welcome-email"
                        target="_blank"
                        style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">
                       Оформить документ
@@ -294,7 +314,7 @@ export function oneTimePurchaseEmail(): string {
             </td>
           </tr>
 
-          <!-- Upsell -->
+          <!-- Upsell: Pro -->
           <tr>
             <td style="padding:0 32px 24px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -304,7 +324,7 @@ export function oneTimePurchaseEmail(): string {
                       Оформляешь работы регулярно?
                     </p>
                     <p style="margin:0 0 12px;font-size:12px;color:#666666;line-height:1.4;">
-                      С подпиской Pro — 39 &#8381; за документ вместо 159 &#8381;. 10 обработок в месяц + Telegram-бот для учёбы.
+                      С подпиской Pro — 39 &#8381; за документ вместо 159 &#8381;. 10 обработок в месяц.
                     </p>
                     <a href="https://diplox.online/pricing?ref=welcome-email"
                        style="font-size:12px;color:#0a0a0a;font-weight:600;text-decoration:underline;">
@@ -314,5 +334,27 @@ export function oneTimePurchaseEmail(): string {
                 </tr>
               </table>
             </td>
-          </tr>`);
+          </tr>
+
+          <!-- Upsell: Second Brain -->
+          <tr>
+            <td style="padding:0 32px 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
+                    <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#0a0a0a;">
+                      &#129504; AI-помощник для учёбы
+                    </p>
+                    <p style="margin:0 0 12px;font-size:12px;color:#666666;line-height:1.4;">
+                      Second Brain в Telegram: сохраняй заметки голосом, задавай вопросы по своим материалам.
+                    </p>
+                    <a href="https://diplox.online/second-brain?ref=email-onetime"
+                       style="font-size:12px;color:#0a0a0a;font-weight:600;text-decoration:underline;">
+                      Узнать о Second Brain &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);;
 }

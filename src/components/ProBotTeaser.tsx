@@ -40,7 +40,7 @@ export function ProBotTeaser() {
           </div>
           <div>
             <p className="text-foreground font-semibold">
-              AI-напарник в Telegram — входит в Pro
+              Second Brain — AI-напарник в Telegram
             </p>
             <p className="text-on-surface-muted text-sm">
               Личный помощник по учёбе прямо в мессенджере
@@ -66,10 +66,10 @@ export function ProBotTeaser() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <AlphaSpotsCounter />
           <Link
-            href="/bot"
+            href="/second-brain"
             className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
           >
-            Подробнее о боте →
+            Подробнее о Second Brain →
           </Link>
         </div>
       </CardContent>

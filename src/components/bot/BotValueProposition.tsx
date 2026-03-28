@@ -5,7 +5,7 @@ const anchors = [
   {
     icon: Coffee,
     title: "Дешевле похода в кофейню",
-    description: "399 ₽ = 2 чашки кофе. Зато AI-напарник работает на тебя весь месяц, 24/7.",
+    description: "1 499 ₽ = 5 чашек кофе. Зато AI-напарник работает на тебя весь месяц, 24/7.",
     delay: 0.2,
   },
   {
@@ -30,12 +30,12 @@ export function BotValueProposition() {
       <div className="mx-auto max-w-5xl">
         <BlurFade delay={0.1} inView>
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
-            399 ₽ — это не расход. Это инвестиция в свой семестр.
+            1 499 ₽ — это не расход. Это инвестиция в свой семестр.
           </h2>
         </BlurFade>
         <BlurFade delay={0.15} inView>
           <p className="text-center text-on-surface-subtle mb-16 max-w-xl mx-auto">
-            Меньше 13 ₽ в день за напарника, который не забывает ничего
+            Меньше 50 ₽ в день за напарника, который не забывает ничего
           </p>
         </BlurFade>
 
@@ -62,7 +62,7 @@ export function BotValueProposition() {
               Для сравнения: один час репетитора — от 1 500 ₽. Одна страница редактуры — от 500 ₽.
               <br />
               <span className="text-foreground font-medium">
-                AI-напарник за 399 ₽/мес помогает каждый день.
+                AI-напарник за 1 499 ₽/мес помогает каждый день.
               </span>
             </p>
           </div>

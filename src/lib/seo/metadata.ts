@@ -193,12 +193,13 @@ export function getBlogPostMetadata(
   title: string,
   description: string,
   slug: string,
-  keywords: string[] = []
+  keywords: string[] = [],
+  baseKeywords: string[] = ['ГОСТ', 'оформление', 'научная работа']
 ): Metadata {
   return generatePageMetadata({
     title,
     description,
     path: `/blog/${slug}`,
-    keywords: [...keywords, 'ГОСТ', 'оформление', 'научная работа'],
+    keywords: [...keywords, ...baseKeywords],
   })
 }

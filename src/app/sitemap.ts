@@ -145,5 +145,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  return [...mainPages, ...workTypePages, ...toolPages, ...blogPage, ...blogPostPages]
+  // Second Brain (отдельная воронка)
+  const secondBrainPage: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/second-brain`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+  ]
+
+  return [...mainPages, ...workTypePages, ...toolPages, ...secondBrainPage, ...blogPage, ...blogPostPages]
 }

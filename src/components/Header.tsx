@@ -63,7 +63,7 @@ interface HeaderProps {
   backHref?: string;
 }
 
-type AccessType = "trial" | "one_time" | "subscription" | "admin" | "none";
+type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
 
 interface NavLink {
   href: string;
@@ -117,7 +117,7 @@ const toolGroups: NavGroup[] = [
   {
     heading: "Новинка",
     links: [
-      { href: "/bot", label: "AI-напарник", description: "Telegram-бот для студентов", icon: Bot },
+      { href: "/second-brain", label: "Second Brain", description: "База знаний + AI в Telegram", icon: Bot },
     ],
   },
 ];
@@ -168,7 +168,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
     : "??";
 
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
-  const isPro = accessType === "subscription" || accessType === "admin";
+  const isPro = accessType === "subscription" || accessType === "subscription_plus" || accessType === "admin";
 
   if (!mounted) {
     return (
@@ -250,9 +250,9 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                             <NavigationMenuLink asChild>
                               <Link
                                 href={link.href}
-                                className={`group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors ${link.href === "/bot" ? "bg-purple-500/10 hover:bg-purple-500/20" : "hover:bg-surface-hover"}`}
+                                className={`group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors ${link.href === "/second-brain" ? "bg-purple-500/10 hover:bg-purple-500/20" : "hover:bg-surface-hover"}`}
                               >
-                                <link.icon className={`h-4 w-4 shrink-0 transition-colors ${link.href === "/bot" ? "text-purple-400 group-hover/item:text-purple-300" : "text-muted-foreground group-hover/item:text-foreground"}`} />
+                                <link.icon className={`h-4 w-4 shrink-0 transition-colors ${link.href === "/second-brain" ? "text-purple-400 group-hover/item:text-purple-300" : "text-muted-foreground group-hover/item:text-foreground"}`} />
                                 <div>
                                   <div className="font-medium text-foreground leading-tight">{link.label}</div>
                                   <p className="text-xs text-muted-foreground leading-tight">{link.description}</p>

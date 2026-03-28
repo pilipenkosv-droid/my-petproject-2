@@ -55,10 +55,10 @@ export function ProUpsellBanner() {
                 </Button>
               </Link>
               <Link
-                href="/bot"
+                href="/second-brain"
                 className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
               >
-                Подробнее о боте →
+                Подробнее о Second Brain →
               </Link>
             </div>
 

@@ -64,6 +64,21 @@ export function getSoftwareApplicationSchema() {
           billingDuration: 'P1M',
         },
       },
+      {
+        '@type': 'Offer',
+        price: '1499',
+        priceCurrency: 'RUB',
+        description: 'Pro Plus — 10 обработок + AI Second Brain в Telegram',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/second-brain`,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '1499',
+          priceCurrency: 'RUB',
+          unitText: 'MONTH',
+          billingDuration: 'P1M',
+        },
+      },
     ],
     aggregateRating: {
       '@type': 'AggregateRating',
@@ -275,6 +290,26 @@ export function getPricingSchemas() {
         priceSpecification: {
           '@type': 'UnitPriceSpecification',
           price: '399',
+          priceCurrency: 'RUB',
+          unitText: 'MONTH',
+        },
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: `${SITE_NAME} Pro Plus`,
+      description: 'Всё из Pro + AI Second Brain в Telegram: заметки, AI-ответы из материалов, голосовые конспекты, ежедневная выжимка.',
+      brand: { '@type': 'Organization', name: SITE_NAME },
+      offers: {
+        '@type': 'Offer',
+        price: '1499',
+        priceCurrency: 'RUB',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/second-brain`,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: '1499',
           priceCurrency: 'RUB',
           unitText: 'MONTH',
         },

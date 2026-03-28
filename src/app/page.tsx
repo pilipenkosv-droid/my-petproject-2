@@ -37,9 +37,9 @@ export default async function LandingPage() {
       <div className="bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-purple-600/10 border-b border-purple-500/20 px-4 py-3">
         <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
           <Bot className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-foreground font-medium">Новинка: AI-напарник для студентов</span>
-          <span className="text-on-surface-muted hidden sm:inline">— 10 мест в закрытом альфа-тесте</span>
-          <Link href="/bot" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors shrink-0">
+          <span className="text-foreground font-medium">Second Brain — запомни всё, что учишь</span>
+          <span className="text-on-surface-muted hidden sm:inline">— AI-помощник в Telegram</span>
+          <Link href="/second-brain" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors shrink-0">
             Узнать <ArrowRight className="w-3 h-3" />
           </Link>
         </div>

@@ -20,23 +20,27 @@ import { Zap } from "lucide-react";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = generatePageMetadata({
-  title: "AI-напарник для студентов в Telegram",
+  title: "Second Brain для студентов — AI-помощник в Telegram",
   description:
-    "Telegram-бот для студентов: хранилище заметок, AI-ответы из твоих материалов, план работы, грамматика, рерайт — всё в чате. Закрытый альфа-тест, 10 мест.",
-  path: "/bot",
+    "Персональная база знаний и AI-напарник в Telegram. Сохраняй лекции голосом, задавай вопросы, получай ответы из своих материалов. Входит в тариф Pro Plus.",
+  path: "/second-brain",
   keywords: [
+    "second brain для студентов",
+    "персональная база знаний",
+    "AI помощник для учёбы",
     "telegram бот для студентов",
-    "AI помощник студентам",
-    "бот для учёбы",
+    "второй мозг для студентов",
     "нейросеть для студентов telegram",
+    "бот для заметок телеграм",
   ],
 });
 
-export default function BotPage() {
+export default function SecondBrainPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
       <Header />
 
+      {/* Воронка по Годину: идентичность → трансформация → соц.доказательство → механизм → цена → разрешение */}
       <BotHero />
       <BotTextRibbon />
       <BotIdentitySection />
@@ -59,16 +63,16 @@ export default function BotPage() {
                   Войди в закрытый альфа-тест
                 </h2>
                 <p className="text-on-surface-muted mb-6 max-w-md mx-auto">
-                  Первые 10 студентов получают полный доступ к AI-напарнику при покупке Pro-подписки
+                  Первые 10 студентов получают полный доступ к AI-напарнику при покупке Pro Plus
                 </p>
                 <div className="flex justify-center mb-8">
                   <AlphaSpotsCounter />
                 </div>
                 <div className="relative inline-flex overflow-hidden rounded-lg">
                   <Button size="lg" className="text-base sm:text-lg px-8" asChild>
-                    <Link href="/pricing?plan=subscription&ref=bot">
+                    <Link href="/pricing?plan=subscription_plus&ref=second-brain">
                       <Zap className="w-5 h-5 mr-2 shrink-0" />
-                      Получить доступ — 399 ₽/мес
+                      Начать запоминать — 1 499 ₽/мес
                     </Link>
                   </Button>
                   <BorderBeam size={80} duration={5} colorFrom="#a855f7" colorTo="#6366f1" borderWidth={2} />

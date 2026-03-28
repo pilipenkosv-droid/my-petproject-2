@@ -41,9 +41,9 @@ export function BotHero() {
         <BlurFade delay={0.4} inView>
           <div className="relative inline-flex overflow-hidden rounded-lg">
             <Button size="lg" className="text-base sm:text-lg px-8" asChild>
-              <Link href="/pricing?plan=subscription&ref=bot">
+              <Link href="/pricing?plan=subscription_plus&ref=bot">
                 <Zap className="w-5 h-5 mr-2 shrink-0" />
-                Получить доступ — 399 ₽/мес
+                Получить доступ — 1 499 ₽/мес
               </Link>
             </Button>
             <BorderBeam size={80} duration={5} colorFrom="#a855f7" colorTo="#6366f1" borderWidth={2} />

@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 301 redirects
+  redirects: async () => [
+    {
+      source: "/bot",
+      destination: "/second-brain",
+      permanent: true,
+    },
+  ],
   // Включаем Server Actions для обработки файлов
   experimental: {
     serverActions: {
