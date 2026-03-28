@@ -14,6 +14,16 @@ const SESSION_COOKIE = "dlx_sid";
 const SESSION_MAX_AGE = 365 * 24 * 60 * 60; // 1 год
 
 export async function middleware(request: NextRequest) {
+  // Защита от индексации .vercel.app домена — редирект на основной домен
+  const host = request.headers.get("host") || "";
+  if (host.includes("vercel.app")) {
+    const url = request.nextUrl.clone();
+    url.host = "diplox.online";
+    url.port = "";
+    url.protocol = "https";
+    return NextResponse.redirect(url, 301);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
