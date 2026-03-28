@@ -63,7 +63,7 @@ export default function SecondBrainPage() {
                   Войди в закрытый альфа-тест
                 </h2>
                 <p className="text-on-surface-muted mb-6 max-w-md mx-auto">
-                  Первые 10 студентов получают полный доступ к AI-напарнику при покупке Pro Plus
+                  Первые 10 студентов начинают накапливать знания — вместо того, чтобы терять их
                 </p>
                 <div className="flex justify-center mb-8">
                   <AlphaSpotsCounter />

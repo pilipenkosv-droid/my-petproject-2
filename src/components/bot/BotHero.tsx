@@ -32,8 +32,8 @@ export function BotHero() {
         {/* Subtitle */}
         <BlurFade delay={0.3} inView>
           <p className="text-lg text-on-surface-subtle max-w-xl mx-auto mb-8 leading-relaxed">
-            Ты учишься каждый день. Но половина знаний теряется к следующей неделе.
-            AI-напарник в Telegram сохраняет всё — и находит за секунду, когда нужно.
+            Ты учишь 5 дней в неделю. К экзамену помнишь 20%.
+            Второй мозг запоминает 100% — и выдаёт нужное за секунду.
           </p>
         </BlurFade>
 

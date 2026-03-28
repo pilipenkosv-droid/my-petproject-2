@@ -41,7 +41,7 @@ export function BotTestimonials() {
             Что говорят альфа-тестеры
           </h2>
           <p className="text-center text-on-surface-subtle mb-12 max-w-xl mx-auto">
-            Реальные студенты, которые уже используют AI-напарника
+            Студенты, которые перестали терять знания
           </p>
         </BlurFade>
 
