@@ -15,8 +15,10 @@ const SESSION_MAX_AGE = 365 * 24 * 60 * 60; // 1 год
 
 export async function middleware(request: NextRequest) {
   // Защита от индексации .vercel.app домена — редирект на основной домен
+  // Nginx проксирует с Host: vercel.app, но ставит X-Forwarded-Host: diplox.online
   const host = request.headers.get("host") || "";
-  if (host.includes("vercel.app")) {
+  const forwardedHost = request.headers.get("x-forwarded-host") || "";
+  if (host.includes("vercel.app") && !forwardedHost.includes("diplox.online")) {
     const url = request.nextUrl.clone();
     url.host = "diplox.online";
     url.port = "";
