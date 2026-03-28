@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsGost: BlogPost[] = [
   {
     slug: "gost-r-7-0-11-2011-trebovaniya-k-dissertaciyam",
-    coverImage: undefined,
+    coverImage: "/blog/oformlenie-magisterskoj-dissertacii.png",
     title: "ГОСТ Р 7.0.11-2011: требования к оформлению диссертаций и авторефератов",
     description:
       "Разбираем ГОСТ Р 7.0.11-2011 простым языком: структура диссертации, правила оформления титульного листа, библиографии, автореферата. Практический гайд для магистрантов и аспирантов.",
