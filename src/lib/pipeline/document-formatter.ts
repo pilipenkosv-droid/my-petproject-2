@@ -372,7 +372,7 @@ async function createMarkedOriginal(
  * @param rules - правила форматирования
  * @param violations - найденные нарушения
  * @param enrichedParagraphs - размеченные параграфы
- * @param accessType - тип доступа пользователя (для обрезки trial до 30 страниц)
+ * @param accessType - тип доступа пользователя (для обрезки trial до 50% документа)
  */
 export async function formatDocument(
   buffer: Buffer,

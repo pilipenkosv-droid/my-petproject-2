@@ -38,7 +38,7 @@ export function getSoftwareApplicationSchema() {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'RUB',
-        description: 'Бесплатный пробный период — 1 документ до 30 страниц',
+        description: 'Бесплатный пробный период — 1 документ, 50% страниц',
         availability: 'https://schema.org/InStock',
       },
       {
@@ -251,7 +251,7 @@ export function getPricingSchemas() {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: `${SITE_NAME} — Пробный`,
-      description: 'Бесплатная обработка 1 документа до 30 страниц. AI-анализ структуры и форматирование по ГОСТу.',
+      description: 'Бесплатная обработка 1 документа (50% страниц). AI-анализ структуры и форматирование по ГОСТу.',
       brand: { '@type': 'Organization', name: SITE_NAME },
       offers: {
         '@type': 'Offer',

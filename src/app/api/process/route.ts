@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
 
     // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
-    // Для trial — обрезка до 30 страниц происходит ПОСЛЕ форматирования
+    // Для trial — обрезка до 50% документа происходит ПОСЛЕ форматирования
     const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs, userAccessType);
 
     await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
