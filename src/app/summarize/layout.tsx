@@ -1,5 +1,11 @@
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/config/site";
+import { MultiJsonLd } from "@/components/JsonLd";
+import {
+  getFAQPageSchema,
+  getHowToSchema,
+  getBreadcrumbSchema,
+} from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
   title: "Краткое содержание текста — аннотация с помощью ИИ | Diplox",
@@ -28,10 +34,70 @@ export const metadata: Metadata = {
   },
 };
 
+const summarizeFaqs = [
+  {
+    question: "Какие форматы резюме доступны?",
+    answer:
+      "Три длины: короткое (1–2 абзаца), среднее (полстраницы) и подробное (1–2 страницы). Выберите нужный вариант перед генерацией.",
+  },
+  {
+    question: "Можно загрузить файл для суммаризации?",
+    answer:
+      "Да, поддерживаются форматы .docx и .pdf. Загрузите файл или вставьте текст вручную.",
+  },
+  {
+    question: "Подходит ли для аннотации к курсовой или диплому?",
+    answer:
+      "Да, результат можно использовать как основу для аннотации к курсовой или дипломной работе. AI выделяет ключевые тезисы и выводы.",
+  },
+  {
+    question: "Сохраняется ли структура исходного текста?",
+    answer:
+      "AI выделяет ключевые тезисы, сохраняя логику и последовательность оригинала. Структура адаптируется под выбранную длину резюме.",
+  },
+];
+
+const summarizeHowTo = getHowToSchema(
+  "Как создать краткое содержание текста онлайн",
+  "Пошаговая инструкция по созданию аннотации или пересказа в Diplox",
+  [
+    {
+      name: "Вставьте текст или загрузите файл",
+      text: "Скопируйте текст в поле ввода или загрузите .docx/.pdf через кнопку «Файл».",
+    },
+    {
+      name: "Выберите длину резюме",
+      text: "Короткое — 1–2 абзаца, среднее — полстраницы, подробное — 1–2 страницы.",
+    },
+    {
+      name: "Нажмите «Создать резюме»",
+      text: "AI проанализирует текст и создаст краткое содержание с ключевыми тезисами.",
+    },
+    {
+      name: "Скопируйте результат",
+      text: "Скопируйте готовую аннотацию или используйте её как основу для доработки.",
+    },
+  ],
+);
+
 export default function SummarizeLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <MultiJsonLd
+        schemas={[
+          getFAQPageSchema(summarizeFaqs),
+          summarizeHowTo,
+          getBreadcrumbSchema([
+            { name: "Главная", url: "/" },
+            { name: "Краткое содержание", url: "/summarize" },
+          ]),
+        ]}
+      />
+      {children}
+    </>
+  );
 }

@@ -1,5 +1,11 @@
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/config/site";
+import { MultiJsonLd } from "@/components/JsonLd";
+import {
+  getFAQPageSchema,
+  getHowToSchema,
+  getBreadcrumbSchema,
+} from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
   title: "Подбор литературы для научной работы — Diplox",
@@ -28,10 +34,70 @@ export const metadata: Metadata = {
   },
 };
 
+const sourcesFaqs = [
+  {
+    question: "Откуда берутся научные источники?",
+    answer:
+      "Поиск идёт по базам OpenAlex и CrossRef — это реальные научные публикации, статьи, книги и монографии с DOI и библиографическими данными.",
+  },
+  {
+    question: "Оформляются ли источники по ГОСТу?",
+    answer:
+      "Да, каждый найденный источник автоматически оформляется по ГОСТ 7.1-2003. Готовый список литературы можно скопировать в работу.",
+  },
+  {
+    question: "Можно ли найти источники на русском языке?",
+    answer:
+      "Да, поиск работает по русскоязычным и англоязычным базам. Укажите тему на русском — система найдёт релевантные публикации.",
+  },
+  {
+    question: "Сколько источников можно найти по одной теме?",
+    answer:
+      "Система подбирает до 50 релевантных источников по вашей теме. Вы можете отфильтровать результаты по году, типу и языку.",
+  },
+];
+
+const sourcesHowTo = getHowToSchema(
+  "Как подобрать литературу для курсовой или диплома",
+  "Пошаговая инструкция по поиску научных источников в Diplox",
+  [
+    {
+      name: "Введите тему работы",
+      text: "Укажите тему курсовой, дипломной или другой научной работы в поле поиска.",
+    },
+    {
+      name: "Настройте фильтры",
+      text: "При необходимости ограничьте поиск по году публикации, типу источника или языку.",
+    },
+    {
+      name: "Нажмите «Найти источники»",
+      text: "Система найдёт релевантные публикации в базах OpenAlex и CrossRef.",
+    },
+    {
+      name: "Скопируйте список литературы",
+      text: "Выберите нужные источники и скопируйте готовый список, оформленный по ГОСТ 7.1.",
+    },
+  ],
+);
+
 export default function SourcesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <MultiJsonLd
+        schemas={[
+          getFAQPageSchema(sourcesFaqs),
+          sourcesHowTo,
+          getBreadcrumbSchema([
+            { name: "Главная", url: "/" },
+            { name: "Подбор литературы", url: "/sources" },
+          ]),
+        ]}
+      />
+      {children}
+    </>
+  );
 }

@@ -6,7 +6,7 @@ import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
 
 export const metadata: Metadata = {
-  title: "Магистерская диссертация по ГОСТу онлайн — форматирование за 5 минут 2026",
+  title: "Оформление магистерской диссертации по ГОСТу онлайн 2026 | Diplox",
   description:
     "Автоматическое форматирование магистерской диссертации по ГОСТу и методичке вуза. Загрузите диссертацию — получите идеально оформленный документ за минуты. Поля, шрифты, интервалы, список литературы.",
   keywords: [

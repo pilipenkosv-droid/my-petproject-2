@@ -6,7 +6,7 @@ import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { getBreadcrumbSchema, getArticleSchema } from "@/lib/seo/schemas";
-import { getPostBySlug, getAllPosts } from "@/lib/blog/posts";
+import { getPostBySlug, getAllPosts, getRelatedPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/config/site";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen, SpellCheck, Pencil, FileText } from "lucide-react";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -65,6 +65,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const currentIndex = allPosts.findIndex((p) => p.slug === slug);
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  const relatedPosts = getRelatedPosts(slug, 3);
 
   return (
     <div className="min-h-screen">
@@ -210,6 +211,36 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </Link>
           )}
         </div>
+
+        {/* Похожие статьи */}
+        {relatedPosts.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
+              Похожие статьи
+            </h2>
+            <div className="grid gap-3">
+              {relatedPosts.map((related) => (
+                <Link
+                  key={related.slug}
+                  href={`/blog/${related.slug}`}
+                  className="flex items-start gap-4 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-foreground text-sm font-medium group-hover:text-primary transition-colors mb-1">
+                      {related.title}
+                    </div>
+                    <div className="text-muted-foreground text-xs line-clamp-2">
+                      {related.description}
+                    </div>
+                  </div>
+                  <div className="text-muted-foreground text-xs whitespace-nowrap pt-0.5">
+                    {related.readingTime}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="text-center">
