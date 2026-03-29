@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление дипломной работы по ГОСТу онлайн 2026 | Diplox",
@@ -124,6 +126,15 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.outline, action: "Выстрой структуру дипломной работы" },
+  { ...DIPLOX_TOOLS.sources, action: "Подбери 40+ источников по теме" },
+  { ...DIPLOX_TOOLS.summarize, action: "Составь аннотацию к работе" },
+  { ...DIPLOX_TOOLS.grammar, action: "Устрани ошибки перед нормоконтролем" },
+  { ...DIPLOX_TOOLS.rewrite, action: "Доведи оригинальность до нужного уровня" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи всё за 4 минуты" },
+];
+
 const relatedTypes = [
   { name: "ВКР", href: "/vkr" },
   { name: "Магистерские диссертации", href: "/magisterskaya" },
@@ -152,6 +163,7 @@ export default function DiplomPage() {
       bottomCtaTitle="Нормоконтроль — с первого раза"
       bottomCtaSubtitle="Первый документ бесплатно. Оцени качество сам."
       bottomCtaLabel="Оформить диплом"
+      workflowSteps={workflowSteps}
     />
   );
 }

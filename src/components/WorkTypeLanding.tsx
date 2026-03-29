@@ -6,12 +6,8 @@ import {
   Sparkles,
   CheckCircle,
   ArrowRight,
-  ListTree,
   FileText,
   ChevronRight,
-  BookOpen,
-  SpellCheck,
-  Pencil,
 } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { CtaButton } from "@/components/CtaButton";
@@ -23,6 +19,10 @@ import {
   WorkTypeTestimonials,
   type WorkTypeTestimonial,
 } from "@/components/WorkTypeTestimonials";
+import {
+  WorkTypeWorkflow,
+  type WorkTypeWorkflowStep,
+} from "@/components/WorkTypeWorkflow";
 
 export interface WorkTypeFAQ {
   question: string;
@@ -54,6 +54,7 @@ export interface WorkTypeLandingProps {
   bottomCtaTitle?: string;
   bottomCtaSubtitle?: string;
   bottomCtaLabel?: string;
+  workflowSteps?: WorkTypeWorkflowStep[];
 }
 
 export function WorkTypeLanding({
@@ -75,6 +76,7 @@ export function WorkTypeLanding({
   bottomCtaTitle,
   bottomCtaSubtitle,
   bottomCtaLabel,
+  workflowSteps,
 }: WorkTypeLandingProps) {
   return (
     <div className="min-h-screen">
@@ -143,6 +145,11 @@ export function WorkTypeLanding({
             ))}
           </div>
         </section>
+
+        {/* 3b. Воркфлоу — последовательность инструментов */}
+        {workflowSteps && workflowSteps.length > 0 && (
+          <WorkTypeWorkflow steps={workflowSteps} />
+        )}
 
         {/* 4. Выгоды (уникальные для типа) */}
         {benefits && benefits.length > 0 && (
@@ -269,59 +276,6 @@ export function WorkTypeLanding({
           </div>
         </section>
 
-        {/* 9. Полезные инструменты */}
-        <section className="mb-12">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Полезные инструменты
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {[
-              {
-                href: "/outline",
-                label: "Генератор плана",
-                desc: "Готовая структура работы за 60 секунд",
-                icon: ListTree,
-              },
-              {
-                href: "/sources",
-                label: "Подбор литературы",
-                desc: "Реальные источники по ГОСТ 7.1",
-                icon: BookOpen,
-              },
-              {
-                href: "/grammar",
-                label: "Проверка грамматики",
-                desc: "Преподаватель не найдёт ошибок",
-                icon: SpellCheck,
-              },
-              {
-                href: "/rewrite",
-                label: "Повышение уникальности",
-                desc: "Твой текст — уникальность растёт",
-                icon: Pencil,
-              },
-            ].map((tool) => {
-              const ToolIcon = tool.icon;
-              return (
-                <Link
-                  key={tool.href}
-                  href={tool.href}
-                  className="flex items-center gap-4 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors group"
-                >
-                  <div className="w-10 h-10 bg-foreground flex items-center justify-center shrink-0">
-                    <ToolIcon className="w-5 h-5 text-background" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground text-sm group-hover:text-primary transition-colors">
-                      {tool.label}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{tool.desc}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
       </main>
     </div>
   );

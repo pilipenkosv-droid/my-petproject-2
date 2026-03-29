@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление магистерской диссертации по ГОСТу онлайн 2026 | Diplox",
@@ -115,6 +117,15 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.outline, action: "Структурируй главы диссертации" },
+  { ...DIPLOX_TOOLS.sources, action: "Собери 60–100 источников" },
+  { ...DIPLOX_TOOLS.summarize, action: "Напиши аннотацию и ключевые положения" },
+  { ...DIPLOX_TOOLS.grammar, action: "Вычисти текст до защиты" },
+  { ...DIPLOX_TOOLS.rewrite, action: "Доведи до требуемого % оригинальности" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи по ГОСТ за 5 минут" },
+];
+
 const relatedTypes = [
   { name: "Дипломные работы", href: "/diplom" },
   { name: "ВКР", href: "/vkr" },
@@ -143,6 +154,7 @@ export default function MagisterskayaPage() {
       bottomCtaTitle="Диссертация оформлена. С первого раза."
       bottomCtaSubtitle="Первый документ бесплатно. Оцени качество."
       bottomCtaLabel="Оформить диссертацию"
+      workflowSteps={workflowSteps}
     />
   );
 }

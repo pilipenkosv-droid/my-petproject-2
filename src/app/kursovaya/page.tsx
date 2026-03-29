@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление курсовой работы по ГОСТу онлайн 2026 | Diplox",
@@ -124,6 +126,14 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.outline, action: "Выстрой структуру глав и разделов" },
+  { ...DIPLOX_TOOLS.sources, action: "Найди источники по теме" },
+  { ...DIPLOX_TOOLS.grammar, action: "Проверь текст перед сдачей" },
+  { ...DIPLOX_TOOLS.rewrite, action: "Подними оригинальность, если нужно" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи по методичке одним кликом" },
+];
+
 const relatedTypes = [
   { name: "Дипломные работы", href: "/diplom" },
   { name: "Рефераты", href: "/referat" },
@@ -152,6 +162,7 @@ export default function KursovayaPage() {
       bottomCtaTitle="Сдай курсовую без переделок"
       bottomCtaSubtitle="Первый документ бесплатно. Оцени качество."
       bottomCtaLabel="Оформить курсовую"
+      workflowSteps={workflowSteps}
     />
   );
 }

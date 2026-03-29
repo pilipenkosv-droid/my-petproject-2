@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление ВКР по ГОСТу онлайн 2026 — за минуты | Diplox",
@@ -116,6 +118,15 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.outline, action: "Спланируй структуру ВКР" },
+  { ...DIPLOX_TOOLS.sources, action: "Подбери 30+ источников" },
+  { ...DIPLOX_TOOLS.summarize, action: "Составь аннотацию" },
+  { ...DIPLOX_TOOLS.grammar, action: "Проверь текст перед защитой" },
+  { ...DIPLOX_TOOLS.rewrite, action: "Повысь уникальность до требуемого %" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи по ГОСТу за 4 минуты" },
+];
+
 const relatedTypes = [
   { name: "Дипломные работы", href: "/diplom" },
   { name: "Магистерские диссертации", href: "/magisterskaya" },
@@ -144,6 +155,7 @@ export default function VkrPage() {
       bottomCtaTitle="Защищайся, а не правь отступы"
       bottomCtaSubtitle="Первый документ бесплатно — оцени качество."
       bottomCtaLabel="Оформить ВКР"
+      workflowSteps={workflowSteps}
     />
   );
 }

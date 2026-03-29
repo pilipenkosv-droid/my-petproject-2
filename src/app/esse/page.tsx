@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление эссе онлайн за 40 секунд — по ГОСТу | Diplox",
@@ -116,6 +118,12 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.grammar, action: "Проверь стиль и грамотность" },
+  { ...DIPLOX_TOOLS.rewrite, action: "Переформулируй заимствованные идеи" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи за 40 секунд" },
+];
+
 const relatedTypes = [
   { name: "Рефераты", href: "/referat" },
   { name: "Курсовые работы", href: "/kursovaya" },
@@ -144,6 +152,7 @@ export default function EssePage() {
       bottomCtaTitle="Оформление — за 40 секунд"
       bottomCtaSubtitle="Первый документ бесплатно."
       bottomCtaLabel="Оформить эссе"
+      workflowSteps={workflowSteps}
     />
   );
 }

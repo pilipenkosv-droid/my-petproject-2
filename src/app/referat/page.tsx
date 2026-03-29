@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление реферата по ГОСТу онлайн — за 2 минуты | Diplox",
@@ -116,6 +118,12 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.sources, action: "Найди 10–15 источников по теме" },
+  { ...DIPLOX_TOOLS.grammar, action: "Быстро проверь текст" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи за 2 минуты" },
+];
+
 const relatedTypes = [
   { name: "Курсовые работы", href: "/kursovaya" },
   { name: "Эссе", href: "/esse" },
@@ -144,6 +152,7 @@ export default function ReferatPage() {
       bottomCtaTitle="Следующий реферат — за 2 минуты"
       bottomCtaSubtitle="Первый документ бесплатно."
       bottomCtaLabel="Оформить реферат"
+      workflowSteps={workflowSteps}
     />
   );
 }

@@ -4,6 +4,8 @@ import { WorkTypeLanding } from "@/components/WorkTypeLanding";
 import { type WorkTypeBenefit } from "@/components/WorkTypeBenefits";
 import { type WorkTypeTestimonial } from "@/components/WorkTypeTestimonials";
 import { SITE_URL } from "@/lib/config/site";
+import { DIPLOX_TOOLS } from "@/lib/config/tools";
+import { type WorkTypeWorkflowStep } from "@/components/WorkTypeWorkflow";
 
 export const metadata: Metadata = {
   title: "Оформление отчёта по практике по ГОСТу онлайн | Diplox",
@@ -116,6 +118,12 @@ const faqs = [
   },
 ];
 
+const workflowSteps: WorkTypeWorkflowStep[] = [
+  { ...DIPLOX_TOOLS.summarize, action: "Составь введение и выводы по практике" },
+  { ...DIPLOX_TOOLS.grammar, action: "Проверь текст перед сдачей руководителю" },
+  { ...DIPLOX_TOOLS.create, action: "Оформи с титульным листом за 2 минуты" },
+];
+
 const relatedTypes = [
   { name: "Дипломные работы", href: "/diplom" },
   { name: "Курсовые работы", href: "/kursovaya" },
@@ -144,6 +152,7 @@ export default function OtchetPoPraktikePage() {
       bottomCtaTitle="Отчёт оформлен. Можно сдавать."
       bottomCtaSubtitle="Первый документ бесплатно."
       bottomCtaLabel="Оформить отчёт"
+      workflowSteps={workflowSteps}
     />
   );
 }
