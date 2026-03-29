@@ -39,15 +39,14 @@ export default function ResultPage({ params }: ResultPageProps) {
   }, [job?.status]);
 
   const handleDownload = (type: "original" | "formatted") => {
-    // Для анонимных пользователей — показываем email-gate
+    trackEvent("file_download", { download_type: type, is_anon: !user });
+    const fileId = `${jobId}_${type}`;
+    window.open(`/api/download/${fileId}`, "_blank");
+    // Для анонимных — предлагаем отправить копию на почту ПОСЛЕ скачивания
     if (!user) {
       setEmailGateDownloadType(type);
       setEmailGateOpen(true);
-      return;
     }
-    trackEvent("file_download", { download_type: type });
-    const fileId = `${jobId}_${type}`;
-    window.open(`/api/download/${fileId}`, "_blank");
   };
 
   // Состояние загрузки
@@ -209,8 +208,8 @@ export default function ResultPage({ params }: ResultPageProps) {
                     </p>
                     <p className="text-on-surface-muted text-sm mb-4">
                       {(job.violationsCount ?? 0) > 0
-                        ? `Найдено ${job.violationsCount} нарушений на ~${job.statistics.originalPageCount} стр. — все уже исправлены. Вы видите первые ${job.statistics.pageLimitApplied} стр., остальное доступно после оплаты.`
-                        : `Мы обработали весь ваш документ (~${job.statistics.originalPageCount} стр.), но показали только первые ${job.statistics.pageLimitApplied}. Получите полную версию прямо сейчас.`
+                        ? `Найдено ${job.violationsCount} нарушений на ~${job.statistics.originalPageCount} стр. — все уже исправлены. Вы видите ${job.statistics.pageLimitApplied} из ${job.statistics.originalPageCount} стр., остальное доступно после оплаты.`
+                        : `Мы обработали весь ваш документ (~${job.statistics.originalPageCount} стр.), но показали ${job.statistics.pageLimitApplied} из ${job.statistics.originalPageCount}. Получите полную версию прямо сейчас.`
                       }
                     </p>
                     <Link href={`/pricing?unlock=${jobId}`}>
@@ -233,10 +232,10 @@ export default function ResultPage({ params }: ResultPageProps) {
                   <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-foreground font-medium mb-1">
-                      Обработаны первые {job.statistics.pageLimitApplied} из ~{job.statistics.originalPageCount} страниц
+                      Обработаны {job.statistics.pageLimitApplied} из ~{job.statistics.originalPageCount} страниц
                     </p>
                     <p className="text-on-surface-muted text-sm">
-                      В бесплатном тарифе доступна обработка до {job.statistics.pageLimitApplied} страниц.
+                      Бесплатно доступно 50% документа.
                       Для обработки полного документа{" "}
                       <Link href="/pricing" className="text-primary hover:text-primary/80 underline">
                         приобретите тариф

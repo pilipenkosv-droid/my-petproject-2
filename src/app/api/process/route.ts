@@ -6,9 +6,10 @@ import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMim
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
-import { LAVA_CONFIG } from "@/lib/payment/config";
+import { checkProcessingAccess } from "@/lib/auth/api-auth";
+import { markTrialUsed } from "@/lib/auth/trial";
+
 
 export const maxDuration = 60; // Максимальное время выполнения для Vercel
 
@@ -17,10 +18,17 @@ export async function POST(request: NextRequest) {
 
   try {
     // Проверяем доступ пользователя
-    const supabase = await createSupabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = await checkProcessingAccess();
 
-    let userAccessType: "trial" | "one_time" | "subscription" | "admin" | "none" = "trial";
+    if (auth.type === "blocked") {
+      return NextResponse.json(
+        { error: auth.reason, requiresAuth: true },
+        { status: 403 }
+      );
+    }
+
+    const user = auth.type === "authenticated" ? auth.user : null;
+    let userAccessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none" = "trial";
 
     if (user?.id) {
       const access = await getUserAccess(user.id);
@@ -31,13 +39,11 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
-      // Списываем использование (для разовых/триала), кроме подписки и админа
       if (access.accessType !== "subscription" && access.accessType !== "admin") {
         await consumeUse(user.id);
       }
     }
-    // Анонимные пользователи: пропускаем (1 бесплатная обработка контролируется фронтом/cookies)
-    // userAccessType остаётся "trial" для анонимных
+
     // Создаём задачу
     const ymUid = request.cookies.get("_ym_uid")?.value ?? undefined;
     const sessionId = request.cookies.get("dlx_sid")?.value ?? undefined;
@@ -157,7 +163,7 @@ export async function POST(request: NextRequest) {
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,
-        pageLimitApplied: LAVA_CONFIG.freeTrialMaxPages,
+        pageLimitApplied: formattingResult.pageLimitApplied,
       }),
     };
 
@@ -171,13 +177,20 @@ export async function POST(request: NextRequest) {
       ...(hasFullVersion && { hasFullVersion: true }),
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       jobId,
       status: "completed",
       statistics,
       violationsCount: analysisResult.violations.length,
       warnings: aiResponse.warnings,
     });
+
+    // Помечаем триал как использованный для анонимов
+    if (!user?.id) {
+      markTrialUsed(response);
+    }
+
+    return response;
 
   } catch (error) {
     console.error("Processing error:", error);

@@ -16,7 +16,7 @@ const ADMIN_EMAILS = [
 
 export interface UserAccess {
   hasAccess: boolean;
-  accessType: "trial" | "one_time" | "subscription" | "admin" | "none";
+  accessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
   remainingUses: number;
   subscriptionActiveUntil: string | null;
   botDeepLink: string | null;
@@ -81,15 +81,15 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
     };
   }
 
-  // Подписка
-  if (data.access_type === "subscription" && data.subscription_active_until) {
+  // Подписка (Pro или Pro Plus)
+  if ((data.access_type === "subscription" || data.access_type === "subscription_plus") && data.subscription_active_until) {
     const isActive = new Date(data.subscription_active_until) > new Date();
     return {
       hasAccess: isActive && data.remaining_uses > 0,
-      accessType: isActive ? "subscription" : "none",
+      accessType: isActive ? data.access_type : "none",
       remainingUses: isActive ? data.remaining_uses : 0,
       subscriptionActiveUntil: data.subscription_active_until,
-      botDeepLink: data.bot_deep_link || null,
+      botDeepLink: data.access_type === "subscription_plus" ? (data.bot_deep_link || null) : null,
     };
   }
 
@@ -126,8 +126,8 @@ export async function consumeUse(userId: string): Promise<boolean> {
     return true;
   }
 
-  // Подписка — списываем использование
-  if (access.accessType === "subscription" && access.remainingUses > 0) {
+  // Подписка (Pro или Pro Plus) — списываем использование
+  if ((access.accessType === "subscription" || access.accessType === "subscription_plus") && access.remainingUses > 0) {
     const { error } = await supabase
       .from("user_access")
       .update({
@@ -181,7 +181,7 @@ export async function consumeUse(userId: string): Promise<boolean> {
  */
 export async function activateAccess(
   userId: string,
-  type: "one_time" | "subscription",
+  type: "one_time" | "subscription" | "subscription_plus",
   lavaSubscriptionId?: string
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
@@ -204,15 +204,18 @@ export async function activateAccess(
       { onConflict: "user_id" }
     );
   } else {
-    // Подписка на 30 дней
+    // Подписка на 30 дней (Pro или Pro Plus)
     const activeUntil = new Date();
     activeUntil.setDate(activeUntil.getDate() + 30);
+    const uses = type === "subscription_plus"
+      ? LAVA_CONFIG.offers.subscriptionPlus.uses
+      : LAVA_CONFIG.offers.subscription.uses;
 
     await supabase.from("user_access").upsert(
       {
         user_id: userId,
-        access_type: "subscription",
-        remaining_uses: LAVA_CONFIG.offers.subscription.uses,
+        access_type: type,
+        remaining_uses: uses,
         subscription_active_until: activeUntil.toISOString(),
         lava_subscription_id: lavaSubscriptionId || null,
         updated_at: new Date().toISOString(),

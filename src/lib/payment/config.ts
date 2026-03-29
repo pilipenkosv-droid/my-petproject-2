@@ -21,14 +21,23 @@ export const LAVA_CONFIG = {
       periodicity: "MONTHLY" as const,
       uses: 10, // 10 обработок в месяц
     },
+    subscriptionPlus: {
+      offerId: "4509a861-05a4-4514-8a77-91b36df99981",
+      price: 1499,
+      currency: "RUB" as const,
+      periodicity: "MONTHLY" as const, // Lava.top сама показывает опцию год (14 499₽/год)
+      uses: 10, // 10 обработок в месяц + AI-бот
+    },
   },
 
   // Кол-во бесплатных обработок для нового пользователя
   freeTrialUses: 1,
 
-  // Лимит страниц для бесплатного (пробного) тарифа
-  freeTrialMaxPages: 30,
+  // Процент документа, доступный бесплатно (trial)
+  freeTrialPercent: 50,
+  // Минимум страниц для trial (чтобы value demonstration работал на коротких документах)
+  freeTrialMinPages: 3,
 } as const;
 
-export type OfferType = "one_time" | "subscription";
+export type OfferType = "one_time" | "subscription" | "subscription_plus";
 export type PaymentStatus = "pending" | "completed" | "failed";

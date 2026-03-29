@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         );
 
         // Если subscriptionId не был передан в activateAccess, но появился позже — допишем
-        if (payment.offer_type === "subscription" && subId) {
+        if ((payment.offer_type === "subscription" || payment.offer_type === "subscription_plus") && subId) {
           await supabase
             .from("user_access")
             .update({ lava_subscription_id: subId })
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
           console.error("Failed to get user profile for post-payment actions");
         }
 
-        // Бот-провижнинг для подписчиков Pro (первые 10)
-        if (payment.offer_type === "subscription") {
+        // Бот-провижнинг ��олько для Pro Plus (1499₽/мес)
+        if (payment.offer_type === "subscription_plus") {
           try {
             const canGrant = await canGrantBotAccess(supabase);
             if (canGrant && profile) {
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         // Welcome-email после оплаты
         if (profile) {
           try {
-            if (payment.offer_type === "subscription") {
+            if (payment.offer_type === "subscription_plus") {
               const { data: access } = await supabase
                 .from("user_access")
                 .select("bot_deep_link")
@@ -161,8 +161,14 @@ export async function POST(request: NextRequest) {
 
               await sendEmail({
                 to: profile.email,
-                subject: "Подписка Pro активирована — Diplox",
+                subject: "Подписка Pro Plus активирована — Diplox",
                 html: subscriptionWelcomeEmail({ botDeepLink: access?.bot_deep_link }),
+              });
+            } else if (payment.offer_type === "subscription") {
+              await sendEmail({
+                to: profile.email,
+                subject: "Подписка Pro активирована — Diplox",
+                html: subscriptionWelcomeEmail(),
               });
             } else {
               await sendEmail({

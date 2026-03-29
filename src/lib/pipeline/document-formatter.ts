@@ -45,13 +45,15 @@ interface FormattingResult {
   wasTruncated?: boolean;
   /** Оригинальное количество страниц до обрезки */
   originalPageCount?: number;
+  /** Сколько страниц показано (лимит после обрезки) */
+  pageLimitApplied?: number;
   /** Полная версия (до обрезки) оригинала с пометками - для trial */
   fullMarkedOriginal?: Buffer;
   /** Полная версия (до обрезки) исправленного документа - для trial */
   fullFormattedDocument?: Buffer;
 }
 
-export type AccessType = "trial" | "one_time" | "subscription" | "admin" | "none";
+export type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
 
 /**
  * Создать отформатированный документ через XML-модификацию
@@ -391,28 +393,33 @@ export async function formatDocument(
     console.warn(`[formatDocument] Отформатированный документ идентичен оригиналу! Violations: ${violations.length}, enrichedParagraphs: ${enrichedParagraphs?.length ?? 0}`);
   }
 
-  // Для trial — обрезаем оба результата до лимита страниц ПОСЛЕ форматирования
+  // Для trial — обрезаем оба результата до % документа ПОСЛЕ форматирования
   // Но СОХРАНЯЕМ полные версии для разблокировки после оплаты
   let wasTruncated = false;
   let originalPageCount = 0;
+  let pageLimitApplied = 0;
   let fullMarkedOriginal: Buffer | undefined;
   let fullFormattedDocument: Buffer | undefined;
 
   if (accessType === "trial") {
+    const truncateOptions = {
+      percentLimit: LAVA_CONFIG.freeTrialPercent,
+      minPages: LAVA_CONFIG.freeTrialMinPages,
+    };
+
     const [truncatedMarked, truncatedFormatted] = await Promise.all([
-      truncateDocxToPageLimit(markedOriginal, LAVA_CONFIG.freeTrialMaxPages),
-      truncateDocxToPageLimit(formattedDocument, LAVA_CONFIG.freeTrialMaxPages),
+      truncateDocxToPageLimit(markedOriginal, 999, truncateOptions),
+      truncateDocxToPageLimit(formattedDocument, 999, truncateOptions),
     ]);
 
-    // Используем результат обрезки с оригинала (markedOriginal) для статистики
     wasTruncated = truncatedMarked.wasTruncated || truncatedFormatted.wasTruncated;
     originalPageCount = Math.max(truncatedMarked.originalPageCount, truncatedFormatted.originalPageCount);
+    pageLimitApplied = truncatedMarked.pageLimitApplied;
 
-    // Если документ был обрезан — сохраняем полные версии для hook-offer
     if (wasTruncated) {
       fullMarkedOriginal = markedOriginal;
       fullFormattedDocument = formattedDocument;
-      console.log(`[formatDocument] Документы обрезаны до ${LAVA_CONFIG.freeTrialMaxPages} страниц (было ~${originalPageCount}). Полные версии сохранены для разблокировки.`);
+      console.log(`[formatDocument] Документы обрезаны до ${pageLimitApplied} из ~${originalPageCount} стр. (${LAVA_CONFIG.freeTrialPercent}%). Полные версии сохранены для разблокировки.`);
     }
 
     markedOriginal = Buffer.from(truncatedMarked.buffer);
@@ -425,6 +432,7 @@ export async function formatDocument(
     fixesApplied: violations.filter((v) => v.autoFixable).length,
     wasTruncated,
     originalPageCount,
+    pageLimitApplied,
     fullMarkedOriginal,
     fullFormattedDocument,
   };

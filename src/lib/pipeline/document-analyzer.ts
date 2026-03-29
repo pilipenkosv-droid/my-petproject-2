@@ -99,21 +99,21 @@ export interface DocxDocument {
  */
 export async function truncateDocxToPageLimit(
   buffer: Buffer,
-  maxPages: number
-): Promise<{ buffer: Buffer; wasTruncated: boolean; originalPageCount: number }> {
+  maxPages: number,
+  options?: { percentLimit?: number; minPages?: number }
+): Promise<{ buffer: Buffer; wasTruncated: boolean; originalPageCount: number; pageLimitApplied: number }> {
   const CHARS_PER_PAGE = 2000;
-  const maxChars = maxPages * CHARS_PER_PAGE;
 
   const zip = await JSZip.loadAsync(buffer);
   const documentXml = await zip.file("word/document.xml")?.async("string");
   if (!documentXml) {
-    return { buffer, wasTruncated: false, originalPageCount: 1 };
+    return { buffer, wasTruncated: false, originalPageCount: 1, pageLimitApplied: 1 };
   }
 
   const parsed = parseDocxXml(documentXml);
   const body = getBody(parsed);
   if (!body) {
-    return { buffer, wasTruncated: false, originalPageCount: 1 };
+    return { buffer, wasTruncated: false, originalPageCount: 1, pageLimitApplied: 1 };
   }
 
   const bodyChildren = children(body);
@@ -130,7 +130,6 @@ export async function truncateDocxToPageLimit(
         }
       }
     } else if ("w:tbl" in child) {
-      // Считаем текст в таблице
       const rows = findChildren(child, "w:tr");
       for (const row of rows) {
         const cells = findChildren(row, "w:tc");
@@ -152,8 +151,19 @@ export async function truncateDocxToPageLimit(
 
   const originalPageCount = Math.max(1, Math.ceil(totalChars / CHARS_PER_PAGE));
 
+  // Процентный режим: вычисляем maxPages из originalPageCount
+  let effectiveMaxPages = maxPages;
+  if (options?.percentLimit) {
+    effectiveMaxPages = Math.max(
+      options.minPages ?? 3,
+      Math.ceil(originalPageCount * options.percentLimit / 100)
+    );
+  }
+
+  const maxChars = effectiveMaxPages * CHARS_PER_PAGE;
+
   if (totalChars <= maxChars) {
-    return { buffer, wasTruncated: false, originalPageCount };
+    return { buffer, wasTruncated: false, originalPageCount, pageLimitApplied: effectiveMaxPages };
   }
 
   // Обрезаем: сохраняем элементы до лимита + w:sectPr
@@ -229,7 +239,7 @@ export async function truncateDocxToPageLimit(
     compression: "DEFLATE",
   })) as Buffer;
 
-  return { buffer: newBuffer, wasTruncated: true, originalPageCount };
+  return { buffer: newBuffer, wasTruncated: true, originalPageCount, pageLimitApplied: effectiveMaxPages };
 }
 
 /**

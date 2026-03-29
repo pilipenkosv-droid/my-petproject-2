@@ -80,10 +80,10 @@ export function EmailGateModal({
         ) : (
           <>
             <h2 className="text-xl font-semibold text-foreground">
-              Скачайте результат
+              Файл скачан!
             </h2>
             <p className="mt-1 text-sm text-foreground/60">
-              Введите email — мы отправим ссылку для скачивания
+              Отправить копию на почту, чтобы не потерять?
             </p>
 
             <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
@@ -109,7 +109,7 @@ export function EmailGateModal({
               onClick={onClose}
               className="mt-4 w-full text-center text-xs text-foreground/40 hover:text-foreground/60"
             >
-              Отмена
+              Нет, спасибо
             </button>
           </>
         )}

@@ -83,14 +83,8 @@ export async function GET(
     return jsonResponse({ error: "Неверный тип файла" }, 400);
   }
 
-  // Проверяем доступ: авторизация или email-токен
-  const hasAccess = await validateAccess(request, jobId);
-  if (!hasAccess) {
-    return jsonResponse(
-      { error: "Для скачивания необходимо авторизоваться или получить ссылку на email" },
-      403
-    );
-  }
+  // Скачивание доступно всем — trial-результат уже обрезан до лимита
+  // Email-токен и авторизация используются только для аналитики
 
   const fileBuffer = await getResultFile(jobId, type);
 

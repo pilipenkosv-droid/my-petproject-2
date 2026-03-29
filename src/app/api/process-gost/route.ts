@@ -9,7 +9,6 @@ import { DEFAULT_GOST_RULES } from "@/types/formatting-rules";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
-import { LAVA_CONFIG } from "@/lib/payment/config";
 
 export const maxDuration = 60;
 
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,
-        pageLimitApplied: LAVA_CONFIG.freeTrialMaxPages,
+        pageLimitApplied: formattingResult.pageLimitApplied,
       }),
     };
 

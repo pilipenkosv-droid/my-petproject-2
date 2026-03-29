@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileUploadZone } from "@/features/constructor/components/FileUploadZone";
@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb } from "lucide-react";
+import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb, GraduationCap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -51,6 +51,20 @@ function ConstructorPageContent() {
   const [trialBlocked, setTrialBlocked] = useState(false);
   const [workType, setWorkType] = useState(searchParams.get("type") || "");
   const [requirementsMode, setRequirementsMode] = useState<RequirementsMode>("upload");
+
+  const [proInfo, setProInfo] = useState<{ type: string; remaining: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/user/access")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data && (data.accessType === "subscription" || data.accessType === "subscription_plus")) {
+          setProInfo({ type: data.accessType, remaining: data.remainingUses });
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   const sourceDoc = useDocumentUpload(SOURCE_DOCUMENT_CONFIG);
   const requirementsDoc = useDocumentUpload(REQUIREMENTS_DOCUMENT_CONFIG);
@@ -202,7 +216,7 @@ function ConstructorPageContent() {
               <BlurFade inView>
                 <div className="text-center p-3 bg-surface border border-surface-border">
                   <p className="text-sm text-on-surface-muted">
-                    У вас <span className="text-primary font-medium">1 бесплатная обработка</span> без регистрации (первые 30 страниц).{" "}
+                    У вас <span className="text-primary font-medium">1 бесплатная обработка</span> без регистрации (50% документа).{" "}
                     <button onClick={() => router.push("/login")} className="text-primary hover:text-primary/80 underline">
                       Войдите
                     </button>
@@ -212,6 +226,27 @@ function ConstructorPageContent() {
               </BlurFade>
             )}
 
+
+            {/* Баннер: Pro/Pro Plus подписка */}
+            {proInfo && (
+              <BlurFade inView>
+                <div className="flex items-center justify-between px-4 py-2.5 bg-muted border border-border text-sm">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-foreground">
+                      {proInfo.type === "subscription_plus" ? "Pro Plus" : "Pro"}
+                    </span>
+                    <span className="text-on-surface-muted">·</span>
+                    <span className="text-on-surface-muted">{proInfo.remaining} из 10 обработок</span>
+                  </div>
+                  {proInfo.remaining === 0 && (
+                    <Link href="/pricing" className="text-xs text-primary hover:underline">
+                      Продлить
+                    </Link>
+                  )}
+                </div>
+              </BlurFade>
+            )}
 
             {/* Описание */}
             <div className="text-center">

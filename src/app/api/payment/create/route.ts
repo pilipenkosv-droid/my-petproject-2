@@ -31,17 +31,19 @@ export async function POST(request: NextRequest) {
     };
     console.log("[payment/create] Step 3: offerType =", offerType, "unlockJobId =", unlockJobId);
 
-    if (!offerType || !["one_time", "subscription"].includes(offerType)) {
+    if (!offerType || !["one_time", "subscription", "subscription_plus"].includes(offerType)) {
       return NextResponse.json(
         { error: "Неверный тип тарифа" },
         { status: 400 }
       );
     }
 
-    const offer =
-      offerType === "one_time"
-        ? LAVA_CONFIG.offers.oneTime
-        : LAVA_CONFIG.offers.subscription;
+    const offerMap = {
+      one_time: LAVA_CONFIG.offers.oneTime,
+      subscription: LAVA_CONFIG.offers.subscription,
+      subscription_plus: LAVA_CONFIG.offers.subscriptionPlus,
+    } as const;
+    const offer = offerMap[offerType];
 
     const admin = getSupabaseAdmin();
 
