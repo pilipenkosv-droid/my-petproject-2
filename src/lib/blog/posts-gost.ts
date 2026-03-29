@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsGost: BlogPost[] = [
   {
     slug: "pomoshch-s-oformleniem-diploma",
-    coverImage: undefined,
+    coverImage: "/blog/pomoshch-s-oformleniem-diploma.png",
     title: "Помощь с оформлением диплома: как сдать работу с первого раза",
     description:
       "Разбираем главные ошибки в оформлении дипломной работы и показываем, как автоматическое форматирование по ГОСТу экономит дни нервов перед защитой.",
