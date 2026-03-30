@@ -6,6 +6,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { nanoid } from "nanoid";
 import { extendSubscription } from "@/lib/payment/access";
 
+const DEFAULT_REFERRAL_BONUS = 3;
+
 export const REWARD_THRESHOLDS = [
   { threshold: 5, months: 1 },
   { threshold: 15, months: 3 },
@@ -220,4 +222,41 @@ export async function getReferrerByCode(
   if (!data) return null;
 
   return { userId: data.user_id };
+}
+
+/**
+ * Возвращает количество бонусных обработок для приглашённого.
+ * Если активна сезонная кампания — возвращает повышенный бонус.
+ */
+export async function getCampaignBonusUses(): Promise<number> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from("campaign_config")
+      .select("value")
+      .eq("key", "marathon_2026")
+      .single();
+
+    if (!data?.value) return DEFAULT_REFERRAL_BONUS;
+
+    const config = data.value as {
+      active?: boolean;
+      starts_at?: string;
+      ends_at?: string;
+      referral_bonus_uses?: number;
+    };
+
+    if (!config.active || !config.starts_at || !config.ends_at) {
+      return DEFAULT_REFERRAL_BONUS;
+    }
+
+    const now = new Date();
+    if (now >= new Date(config.starts_at) && now <= new Date(config.ends_at)) {
+      return config.referral_bonus_uses ?? DEFAULT_REFERRAL_BONUS;
+    }
+  } catch {
+    // При ошибке — дефолтный бонус
+  }
+
+  return DEFAULT_REFERRAL_BONUS;
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useJobStatus } from "@/features/result/hooks/useJobStatus";
 import { StatisticsPanel } from "@/features/result/components/StatisticsPanel";
 import { CSATWidget } from "@/features/result/components/CSATWidget";
+import { CSATReturnVisitModal } from "@/features/result/components/CSATReturnVisitModal";
 import { EmailGateModal } from "@/features/result/components/EmailGateModal";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { CrossSellCtas } from "@/features/result/components/CrossSellCtas";
 import { ChangesSummary } from "@/features/result/components/ChangesSummary";
 import { ProUpsellBanner } from "@/features/result/components/ProUpsellBanner";
 import { ShareResultPopup } from "@/features/result/components/ShareResultPopup";
+import { GroupLinkCard } from "@/features/group/components/GroupLinkCard";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
 
@@ -31,6 +33,7 @@ export default function ResultPage({ params }: ResultPageProps) {
   const trackedPreview = useRef(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
   const [emailGateDownloadType, setEmailGateDownloadType] = useState<"original" | "formatted">("formatted");
+  const [hasDownloaded, setHasDownloaded] = useState(false);
 
   useEffect(() => {
     if (job?.status === "completed" && !trackedPreview.current) {
@@ -43,6 +46,7 @@ export default function ResultPage({ params }: ResultPageProps) {
     trackEvent("file_download", { download_type: type, is_anon: !user });
     const fileId = `${jobId}_${type}`;
     window.open(`/api/download/${fileId}`, "_blank");
+    setHasDownloaded(true);
     // Для анонимных — предлагаем отправить копию на почту ПОСЛЕ скачивания
     if (!user) {
       setEmailGateDownloadType(type);
@@ -304,13 +308,19 @@ export default function ResultPage({ params }: ResultPageProps) {
             </CardContent>
           </Card>
 
-          {/* CSAT виджет */}
-          <CSATWidget
-            jobId={jobId}
-            workType={job.workType}
-            requirementsMode={job.requirementsMode}
-            wasTruncated={job.statistics?.wasTruncated}
-          />
+          {/* CSAT виджет — показываем только после скачивания */}
+          {hasDownloaded && (
+            <CSATWidget
+              jobId={jobId}
+              workType={job.workType}
+              requirementsMode={job.requirementsMode}
+              wasTruncated={job.statistics?.wasTruncated}
+              source="after_download"
+            />
+          )}
+
+          {/* Групповая ссылка */}
+          <GroupLinkCard userId={user?.id} />
 
           {/* Апселл Pro-подписки */}
           <ProUpsellBanner />
@@ -338,6 +348,11 @@ export default function ResultPage({ params }: ResultPageProps) {
           pageCount={job.statistics?.pageCount ?? 0}
           workType={job.workType}
         />
+      )}
+
+      {/* CSAT модалка для повторных визитов */}
+      {job.status === "completed" && (
+        <CSATReturnVisitModal jobId={jobId} />
       )}
 
       {/* Email-gate для анонимных скачиваний */}

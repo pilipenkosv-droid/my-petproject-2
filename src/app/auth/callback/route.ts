@@ -44,6 +44,18 @@ export async function GET(request: NextRequest) {
               console.error("[auth/callback] Referral register error:", err)
             );
           }
+
+          // Групповая привязка: если есть cookie dlx_grp — присоединить к группе
+          const grpCode = request.cookies.get("dlx_grp")?.value;
+          if (grpCode) {
+            fetch(`${SITE_URL}/api/group/register`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, code: grpCode }),
+            }).catch((err) =>
+              console.error("[auth/callback] Group register error:", err)
+            );
+          }
         }
 
         return NextResponse.redirect(`${SITE_URL}${next}`);

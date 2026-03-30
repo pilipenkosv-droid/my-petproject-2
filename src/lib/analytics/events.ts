@@ -33,7 +33,10 @@ export type FunnelEvent =
   | "referral_link_copy"        // User copied referral link
   | "referral_click"            // Visitor clicked referral link
   | "referral_registration"     // Referred user registered
-  | "referral_reward";          // Referral reward granted
+  | "referral_reward"           // Referral reward granted
+  | "group_link_created"        // User created a group link
+  | "group_link_joined"         // User joined via group link
+  | "group_link_copy";          // User copied group link
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.

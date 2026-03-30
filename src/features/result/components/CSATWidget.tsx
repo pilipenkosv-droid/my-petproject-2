@@ -21,10 +21,12 @@ interface CSATWidgetProps {
   wasTruncated?: boolean;
   /** Заголовок виджета (по умолчанию "Оцените качество") */
   title?: string;
+  /** Источник показа CSAT (result_page, after_download, return_visit, email) */
+  source?: string;
   onSubmit?: (rating: number, feedback?: string) => void;
 }
 
-export function CSATWidget({ jobId, toolType = "formatting", workType, requirementsMode, wasTruncated, title = "Оцените качество", onSubmit }: CSATWidgetProps) {
+export function CSATWidget({ jobId, toolType = "formatting", workType, requirementsMode, wasTruncated, title = "Оцените качество", source = "result_page", onSubmit }: CSATWidgetProps) {
   const [rating, setRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -48,6 +50,7 @@ export function CSATWidget({ jobId, toolType = "formatting", workType, requireme
           workType: workType || toolType,
           requirementsMode,
           wasTruncated,
+          source,
           timestamp: new Date().toISOString(),
         }),
       });

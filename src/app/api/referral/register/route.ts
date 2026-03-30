@@ -11,13 +11,12 @@ import {
   getReferrerByCode,
   recordReferralEvent,
   checkAndGrantRewards,
+  getCampaignBonusUses,
+  getReferralStats,
 } from "@/lib/referral/utils";
 import { activateAccess } from "@/lib/payment/access";
 import { sendEmail } from "@/lib/email/transport";
 import { referralRegisteredEmail } from "@/lib/email/templates";
-import { getReferralStats } from "@/lib/referral/utils";
-
-const REFERRAL_BONUS_USES = 3;
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,7 +68,8 @@ export async function POST(request: NextRequest) {
       refereeId: userId,
     });
 
-    // Бонус приглашённому: +3 бесплатных обработки
+    // Бонус приглашённому: динамический (3 или 5 во время кампании)
+    const bonusUses = await getCampaignBonusUses();
     const currentAccess = await admin
       .from("user_access")
       .select("remaining_uses")
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       {
         user_id: userId,
         access_type: "one_time",
-        remaining_uses: currentUses + REFERRAL_BONUS_USES,
+        remaining_uses: currentUses + bonusUses,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      bonusUses: REFERRAL_BONUS_USES,
+      bonusUses: bonusUses,
       rewardGranted: rewardResult.granted,
     });
   } catch (err) {

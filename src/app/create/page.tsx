@@ -28,6 +28,7 @@ import { FlowStepper } from "@/components/FlowStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
 import { WORK_TYPES, type RequirementsMode } from "@/types/work-types";
+import { MarathonBanner } from "@/features/seasonal/components/MarathonBanner";
 
 type PageState = "upload" | "processing";
 
@@ -186,6 +187,10 @@ function ConstructorPageContent() {
       <div className="fixed inset-0 mesh-gradient pointer-events-none" />
 
       <Header showBack />
+
+      <div className="relative z-10 mx-auto max-w-2xl px-6 pt-4">
+        <MarathonBanner />
+      </div>
 
       <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
         <FlowStepper currentStep={0} />

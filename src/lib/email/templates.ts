@@ -437,6 +437,323 @@ export function referralRegisteredEmail({
           ${rewardBlock}`);
 }
 
+// ─── Lifecycle email templates ───
+
+/**
+ * Email #1: Активация — юзер зарегался, но не сделал обработку за 24ч
+ */
+export function activationNudgeEmail(): string {
+  return emailLayout("Загрузи первый документ", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Загрузи первый документ за 2 минуты
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                Ты зарегистрировался в Diplox — осталось загрузить работу, и мы оформим её по ГОСТу автоматически.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#fafafa;border:1px solid #e5e5e5;">
+                    <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#0a0a0a;">Как это работает:</p>
+                    <p style="margin:0 0 4px;font-size:13px;color:#333;line-height:1.5;">1. Загрузи .docx файл</p>
+                    <p style="margin:0 0 4px;font-size:13px;color:#333;line-height:1.5;">2. Мы проверим и исправим форматирование</p>
+                    <p style="margin:0;font-size:13px;color:#333;line-height:1.5;">3. Скачай готовый документ</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/create?ref=email-activation"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Загрузить документ
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email #2: Share nudge — после первой обработки, предложить поделиться
+ */
+interface ShareNudgeEmailParams {
+  fixesApplied: number;
+  workType?: string;
+}
+
+export function shareNudgeEmail({ fixesApplied, workType }: ShareNudgeEmailParams): string {
+  const workLabel = workType || "документ";
+
+  return emailLayout("Результат обработки", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                ${fixesApplied > 0 ? `${fixesApplied} исправлений в твоей работе` : "Твой документ обработан"}
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                Мы проверили твой ${workLabel} и ${fixesApplied > 0 ? `нашли ${fixesApplied} нарушений форматирования` : "всё выглядит отлично"}.
+                Покажи одногруппникам — им тоже может пригодиться.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0a0a0a;">
+                      Поделись с одногруппниками
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#666666;line-height:1.5;">
+                      Каждый, кто зарегистрируется по твоей ссылке, получит бесплатную проверку. А ты — бонус за приглашение.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/profile?ref=email-share"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Получить ссылку для друзей
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email #3: Upsell подписки — 3+ разовых покупки
+ */
+interface SubscriptionUpsellEmailParams {
+  totalSpent: number;
+  purchaseCount: number;
+}
+
+export function subscriptionUpsellEmail({ totalSpent, purchaseCount }: SubscriptionUpsellEmailParams): string {
+  return emailLayout("Сэкономь на оформлении", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Ты потратил ${totalSpent.toLocaleString("ru-RU")}&nbsp;&#8381; на оформление
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                ${purchaseCount} обработок по 159&nbsp;&#8381; — это ${totalSpent.toLocaleString("ru-RU")}&nbsp;&#8381;.
+                С Pro-подпиской — 10 обработок за 399&nbsp;&#8381;/мес (39&nbsp;&#8381; за документ).
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#f0fff4;border:1px solid #86efac;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#166534;">
+                      Экономия: ${(totalSpent - 399).toLocaleString("ru-RU")}&nbsp;&#8381; в месяц
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#166534;">
+                      Pro = 399&nbsp;&#8381;/мес за 10 документов вместо ${totalSpent.toLocaleString("ru-RU")}&nbsp;&#8381;
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/pricing?ref=email-upsell"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Перейти на Pro
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email #4: Реактивация — нет визита 14 дней
+ */
+interface ReactivationEmailParams {
+  daysUntilDeadline: number | null;
+}
+
+export function reactivationEmail({ daysUntilDeadline }: ReactivationEmailParams): string {
+  const deadlineBlock = daysUntilDeadline !== null && daysUntilDeadline > 0
+    ? `<p style="margin:0 0 24px;font-size:14px;color:#b45309;font-weight:600;">
+        До сдачи осталось ~${daysUntilDeadline} дней. Не оставляй оформление на потом.
+      </p>`
+    : `<p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+        Не забудь оформить работу перед сдачей — это занимает 2 минуты.
+      </p>`;
+
+  return emailLayout("Не забудь оформить работу", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Давно не заходил — всё в порядке?
+              </h1>
+              ${deadlineBlock}
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/create?ref=email-reactivation"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Оформить документ
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email #5: CSAT низкий (≤2) — просим фидбек
+ */
+export function csatLowEmail(): string {
+  return emailLayout("Что пошло не так?", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Что пошло не так?
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                Ты поставил низкую оценку нашей обработке. Нам важно понять, что именно не понравилось,
+                чтобы стать лучше.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#fafafa;border:1px solid #e5e5e5;">
+                    <p style="margin:0;font-size:13px;color:#333333;line-height:1.5;">
+                      Ответь одним предложением — что было не так? Мы читаем каждое сообщение.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="mailto:hello@diplox.online?subject=Обратная связь по обработке"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Написать нам
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email #6: CSAT высокий (≥4) — спасибо + поделись
+ */
+interface CsatHighEmailParams {
+  groupLinkUrl?: string | null;
+}
+
+export function csatHighEmail({ groupLinkUrl }: CsatHighEmailParams): string {
+  const shareBlock = groupLinkUrl
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0a0a0a;">
+                      Поделись с одногруппниками
+                    </p>
+                    <p style="margin:0 0 12px;font-size:13px;color:#666666;">
+                      Каждый получит бесплатную проверку по этой ссылке:
+                    </p>
+                    <a href="${groupLinkUrl}" style="font-size:13px;color:#7c3aed;font-weight:600;text-decoration:none;word-break:break-all;">${groupLinkUrl}</a>
+                  </td>
+                </tr>
+              </table>`
+    : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0a0a0a;">
+                      Расскажи одногруппникам
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#666666;">
+                      Пригласи друзей — каждый получит бонусную проверку, а ты приблизишься к бесплатному Pro.
+                    </p>
+                  </td>
+                </tr>
+              </table>`;
+
+  return emailLayout("Спасибо за оценку!", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Спасибо за высокую оценку!
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                Рады, что результат понравился. Мы стараемся делать оформление максимально точным.
+              </p>
+
+              ${shareBlock}
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/profile?ref=email-csat"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Открыть профиль
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
+/**
+ * Email: Marathon blast — сезонная рассылка
+ */
+export function marathonBlastEmail(): string {
+  return emailLayout("Сезон дипломов: оформляйте вместе", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Дипломный марафон в Diplox
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                Сезон сдачи работ — самое время оформить документы. Приглашай одногруппников:
+                каждый получит +5 бесплатных проверок вместо обычных 3.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px;background-color:#f0fff4;border:1px solid #86efac;">
+                    <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#166534;">
+                      Акция до 1 июня
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#166534;">
+                      +5 проверок за каждого приглашённого друга (обычно +3)
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/profile?ref=email-marathon"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Получить ссылку для друзей
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
+}
+
 interface ReferralReminderParams {
   count: number;
   nextThreshold: number;
