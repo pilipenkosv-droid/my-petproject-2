@@ -1,22 +1,5 @@
 {
   "framework": "nextjs",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "ai-sformat.vercel.app"
-        }
-      ],
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    }
-  ],
   "crons": [
     {
       "path": "/api/cleanup",
