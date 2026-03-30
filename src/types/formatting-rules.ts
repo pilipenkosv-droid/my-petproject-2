@@ -774,7 +774,7 @@ export const DEFAULT_GOST_RULES: FormattingRules = {
         hyphen: "-",
         enDash: "–",
         emDash: "—",
-        prohibitEmDash: true, // п.4.3.6
+        prohibitEmDash: false, // отключено — замена — на – раздражает юзеров без реальной пользы
       },
       multiply: {
         correctSymbol: "×",
