@@ -167,7 +167,7 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
     ? user.email.substring(0, 2).toUpperCase()
     : "??";
 
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const avatarUrl = (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) as string | undefined;
   const isPro = accessType === "subscription" || accessType === "subscription_plus" || accessType === "admin";
 
   if (!mounted) {

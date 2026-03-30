@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 import { populateUserAttribution } from "@/lib/analytics/attribution";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://diplox.online";
@@ -31,6 +31,11 @@ export async function GET(request: NextRequest) {
         if (sessionId && user) {
           populateUserAttribution(user.id, sessionId, ymUid).catch((err) =>
             console.error("[auth/callback] Attribution error:", err)
+          );
+
+          // Синхронизация avatar_url из identity data (Google передаёт picture)
+          syncAvatarFromIdentity(user).catch((err) =>
+            console.error("[auth/callback] Avatar sync error:", err)
           );
 
           // Реферальная привязка: если есть cookie dlx_ref — привязать к реферреру
@@ -68,4 +73,34 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(`${SITE_URL}/login?error=auth_failed`);
+}
+
+/**
+ * Синхронизирует avatar_url из identity data провайдера.
+ * Google хранит аватарку в identity_data.picture или identity_data.avatar_url.
+ */
+async function syncAvatarFromIdentity(user: { id: string; user_metadata?: Record<string, unknown>; identities?: Array<{ identity_data?: Record<string, unknown>; provider?: string }> }) {
+  // Если avatar_url уже есть — ничего не делаем
+  if (user.user_metadata?.avatar_url || user.user_metadata?.picture) return;
+
+  // Ищем аватарку в identity data
+  const identities = user.identities || [];
+  let avatarUrl: string | undefined;
+
+  for (const identity of identities) {
+    const data = identity.identity_data;
+    if (!data) continue;
+    avatarUrl = (data.avatar_url || data.picture) as string | undefined;
+    if (avatarUrl) break;
+  }
+
+  if (!avatarUrl) return;
+
+  const admin = getSupabaseAdmin();
+  await admin.auth.admin.updateUserById(user.id, {
+    user_metadata: {
+      ...user.user_metadata,
+      avatar_url: avatarUrl,
+    },
+  });
 }
