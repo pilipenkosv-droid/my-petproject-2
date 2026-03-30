@@ -15,14 +15,11 @@ const SESSION_MAX_AGE = 365 * 24 * 60 * 60; // 1 год
 
 export async function middleware(request: NextRequest) {
   // Редирект прямого доступа к vercel.app → diplox.online
-  // Nginx проксирует с X-Forwarded-Host: diplox.online — его НЕ редиректим.
-  // Прямой доступ: X-Forwarded-Host отсутствует или = vercel.app.
-  const forwardedHost = request.headers.get("x-forwarded-host");
+  // Nginx добавляет кастомный заголовок X-Nginx-Proxy: 1 — его НЕ редиректим.
+  // Прямой доступ к Vercel: заголовок отсутствует.
+  const isNginxProxied = request.headers.get("x-nginx-proxy") === "1";
   const host = request.headers.get("host") || "";
-  if (
-    host.includes("vercel.app") &&
-    (!forwardedHost || forwardedHost.includes("vercel.app"))
-  ) {
+  if (host.includes("vercel.app") && !isNginxProxied) {
     const url = new URL(request.url);
     url.hostname = "diplox.online";
     url.port = "";
