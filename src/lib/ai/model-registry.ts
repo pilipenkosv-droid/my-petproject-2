@@ -125,15 +125,15 @@ export const MODEL_REGISTRY: ModelConfig[] = [
 
   // ── Cerebras ──
   {
-    id: "cerebras-llama-3.3-70b",
-    displayName: "Cerebras Llama 3.3 70B",
+    id: "cerebras-llama-3.1-8b",
+    displayName: "Cerebras Llama 3.1 8B",
     protocol: "openai-compatible",
     apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "llama-3.3-70b",
+    modelId: "llama3.1-8b",
     baseUrl: "https://api.cerebras.ai/v1",
     limits: { rpm: 30, rpd: 1000, tpm: 60_000 },
     supportsJsonMode: true,
-    priority: 5,
+    priority: 7,
   },
 
   // ── Anthropic (платный, last-resort fallback) ──
