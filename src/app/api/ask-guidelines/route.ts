@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[ask-guidelines] Error:", error);
 
-    const message =
-      error instanceof Error ? error.message : "Неизвестная ошибка";
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Извините, сервис временно недоступен. Мы уже работаем над этим. Попробуйте через пару минут." },
+      { status: 503 }
+    );
   }
 }

@@ -7,11 +7,23 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig, getAvailableModels } from "./model-registry";
 import { canUseModel, recordUsage, markModelFailed } from "./rate-limiter";
 
 // Таймаут для AI вызовов (15 секунд на модель, чтобы успеть попробовать несколько)
 const AI_CALL_TIMEOUT_MS = 15000;
+
+/**
+ * Ошибка когда все AI-модели недоступны.
+ * Содержит технические детали для логов, но НЕ для пользователя.
+ */
+export class AllModelsUnavailableError extends Error {
+  constructor(technicalDetails: string) {
+    super(technicalDetails);
+    this.name = "AllModelsUnavailableError";
+  }
+}
 
 /**
  * Обёртка для добавления таймаута к Promise
@@ -119,6 +131,35 @@ async function callOpenAICompatible(
 }
 
 /**
+ * Вызов Anthropic-модели (Claude)
+ */
+async function callAnthropic(
+  config: ModelConfig,
+  request: GatewayRequest
+): Promise<string> {
+  const apiKey = process.env[config.apiKeyEnv]!;
+
+  const client = new Anthropic({
+    apiKey,
+    timeout: AI_CALL_TIMEOUT_MS,
+  });
+
+  const message = await client.messages.create({
+    model: config.modelId,
+    max_tokens: request.maxTokens ?? 4096,
+    temperature: request.temperature ?? 0.1,
+    system: request.systemPrompt,
+    messages: [{ role: "user", content: request.userPrompt }],
+  });
+
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error(`${config.displayName} returned no text content`);
+  }
+  return textBlock.text;
+}
+
+/**
  * Извлечь JSON из текстового ответа модели
  */
 function extractJson(text: string): unknown {
@@ -154,6 +195,19 @@ async function checkProviderReachable(model: ModelConfig): Promise<boolean> {
         `https://generativelanguage.googleapis.com/v1beta/models/${model.modelId}?key=${apiKey}`,
         { method: "GET", signal: AbortSignal.timeout(5000) }
       );
+      return res.ok;
+    } else if (model.protocol === "anthropic") {
+      // Anthropic — GET /v1/models
+      const apiKey = process.env[model.apiKeyEnv];
+      if (!apiKey) return false;
+      const res = await fetch("https://api.anthropic.com/v1/models", {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        signal: AbortSignal.timeout(5000),
+      });
       return res.ok;
     } else {
       // OpenAI-compatible — запрос /models
@@ -282,6 +336,12 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
           AI_CALL_TIMEOUT_MS,
           model.displayName
         );
+      } else if (model.protocol === "anthropic") {
+        rawText = await withTimeout(
+          callAnthropic(model, request),
+          AI_CALL_TIMEOUT_MS,
+          model.displayName
+        );
       } else {
         rawText = await withTimeout(
           callOpenAICompatible(model, request),
@@ -313,7 +373,7 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
     }
   }
 
-  throw new Error(
+  throw new AllModelsUnavailableError(
     `Все AI-модели недоступны:\n${errors.map((e) => `  - ${e}`).join("\n")}`
   );
 }

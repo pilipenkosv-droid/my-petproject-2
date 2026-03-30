@@ -53,9 +53,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[find-sources] Error:", error);
 
-    const message =
-      error instanceof Error ? error.message : "Ошибка при поиске источников";
-
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Извините, сервис временно недоступен. Мы уже работаем над этим. Попробуйте через пару минут." },
+      { status: 503 }
+    );
   }
 }

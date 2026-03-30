@@ -5,7 +5,7 @@
  * способ вызова (gemini-native или openai-compatible).
  */
 
-export type ModelProtocol = "gemini" | "openai-compatible";
+export type ModelProtocol = "gemini" | "openai-compatible" | "anthropic";
 
 export interface ModelConfig {
   /** Уникальный ID в нашей системе */
@@ -134,6 +134,18 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 30, rpd: 1000, tpm: 60_000 },
     supportsJsonMode: true,
     priority: 5,
+  },
+
+  // ── Anthropic (платный, last-resort fallback) ──
+  {
+    id: "anthropic-claude-haiku",
+    displayName: "Anthropic Claude Haiku",
+    protocol: "anthropic",
+    apiKeyEnv: "ANTHROPIC_API_KEY",
+    modelId: "claude-haiku-4-5-20251001",
+    limits: { rpm: 10, rpd: 100, tpm: 100_000 },
+    supportsJsonMode: false,
+    priority: 99,
   },
 ];
 
