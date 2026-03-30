@@ -33,7 +33,8 @@ Always check MCP before asking the user or guessing.
 - **Redirect по Host БЕЗ проверки X-Forwarded-Host** → redirect loop (Nginx→Vercel→301→Nginx→...)
 - **Redirect по Host С проверкой X-Forwarded-Host** → безопасен, используется в middleware
 - Прямой доступ к vercel.app ЛОМАЕТ авторизацию: cookies Supabase привязаны к diplox.online
-- `vercel.json` headers: `X-Robots-Tag: noindex, nofollow` для vercel.app (предотвращает индексацию)
+- **НЕЛЬЗЯ** использовать `X-Robots-Tag` в vercel.json для блокировки vercel.app — Vercel видит `Host: vercel.app` и от Nginx, заблокирует индексацию diplox.online тоже
+- Защита от индексации vercel.app обеспечивается 301 redirect в middleware (Google следует редиректу)
 - Перед любыми изменениями в middleware, связанными с Host/redirect — проверить Nginx конфиг через SSH
 - Nginx конфиги: менять ОБА `sites-available` и `sites-enabled` (копия, не симлинк)
 
