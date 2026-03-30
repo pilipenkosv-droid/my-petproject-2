@@ -61,6 +61,10 @@ export async function GET(request: NextRequest) {
 
     const admin = getSupabaseAdmin();
 
+    const avatarUrl = yandexUser.default_avatar_id
+      ? `https://avatars.yandex.net/get-yapic/${yandexUser.default_avatar_id}/islands-200`
+      : undefined;
+
     // 4. Найти или создать пользователя
     const { data: newUser, error: createError } = await admin.auth.admin.createUser({
       email,
@@ -69,17 +73,15 @@ export async function GET(request: NextRequest) {
         full_name: fullName,
         provider: "yandex",
         yandex_id: yandexUser.id,
-        avatar_url: yandexUser.default_avatar_id
-          ? `https://avatars.yandex.net/get-yapic/${yandexUser.default_avatar_id}/islands-200`
-          : undefined,
+        avatar_url: avatarUrl,
       },
     });
 
-    if (newUser?.user) {
-      // Новый пользователь создан
-    } else if (createError?.message?.includes("already been registered")) {
-      // Пользователь уже существует — account linking, продолжаем
-    } else if (createError) {
+    const isNewUser = !!newUser?.user;
+
+    if (!isNewUser && createError?.message?.includes("already been registered")) {
+      // Пользователь уже существует — продолжаем, обновим metadata после verifyOtp
+    } else if (createError && !isNewUser) {
       console.error("[yandex/callback] Create user error:", createError.message);
       return redirectError("auth_failed");
     }
@@ -107,6 +109,21 @@ export async function GET(request: NextRequest) {
       return redirectError("auth_failed");
     }
 
+    // 5b. Обновляем metadata (avatar_url может измениться, или не был задан при создании)
+    if (avatarUrl) {
+      await admin.auth.admin.updateUserById(sessionData.user.id, {
+        user_metadata: {
+          ...sessionData.user.user_metadata,
+          full_name: fullName,
+          provider: "yandex",
+          yandex_id: yandexUser.id,
+          avatar_url: avatarUrl,
+        },
+      }).catch((err) =>
+        console.error("[yandex/callback] Update metadata error:", err)
+      );
+    }
+
     // 6. Attribution и реферальная привязка (как в /auth/callback)
     const sessionId = request.cookies.get("dlx_sid")?.value;
     const ymUid = request.cookies.get("_ym_uid")?.value;
@@ -126,6 +143,18 @@ export async function GET(request: NextRequest) {
         body: JSON.stringify({ userId, code: refCode }),
       }).catch((err) =>
         console.error("[yandex/callback] Referral register error:", err)
+      );
+    }
+
+    // Групповая привязка
+    const grpCode = request.cookies.get("dlx_grp")?.value;
+    if (grpCode) {
+      fetch(`${SITE_URL}/api/group/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, code: grpCode }),
+      }).catch((err) =>
+        console.error("[yandex/callback] Group register error:", err)
       );
     }
 
