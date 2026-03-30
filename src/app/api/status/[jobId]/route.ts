@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getJob } from "@/lib/storage/job-store";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { FormattingViolation } from "@/types/formatting-rules";
 
 interface ChangeSummaryItem {
@@ -73,6 +74,20 @@ export async function GET(
     : { items: [], uniqueCount: 0 };
   const fixesApplied = job.violations?.filter((v) => v.autoFixable).length ?? 0;
 
+  // Проверяем, была ли оплата за этот job (для скрытия upsell-баннера)
+  let paymentCompleted = false;
+  if (job.hasFullVersion) {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("unlock_job_id", jobId)
+      .eq("status", "completed")
+      .limit(1)
+      .single();
+    paymentCompleted = !!data;
+  }
+
   return NextResponse.json({
     id: job.id,
     status: job.status,
@@ -84,6 +99,7 @@ export async function GET(
     fixesApplied,
     changesSummary,
     hasFullVersion: job.hasFullVersion,
+    paymentCompleted,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   });

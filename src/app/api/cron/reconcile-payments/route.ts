@@ -8,6 +8,7 @@ import { getAllPosts } from "@/lib/blog/posts";
 import { distributeAll } from "@/lib/distribution/distributor";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export async function GET(req: NextRequest) {
   // Проверка авторизации: Vercel Cron (Authorization: Bearer) или ручной вызов (x-cron-secret)
@@ -96,6 +97,52 @@ export async function GET(req: NextRequest) {
 
   console.log(`[reconcile] Done: ${JSON.stringify(summary)}`);
 
+  // Разблокировка файлов для оплаченных, но не разблокированных jobs
+  let unlockSummary = { unlocked: 0, failed: 0 };
+  try {
+    const { data: stuckPayments } = await supabase
+      .from("payments")
+      .select("unlock_job_id")
+      .eq("status", "completed")
+      .not("unlock_job_id", "is", null)
+      .order("completed_at", { ascending: true })
+      .limit(5);
+
+    for (const sp of stuckPayments ?? []) {
+      if (!sp.unlock_job_id) continue;
+      try {
+        const { data: job } = await supabase
+          .from("jobs")
+          .select("has_full_version")
+          .eq("id", sp.unlock_job_id)
+          .single();
+
+        if (!job?.has_full_version) continue;
+
+        const [unlockedOrig, unlockedFmt] = await Promise.all([
+          unlockFullVersion(sp.unlock_job_id, "original"),
+          unlockFullVersion(sp.unlock_job_id, "formatted"),
+        ]);
+        if (unlockedOrig && unlockedFmt) {
+          await updateJob(sp.unlock_job_id, { hasFullVersion: false });
+          unlockSummary.unlocked++;
+          console.log(`🔓 Reconciled unlock for job ${sp.unlock_job_id}`);
+        } else {
+          unlockSummary.failed++;
+        }
+      } catch (unlockErr) {
+        console.error(`[reconcile] Unlock error for ${sp.unlock_job_id}:`, unlockErr);
+        unlockSummary.failed++;
+      }
+    }
+  } catch (err) {
+    console.error("[reconcile] Stuck unlock query error:", err);
+  }
+
+  if (unlockSummary.unlocked > 0 || unlockSummary.failed > 0) {
+    console.log(`[reconcile] Unlock: ${JSON.stringify(unlockSummary)}`);
+  }
+
   // Дистрибуция новых статей блога на внешние площадки
   let distributionSummary = { distributed: 0, failed: 0, skipped: 0 };
   try {
@@ -115,6 +162,7 @@ export async function GET(req: NextRequest) {
     ok: true,
     processed: payments?.length ?? 0,
     summary,
+    unlock: unlockSummary,
     distribution: distributionSummary,
     timestamp: now.toISOString(),
   });

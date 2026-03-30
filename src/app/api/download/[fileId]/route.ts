@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getResultFile } from "@/lib/storage/file-storage";
+import { getResultFile, getFullVersionFile } from "@/lib/storage/file-storage";
 import { getJob } from "@/lib/storage/job-store";
 import { createSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server";
 
@@ -86,10 +86,25 @@ export async function GET(
   // Скачивание доступно всем — trial-результат уже обрезан до лимита
   // Email-токен и авторизация используются только для аналитики
 
-  const fileBuffer = await getResultFile(jobId, type);
+  let fileBuffer = await getResultFile(jobId, type);
 
   if (!fileBuffer) {
     return jsonResponse({ error: "Файл не найден" }, 404);
+  }
+
+  // Если оплата прошла, но unlock не сработал — отдаём полную версию напрямую
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: completedPayment } = await supabaseAdmin
+    .from("payments")
+    .select("id")
+    .eq("unlock_job_id", jobId)
+    .eq("status", "completed")
+    .limit(1)
+    .single();
+
+  if (completedPayment) {
+    const fullBuffer = await getFullVersionFile(jobId, type);
+    if (fullBuffer) fileBuffer = fullBuffer;
   }
 
   // Серверный лог скачивания (fire-and-forget)

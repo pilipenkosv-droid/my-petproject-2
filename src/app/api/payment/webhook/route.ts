@@ -1,17 +1,22 @@
 /**
  * POST /api/payment/webhook
  * Обработка вебхуков от Lava.top
+ *
+ * Критичные операции (статус платежа, доступ) выполняются синхронно.
+ * Тяжёлые операции (unlock файлов, email, бот) — через after() после ответа 200.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { activateAccess } from "@/lib/payment/access";
 import { LAVA_CONFIG } from "@/lib/payment/config";
 import { unlockFullVersion as unlockFullVersionFile } from "@/lib/storage/file-storage";
-import { updateJob } from "@/lib/storage/job-store";
+import { getJob, updateJob } from "@/lib/storage/job-store";
 import { canGrantBotAccess, getUserProfile, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 import { sendEmail } from "@/lib/email/transport";
 import { subscriptionWelcomeEmail, oneTimePurchaseEmail } from "@/lib/email/templates";
+
+export const maxDuration = 60;
 
 interface LavaWebhookPayload {
   type: string;
@@ -38,6 +43,99 @@ function verifyBasicAuth(request: NextRequest): boolean {
   const [login, password] = decoded.split(":");
 
   return login === expectedLogin && password === expectedPassword;
+}
+
+/**
+ * Тяжёлые post-payment операции: unlock файлов, бот, email.
+ * Выполняются через after() после ответа 200.
+ */
+async function runPostPaymentTasks(payment: {
+  id: string;
+  user_id: string;
+  offer_type: string;
+  unlock_job_id: string | null;
+}) {
+  const supabase = getSupabaseAdmin();
+
+  // Разблокировка полной версии
+  if (payment.unlock_job_id) {
+    try {
+      const job = await getJob(payment.unlock_job_id);
+      if (job?.hasFullVersion) {
+        const [unlockedOriginal, unlockedFormatted] = await Promise.all([
+          unlockFullVersionFile(payment.unlock_job_id, "original"),
+          unlockFullVersionFile(payment.unlock_job_id, "formatted"),
+        ]);
+
+        if (unlockedOriginal && unlockedFormatted) {
+          await updateJob(payment.unlock_job_id, { hasFullVersion: false });
+          console.log(`🔓 Full version unlocked for job ${payment.unlock_job_id}`);
+        } else {
+          console.warn(`⚠️ Could not unlock full version for job ${payment.unlock_job_id}`);
+        }
+      }
+    } catch (unlockError) {
+      console.error(`Failed to unlock job ${payment.unlock_job_id}:`, unlockError);
+    }
+  }
+
+  // Получаем профиль юзера (переиспользуем для бота и email)
+  let profile: { email: string; name: string } | null = null;
+  try {
+    profile = await getUserProfile(supabase, payment.user_id);
+  } catch {
+    console.error("Failed to get user profile for post-payment actions");
+  }
+
+  // Бот-провижнинг только для Pro Plus
+  if (payment.offer_type === "subscription_plus") {
+    try {
+      const canGrant = await canGrantBotAccess(supabase);
+      if (canGrant && profile) {
+        const result = await provisionBotUser(profile.email, profile.name);
+        if (result?.success) {
+          await storeBotAccess(supabase, payment.user_id, result.deepLink);
+          console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);
+        }
+      }
+    } catch (botError) {
+      console.error("Bot provisioning failed (non-critical):", botError);
+    }
+  }
+
+  // Welcome-email после оплаты
+  if (profile) {
+    try {
+      if (payment.offer_type === "subscription_plus") {
+        const { data: access } = await supabase
+          .from("user_access")
+          .select("bot_deep_link")
+          .eq("user_id", payment.user_id)
+          .single();
+
+        await sendEmail({
+          to: profile.email,
+          subject: "Подписка Pro Plus активирована — Diplox",
+          html: subscriptionWelcomeEmail({ botDeepLink: access?.bot_deep_link }),
+        });
+      } else if (payment.offer_type === "subscription") {
+        await sendEmail({
+          to: profile.email,
+          subject: "Подписка Pro активирована — Diplox",
+          html: subscriptionWelcomeEmail(),
+        });
+      } else {
+        await sendEmail({
+          to: profile.email,
+          subject: "Спасибо за покупку — Diplox",
+          html: oneTimePurchaseEmail(),
+        });
+      }
+      console.log(`📧 Welcome email sent to ${profile.email}`);
+    } catch (emailError) {
+      console.error("Welcome email failed (non-critical):", emailError);
+    }
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -71,9 +169,17 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        // Идемпотентность: если уже обработан — пропускаем
+        // Идемпотентность: если уже обработан — проверяем, нужен ли unlock
         if (payment.status === "completed") {
-          console.log(`Webhook: payment ${payment.id} already completed, skipping`);
+          if (payment.unlock_job_id) {
+            const job = await getJob(payment.unlock_job_id);
+            if (job?.hasFullVersion) {
+              console.log(`Webhook retry: payment ${payment.id} completed but unlock pending, retrying`);
+              after(() => runPostPaymentTasks(payment));
+            } else {
+              console.log(`Webhook: payment ${payment.id} already completed, skipping`);
+            }
+          }
           break;
         }
 
@@ -103,85 +209,10 @@ export async function POST(request: NextRequest) {
             .is("lava_subscription_id", null);
         }
 
-        // Если есть jobId для разблокировки — разблокируем полную версию
-        if (payment.unlock_job_id) {
-          try {
-            const [unlockedOriginal, unlockedFormatted] = await Promise.all([
-              unlockFullVersionFile(payment.unlock_job_id, "original"),
-              unlockFullVersionFile(payment.unlock_job_id, "formatted"),
-            ]);
-
-            if (unlockedOriginal && unlockedFormatted) {
-              // Убираем флаг hasFullVersion, т.к. теперь основные файлы — полные версии
-              await updateJob(payment.unlock_job_id, { hasFullVersion: false });
-              console.log(`🔓 Full version unlocked for job ${payment.unlock_job_id}`);
-            } else {
-              console.warn(`⚠️ Could not unlock full version for job ${payment.unlock_job_id}`);
-            }
-          } catch (unlockError) {
-            console.error(`Failed to unlock job ${payment.unlock_job_id}:`, unlockError);
-          }
-        }
-
         console.log(`✅ Payment completed: ${payment.offer_type} for user ${payment.user_id}`);
 
-        // Получаем профиль юзера (переиспользуем для бота и email)
-        let profile: { email: string; name: string } | null = null;
-        try {
-          profile = await getUserProfile(supabase, payment.user_id);
-        } catch {
-          console.error("Failed to get user profile for post-payment actions");
-        }
-
-        // Бот-провижнинг ��олько для Pro Plus (1499₽/мес)
-        if (payment.offer_type === "subscription_plus") {
-          try {
-            const canGrant = await canGrantBotAccess(supabase);
-            if (canGrant && profile) {
-              const result = await provisionBotUser(profile.email, profile.name);
-              if (result?.success) {
-                await storeBotAccess(supabase, payment.user_id, result.deepLink);
-                console.log(`🤖 Bot access granted for user ${payment.user_id} (existing: ${result.existing})`);
-              }
-            }
-          } catch (botError) {
-            console.error("Bot provisioning failed (non-critical):", botError);
-          }
-        }
-
-        // Welcome-email после оплаты
-        if (profile) {
-          try {
-            if (payment.offer_type === "subscription_plus") {
-              const { data: access } = await supabase
-                .from("user_access")
-                .select("bot_deep_link")
-                .eq("user_id", payment.user_id)
-                .single();
-
-              await sendEmail({
-                to: profile.email,
-                subject: "Подписка Pro Plus активирована — Diplox",
-                html: subscriptionWelcomeEmail({ botDeepLink: access?.bot_deep_link }),
-              });
-            } else if (payment.offer_type === "subscription") {
-              await sendEmail({
-                to: profile.email,
-                subject: "Подписка Pro активирована — Diplox",
-                html: subscriptionWelcomeEmail(),
-              });
-            } else {
-              await sendEmail({
-                to: profile.email,
-                subject: "Спасибо за покупку — Diplox",
-                html: oneTimePurchaseEmail(),
-              });
-            }
-            console.log(`📧 Welcome email sent to ${profile.email}`);
-          } catch (emailError) {
-            console.error("Welcome email failed (non-critical):", emailError);
-          }
-        }
+        // Тяжёлые операции — после ответа 200
+        after(() => runPostPaymentTasks(payment));
 
         break;
       }

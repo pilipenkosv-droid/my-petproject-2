@@ -28,6 +28,7 @@ interface JobApiResponse extends Partial<JobState> {
   violationsCount?: number;
   fixesApplied?: number;
   changesSummary?: ChangeSummaryItem[];
+  paymentCompleted?: boolean;
 }
 
 interface JobStatusResult {
