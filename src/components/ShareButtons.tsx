@@ -55,7 +55,7 @@ const shareButtons = [
 ];
 
 const btnBase =
-  "group relative flex items-center gap-2 px-4 py-2 bg-surface border border-surface-border text-on-surface-muted text-sm font-medium hover:bg-surface-hover hover:border-surface-border hover:text-foreground active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
+  "group relative flex items-center justify-center gap-2 px-4 py-2 bg-surface border border-surface-border text-on-surface-muted text-sm font-medium hover:bg-surface-hover active:scale-95 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
 
 export function ShareButtons({
   url,
@@ -188,7 +188,7 @@ export function ShareButtons({
 
   // ─── Default вариант ───
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="grid grid-cols-2 gap-3">
       {/* Копировать ссылку */}
       <button
         onClick={handleCopy}
@@ -196,7 +196,7 @@ export function ShareButtons({
         className={`${btnBase} ${
           copied
             ? "!bg-green-500/20 !border-green-500/40 !text-green-400"
-            : ""
+            : "hover:text-primary hover:border-primary/30"
         }`}
       >
         {copied ? (
