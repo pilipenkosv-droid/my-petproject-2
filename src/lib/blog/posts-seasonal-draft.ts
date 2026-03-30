@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const seasonalDraftPosts: BlogPost[] = [
   {
     slug: "kak-podgotovit-vkr-za-2-nedeli",
-    coverImage: undefined,
+    coverImage: "/blog/kak-podgotovit-vkr-za-2-nedeli.png",
     title: "Как подготовить ВКР за 2 недели — пошаговый план без паники",
     description:
       "Осталось 2 недели до сдачи ВКР? Пошаговый план: от структуры до финального оформления. Что делать каждый день, какие инструменты использовать и как не сойти с ума.",
@@ -189,7 +189,7 @@ export const seasonalDraftPosts: BlogPost[] = [
   },
   {
     slug: "chek-list-pered-zashchitoj-diploma-2026",
-    coverImage: undefined,
+    coverImage: "/blog/chek-list-pered-zashchitoj-diploma-2026.png",
     title: "Чек-лист перед защитой диплома 2026: 20 пунктов, которые нельзя забыть",
     description:
       "Полный чек-лист подготовки к защите дипломной работы в 2026 году. Оформление, антиплагиат, презентация, речь — всё, что нужно проверить перед выходом к комиссии.",
