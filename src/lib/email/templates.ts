@@ -14,7 +14,7 @@ interface SubscriptionWelcomeEmailParams {
 /**
  * Общий layout-обёртка для всех email
  */
-function emailLayout(title: string, content: string): string {
+export function emailLayout(title: string, content: string): string {
   return `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -356,5 +356,129 @@ export function oneTimePurchaseEmail(): string {
                 </tr>
               </table>
             </td>
-          </tr>`);;
+          </tr>`);
+}
+
+// ─── Referral email templates ───
+
+interface ReferralRegisteredParams {
+  count: number;
+  nextThreshold: number;
+  nextRewardMonths: number;
+  rewardGranted?: boolean;
+  rewardMonths?: number;
+}
+
+export function referralRegisteredEmail({
+  count,
+  nextThreshold,
+  nextRewardMonths,
+  rewardGranted,
+  rewardMonths,
+}: ReferralRegisteredParams): string {
+  const rewardBlock = rewardGranted && rewardMonths
+    ? `<tr>
+        <td style="padding:0 32px 24px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+              <td style="padding:16px;background-color:#f0fff4;border:1px solid #86efac;">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#166534;">
+                  &#127881; Поздравляем! Вы получили ${rewardMonths} мес. Pro бесплатно
+                </p>
+                <p style="margin:0;font-size:13px;color:#166534;">
+                  Подписка уже активирована. Продолжайте приглашать друзей для ещё больших наград!
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+    : "";
+
+  const remaining = nextThreshold - count;
+
+  return emailLayout("Новый друг зарегистрировался", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                +1! По вашей ссылке зарегистрировался новый пользователь
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                ${rewardGranted
+                  ? `У вас уже ${count} приглашённых друзей. Отличный результат!`
+                  : `Всего ${count} из ${nextThreshold}. Ещё ${remaining} — и вы получите ${nextRewardMonths} мес. Pro бесплатно.`
+                }
+              </p>
+
+              <!-- Progress -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td>
+                    <div style="background-color:#e5e5e5;height:8px;border-radius:4px;overflow:hidden;">
+                      <div style="background-color:#7c3aed;height:8px;width:${Math.min(100, Math.round((count / nextThreshold) * 100))}%;border-radius:4px;"></div>
+                    </div>
+                    <p style="margin:6px 0 0;font-size:12px;color:#999999;">${count} / ${nextThreshold} друзей</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/profile"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Посмотреть прогресс
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ${rewardBlock}`);
+}
+
+interface ReferralReminderParams {
+  count: number;
+  nextThreshold: number;
+  referralUrl: string;
+}
+
+export function referralWeeklyReminderEmail({
+  count,
+  nextThreshold,
+  referralUrl,
+}: ReferralReminderParams): string {
+  const remaining = nextThreshold - count;
+
+  return emailLayout("До бесплатного Pro осталось немного", `
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;">
+                Ещё ${remaining} ${remaining === 1 ? "друг" : remaining < 5 ? "друга" : "друзей"} до бесплатного Pro
+              </h1>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.5;">
+                У вас уже ${count} приглашённых. Поделитесь ссылкой с одногруппниками —
+                и получите месяц Pro подписки бесплатно.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:12px 16px;background-color:#fafafa;border:1px solid #e5e5e5;word-break:break-all;">
+                    <a href="${referralUrl}" style="font-size:13px;color:#7c3aed;font-weight:600;text-decoration:none;">${referralUrl}</a>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/profile"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                      Мой прогресс
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`);
 }

@@ -32,6 +32,18 @@ export async function GET(request: NextRequest) {
           populateUserAttribution(user.id, sessionId, ymUid).catch((err) =>
             console.error("[auth/callback] Attribution error:", err)
           );
+
+          // Реферальная привязка: если есть cookie dlx_ref — привязать к реферреру
+          const refCode = request.cookies.get("dlx_ref")?.value;
+          if (refCode) {
+            fetch(`${SITE_URL}/api/referral/register`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, code: refCode }),
+            }).catch((err) =>
+              console.error("[auth/callback] Referral register error:", err)
+            );
+          }
         }
 
         return NextResponse.redirect(`${SITE_URL}${next}`);

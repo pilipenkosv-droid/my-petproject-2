@@ -224,3 +224,47 @@ export async function activateAccess(
     );
   }
 }
+
+/**
+ * Продлевает подписку на указанное кол-во месяцев (для реферальных наград).
+ * Если активная подписка есть — добавляет к существующей дате.
+ * Если нет — создаёт новую subscription.
+ */
+export async function extendSubscription(
+  userId: string,
+  months: number
+): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  const access = await getUserAccess(userId);
+
+  const daysToAdd = months * 30;
+
+  // Определяем базовую дату: продлеваем от текущего истечения или от сейчас
+  let baseDate: Date;
+  if (
+    (access.accessType === "subscription" || access.accessType === "subscription_plus") &&
+    access.subscriptionActiveUntil
+  ) {
+    const currentExpiry = new Date(access.subscriptionActiveUntil);
+    baseDate = currentExpiry > new Date() ? currentExpiry : new Date();
+  } else {
+    baseDate = new Date();
+  }
+
+  const newExpiry = new Date(baseDate);
+  newExpiry.setDate(newExpiry.getDate() + daysToAdd);
+
+  await supabase.from("user_access").upsert(
+    {
+      user_id: userId,
+      access_type: access.accessType === "subscription_plus" ? "subscription_plus" : "subscription",
+      remaining_uses:
+        access.accessType === "subscription" || access.accessType === "subscription_plus"
+          ? Math.max(access.remainingUses, LAVA_CONFIG.offers.subscription.uses)
+          : LAVA_CONFIG.offers.subscription.uses,
+      subscription_active_until: newExpiry.toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+}

@@ -6,7 +6,6 @@ import {
   Check,
   Send,
   Share2,
-  Twitter,
 } from "lucide-react";
 
 interface ShareButtonsProps {
@@ -52,14 +51,6 @@ const shareButtons = [
     getUrl: (url: string, title: string) =>
       `https://wa.me/?text=${encodeURIComponent(title + " " + url)}`,
     hoverColor: "hover:text-green-400 hover:border-green-400/30",
-  },
-  {
-    key: "twitter",
-    label: "Twitter",
-    icon: Twitter,
-    getUrl: (url: string, title: string) =>
-      `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-    hoverColor: "hover:text-sky-400 hover:border-sky-400/30",
   },
 ];
 

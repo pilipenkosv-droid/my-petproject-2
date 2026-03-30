@@ -1,0 +1,139 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { X, Users, Gift } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
+import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics/events";
+import { SITE_URL } from "@/lib/config/site";
+import Link from "next/link";
+
+interface ShareResultPopupProps {
+  jobId: string;
+  violationsCount: number;
+  fixesApplied: number;
+  pageCount: number;
+  workType?: string;
+}
+
+const WORK_TYPE_LABELS: Record<string, string> = {
+  diplom: "дипломную",
+  kursovaya: "курсовую",
+  referat: "реферат",
+  otchet: "отчёт",
+  dissertation: "диссертацию",
+  vkr: "ВКР",
+  doklad: "доклад",
+  esse: "эссе",
+};
+
+export function ShareResultPopup({
+  jobId,
+  violationsCount,
+  fixesApplied,
+  pageCount,
+  workType,
+}: ShareResultPopupProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const storageKey = `dlx_shared_${jobId}`;
+    if (localStorage.getItem(storageKey)) return;
+
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+      trackEvent("share_popup_shown", { job_id: jobId });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [jobId]);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    localStorage.setItem(`dlx_shared_${jobId}`, "1");
+  };
+
+  if (!isVisible) return null;
+
+  const shareUrl = `${SITE_URL}/r/${jobId}`;
+  const workLabel = workType ? WORK_TYPE_LABELS[workType] || "работу" : "работу";
+  const shareTitle = fixesApplied > 0
+    ? `Оформил ${workLabel} в Diplox: исправлено ${fixesApplied} нарушений на ${pageCount} стр.`
+    : `Оформил ${workLabel} в Diplox: ${pageCount} стр. проверены и готовы к сдаче`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-md bg-surface border border-surface-border shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-on-surface-muted hover:text-foreground transition-colors"
+          aria-label="Закрыть"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="p-6 space-y-5">
+          {/* Header */}
+          <div className="text-center">
+            <div className="w-12 h-12 bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+              <Users className="w-6 h-6 text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">
+              Документ готов! Поделись результатом
+            </h3>
+            <p className="text-sm text-on-surface-muted mt-1">
+              Покажи одногруппникам, как легко оформить работу
+            </p>
+          </div>
+
+          {/* Metrics */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-surface-hover border border-surface-border p-3 text-center">
+              <div className="text-xl font-bold text-foreground">{pageCount}</div>
+              <div className="text-xs text-on-surface-muted">страниц</div>
+            </div>
+            <div className="bg-surface-hover border border-surface-border p-3 text-center">
+              <div className="text-xl font-bold text-emerald-400">{fixesApplied}</div>
+              <div className="text-xs text-on-surface-muted">исправлений</div>
+            </div>
+          </div>
+
+          {/* Share buttons */}
+          <ShareButtons
+            url={shareUrl}
+            title={shareTitle}
+            description="Автоматическое оформление по методичке — бесплатно"
+          />
+
+          {/* Referral teaser */}
+          <div className="border border-surface-border bg-surface-hover p-4">
+            <div className="flex items-start gap-3">
+              <Gift className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Приглашай друзей — получи Pro бесплатно
+                </p>
+                <p className="text-xs text-on-surface-muted mt-1">
+                  5 друзей = 1 месяц Pro. Реферальная ссылка — в профиле.
+                </p>
+                <Link href="/profile" onClick={handleClose}>
+                  <Button variant="link" size="sm" className="px-0 mt-1 h-auto text-xs">
+                    Перейти в профиль
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

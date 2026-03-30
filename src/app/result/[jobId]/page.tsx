@@ -16,6 +16,7 @@ import { FlowStepper } from "@/components/FlowStepper";
 import { CrossSellCtas } from "@/features/result/components/CrossSellCtas";
 import { ChangesSummary } from "@/features/result/components/ChangesSummary";
 import { ProUpsellBanner } from "@/features/result/components/ProUpsellBanner";
+import { ShareResultPopup } from "@/features/result/components/ShareResultPopup";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { trackEvent } from "@/lib/analytics/events";
 
@@ -194,7 +195,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           )}
 
           {/* Hook-offer: полная версия уже готова */}
-          {job.statistics?.wasTruncated && job.hasFullVersion && (
+          {job.statistics?.wasTruncated && job.hasFullVersion && !job.paymentCompleted && (
             <Card className="border-border bg-muted overflow-hidden relative">
               <div className="absolute top-0 right-0 w-32 h-32 bg-muted rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
               <CardContent className="pt-6 relative">
@@ -327,6 +328,17 @@ export default function ResultPage({ params }: ResultPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Share popup после завершения */}
+      {job.status === "completed" && (
+        <ShareResultPopup
+          jobId={jobId}
+          violationsCount={job.violationsCount ?? 0}
+          fixesApplied={job.fixesApplied ?? 0}
+          pageCount={job.statistics?.pageCount ?? 0}
+          workType={job.workType}
+        />
+      )}
 
       {/* Email-gate для анонимных скачиваний */}
       <EmailGateModal

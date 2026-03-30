@@ -26,7 +26,14 @@ export type FunnelEvent =
   | "work_type_selected"    // User selected work type
   | "subscription_pro_view"    // Pro card scrolled into viewport on pricing page
   | "subscription_upsell_view"  // Pro upsell banner viewed on result page
-  | "email_capture_submit";     // Anonymous user submitted email to get download link
+  | "email_capture_submit"      // Anonymous user submitted email to get download link
+  | "share_popup_shown"         // Share popup shown after job completion
+  | "share_click"               // User clicked share button (any channel)
+  | "share_page_visit"          // Visitor landed on /r/[jobId] share page
+  | "referral_link_copy"        // User copied referral link
+  | "referral_click"            // Visitor clicked referral link
+  | "referral_registration"     // Referred user registered
+  | "referral_reward";          // Referral reward granted
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.

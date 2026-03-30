@@ -10,6 +10,7 @@ import { Download, CheckCircle, XCircle, Clock, GraduationCap, Zap, CreditCard, 
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { VerifyPaymentsButton } from "@/components/VerifyPaymentsButton";
+import { ReferralCard } from "@/features/referral/components/ReferralCard";
 
 export default async function ProfilePage() {
   const supabase = await createSupabaseServer();
@@ -183,6 +184,11 @@ export default async function ProfilePage() {
             <VerifyPaymentsButton />
           </div>
         )}
+
+        {/* Referral program */}
+        <div className="mb-8">
+          <ReferralCard />
+        </div>
 
         {/* Quick action button */}
         <div className="mb-8 flex justify-end">
