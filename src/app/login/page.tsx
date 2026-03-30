@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,19 @@ function GoogleIcon({ className }: { className?: string }) {
         fill="#EA4335"
       />
     </svg>
+  );
+}
+
+// Yandex "Я" icon
+function YandexIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/logo/icons8-yandex-48.png"
+      alt="Яндекс"
+      width={20}
+      height={20}
+      className={className}
+    />
   );
 }
 
@@ -98,6 +112,11 @@ function LoginForm() {
     if (error) {
       setError(error.message);
     }
+  };
+
+  const handleYandexAuth = () => {
+    setError("");
+    window.location.href = "/api/auth/yandex";
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -199,16 +218,27 @@ function LoginForm() {
             </>
           ) : (
             <>
-              {/* Google OAuth */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleGoogleAuth}
-                disabled={loading}
-              >
-                <GoogleIcon className="mr-2 h-4 w-4" />
-                Войти через Google
-              </Button>
+              {/* OAuth кнопки */}
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleAuth}
+                  disabled={loading}
+                >
+                  <GoogleIcon className="mr-2 h-4 w-4" />
+                  Войти через Google
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleYandexAuth}
+                  disabled={loading}
+                >
+                  <YandexIcon className="mr-2 h-4 w-4" />
+                  Войти через Яндекс
+                </Button>
+              </div>
 
               <div className="flex items-center gap-3">
                 <Separator className="flex-1" />
