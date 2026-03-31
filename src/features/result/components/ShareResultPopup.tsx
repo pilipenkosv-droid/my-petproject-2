@@ -14,16 +14,31 @@ interface ShareResultPopupProps {
   fixesApplied: number;
   pageCount: number;
   workType?: string;
+  /** Время обработки в полных минутах (округлено вверх) */
+  processingMinutes?: number;
   /** Показывать только после скачивания документа */
   hasDownloaded: boolean;
 }
 
-const WORK_TYPE_LABELS: Record<string, string> = {
+// Винительный падеж: "Оформил {что?}"
+const WORK_TYPE_ACCUSATIVE: Record<string, string> = {
   diplom: "дипломную",
   kursovaya: "курсовую",
   referat: "реферат",
   otchet: "отчёт",
   dissertation: "диссертацию",
+  vkr: "ВКР",
+  doklad: "доклад",
+  esse: "эссе",
+};
+
+// Именительный падеж: "Мой {что?} готов"
+const WORK_TYPE_NOMINATIVE: Record<string, string> = {
+  diplom: "диплом",
+  kursovaya: "курсовая",
+  referat: "реферат",
+  otchet: "отчёт",
+  dissertation: "диссертация",
   vkr: "ВКР",
   doklad: "доклад",
   esse: "эссе",
@@ -35,6 +50,7 @@ export function ShareResultPopup({
   fixesApplied,
   pageCount,
   workType,
+  processingMinutes,
   hasDownloaded,
 }: ShareResultPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -77,10 +93,13 @@ export function ShareResultPopup({
   if (!isVisible) return null;
 
   const shareUrl = `${SITE_URL}/r/${jobId}`;
-  const workLabel = workType ? WORK_TYPE_LABELS[workType] || "работу" : "работу";
-  const shareTitle = fixesApplied > 0
-    ? `Оформил ${workLabel} в Diplox: исправлено ${fixesApplied} нарушений на ${pageCount} стр.`
-    : `Оформил ${workLabel} в Diplox: ${pageCount} стр. проверены и готовы к сдаче`;
+  const accLabel = workType ? WORK_TYPE_ACCUSATIVE[workType] || "работу" : "работу";
+  const nomLabel = workType ? WORK_TYPE_NOMINATIVE[workType] || "работа" : "работа";
+  const timeStr = processingMinutes && processingMinutes > 0 ? ` за ${processingMinutes} мин` : "";
+  const statsLine = fixesApplied > 0
+    ? `\n*Исправлено ${fixesApplied} нарушений на ${pageCount} стр.`
+    : `\n*${pageCount} стр. проверены и готовы к сдаче`;
+  const shareTitle = `Оформил ${accLabel} в Diplox${timeStr}! Мой ${nomLabel} готов к сдаче. А ваш?${statsLine}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
