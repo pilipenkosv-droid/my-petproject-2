@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsGost: BlogPost[] = [
   {
     slug: "oformlenie-po-gostu-2026",
-    coverImage: undefined,
+    coverImage: "/blog/oformlenie-po-gostu-2026.png",
     title: "Оформление по ГОСТу в 2026 году: полный гайд для студентов",
     description:
       "Актуальные требования к оформлению курсовых, дипломов и ВКР по ГОСТу в 2026 году. Поля, шрифт, интервалы, нумерация — всё в одном месте с примерами.",
