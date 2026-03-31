@@ -61,9 +61,9 @@ export async function GET(
 
           console.log(`✅ Payment verified via API: ${payment.offer_type} for user ${payment.user_id}`);
 
-          // Бот-провижнинг для подписчиков Pro (первые 10)
+          // Бот-провижнинг для подписчиков Pro Plus (первые 10)
           let botDeepLink: string | null = null;
-          if (payment.offer_type === "subscription") {
+          if (payment.offer_type === "subscription_plus") {
             try {
               const canGrant = await canGrantBotAccess(admin);
               if (canGrant) {
