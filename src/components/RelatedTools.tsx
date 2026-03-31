@@ -36,8 +36,8 @@ const TOOLS = [
   {
     slug: "rewrite",
     href: "/rewrite",
-    label: "Повышение уникальности",
-    description: "Рерайт с сохранением смысла",
+    label: "Перефразирование",
+    description: "Перескажи текст своими словами",
     icon: Pencil,
     gradient: "",
   },

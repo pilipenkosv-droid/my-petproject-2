@@ -30,9 +30,9 @@ type InputMode = "text" | "file";
 type RewriteMode = "light" | "medium" | "heavy";
 
 const MODE_OPTIONS: { value: RewriteMode; label: string; description: string }[] = [
-  { value: "light", label: "Лёгкий", description: "Синонимы, ~70-80%" },
-  { value: "medium", label: "Средний", description: "Перестройка, ~80-90%" },
-  { value: "heavy", label: "Глубокий", description: "Перефразирование, ~90-95%" },
+  { value: "light", label: "Лёгкий", description: "Замена формулировок" },
+  { value: "medium", label: "Средний", description: "Перестройка предложений" },
+  { value: "heavy", label: "Глубокий", description: "Полное перефразирование" },
 ];
 
 export default function RewritePage() {
@@ -201,10 +201,10 @@ function RewritePageContent() {
                 <Pencil className="w-8 h-8 text-background" />
               </div>
               <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Антиплагиат пройдёт. Смысл останется.
+                Свои мысли — своими словами
               </h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Вставь текст или загрузи файл — получишь переписанный вариант с уникальностью 80-95%
+                Вставь текст или загрузи файл — получишь перефразированный вариант с сохранением смысла
               </p>
             </div>
           </BlurFade>

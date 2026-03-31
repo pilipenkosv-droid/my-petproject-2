@@ -8,7 +8,7 @@ const footerLinks = {
       { label: "Форматирование", href: "/create" },
       { label: "Генератор плана", href: "/outline" },
       { label: "Проверка грамматики", href: "/grammar" },
-      { label: "Повышение уникальности", href: "/rewrite" },
+      { label: "Перефразирование", href: "/rewrite" },
       { label: "Краткое содержание", href: "/summarize" },
       { label: "Подбор литературы", href: "/sources" },
     ],

@@ -37,8 +37,8 @@ export default async function LandingPage() {
       <div className="bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-purple-600/10 border-b border-purple-500/20 px-4 py-3">
         <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
           <Bot className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-foreground font-medium">Second Brain — запомни всё, что учишь</span>
-          <span className="text-on-surface-muted hidden sm:inline">— AI-помощник в Telegram</span>
+          <span className="text-foreground font-medium">ИИ-бот для учёбы в Telegram</span>
+          <span className="text-on-surface-muted hidden sm:inline">— конспекты голосом, ответы из своих заметок</span>
           <Link href="/second-brain" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors shrink-0">
             Узнать <ArrowRight className="w-3 h-3" />
           </Link>
@@ -199,8 +199,8 @@ export default async function LandingPage() {
               {
                 href: "/rewrite",
                 icon: Pencil,
-                label: "Повышение уникальности",
-                desc: "Твой текст, твои мысли — уникальность растёт",
+                label: "Перефразирование",
+                desc: "Свои мысли — своими словами. Смысл тот же, текст — твой",
                 gradient: "from-brand-teal-dark to-brand-teal",
                 delay: 0.45,
               },
@@ -264,9 +264,8 @@ export default async function LandingPage() {
                 </h2>
                 <p className="text-on-surface-muted mb-4 leading-relaxed max-w-2xl">
                   Diplox — сервис форматирования, не система проверки.
-                  Мы используем Google Gemini и Groq для анализа методички, но не имеем
-                  доступа к Антиплагиат.ВУЗ и не передаём документы в университетские базы.
-                  Оригинальность вашей работы не изменится.
+                  Мы не имеем доступа к Антиплагиат.ВУЗ и не передаём документы в университетские базы.
+                  Файлы удаляются после обработки. Оригинальность вашей работы не изменится.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Link

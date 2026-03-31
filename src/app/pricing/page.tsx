@@ -30,7 +30,7 @@ const plans = [
     description: "Попробуйте бесплатно",
     features: [
       { text: "1 бесплатная обработка" },
-      { text: "50% документа бесплатно" },
+      { text: "Обработка до 50% страниц" },
       { text: "AI-анализ структуры" },
       { text: "Форматирование по ГОСТу" },
       { text: "Базовые инструменты" },
@@ -81,12 +81,12 @@ const plans = [
     price: "1 499 ₽",
     period: "/ месяц",
     icon: Bot,
-    description: "Pro + AI-напарник в Telegram",
+    description: "Pro + ИИ-бот для учёбы в Telegram",
     features: [
-      { text: "AI-напарник в Telegram — помощник по учёбе", highlight: true, icon: Bot },
+      { text: "ИИ-бот в Telegram — конспекты голосом, поиск по заметкам", highlight: true, icon: Bot },
       { text: "Всё из тарифа Pro", highlight: true },
-      { text: "10 обработок/мес — 39 ₽ за документ" },
-      { text: "Все инструменты без ограничений" },
+      { text: "Спрашивай: /ask что я учил про..." },
+      { text: "Все инструменты прямо в чате" },
       { text: "Приоритетная обработка" },
     ] as PlanFeature[],
     accent: true,
@@ -264,7 +264,7 @@ function PricingContent() {
                     <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
                       <Sparkles className="w-3 h-3 shrink-0" />
                       {plan.id === "subscription_plus"
-                        ? "Всё из Pro + AI-напарник по учёбе"
+                        ? "Всё из Pro + ИИ-бот для учёбы в Telegram"
                         : "39 ₽/документ вместо 159 ₽ — экономия 75%"}
                     </div>
                   )}
@@ -345,7 +345,7 @@ function PricingContent() {
               <div>
                 <p className="text-foreground font-semibold">Попробуйте бесплатно</p>
                 <p className="text-on-surface-muted text-sm">
-                  1 обработка документа (50% страниц) — без регистрации и оплаты
+                  1 обработка документа (до 50% страниц) — без регистрации и оплаты
                 </p>
               </div>
             </div>

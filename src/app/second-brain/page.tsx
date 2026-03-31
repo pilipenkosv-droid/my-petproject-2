@@ -20,9 +20,9 @@ import { Zap } from "lucide-react";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = generatePageMetadata({
-  title: "Second Brain для студентов — AI-помощник в Telegram",
+  title: "ИИ-бот для учёбы в Telegram — конспекты, поиск, инструменты | Diplox",
   description:
-    "Нейросеть для студентов в Telegram — персональная база знаний и AI-напарник. Сохраняй лекции голосом, решай задачи по фото, задавай вопросы своим материалам. Входит в тариф Pro Plus.",
+    "ИИ-бот для студентов в Telegram — сохраняй лекции голосом, ищи по своим заметкам, используй все инструменты Diplox в одном чате. Входит в тариф Pro Plus.",
   path: "/second-brain",
   keywords: [
     "нейросеть для решения задач",

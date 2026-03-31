@@ -109,7 +109,7 @@ const toolGroups: NavGroup[] = [
     heading: "Текст",
     links: [
       { href: "/summarize", label: "Краткое содержание", description: "Суммаризация текста", icon: Layers },
-      { href: "/rewrite", label: "Уникальность", description: "Рерайт для антиплагиата", icon: Wand2 },
+      { href: "/rewrite", label: "Перефразирование", description: "Перескажи текст своими словами", icon: Wand2 },
       { href: "/grammar", label: "Грамматика", description: "Орфография и пунктуация", icon: SpellCheck },
       { href: "/sources", label: "Литература", description: "Поиск научных источников", icon: BookMarked },
     ],
@@ -117,7 +117,7 @@ const toolGroups: NavGroup[] = [
   {
     heading: "Новинка",
     links: [
-      { href: "/second-brain", label: "Second Brain", description: "База знаний + AI в Telegram", icon: Bot },
+      { href: "/second-brain", label: "ИИ-бот для учёбы", description: "Конспекты, поиск и инструменты в Telegram", icon: Bot },
     ],
   },
 ];
