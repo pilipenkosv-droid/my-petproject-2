@@ -14,6 +14,8 @@ interface ShareResultPopupProps {
   fixesApplied: number;
   pageCount: number;
   workType?: string;
+  /** Показывать только после скачивания документа */
+  hasDownloaded: boolean;
 }
 
 const WORK_TYPE_LABELS: Record<string, string> = {
@@ -33,20 +35,39 @@ export function ShareResultPopup({
   fixesApplied,
   pageCount,
   workType,
+  hasDownloaded,
 }: ShareResultPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const storageKey = `dlx_shared_${jobId}`;
     if (localStorage.getItem(storageKey)) return;
+    if (!hasDownloaded) return;
 
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-      trackEvent("share_popup_shown", { job_id: jobId });
-    }, 1500);
+    // После скачивания ждём возврата на вкладку (пользователь посмотрел документ)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Небольшая задержка чтобы не выскакивать мгновенно
+        setTimeout(() => {
+          setIsVisible(true);
+          trackEvent("share_popup_shown", { job_id: jobId, trigger: "tab_return" });
+        }, 800);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, [jobId]);
+    // Если вкладка уже видима (пользователь не уходил) — ставим слушатель на уход+возврат
+    if (document.visibilityState === "visible") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    } else {
+      // Вкладка уже скрыта — покажем при возврате
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [jobId, hasDownloaded]);
 
   const handleClose = () => {
     setIsVisible(false);

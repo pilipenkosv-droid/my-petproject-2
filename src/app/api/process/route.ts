@@ -39,8 +39,16 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
-      if (access.accessType !== "subscription" && access.accessType !== "admin") {
-        await consumeUse(user.id);
+      // Списываем использование (для всех, кроме админа)
+      if (access.accessType !== "admin") {
+        const consumed = await consumeUse(user.id);
+        if (!consumed) {
+          console.error("[process] consumeUse failed for user:", user.id);
+          return NextResponse.json(
+            { error: "Ошибка списания использования. Попробуйте снова." },
+            { status: 500 }
+          );
+        }
       }
     }
 

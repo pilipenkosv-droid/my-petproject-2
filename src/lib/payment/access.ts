@@ -114,7 +114,8 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
 }
 
 /**
- * Списывает одно использование (для разовых покупок и триала)
+ * Списывает одно использование.
+ * Использует атомарный SQL-декремент (RPC) для предотвращения race conditions.
  */
 export async function consumeUse(userId: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
@@ -126,20 +127,7 @@ export async function consumeUse(userId: string): Promise<boolean> {
     return true;
   }
 
-  // Подписка (Pro или Pro Plus) — списываем использование
-  if ((access.accessType === "subscription" || access.accessType === "subscription_plus") && access.remainingUses > 0) {
-    const { error } = await supabase
-      .from("user_access")
-      .update({
-        remaining_uses: access.remainingUses - 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-
-    return !error;
-  }
-
-  // Триал — создаём запись и списываем
+  // Триал — создаём запись и списываем (нет записи в БД, нельзя декрементить)
   if (access.accessType === "trial") {
     const { error } = await supabase.from("user_access").upsert({
       user_id: userId,
@@ -148,31 +136,49 @@ export async function consumeUse(userId: string): Promise<boolean> {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id" });
 
+    if (error) {
+      console.error("[consumeUse] trial upsert failed:", error.message);
+    }
     return !error;
   }
 
-  // Разовая покупка — декрементим
-  if (access.accessType === "one_time" && access.remainingUses > 0) {
-    const { error } = await supabase.rpc("decrement_remaining_uses", {
+  // Подписка, разовая покупка — атомарный декремент через RPC
+  if (access.remainingUses > 0) {
+    const { data, error } = await supabase.rpc("decrement_remaining_uses", {
       p_user_id: userId,
     });
 
-    // Фоллбэк если RPC не создан
     if (error) {
-      const { error: updateError } = await supabase
+      // Фоллбэк: прямой update с условием remaining_uses > 0
+      console.error("[consumeUse] RPC failed, using fallback:", error.message);
+      const { data: rows, error: updateError } = await supabase
         .from("user_access")
         .update({
           remaining_uses: access.remainingUses - 1,
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .gt("remaining_uses", 0)
+        .select("remaining_uses");
 
-      return !updateError;
+      if (updateError) {
+        console.error("[consumeUse] fallback update failed:", updateError.message);
+        return false;
+      }
+      return (rows?.length ?? 0) > 0;
+    }
+
+    // RPC возвращает -1 если нечего списывать
+    const newRemaining = data as number;
+    if (newRemaining < 0) {
+      console.error("[consumeUse] no uses to consume for user:", userId);
+      return false;
     }
 
     return true;
   }
 
+  console.error("[consumeUse] no remaining uses for user:", userId);
   return false;
 }
 

@@ -347,6 +347,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           fixesApplied={job.fixesApplied ?? 0}
           pageCount={job.statistics?.pageCount ?? 0}
           workType={job.workType}
+          hasDownloaded={hasDownloaded}
         />
       )}
 

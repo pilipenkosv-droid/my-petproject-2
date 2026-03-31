@@ -90,7 +90,15 @@ export async function POST(request: NextRequest) {
       }
       // Списываем использование (для разовых/триала/подписки), кроме админа
       if (access.accessType !== "admin") {
-        await consumeUse(userId);
+        const consumed = await consumeUse(userId);
+        if (!consumed) {
+          console.error("[process-gost] consumeUse failed for user:", userId);
+          await failJob(jobId, "Не удалось списать использование");
+          return NextResponse.json(
+            { error: "Ошибка списания использования. Попробуйте снова." },
+            { status: 500 }
+          );
+        }
       }
     }
 
