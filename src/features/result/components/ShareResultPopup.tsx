@@ -154,7 +154,7 @@ export function ShareResultPopup({
           />
 
           {/* Referral teaser */}
-          <div className="border border-surface-border bg-surface-hover p-4">
+          <div className="border border-primary/30 bg-primary/5 p-4">
             <div className="flex items-start gap-3">
               <Gift className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <div>
