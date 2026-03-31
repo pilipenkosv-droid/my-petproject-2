@@ -12,7 +12,7 @@ export function SecondBrainBanner() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground mb-1">
-            Second Brain — AI-помощник в Telegram
+            Diplox Bot — ИИ-бот для учёбы в Telegram
           </p>
           <p className="text-xs text-on-surface-muted mb-2 leading-relaxed">
             Сохраняй заметки голосом, задавай вопросы по своим материалам, получай конспекты — всё в одном чате.

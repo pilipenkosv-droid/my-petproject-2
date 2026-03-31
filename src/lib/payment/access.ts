@@ -3,7 +3,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { LAVA_CONFIG } from "./config";
+import { LAVA_CONFIG, BOT_TRIAL_DAYS } from "./config";
 
 /**
  * Whitelist админских email-адресов с бесконечным Pro доступом.
@@ -16,7 +16,7 @@ const ADMIN_EMAILS = [
 
 export interface UserAccess {
   hasAccess: boolean;
-  accessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
+  accessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "subscription_plus_trial" | "admin" | "none";
   remainingUses: number;
   subscriptionActiveUntil: string | null;
   botDeepLink: string | null;
@@ -81,15 +81,17 @@ export async function getUserAccess(userId: string): Promise<UserAccess> {
     };
   }
 
-  // Подписка (Pro или Pro Plus)
-  if ((data.access_type === "subscription" || data.access_type === "subscription_plus") && data.subscription_active_until) {
+  // Подписка (Pro, Pro Plus, или Bot Trial)
+  const isSubscriptionType = ["subscription", "subscription_plus", "subscription_plus_trial"].includes(data.access_type);
+  if (isSubscriptionType && data.subscription_active_until) {
     const isActive = new Date(data.subscription_active_until) > new Date();
+    const hasBotAccess = data.access_type === "subscription_plus" || data.access_type === "subscription_plus_trial";
     return {
       hasAccess: isActive && data.remaining_uses > 0,
       accessType: isActive ? data.access_type : "none",
       remainingUses: isActive ? data.remaining_uses : 0,
       subscriptionActiveUntil: data.subscription_active_until,
-      botDeepLink: data.access_type === "subscription_plus" ? (data.bot_deep_link || null) : null,
+      botDeepLink: hasBotAccess ? (data.bot_deep_link || null) : null,
     };
   }
 
@@ -229,6 +231,42 @@ export async function activateAccess(
       { onConflict: "user_id" }
     );
   }
+}
+
+/**
+ * Активирует бесплатный trial Diplox Bot на BOT_TRIAL_DAYS дней.
+ * Не требует оплаты — доступ создаётся в БД напрямую.
+ * Возвращает false если у пользователя уже есть активный доступ (trial или платный).
+ */
+export async function activateBotTrial(userId: string): Promise<{ success: boolean; reason?: string }> {
+  const supabase = getSupabaseAdmin();
+  const access = await getUserAccess(userId);
+
+  // Нельзя активировать trial если уже есть активная подписка или trial
+  if (access.accessType === "subscription_plus" || access.accessType === "subscription_plus_trial") {
+    return { success: false, reason: "already_has_access" };
+  }
+
+  const activeUntil = new Date();
+  activeUntil.setDate(activeUntil.getDate() + BOT_TRIAL_DAYS);
+
+  const { error } = await supabase.from("user_access").upsert(
+    {
+      user_id: userId,
+      access_type: "subscription_plus_trial",
+      remaining_uses: LAVA_CONFIG.offers.subscriptionPlus.uses,
+      subscription_active_until: activeUntil.toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    console.error("[activateBotTrial] upsert failed:", error.message);
+    return { success: false, reason: "db_error" };
+  }
+
+  return { success: true };
 }
 
 /**

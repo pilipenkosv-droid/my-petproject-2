@@ -43,13 +43,13 @@ export function BotHero() {
             <Button size="lg" className="text-base sm:text-lg px-8" asChild>
               <Link href="/pricing?plan=subscription_plus&ref=bot">
                 <Zap className="w-5 h-5 mr-2 shrink-0" />
-                Получить доступ — 1 499 ₽/мес
+                Попробовать 7 дней бесплатно
               </Link>
             </Button>
             <BorderBeam size={80} duration={5} colorFrom="#a855f7" colorTo="#6366f1" borderWidth={2} />
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            После покупки ты автоматически получишь ссылку на бота
+            Затем 1 499 ₽/мес · Отмена в любой момент
           </p>
         </BlurFade>
       </div>

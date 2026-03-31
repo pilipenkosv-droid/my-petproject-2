@@ -53,7 +53,7 @@ interface FormattingResult {
   fullFormattedDocument?: Buffer;
 }
 
-export type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
+export type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "subscription_plus_trial" | "admin" | "none";
 
 /**
  * Создать отформатированный документ через XML-модификацию

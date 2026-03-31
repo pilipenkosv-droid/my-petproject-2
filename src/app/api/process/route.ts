@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = auth.type === "authenticated" ? auth.user : null;
-    let userAccessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none" = "trial";
+    let userAccessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "subscription_plus_trial" | "admin" | "none" = "trial";
 
     if (user?.id) {
       const access = await getUserAccess(user.id);

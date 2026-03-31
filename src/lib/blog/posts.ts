@@ -29,7 +29,7 @@ export function getAllPosts(): BlogPost[] {
   );
 }
 
-/** Кластер поста: gost (инструменты/оформление) или second-brain (AI-бот) */
+/** Кластер поста: gost (инструменты/оформление) или second-brain (Diplox Bot) */
 function getPostCluster(slug: string): "gost" | "second-brain" {
   const isSecondBrain = blogPostsSecondBrain.some((p) => p.slug === slug);
   return isSecondBrain ? "second-brain" : "gost";

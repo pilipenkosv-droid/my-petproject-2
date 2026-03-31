@@ -63,7 +63,7 @@ interface HeaderProps {
   backHref?: string;
 }
 
-type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "admin" | "none";
+type AccessType = "trial" | "one_time" | "subscription" | "subscription_plus" | "subscription_plus_trial" | "admin" | "none";
 
 interface NavLink {
   href: string;

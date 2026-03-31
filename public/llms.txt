@@ -28,14 +28,14 @@ Diplox — онлайн-сервис, который автоматически 
 - [Проверка грамматики](https://diplox.online/grammar)
 - [Подбор литературы](https://diplox.online/sources) — из OpenAlex и CrossRef
 - [Краткое содержание](https://diplox.online/summarize)
-- [Рерайт текста](https://diplox.online/rewrite)
+- [Перефразирование текста](https://diplox.online/rewrite)
 - [Генерация плана](https://diplox.online/outline)
 
-## Second Brain (AI-напарник в Telegram)
+## Diplox Bot (ИИ-бот для учёбы в Telegram)
 
-- [Second Brain для студентов](https://diplox.online/second-brain) — персональная база знаний + AI в Telegram
+- [Diplox Bot](https://diplox.online/second-brain) — персональная база знаний + ИИ-бот в Telegram
 - Telegram-бот: сохраняет заметки (текст, голос, PDF, фото), отвечает на вопросы из твоих материалов
-- Инструменты в чате: рерайт, грамматика, план работы, дневной конспект
+- Инструменты в чате: перефразирование, грамматика, план работы, дневной конспект
 - Входит в тариф Pro Plus — 1 499 ₽/мес
 
 ## Тарифы
@@ -43,7 +43,7 @@ Diplox — онлайн-сервис, который автоматически 
 - **Бесплатно** — 1 документ, до 30 страниц, базовые инструменты
 - **Разовый** — 159 ₽, 1 документ без ограничений по страницам
 - **Pro** — 399 ₽/мес, 10 обработок и все инструменты
-- **Pro Plus** — 1 499 ₽/мес, всё из Pro + AI Second Brain в Telegram
+- **Pro Plus** — 1 499 ₽/мес, всё из Pro + Diplox Bot в Telegram
 
 ## Как это работает
 

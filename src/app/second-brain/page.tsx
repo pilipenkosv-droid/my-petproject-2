@@ -16,7 +16,7 @@ import { BotValueProposition } from "@/components/bot/BotValueProposition";
 import { BotHowItWorks } from "@/components/bot/BotHowItWorks";
 import { BotFaq } from "@/components/bot/BotFaq";
 import { AlphaSpotsCounter } from "@/components/bot/AlphaSpotsCounter";
-import { Zap } from "lucide-react";
+import { Zap, FileCheck } from "lucide-react";
 import { generatePageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = generatePageMetadata({
@@ -29,10 +29,10 @@ export const metadata = generatePageMetadata({
     "нейросеть для студентов",
     "нейросеть для студентов бесплатно",
     "нейросеть для учёбы",
-    "second brain для студентов",
+    "бот для учёбы telegram",
     "персональная база знаний",
-    "AI помощник для учёбы",
-    "второй мозг для студентов",
+    "ии бот для студентов",
+    "diplox bot",
     "нейросеть для студентов telegram",
   ],
 });
@@ -41,6 +41,16 @@ export default function SecondBrainPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
       <Header />
+
+      {/* Связь с Diplox */}
+      <div className="bg-muted border-b border-border px-4 py-3">
+        <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
+          <FileCheck className="w-4 h-4 text-foreground shrink-0" />
+          <span className="text-on-surface-muted">
+            От создателей <span className="text-foreground font-medium">Diplox</span> — сервиса, который уже оформил тысячи работ по ГОСТу
+          </span>
+        </div>
+      </div>
 
       {/* Воронка по Годину: идентичность → трансформация → соц.доказательство → механизм → цена → разрешение */}
       <BotHero />
@@ -62,26 +72,25 @@ export default function SecondBrainPage() {
             <BlurFade delay={0.1} inView>
               <div className="text-center">
                 <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                  Войди в закрытый альфа-тест
+                  Попробуй Diplox Bot бесплатно
                 </h2>
                 <p className="text-on-surface-muted mb-6 max-w-md mx-auto">
-                  Первые 10 студентов начинают накапливать знания — вместо того, чтобы терять их
+                  7 дней полного доступа — без оплаты. Начни копить знания уже сегодня.
                 </p>
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mb-4">
                   <AlphaSpotsCounter />
                 </div>
-                <div className="relative inline-flex overflow-hidden rounded-lg">
+                <div className="flex flex-col items-center gap-3">
                   <Button size="lg" className="text-base sm:text-lg px-8" asChild>
                     <Link href="/pricing?plan=subscription_plus&ref=second-brain">
                       <Zap className="w-5 h-5 mr-2 shrink-0" />
-                      Начать запоминать — 1 499 ₽/мес
+                      Попробовать 7 дней бесплатно
                     </Link>
                   </Button>
-                  <BorderBeam size={80} duration={5} colorFrom="#a855f7" colorTo="#6366f1" borderWidth={2} />
+                  <p className="text-xs text-muted-foreground">
+                    Затем 1 499 ₽/мес · Отмена в любой момент
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3">
-                  После покупки ты автоматически получишь ссылку на бота в Telegram
-                </p>
               </div>
             </BlurFade>
           </div>

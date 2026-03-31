@@ -132,6 +132,40 @@ function PricingContent() {
     return () => observer.disconnect();
   }, [refParam]);
 
+  const handleTrialActivation = async () => {
+    if (!user) {
+      router.push("/login?redirect=/pricing");
+      return;
+    }
+
+    setLoading("trial_bot");
+    trackEvent("payment_init", { offer_type: "subscription_plus_trial" });
+
+    try {
+      const res = await fetch("/api/bot/trial", { method: "POST" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          alert("У тебя уже есть доступ к Diplox Bot");
+        } else {
+          alert(data.error || "Не удалось активировать trial");
+        }
+        return;
+      }
+
+      if (data.botDeepLink) {
+        window.open(data.botDeepLink, "_blank");
+      }
+      router.push("/profile");
+    } catch (error) {
+      console.error("Trial activation error:", error);
+      alert("Ошибка при активации trial");
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const handlePurchase = async (offerType: "trial" | "one_time" | "subscription" | "subscription_plus") => {
     if (offerType === "trial") {
       router.push(user ? "/create" : "/login?redirect=/create");
@@ -291,24 +325,35 @@ function PricingContent() {
 
                   {/* Кнопка */}
                   {plan.accent ? (
-                    <div className="relative inline-flex overflow-hidden rounded-lg w-full">
+                    <div className="space-y-2 w-full">
+                      <div className="relative inline-flex overflow-hidden rounded-lg w-full">
+                        <Button
+                          className="w-full"
+                          size="lg"
+                          onClick={() => handlePurchase(plan.id)}
+                          disabled={loading !== null}
+                        >
+                          {loading === plan.id ? "Перенаправление..." : "Оформить подписку"}
+                        </Button>
+                        {loading !== plan.id && (
+                          <BorderBeam
+                            size={80}
+                            duration={5}
+                            colorFrom="#a855f7"
+                            colorTo="#6366f1"
+                            borderWidth={2}
+                          />
+                        )}
+                      </div>
                       <Button
-                        className="w-full"
-                        size="lg"
-                        onClick={() => handlePurchase(plan.id)}
+                        className="w-full text-xs"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTrialActivation()}
                         disabled={loading !== null}
                       >
-                        {loading === plan.id ? "Перенаправление..." : "Оформить подписку"}
+                        {loading === "trial_bot" ? "Активируем..." : "Попробовать 7 дней бесплатно"}
                       </Button>
-                      {loading !== plan.id && (
-                        <BorderBeam
-                          size={80}
-                          duration={5}
-                          colorFrom="#a855f7"
-                          colorTo="#6366f1"
-                          borderWidth={2}
-                        />
-                      )}
                     </div>
                   ) : (
                     <Button

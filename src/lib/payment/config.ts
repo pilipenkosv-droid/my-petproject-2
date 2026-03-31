@@ -40,4 +40,9 @@ export const LAVA_CONFIG = {
 } as const;
 
 export type OfferType = "one_time" | "subscription" | "subscription_plus";
+export type TrialType = "subscription_plus_trial";
+export type AccessType = OfferType | TrialType;
 export type PaymentStatus = "pending" | "completed" | "failed";
+
+/** Длительность trial для Diplox Bot (дней) */
+export const BOT_TRIAL_DAYS = 7;

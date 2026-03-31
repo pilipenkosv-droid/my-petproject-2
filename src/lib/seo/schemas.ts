@@ -68,7 +68,7 @@ export function getSoftwareApplicationSchema() {
         '@type': 'Offer',
         price: '1499',
         priceCurrency: 'RUB',
-        description: 'Pro Plus — 10 обработок + AI Second Brain в Telegram',
+        description: 'Pro Plus — 10 обработок + Diplox Bot в Telegram',
         availability: 'https://schema.org/InStock',
         url: `${SITE_URL}/second-brain`,
         priceSpecification: {
@@ -299,7 +299,7 @@ export function getPricingSchemas() {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: `${SITE_NAME} Pro Plus`,
-      description: 'Всё из Pro + AI Second Brain в Telegram: заметки, AI-ответы из материалов, голосовые конспекты, ежедневная выжимка.',
+      description: 'Всё из Pro + Diplox Bot в Telegram: заметки, AI-ответы из материалов, голосовые конспекты, ежедневная выжимка.',
       brand: { '@type': 'Organization', name: SITE_NAME },
       offers: {
         '@type': 'Offer',

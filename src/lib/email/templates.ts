@@ -220,17 +220,17 @@ export function subscriptionWelcomeEmail({ botDeepLink }: SubscriptionWelcomeEma
               </table>
             </td>
           </tr>`
-    : `<!-- Second Brain upsell for Pro buyers -->
+    : `<!-- Diplox Bot upsell for Pro buyers -->
           <tr>
             <td style="padding:0 32px 24px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
                     <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0a0a0a;">
-                      &#129504; Хочешь AI-помощника для учёбы?
+                      &#129504; Хочешь ИИ-бота для учёбы?
                     </p>
                     <p style="margin:0 0 12px;font-size:13px;color:#666666;line-height:1.5;">
-                      Second Brain в Telegram — сохраняй лекции голосом, задавай вопросы по своим материалам, получай конспекты.
+                      Diplox Bot в Telegram — сохраняй лекции голосом, задавай вопросы по своим материалам, получай конспекты.
                     </p>
                     <a href="https://diplox.online/second-brain?ref=email-pro"
                        style="font-size:12px;color:#0a0a0a;font-weight:600;text-decoration:underline;">
@@ -336,21 +336,21 @@ export function oneTimePurchaseEmail(): string {
             </td>
           </tr>
 
-          <!-- Upsell: Second Brain -->
+          <!-- Upsell: Diplox Bot -->
           <tr>
             <td style="padding:0 32px 24px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding:16px;background-color:#f5f0ff;border:1px solid #e0d4ff;">
                     <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#0a0a0a;">
-                      &#129504; AI-помощник для учёбы
+                      &#129504; ИИ-бот для учёбы в Telegram
                     </p>
                     <p style="margin:0 0 12px;font-size:12px;color:#666666;line-height:1.4;">
-                      Second Brain в Telegram: сохраняй заметки голосом, задавай вопросы по своим материалам.
+                      Diplox Bot: сохраняй заметки голосом, задавай вопросы по своим материалам.
                     </p>
                     <a href="https://diplox.online/second-brain?ref=email-onetime"
                        style="font-size:12px;color:#0a0a0a;font-weight:600;text-decoration:underline;">
-                      Узнать о Second Brain &rarr;
+                      Узнать о Diplox Bot &rarr;
                     </a>
                   </td>
                 </tr>

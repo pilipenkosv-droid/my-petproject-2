@@ -145,7 +145,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  // Second Brain (отдельная воронка)
+  // Diplox Bot (отдельная воронка)
   const secondBrainPage: MetadataRoute.Sitemap = [
     {
       url: `${SITE_URL}/second-brain`,

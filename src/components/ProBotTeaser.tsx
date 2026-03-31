@@ -20,7 +20,7 @@ const botFeatures = [
   {
     icon: Wrench,
     title: "Инструменты в чате",
-    description: "Рерайт, грамматика, план — прямо в Telegram",
+    description: "Перефразирование, грамматика, план — прямо в Telegram",
   },
   {
     icon: FileText,
@@ -40,7 +40,7 @@ export function ProBotTeaser() {
           </div>
           <div>
             <p className="text-foreground font-semibold">
-              Second Brain — AI-напарник в Telegram
+              Diplox Bot — ИИ-бот для учёбы в Telegram
             </p>
             <p className="text-on-surface-muted text-sm">
               Личный помощник по учёбе прямо в мессенджере
@@ -69,7 +69,7 @@ export function ProBotTeaser() {
             href="/second-brain"
             className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
           >
-            Подробнее о Second Brain →
+            Подробнее о Diplox Bot →
           </Link>
         </div>
       </CardContent>
