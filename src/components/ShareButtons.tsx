@@ -7,6 +7,7 @@ import {
   Send,
   Share2,
 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface ShareButtonsProps {
   url: string;
@@ -89,6 +90,7 @@ export function ShareButtons({
   const handleCopy = async (e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
+    trackEvent("share_click", { channel: "copy", url });
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -112,6 +114,7 @@ export function ShareButtons({
     e?.preventDefault();
     e?.stopPropagation();
     if (!navigator.share) return;
+    trackEvent("share_click", { channel: "native", url });
     try {
       await navigator.share({ url, title, text: description || title });
     } catch {
@@ -162,7 +165,7 @@ export function ShareButtons({
                 href={btn.getUrl(url, title)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); trackEvent("share_click", { channel: btn.key, url }); }}
                 aria-label={`Поделиться в ${btn.label}`}
                 className={`flex items-center justify-center w-8 h-8 text-on-surface-muted hover:bg-surface-hover transition-all duration-300 active:scale-90 ${btn.hoverColor}`}
               >
@@ -214,6 +217,7 @@ export function ShareButtons({
           href={btn.getUrl(url, title)}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent("share_click", { channel: btn.key, url })}
           aria-label={`Поделиться в ${btn.label}`}
           className={`${btnBase} ${btn.hoverColor}`}
         >

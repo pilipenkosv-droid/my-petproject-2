@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ShareButtons } from "@/components/ShareButtons";
 import { getJob } from "@/lib/storage/job-store";
 import { SITE_URL, SITE_NAME } from "@/lib/config/site";
+import { SharePageTracker } from "./SharePageTracker";
 
 const WORK_TYPE_LABELS: Record<string, string> = {
   diplom: "Дипломная",
@@ -55,6 +56,7 @@ export default async function SharePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SharePageTracker jobId={jobId} />
       <Header showBack backHref="/" />
 
       <main className="max-w-2xl mx-auto px-4 py-12 flex flex-col gap-10">

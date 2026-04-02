@@ -194,6 +194,8 @@ export async function checkAndGrantRewards(
       // Продлеваем подписку
       await extendSubscription(userId, months);
 
+      console.log("[referral_reward]", { userId, threshold, months, registrations });
+
       highestGrantedMonths = months;
     }
   }
