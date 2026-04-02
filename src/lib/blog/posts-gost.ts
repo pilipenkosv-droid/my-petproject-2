@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsGost: BlogPost[] = [
   {
     slug: "gost-r-7-0-100-2018-bibliograficheskaya-zapis",
-    coverImage: undefined,
+    coverImage: "/blog/gost-r-7-0-100-2018-bibliograficheskaya-zapis.png",
     title: "ГОСТ Р 7.0.100-2018: как оформить библиографическую запись правильно",
     description:
       "Разбираем ГОСТ Р 7.0.100-2018 простым языком. Примеры библиографических записей для книг, статей, сайтов и законов — чтобы список литературы в дипломе или курсовой был без ошибок.",
@@ -125,7 +125,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "avtomaticheskoe-formatirovanie-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/avtomaticheskoe-formatirovanie-po-gostu.png",
     title: "Автоматическое форматирование по ГОСТу: как AI экономит время",
     description:
       "Как автоматически оформить диплом, курсовую или ВКР по ГОСТу за минуты вместо часов. Разбираем AI-инструменты для форматирования документов онлайн — от полей до списка литературы.",
@@ -234,7 +234,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "shrift-dlya-diploma-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/shrift-dlya-diploma-po-gostu.png",
     title: "Шрифт для диплома по ГОСТу: Times New Roman, размер и настройки",
     description:
       "Какой шрифт использовать в дипломе и курсовой по ГОСТу 2026? Times New Roman 14, интервал 1,5 — разбираем все требования и показываем, как настроить в Word за 5 минут.",
@@ -371,7 +371,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "gost-r-7-0-5-2008-bibliograficheskie-ssylki",
-    coverImage: undefined,
+    coverImage: "/blog/gost-r-7-0-5-2008-bibliograficheskie-ssylki.png",
     title: "ГОСТ Р 7.0.5-2008: как оформить библиографические ссылки",
     description:
       "Разбираем ГОСТ Р 7.0.5-2008 простым языком: виды библиографических ссылок, примеры оформления подстрочных, внутритекстовых и затекстовых ссылок для курсовых и дипломов.",
