@@ -309,7 +309,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           </Card>
 
           {/* CSAT виджет — показываем только после скачивания */}
-          {hasDownloaded && (
+          {hasDownloaded && !job.statistics?.wasTruncated && (
             <CSATWidget
               jobId={jobId}
               workType={job.workType}
