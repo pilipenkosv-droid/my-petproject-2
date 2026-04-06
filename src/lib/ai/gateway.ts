@@ -9,10 +9,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig, getAvailableModels } from "./model-registry";
-import { canUseModel, recordUsage, markModelFailed } from "./rate-limiter";
+import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFailure } from "./rate-limiter";
 
-// Таймаут для AI вызовов (15 секунд на модель, чтобы успеть попробовать несколько)
-const AI_CALL_TIMEOUT_MS = 15000;
+// Таймаут для AI вызовов: платные модели быстрее, бесплатные могут тормозить
+const AI_CALL_TIMEOUT_PAID_MS = 15000;
+const AI_CALL_TIMEOUT_FREE_MS = 30000;
+
+/** Платные провайдеры (по apiKeyEnv) */
+const PAID_PROVIDERS = new Set(["ANTHROPIC_API_KEY"]);
 
 /**
  * Ошибка когда все AI-модели недоступны.
@@ -97,7 +101,7 @@ async function callOpenAICompatible(
   const clientOptions: ConstructorParameters<typeof OpenAI>[0] = {
     apiKey,
     baseURL: config.baseUrl,
-    timeout: AI_CALL_TIMEOUT_MS,
+    timeout: AI_CALL_TIMEOUT_FREE_MS,
   };
 
   // OpenRouter требует дополнительные заголовки
@@ -141,7 +145,7 @@ async function callAnthropic(
 
   const client = new Anthropic({
     apiKey,
-    timeout: AI_CALL_TIMEOUT_MS,
+    timeout: AI_CALL_TIMEOUT_FREE_MS,
   });
 
   const message = await client.messages.create({
@@ -324,33 +328,37 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
     }
 
     try {
-      // Регистрируем использование до вызова (оптимистично)
-      await recordUsage(model.id);
-
       let rawText: string;
+      const timeout = PAID_PROVIDERS.has(model.apiKeyEnv)
+        ? AI_CALL_TIMEOUT_PAID_MS
+        : AI_CALL_TIMEOUT_FREE_MS;
 
-      // Оборачиваем вызов в таймаут для быстрого failover при 503/перегрузке
       if (model.protocol === "gemini") {
         rawText = await withTimeout(
           callGemini(model, request),
-          AI_CALL_TIMEOUT_MS,
+          timeout,
           model.displayName
         );
       } else if (model.protocol === "anthropic") {
         rawText = await withTimeout(
           callAnthropic(model, request),
-          AI_CALL_TIMEOUT_MS,
+          timeout,
           model.displayName
         );
       } else {
         rawText = await withTimeout(
           callOpenAICompatible(model, request),
-          AI_CALL_TIMEOUT_MS,
+          timeout,
           model.displayName
         );
       }
 
       const json = request.textMode ? rawText : extractJson(rawText);
+
+      // Регистрируем использование ПОСЛЕ успешного вызова
+      await recordUsage(model.id);
+      // Логируем в историческую таблицу (fire-and-forget)
+      logDailySuccess(model.id).catch(() => {});
 
       console.log(`[ai-gateway] Success with ${model.displayName}`);
 
@@ -365,10 +373,10 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
       console.error(`[ai-gateway] ${model.displayName} failed: ${msg}`);
       errors.push(`${model.displayName}: ${msg}`);
 
-      // Помечаем модель как нерабочую (на 1 минуту)
       await markModelFailed(model.id);
+      // Логируем ошибку в историческую таблицу (fire-and-forget)
+      logDailyFailure(model.id).catch(() => {});
 
-      // Продолжаем к следующей модели
       continue;
     }
   }
