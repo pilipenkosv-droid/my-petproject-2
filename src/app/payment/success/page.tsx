@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { trackEvent } from "@/lib/analytics/events";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Clock, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock, MessageCircle, Gift } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 
 
 type PaymentState = "polling" | "completed" | "failed" | "timeout";
@@ -23,6 +24,7 @@ function PaymentSuccessContent() {
   const [offerType, setOfferType] = useState<string | null>(null);
   const [botDeepLink, setBotDeepLink] = useState<string | null>(null);
   const [longWait, setLongWait] = useState(false);
+  const [referralUrl, setReferralUrl] = useState<string | null>(null);
 
   const checkPayment = useCallback(async () => {
     if (!invoiceId) return null;
@@ -67,6 +69,11 @@ function PaymentSuccessContent() {
           setBotDeepLink(result.botDeepLink);
         }
         trackEvent("payment_complete", { offer_type: result.offerType });
+        // Загружаем реферальную ссылку для CTA
+        fetch("/api/referral/stats")
+          .then((r) => r.ok ? r.json() : null)
+          .then((data) => { if (data?.referralUrl) setReferralUrl(data.referralUrl); })
+          .catch(() => {});
         clearInterval(timer);
       } else if (result.status === "failed") {
         setState("failed");
@@ -145,6 +152,26 @@ function PaymentSuccessContent() {
               >
                 Перейти к обработке
               </Button>
+
+              {/* Реферальный CTA — момент наибольшего удовлетворения */}
+              {referralUrl && (
+                <div className="mt-8 p-4 rounded-xl border border-violet-500/20 bg-violet-500/5 text-left space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Gift className="h-4 w-4 text-violet-400" />
+                    <p className="text-sm font-medium text-foreground">
+                      Пригласи друга — получи бесплатную обработку
+                    </p>
+                  </div>
+                  <p className="text-xs text-on-surface-muted">
+                    За каждого друга +1 обработка. За 5 друзей — месяц Pro.
+                  </p>
+                  <ShareButtons
+                    variant="compact"
+                    url={referralUrl}
+                    title="Попробуй Diplox — сервис оформления учебных работ по ГОСТу"
+                  />
+                </div>
+              )}
             </>
           )}
 

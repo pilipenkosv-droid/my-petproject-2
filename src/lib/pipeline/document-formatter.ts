@@ -34,6 +34,82 @@ import {
   setOrderedProp,
 } from "../xml/docx-xml";
 
+/**
+ * Извлекает текстовое содержимое из docx-буфера для сравнения
+ */
+async function extractTextContent(buffer: Buffer): Promise<{ text: string; charCount: number }> {
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const xml = await zip.file("word/document.xml")?.async("string");
+    if (!xml) return { text: "", charCount: 0 };
+
+    const parsed = parseDocxXml(xml);
+    const body = getBody(parsed);
+    if (!body) return { text: "", charCount: 0 };
+
+    const paragraphs = getParagraphsWithPositions(body);
+    let text = "";
+    for (const { node } of paragraphs) {
+      const runs = getRuns(node);
+      for (const run of runs) {
+        const textNodes = children(run).filter((c) => "w:t" in c);
+        for (const t of textNodes) {
+          const content = children(t).find((c) => "#text" in c);
+          if (content?.["#text"]) {
+            text += content["#text"];
+          }
+        }
+      }
+      text += "\n";
+    }
+    return { text, charCount: text.replace(/\s/g, "").length };
+  } catch {
+    return { text: "", charCount: 0 };
+  }
+}
+
+/**
+ * Проверяет, что форматирование не потеряло значительную часть контента.
+ * Порог: потеря >20% символов = предупреждение.
+ */
+async function validateContentPreserved(
+  originalBuffer: Buffer,
+  formattedBuffer: Buffer
+): Promise<{ ok: boolean; reason?: string; originalChars: number; formattedChars: number; lossPercent: number }> {
+  const [original, formatted] = await Promise.all([
+    extractTextContent(originalBuffer),
+    extractTextContent(formattedBuffer),
+  ]);
+
+  if (original.charCount === 0) {
+    return { ok: true, originalChars: 0, formattedChars: 0, lossPercent: 0 };
+  }
+
+  const lossPercent = Math.round(((original.charCount - formatted.charCount) / original.charCount) * 100);
+
+  if (formatted.charCount === 0 && original.charCount > 0) {
+    return {
+      ok: false,
+      reason: "Formatted document is empty but original had content",
+      originalChars: original.charCount,
+      formattedChars: 0,
+      lossPercent: 100,
+    };
+  }
+
+  if (lossPercent > 20) {
+    return {
+      ok: false,
+      reason: `Content loss ${lossPercent}% exceeds 20% threshold`,
+      originalChars: original.charCount,
+      formattedChars: formatted.charCount,
+      lossPercent,
+    };
+  }
+
+  return { ok: true, originalChars: original.charCount, formattedChars: formatted.charCount, lossPercent };
+}
+
 interface FormattingResult {
   /** Оригинальный документ с красными выделениями нарушений */
   markedOriginal: Buffer;
@@ -68,6 +144,9 @@ async function createFormattedDocumentXml(
 ): Promise<Buffer> {
   const formatter = new XmlDocumentFormatter();
   await formatter.loadDocument(originalBuffer);
+
+  // Очищаем нестандартные визуальные элементы (тёмный фон, столбцы)
+  formatter.sanitizeDocumentDefaults();
 
   // Применяем поля страницы
   formatter.applyPageMargins(rules);
@@ -391,6 +470,16 @@ export async function formatDocument(
   // Проверяем, что форматирование реально изменило документ
   if (buffer.length === formattedDocument.length && buffer.equals(formattedDocument)) {
     console.warn(`[formatDocument] Отформатированный документ идентичен оригиналу! Violations: ${violations.length}, enrichedParagraphs: ${enrichedParagraphs?.length ?? 0}`);
+  }
+
+  // Проверяем потерю контента после форматирования
+  const contentCheck = await validateContentPreserved(buffer, formattedDocument);
+  if (!contentCheck.ok) {
+    console.error(`[formatDocument] CONTENT LOSS DETECTED: ${contentCheck.reason}`, {
+      originalChars: contentCheck.originalChars,
+      formattedChars: contentCheck.formattedChars,
+      lossPercent: contentCheck.lossPercent,
+    });
   }
 
   // Для trial — обрезаем оба результата до % документа ПОСЛЕ форматирования

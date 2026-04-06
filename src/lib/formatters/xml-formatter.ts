@@ -50,6 +50,22 @@ function alignmentToXml(alignment: string): string {
   }
 }
 
+/**
+ * Проверяет, является ли hex-цвет "светлым" (невидим на белом фоне).
+ * Используется для сброса цвета текста из документов с тёмной темой.
+ */
+function isLightColor(hex: string): boolean {
+  const clean = hex.replace("#", "").toLowerCase();
+  if (clean === "ffffff" || clean === "auto") return false; // auto — уже дефолтный
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  // Яркость по формуле ITU-R BT.709
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 180;
+}
+
 export class XmlDocumentFormatter {
   private zip!: JSZip;
   private parsedDocument!: OrderedXmlNode[];
@@ -81,7 +97,38 @@ export class XmlDocumentFormatter {
   }
 
   /**
-   * Применяет форматирование к параграфу по его индексу и типу блока
+   * Очищает документ от нестандартных визуальных элементов:
+   * - Удаляет фон документа (w:background)
+   * - Удаляет многоколоночный layout (w:cols)
+   *
+   * Вызывать ПЕРЕД применением форматирования параграфов.
+   */
+  sanitizeDocumentDefaults(): void {
+    // Удаляем w:background из w:document (тёмный фон документа)
+    const docNode = this.parsedDocument.find((n) => "w:document" in n);
+    if (docNode) {
+      removeChild(docNode, "w:background");
+    }
+
+    // Удаляем w:cols из всех sectPr (многоколоночная вёрстка → одна колонка)
+    const sectPr = getSectPr(this.body);
+    if (sectPr) {
+      removeChild(sectPr, "w:cols");
+    }
+    // Также проверяем sectPr внутри параграфов (секционные разрывы)
+    for (const { node } of this.paragraphPositions) {
+      const pPr = findChild(node, "w:pPr");
+      if (pPr) {
+        const innerSectPr = findChild(pPr, "w:sectPr");
+        if (innerSectPr) {
+          removeChild(innerSectPr, "w:cols");
+        }
+      }
+    }
+  }
+
+  /**
+   * Применяет форматирование к парагр��фу по его индексу и т��пу блока
    */
   applyFormattingToParagraph(
     index: number,
@@ -95,15 +142,18 @@ export class XmlDocumentFormatter {
     // Не трогаем пустые параграфы
     if (blockType === "empty") return;
 
-    // Не трогаем таблицы и рисунки — они могут содержать сложную разметку
+    // Не трог��ем таблицы и рисунки — они могут со��ержать сложную разме��ку
     if (blockType === "table" || blockType === "figure") return;
 
     // Получаем целевые параметры форматирования
     const target = this.getTargetFormatting(blockType, rules);
     if (!target) return;
 
-    // Получаем/создаём w:pPr
+    // П��лучаем/создаём w:pPr
     const pPr = ensurePPr(p);
+
+    // Удаляем шейдинг параграфа (тёмный фон параграфа)
+    removeChild(pPr, "w:shd");
 
     // Применяем выравнивание
     if (target.alignment) {
@@ -215,6 +265,19 @@ export class XmlDocumentFormatter {
       } else if (target.italic === false) {
         removeChild(rPr, "w:i");
         removeChild(rPr, "w:iCs");
+      }
+
+      // Удаляем шейдинг run (фон текста)
+      removeChild(rPr, "w:shd");
+
+      // Сбрасываем цвет текста на auto (чёрный), если он был
+      // светлым из-за тёмной темы документа
+      const colorNode = findChild(rPr, "w:color");
+      if (colorNode?.[":@"]) {
+        const colorVal = colorNode[":@"]["@_w:val"];
+        if (typeof colorVal === "string" && isLightColor(colorVal)) {
+          setOrderedProp(rPr, "w:color", { "w:val": "auto" });
+        }
       }
     }
   }
@@ -614,11 +677,33 @@ export class XmlDocumentFormatter {
       for (const row of rows) {
         const cells = findChildren(row, "w:tc");
         for (const cell of cells) {
+          // Удаляем шейдинг ячейки таблицы (тёмный фон ячейки)
+          const tcPr = findChild(cell, "w:tcPr");
+          if (tcPr) {
+            removeChild(tcPr, "w:shd");
+          }
+
           const paragraphs = findChildren(cell, "w:p");
           for (const p of paragraphs) {
+            // Удаляем шейдинг параграфа в таблице
+            const pPr = findChild(p, "w:pPr");
+            if (pPr) {
+              removeChild(pPr, "w:shd");
+            }
+
             const runs = getRuns(p);
             for (const run of runs) {
               const rPr = ensureRPr(run);
+
+              // Удаляем шейдинг и светлый цвет текста в таблицах
+              removeChild(rPr, "w:shd");
+              const colorNode = findChild(rPr, "w:color");
+              if (colorNode?.[":@"]) {
+                const colorVal = colorNode[":@"]["@_w:val"];
+                if (typeof colorVal === "string" && isLightColor(colorVal)) {
+                  setOrderedProp(rPr, "w:color", { "w:val": "auto" });
+                }
+              }
 
               // Исправлять шрифт только если он вне допустимого диапазона [exceptional..default]
               if (maxSizeHalf !== undefined) {

@@ -356,8 +356,8 @@ export default function ResultPage({ params }: ResultPageProps) {
         />
       )}
 
-      {/* CSAT модалка для повторных визитов */}
-      {job.status === "completed" && (
+      {/* CSAT модалка для повторных визитов (не для truncated) */}
+      {job.status === "completed" && !job.statistics?.wasTruncated && (
         <CSATReturnVisitModal jobId={jobId} />
       )}
 
