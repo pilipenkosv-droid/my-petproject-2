@@ -65,6 +65,8 @@ function PaymentSuccessContent() {
       if (result.status === "completed") {
         setState("completed");
         setOfferType(result.offerType);
+        localStorage.removeItem("pendingInvoiceId");
+        localStorage.removeItem("pendingUnlockJob");
         if (result.botDeepLink) {
           setBotDeepLink(result.botDeepLink);
         }
@@ -77,6 +79,8 @@ function PaymentSuccessContent() {
         clearInterval(timer);
       } else if (result.status === "failed") {
         setState("failed");
+        localStorage.removeItem("pendingInvoiceId");
+        localStorage.removeItem("pendingUnlockJob");
         clearInterval(timer);
       }
     };
