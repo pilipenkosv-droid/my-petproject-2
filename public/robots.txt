@@ -32,7 +32,3 @@ Disallow: /confirm-rules/
 Disallow: /payment/
 
 Sitemap: https://diplox.online/sitemap.xml
-
-# LLM discovery
-# https://llmstxt.org
-LLMs-Txt: https://diplox.online/llms.txt
