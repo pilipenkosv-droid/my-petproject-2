@@ -9,9 +9,10 @@ import { extendSubscription } from "@/lib/payment/access";
 const DEFAULT_REFERRAL_BONUS = 3;
 
 export const REWARD_THRESHOLDS = [
-  { threshold: 5, months: 1 },
-  { threshold: 15, months: 3 },
-  { threshold: 30, months: 6 },
+  { threshold: 1, rewardType: "uses" as const, uses: 1 },
+  { threshold: 5, rewardType: "months" as const, months: 1 },
+  { threshold: 15, rewardType: "months" as const, months: 3 },
+  { threshold: 30, rewardType: "months" as const, months: 6 },
 ] as const;
 
 export interface ReferralStats {
@@ -19,6 +20,7 @@ export interface ReferralStats {
   registrations: number;
   nextThreshold: number;
   nextRewardMonths: number;
+  nextRewardDescription: string;
   rewards: Array<{ threshold: number; rewardMonths: number; grantedAt: string }>;
 }
 
@@ -146,10 +148,16 @@ export async function getReferralStats(
     (t) => !grantedThresholds.has(t.threshold)
   );
 
-  const nextThreshold = nextEntry?.threshold ?? REWARD_THRESHOLDS[REWARD_THRESHOLDS.length - 1].threshold;
-  const nextRewardMonths = nextEntry?.months ?? REWARD_THRESHOLDS[REWARD_THRESHOLDS.length - 1].months;
+  const lastEntry = REWARD_THRESHOLDS[REWARD_THRESHOLDS.length - 1];
+  const nextThreshold = nextEntry?.threshold ?? lastEntry.threshold;
+  const nextRewardMonths = nextEntry && nextEntry.rewardType === "months" ? nextEntry.months : 0;
+  const nextRewardDescription = nextEntry
+    ? nextEntry.rewardType === "uses"
+      ? `+${nextEntry.uses} бесплатная обработка`
+      : `${nextEntry.months} мес. Pro бесплатно`
+    : `${lastEntry.rewardType === "months" ? lastEntry.months : 0} мес. Pro бесплатно`;
 
-  return { clicks, registrations, nextThreshold, nextRewardMonths, rewards };
+  return { clicks, registrations, nextThreshold, nextRewardMonths, nextRewardDescription, rewards };
 }
 
 /**
@@ -179,28 +187,56 @@ export async function checkAndGrantRewards(
     (existingRewards ?? []).map((r) => r.threshold)
   );
 
+  let granted = false;
   let highestGrantedMonths: number | undefined;
 
-  for (const { threshold, months } of REWARD_THRESHOLDS) {
-    if (registrations >= threshold && !grantedThresholds.has(threshold)) {
+  for (const reward of REWARD_THRESHOLDS) {
+    if (registrations >= reward.threshold && !grantedThresholds.has(reward.threshold)) {
+      const rewardMonths = reward.rewardType === "months" ? reward.months : 0;
+
       // Записываем награду
       await supabase.from("referral_rewards").insert({
         user_id: userId,
-        threshold,
-        reward_months: months,
+        threshold: reward.threshold,
+        reward_months: rewardMonths,
         granted_at: new Date().toISOString(),
       });
 
-      // Продлеваем подписку
-      await extendSubscription(userId, months);
+      if (reward.rewardType === "months") {
+        // Продлеваем подписку
+        await extendSubscription(userId, reward.months);
+        highestGrantedMonths = reward.months;
+      } else if (reward.rewardType === "uses") {
+        // Добавляем бонусные обработки
+        const { data: currentAccess } = await supabase
+          .from("user_access")
+          .select("remaining_uses")
+          .eq("user_id", userId)
+          .single();
 
-      console.log("[referral_reward]", { userId, threshold, months, registrations });
+        const currentUses = currentAccess?.remaining_uses ?? 0;
+        await supabase.from("user_access").upsert(
+          {
+            user_id: userId,
+            access_type: "one_time",
+            remaining_uses: currentUses + reward.uses,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+      }
 
-      highestGrantedMonths = months;
+      console.log("[referral_reward]", {
+        userId, threshold: reward.threshold,
+        rewardType: reward.rewardType,
+        registrations,
+      });
+
+      granted = true;
     }
   }
 
-  if (highestGrantedMonths !== undefined) {
+  if (granted) {
     return { granted: true, months: highestGrantedMonths };
   }
 

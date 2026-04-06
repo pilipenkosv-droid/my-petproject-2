@@ -13,6 +13,7 @@ interface ReferralStats {
   registrations: number;
   nextThreshold: number;
   nextRewardMonths: number;
+  nextRewardDescription: string;
   rewards: { threshold: number; rewardMonths: number; grantedAt: string }[];
   code: string;
   referralUrl: string;
@@ -73,7 +74,7 @@ export function ReferralCard() {
           <ReferralProgressBar
             current={stats.registrations}
             target={stats.nextThreshold}
-            rewardMonths={stats.nextRewardMonths}
+            rewardDescription={stats.nextRewardDescription}
           />
         )}
 
@@ -86,7 +87,7 @@ export function ReferralCard() {
 
         {/* Reward tiers */}
         <p className="text-xs text-on-surface-muted">
-          Награды: 5 друзей → 1 мес · 15 → 3 мес · 30 → 6 мес
+          1 друг → +1 обработка · 5 → 1 мес Pro · 15 → 3 мес · 30 → 6 мес
         </p>
 
         {/* Granted rewards */}
@@ -95,7 +96,12 @@ export function ReferralCard() {
             <p className="text-sm font-medium text-foreground">Полученные награды</p>
             {stats.rewards.map((r, i) => (
               <div key={i} className="flex justify-between text-sm text-on-surface-subtle">
-                <span>{r.rewardMonths} мес. Pro за {r.threshold} друзей</span>
+                <span>
+                  {r.rewardMonths > 0
+                    ? `${r.rewardMonths} мес. Pro за ${r.threshold} друзей`
+                    : `+1 обработка за ${r.threshold} друга`
+                  }
+                </span>
                 <span className="text-on-surface-muted text-xs">
                   {new Date(r.grantedAt).toLocaleDateString("ru-RU", {
                     day: "numeric",

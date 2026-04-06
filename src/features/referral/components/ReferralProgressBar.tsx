@@ -3,10 +3,10 @@
 interface ReferralProgressBarProps {
   current: number;
   target: number;
-  rewardMonths: number;
+  rewardDescription: string;
 }
 
-export function ReferralProgressBar({ current, target, rewardMonths }: ReferralProgressBarProps) {
+export function ReferralProgressBar({ current, target, rewardDescription }: ReferralProgressBarProps) {
   const clamped = Math.min(current, target);
   const percent = target > 0 ? Math.round((clamped / target) * 100) : 100;
 
@@ -14,8 +14,7 @@ export function ReferralProgressBar({ current, target, rewardMonths }: ReferralP
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-sm">
         <span className="text-on-surface-subtle">
-          {clamped} из {target} друзей — до {rewardMonths}{" "}
-          {rewardMonths === 1 ? "мес." : rewardMonths < 5 ? "мес." : "мес."} Pro бесплатно
+          {clamped} из {target} — {rewardDescription}
         </span>
         <span className="text-on-surface-muted text-xs">{percent}%</span>
       </div>
