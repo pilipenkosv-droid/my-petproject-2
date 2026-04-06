@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsSecondBrain: BlogPost[] = [
   {
     slug: "nejroset-dlya-diplomnoj-raboty",
-    coverImage: undefined,
+    coverImage: "/blog/nejroset-dlya-diplomnoj-raboty.png",
     title:
       "Нейросеть для дипломной работы: 5 способов использовать AI при подготовке ВКР",
     description:
@@ -131,7 +131,7 @@ export const blogPostsSecondBrain: BlogPost[] = [
       "нейросеть для дипломной работы",
       "подготовка диплома с нейросетью",
     ],
-    coverImage: undefined,
+    coverImage: "/blog/kak-napisat-diplom-s-ai-botom.png",
     readingTime: "6 мин",
     content: `
 ## Апрель — значит диплом

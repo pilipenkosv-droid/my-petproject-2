@@ -3,7 +3,7 @@ import type { BlogPost } from "./types";
 export const blogPostsGost: BlogPost[] = [
   {
     slug: "formatirovanie-dokumentov-onlajn",
-    coverImage: undefined,
+    coverImage: "/blog/formatirovanie-dokumentov-onlajn.png",
     title:
       "Форматирование документов онлайн: как оформить диплом без установки Word",
     description:
@@ -125,7 +125,7 @@ Collabora Online или LibreOffice в облаке — бесплатные р�
   },
   {
     slug: "nejroset-dlya-kursovoj-raboty",
-    coverImage: undefined,
+    coverImage: "/blog/nejroset-dlya-kursovoj-raboty.png",
     title: "Нейросеть для курсовой работы: как AI поможет оформить и написать",
     description:
       "Как использовать нейросети при написании курсовой: от сбора материалов до автоматического оформления по ГОСТу. Обзор инструментов 2026 года.",
