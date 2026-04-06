@@ -246,13 +246,17 @@ export function getHowToSchema(
  * Schema для страницы тарифов (3 Product + Offer)
  */
 export function getPricingSchemas() {
+  const productImage = `${SITE_URL}/logo/d-icon-full.png`
+
   return [
     {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: `${SITE_NAME} — Пробный`,
       description: 'Бесплатная обработка 1 документа (50% страниц). AI-анализ структуры и форматирование по ГОСТу.',
+      image: productImage,
       brand: { '@type': 'Organization', name: SITE_NAME },
+      sku: 'diplox-trial',
       offers: {
         '@type': 'Offer',
         price: '0',
@@ -266,7 +270,9 @@ export function getPricingSchemas() {
       '@type': 'Product',
       name: `${SITE_NAME} — Разовая обработка`,
       description: 'Обработка 1 документа без ограничений по страницам. Форматирование по ГОСТу, AI-анализ, скачивание результата.',
+      image: productImage,
       brand: { '@type': 'Organization', name: SITE_NAME },
+      sku: 'diplox-single',
       offers: {
         '@type': 'Offer',
         price: '159',
@@ -280,7 +286,9 @@ export function getPricingSchemas() {
       '@type': 'Product',
       name: `${SITE_NAME} Pro`,
       description: '10 обработок в месяц. Все инструменты: форматирование, грамматика, рерайт, подбор литературы. Приоритетная обработка.',
+      image: productImage,
       brand: { '@type': 'Organization', name: SITE_NAME },
+      sku: 'diplox-pro',
       offers: {
         '@type': 'Offer',
         price: '399',
@@ -300,7 +308,9 @@ export function getPricingSchemas() {
       '@type': 'Product',
       name: `${SITE_NAME} Pro Plus`,
       description: 'Всё из Pro + Diplox Bot в Telegram: заметки, AI-ответы из материалов, голосовые конспекты, ежедневная выжимка.',
+      image: productImage,
       brand: { '@type': 'Organization', name: SITE_NAME },
+      sku: 'diplox-pro-plus',
       offers: {
         '@type': 'Offer',
         price: '1499',
