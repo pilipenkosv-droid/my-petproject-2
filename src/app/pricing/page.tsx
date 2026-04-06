@@ -108,6 +108,14 @@ function PricingContent() {
 
   const proTracked = useRef(false);
 
+  // Если пользователь вернулся после оплаты на Lava.top — redirect на страницу статуса
+  useEffect(() => {
+    const pendingInvoice = localStorage.getItem("pendingInvoiceId");
+    if (pendingInvoice) {
+      router.replace(`/payment/success?invoiceId=${pendingInvoice}`);
+    }
+  }, [router]);
+
   useEffect(() => {
     if (fromBot && proCardRef.current) {
       proCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -195,13 +203,11 @@ function PricingContent() {
       const data = await res.json();
 
       if (data.paymentUrl && data.invoiceId) {
-        // Открываем оплату в новой вкладке, а текущую перенаправляем на страницу ожидания
-        window.open(data.paymentUrl, "_blank");
-        // Если разблокируем конкретный документ — передаём jobId на страницу успеха
-        const successUrl = unlockJobId
-          ? `/payment/success?invoiceId=${data.invoiceId}&unlockJob=${unlockJobId}`
-          : `/payment/success?invoiceId=${data.invoiceId}`;
-        router.push(successUrl);
+        // Сохраняем invoiceId в localStorage — пользователь вернётся после оплаты на Lava.top
+        localStorage.setItem("pendingInvoiceId", data.invoiceId);
+        if (unlockJobId) localStorage.setItem("pendingUnlockJob", unlockJobId);
+        // Redirect на Lava.top в том же окне (popup blockers не блокируют location.href)
+        window.location.href = data.paymentUrl;
       } else {
         console.error("No payment URL:", data);
         alert("Не удалось создать платёж. Попробуйте снова.");

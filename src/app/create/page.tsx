@@ -55,6 +55,14 @@ function ConstructorPageContent() {
 
   const [proInfo, setProInfo] = useState<{ type: string; remaining: number } | null>(null);
 
+  // Если пользователь вернулся после оплаты на Lava.top — redirect на страницу статуса
+  useEffect(() => {
+    const pendingInvoice = localStorage.getItem("pendingInvoiceId");
+    if (pendingInvoice) {
+      router.replace(`/payment/success?invoiceId=${pendingInvoice}`);
+    }
+  }, [router]);
+
   useEffect(() => {
     if (!user) return;
     fetch("/api/user/access")
