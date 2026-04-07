@@ -21,6 +21,14 @@ const footerLinks = {
       { label: "Блог", href: "/blog" },
     ],
   },
+  legal: {
+    title: "Документы",
+    links: [
+      { label: "Соглашение", href: "/terms" },
+      { label: "Политика возвратов", href: "/refund" },
+      { label: "Конфиденциальность", href: "/privacy" },
+    ],
+  },
   support: {
     title: "Поддержка",
     links: [
@@ -34,7 +42,7 @@ export function Footer() {
   return (
     <footer className="border-t border-surface-border bg-muted">
       <div className="mx-auto max-w-5xl px-6 py-12">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-1">
             <Logo variant="favicon" size={28} withText />

@@ -44,6 +44,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.3,
     },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/refund`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+    },
   ]
 
   // Landing pages по типам работ
