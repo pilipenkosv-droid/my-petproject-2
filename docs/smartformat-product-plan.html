@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SmartFormat Product Plan</title>
+  <style>
+
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <link href="data:text/css; charset=utf-8;charset=utf-8,%0A%40media%20%28prefers%2Dcolor%2Dscheme%3Adark%29%7B%2Emarkdown%2Dbody%2C%5Bdata%2Dtheme%3Ddark%5D%7Bcolor%2Dscheme%3Adark%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcomment%3A%238b949e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%3A%2379c0ff%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%3A%23d2a8ff%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstorage%2Dmodifier%2Dimport%3A%23c9d1d9%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%2Dtag%3A%237ee787%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dkeyword%3A%23ff7b72%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%3A%23a5d6ff%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dvariable%3A%23ffa657%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dunmatched%3A%23f85149%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dtext%3A%23f0f6fc%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dbg%3A%238e1519%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dtext%3A%23f0f6fc%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dbg%3A%23b62324%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%2Dregexp%3A%237ee787%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dlist%3A%23f2cc60%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dheading%3A%231f6feb%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ditalic%3A%23c9d1d9%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dbold%3A%23c9d1d9%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dtext%3A%23ffdcd7%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dbg%3A%2367060c%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dtext%3A%23aff5b4%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dbg%3A%23033a16%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dtext%3A%23ffdfb6%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dbg%3A%235a1e02%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dtext%3A%23c9d1d9%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dbg%3A%231158c7%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmeta%2Ddiff%2Drange%3A%23d2a8ff%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dangle%3A%238b949e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dsublimelinter%2Dgutter%2Dmark%3A%23484f58%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%2Dother%2Dreference%2Dlink%3A%23a5d6ff%3B%2D%2Dcolor%2Dfg%2Ddefault%3A%23e6edf3%3B%2D%2Dcolor%2Dfg%2Dmuted%3A%23848d97%3B%2D%2Dcolor%2Dfg%2Dsubtle%3A%236e7681%3B%2D%2Dcolor%2Dcanvas%2Ddefault%3A%230d1117%3B%2D%2Dcolor%2Dcanvas%2Dsubtle%3A%23161b22%3B%2D%2Dcolor%2Dborder%2Ddefault%3A%2330363d%3B%2D%2Dcolor%2Dborder%2Dmuted%3A%2321262d%3B%2D%2Dcolor%2Dneutral%2Dmuted%3Argba%28110%2C118%2C129%2C0%2E4%29%3B%2D%2Dcolor%2Daccent%2Dfg%3A%232f81f7%3B%2D%2Dcolor%2Daccent%2Demphasis%3A%231f6feb%3B%2D%2Dcolor%2Dsuccess%2Dfg%3A%233fb950%3B%2D%2Dcolor%2Dsuccess%2Demphasis%3A%23238636%3B%2D%2Dcolor%2Dattention%2Dfg%3A%23d29922%3B%2D%2Dcolor%2Dattention%2Demphasis%3A%239e6a03%3B%2D%2Dcolor%2Dattention%2Dsubtle%3Argba%28187%2C128%2C9%2C0%2E15%29%3B%2D%2Dcolor%2Ddanger%2Dfg%3A%23f85149%3B%2D%2Dcolor%2Ddanger%2Demphasis%3A%23da3633%3B%2D%2Dcolor%2Ddone%2Dfg%3A%23a371f7%3B%2D%2Dcolor%2Ddone%2Demphasis%3A%238957e5%7D%7D%40media%20%28prefers%2Dcolor%2Dscheme%3Alight%29%7B%2Emarkdown%2Dbody%2C%5Bdata%2Dtheme%3Dlight%5D%7Bcolor%2Dscheme%3Alight%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcomment%3A%2357606a%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%3A%230550ae%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%3A%236639ba%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstorage%2Dmodifier%2Dimport%3A%2324292f%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%2Dtag%3A%23116329%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dkeyword%3A%23cf222e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%3A%230a3069%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dvariable%3A%23953800%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dunmatched%3A%2382071e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dtext%3A%23f6f8fa%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dbg%3A%2382071e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dtext%3A%23f6f8fa%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dbg%3A%23cf222e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%2Dregexp%3A%23116329%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dlist%3A%233b2300%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dheading%3A%230550ae%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ditalic%3A%2324292f%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dbold%3A%2324292f%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dtext%3A%2382071e%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dbg%3A%23ffebe9%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dtext%3A%23116329%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dbg%3A%23dafbe1%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dtext%3A%23953800%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dbg%3A%23ffd8b5%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dtext%3A%23eaeef2%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dbg%3A%230550ae%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmeta%2Ddiff%2Drange%3A%238250df%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dangle%3A%2357606a%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dsublimelinter%2Dgutter%2Dmark%3A%238c959f%3B%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%2Dother%2Dreference%2Dlink%3A%230a3069%3B%2D%2Dcolor%2Dfg%2Ddefault%3A%231F2328%3B%2D%2Dcolor%2Dfg%2Dmuted%3A%23656d76%3B%2D%2Dcolor%2Dfg%2Dsubtle%3A%236e7781%3B%2D%2Dcolor%2Dcanvas%2Ddefault%3A%23ffffff%3B%2D%2Dcolor%2Dcanvas%2Dsubtle%3A%23f6f8fa%3B%2D%2Dcolor%2Dborder%2Ddefault%3A%23d0d7de%3B%2D%2Dcolor%2Dborder%2Dmuted%3Ahsla%28210%2C18%25%2C87%25%2C1%29%3B%2D%2Dcolor%2Dneutral%2Dmuted%3Argba%28175%2C184%2C193%2C0%2E2%29%3B%2D%2Dcolor%2Daccent%2Dfg%3A%230969da%3B%2D%2Dcolor%2Daccent%2Demphasis%3A%230969da%3B%2D%2Dcolor%2Dsuccess%2Dfg%3A%231a7f37%3B%2D%2Dcolor%2Dsuccess%2Demphasis%3A%231f883d%3B%2D%2Dcolor%2Dattention%2Dfg%3A%239a6700%3B%2D%2Dcolor%2Dattention%2Demphasis%3A%239a6700%3B%2D%2Dcolor%2Dattention%2Dsubtle%3A%23fff8c5%3B%2D%2Dcolor%2Ddanger%2Dfg%3A%23d1242f%3B%2D%2Dcolor%2Ddanger%2Demphasis%3A%23cf222e%3B%2D%2Dcolor%2Ddone%2Dfg%3A%238250df%3B%2D%2Dcolor%2Ddone%2Demphasis%3A%238250df%7D%7D%2Emarkdown%2Dbody%7B%2Dms%2Dtext%2Dsize%2Dadjust%3A100%25%3B%2Dwebkit%2Dtext%2Dsize%2Dadjust%3A100%25%3Bmargin%3A0%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Ddefault%29%3Bfont%2Dfamily%3A%2Dapple%2Dsystem%2CBlinkMacSystemFont%2C%22Segoe%20UI%22%2C%22Noto%20Sans%22%2CHelvetica%2CArial%2Csans%2Dserif%2C%22Apple%20Color%20Emoji%22%2C%22Segoe%20UI%20Emoji%22%3Bfont%2Dsize%3A16px%3Bline%2Dheight%3A1%2E5%3Bword%2Dwrap%3Abreak%2Dword%7D%2Emarkdown%2Dbody%20%2Eocticon%7Bdisplay%3Ainline%2Dblock%3Bfill%3AcurrentColor%3Bvertical%2Dalign%3Atext%2Dbottom%7D%2Emarkdown%2Dbody%20h1%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%2C%2Emarkdown%2Dbody%20h2%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%2C%2Emarkdown%2Dbody%20h3%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%2C%2Emarkdown%2Dbody%20h4%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%2C%2Emarkdown%2Dbody%20h5%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%2C%2Emarkdown%2Dbody%20h6%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%3Abefore%7Bwidth%3A16px%3Bheight%3A16px%3Bcontent%3A%27%20%27%3Bdisplay%3Ainline%2Dblock%3Bbackground%2Dcolor%3AcurrentColor%3B%2Dwebkit%2Dmask%2Dimage%3Aurl%28%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww%2Ew3%2Eorg%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%20version%3D%271%2E1%27%20aria%2Dhidden%3D%27true%27%3E%3Cpath%20fill%2Drule%3D%27evenodd%27%20d%3D%27M7%2E775%203%2E275a%2E75%2E75%200%20001%2E06%201%2E06l1%2E25%2D1%2E25a2%202%200%20112%2E83%202%2E83l%2D2%2E5%202%2E5a2%202%200%2001%2D2%2E83%200%20%2E75%2E75%200%2000%2D1%2E06%201%2E06%203%2E5%203%2E5%200%20004%2E95%200l2%2E5%2D2%2E5a3%2E5%203%2E5%200%2000%2D4%2E95%2D4%2E95l%2D1%2E25%201%2E25zm%2D4%2E69%209%2E64a2%202%200%20010%2D2%2E83l2%2E5%2D2%2E5a2%202%200%20012%2E83%200%20%2E75%2E75%200%20001%2E06%2D1%2E06%203%2E5%203%2E5%200%2000%2D4%2E95%200l%2D2%2E5%202%2E5a3%2E5%203%2E5%200%20004%2E95%204%2E95l1%2E25%2D1%2E25a%2E75%2E75%200%2000%2D1%2E06%2D1%2E06l%2D1%2E25%201%2E25a2%202%200%2001%2D2%2E83%200z%27%3E%3C%2Fpath%3E%3C%2Fsvg%3E%22%29%3Bmask%2Dimage%3Aurl%28%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww%2Ew3%2Eorg%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%20version%3D%271%2E1%27%20aria%2Dhidden%3D%27true%27%3E%3Cpath%20fill%2Drule%3D%27evenodd%27%20d%3D%27M7%2E775%203%2E275a%2E75%2E75%200%20001%2E06%201%2E06l1%2E25%2D1%2E25a2%202%200%20112%2E83%202%2E83l%2D2%2E5%202%2E5a2%202%200%2001%2D2%2E83%200%20%2E75%2E75%200%2000%2D1%2E06%201%2E06%203%2E5%203%2E5%200%20004%2E95%200l2%2E5%2D2%2E5a3%2E5%203%2E5%200%2000%2D4%2E95%2D4%2E95l%2D1%2E25%201%2E25zm%2D4%2E69%209%2E64a2%202%200%20010%2D2%2E83l2%2E5%2D2%2E5a2%202%200%20012%2E83%200%20%2E75%2E75%200%20001%2E06%2D1%2E06%203%2E5%203%2E5%200%2000%2D4%2E95%200l%2D2%2E5%202%2E5a3%2E5%203%2E5%200%20004%2E95%204%2E95l1%2E25%2D1%2E25a%2E75%2E75%200%2000%2D1%2E06%2D1%2E06l%2D1%2E25%201%2E25a2%202%200%2001%2D2%2E83%200z%27%3E%3C%2Fpath%3E%3C%2Fsvg%3E%22%29%7D%2Emarkdown%2Dbody%20details%2C%2Emarkdown%2Dbody%20figcaption%2C%2Emarkdown%2Dbody%20figure%7Bdisplay%3Ablock%7D%2Emarkdown%2Dbody%20summary%7Bdisplay%3Alist%2Ditem%7D%2Emarkdown%2Dbody%20%5Bhidden%5D%7Bdisplay%3Anone%21important%7D%2Emarkdown%2Dbody%20a%7Bbackground%2Dcolor%3Atransparent%3Bcolor%3Avar%28%2D%2Dcolor%2Daccent%2Dfg%29%3Btext%2Ddecoration%3Anone%7D%2Emarkdown%2Dbody%20abbr%5Btitle%5D%7Bborder%2Dbottom%3Anone%3B%2Dwebkit%2Dtext%2Ddecoration%3Aunderline%20dotted%3Btext%2Ddecoration%3Aunderline%20dotted%7D%2Emarkdown%2Dbody%20b%2C%2Emarkdown%2Dbody%20strong%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%7D%2Emarkdown%2Dbody%20dfn%7Bfont%2Dstyle%3Aitalic%7D%2Emarkdown%2Dbody%20h1%7Bmargin%3A%2E67em%200%3Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bpadding%2Dbottom%3A%2E3em%3Bfont%2Dsize%3A2em%3Bborder%2Dbottom%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Dmuted%29%7D%2Emarkdown%2Dbody%20mark%7Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dattention%2Dsubtle%29%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%7D%2Emarkdown%2Dbody%20small%7Bfont%2Dsize%3A90%25%7D%2Emarkdown%2Dbody%20sub%2C%2Emarkdown%2Dbody%20sup%7Bfont%2Dsize%3A75%25%3Bline%2Dheight%3A0%3Bposition%3Arelative%3Bvertical%2Dalign%3Abaseline%7D%2Emarkdown%2Dbody%20sub%7Bbottom%3A%2D%2E25em%7D%2Emarkdown%2Dbody%20sup%7Btop%3A%2D%2E5em%7D%2Emarkdown%2Dbody%20img%7Bborder%2Dstyle%3Anone%3Bmax%2Dwidth%3A100%25%3Bbox%2Dsizing%3Acontent%2Dbox%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Ddefault%29%7D%2Emarkdown%2Dbody%20code%2C%2Emarkdown%2Dbody%20kbd%2C%2Emarkdown%2Dbody%20pre%2C%2Emarkdown%2Dbody%20samp%7Bfont%2Dfamily%3Amonospace%3Bfont%2Dsize%3A1em%7D%2Emarkdown%2Dbody%20figure%7Bmargin%3A1em%2040px%7D%2Emarkdown%2Dbody%20hr%7Bbox%2Dsizing%3Acontent%2Dbox%3Boverflow%3Ahidden%3Bbackground%3A0%200%3Bborder%2Dbottom%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Dmuted%29%3Bheight%3A%2E25em%3Bpadding%3A0%3Bmargin%3A24px%200%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dborder%2Ddefault%29%3Bborder%3A0%7D%2Emarkdown%2Dbody%20input%7Bfont%3Ainherit%3Bmargin%3A0%3Boverflow%3Avisible%3Bfont%2Dfamily%3Ainherit%3Bfont%2Dsize%3Ainherit%3Bline%2Dheight%3Ainherit%7D%2Emarkdown%2Dbody%20%5Btype%3Dbutton%5D%2C%2Emarkdown%2Dbody%20%5Btype%3Dreset%5D%2C%2Emarkdown%2Dbody%20%5Btype%3Dsubmit%5D%7B%2Dwebkit%2Dappearance%3Abutton%3Bappearance%3Abutton%7D%2Emarkdown%2Dbody%20%5Btype%3Dcheckbox%5D%2C%2Emarkdown%2Dbody%20%5Btype%3Dradio%5D%7Bbox%2Dsizing%3Aborder%2Dbox%3Bpadding%3A0%7D%2Emarkdown%2Dbody%20%5Btype%3Dnumber%5D%3A%3A%2Dwebkit%2Dinner%2Dspin%2Dbutton%2C%2Emarkdown%2Dbody%20%5Btype%3Dnumber%5D%3A%3A%2Dwebkit%2Douter%2Dspin%2Dbutton%7Bheight%3Aauto%7D%2Emarkdown%2Dbody%20%5Btype%3Dsearch%5D%3A%3A%2Dwebkit%2Dsearch%2Dcancel%2Dbutton%2C%2Emarkdown%2Dbody%20%5Btype%3Dsearch%5D%3A%3A%2Dwebkit%2Dsearch%2Ddecoration%7B%2Dwebkit%2Dappearance%3Anone%3Bappearance%3Anone%7D%2Emarkdown%2Dbody%20%3A%3A%2Dwebkit%2Dinput%2Dplaceholder%7Bcolor%3Ainherit%3Bopacity%3A%2E54%7D%2Emarkdown%2Dbody%20%3A%3A%2Dwebkit%2Dfile%2Dupload%2Dbutton%7B%2Dwebkit%2Dappearance%3Abutton%3Bappearance%3Abutton%3Bfont%3Ainherit%7D%2Emarkdown%2Dbody%20a%3Ahover%7Btext%2Ddecoration%3Aunderline%7D%2Emarkdown%2Dbody%20%3A%3Aplaceholder%7Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Dsubtle%29%3Bopacity%3A1%7D%2Emarkdown%2Dbody%20hr%3A%3Abefore%7Bdisplay%3Atable%3Bcontent%3A%22%22%7D%2Emarkdown%2Dbody%20hr%3A%3Aafter%7Bdisplay%3Atable%3Bclear%3Aboth%3Bcontent%3A%22%22%7D%2Emarkdown%2Dbody%20table%7Bborder%2Dspacing%3A0%3Bborder%2Dcollapse%3Acollapse%3Bdisplay%3Ablock%3Bwidth%3Amax%2Dcontent%3Bmax%2Dwidth%3A100%25%3Boverflow%3Aauto%7D%2Emarkdown%2Dbody%20td%2C%2Emarkdown%2Dbody%20th%7Bpadding%3A0%7D%2Emarkdown%2Dbody%20details%20summary%7Bcursor%3Apointer%7D%2Emarkdown%2Dbody%20details%3Anot%28%5Bopen%5D%29%3E%3Anot%28summary%29%7Bdisplay%3Anone%21important%7D%2Emarkdown%2Dbody%20%5Brole%3Dbutton%5D%3Afocus%2C%2Emarkdown%2Dbody%20a%3Afocus%2C%2Emarkdown%2Dbody%20input%5Btype%3Dcheckbox%5D%3Afocus%2C%2Emarkdown%2Dbody%20input%5Btype%3Dradio%5D%3Afocus%7Boutline%3A2px%20solid%20var%28%2D%2Dcolor%2Daccent%2Dfg%29%3Boutline%2Doffset%3A%2D2px%3Bbox%2Dshadow%3Anone%7D%2Emarkdown%2Dbody%20%5Brole%3Dbutton%5D%3Afocus%3Anot%28%3Afocus%2Dvisible%29%2C%2Emarkdown%2Dbody%20a%3Afocus%3Anot%28%3Afocus%2Dvisible%29%2C%2Emarkdown%2Dbody%20input%5Btype%3Dcheckbox%5D%3Afocus%3Anot%28%3Afocus%2Dvisible%29%2C%2Emarkdown%2Dbody%20input%5Btype%3Dradio%5D%3Afocus%3Anot%28%3Afocus%2Dvisible%29%7Boutline%3Asolid%201px%20transparent%7D%2Emarkdown%2Dbody%20%5Brole%3Dbutton%5D%3Afocus%2Dvisible%2C%2Emarkdown%2Dbody%20a%3Afocus%2Dvisible%2C%2Emarkdown%2Dbody%20input%5Btype%3Dcheckbox%5D%3Afocus%2Dvisible%2C%2Emarkdown%2Dbody%20input%5Btype%3Dradio%5D%3Afocus%2Dvisible%7Boutline%3A2px%20solid%20var%28%2D%2Dcolor%2Daccent%2Dfg%29%3Boutline%2Doffset%3A%2D2px%3Bbox%2Dshadow%3Anone%7D%2Emarkdown%2Dbody%20a%3Anot%28%5Bclass%5D%29%3Afocus%2C%2Emarkdown%2Dbody%20a%3Anot%28%5Bclass%5D%29%3Afocus%2Dvisible%2C%2Emarkdown%2Dbody%20input%5Btype%3Dcheckbox%5D%3Afocus%2C%2Emarkdown%2Dbody%20input%5Btype%3Dcheckbox%5D%3Afocus%2Dvisible%2C%2Emarkdown%2Dbody%20input%5Btype%3Dradio%5D%3Afocus%2C%2Emarkdown%2Dbody%20input%5Btype%3Dradio%5D%3Afocus%2Dvisible%7Boutline%2Doffset%3A0%7D%2Emarkdown%2Dbody%20kbd%7Bdisplay%3Ainline%2Dblock%3Bpadding%3A3px%205px%3Bfont%3A11px%20ui%2Dmonospace%2CSFMono%2DRegular%2CSF%20Mono%2CMenlo%2CConsolas%2CLiberation%20Mono%2Cmonospace%3Bline%2Dheight%3A10px%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%3Bvertical%2Dalign%3Amiddle%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Dsubtle%29%3Bborder%3Asolid%201px%20var%28%2D%2Dcolor%2Dneutral%2Dmuted%29%3Bborder%2Dbottom%2Dcolor%3Avar%28%2D%2Dcolor%2Dneutral%2Dmuted%29%3Bborder%2Dradius%3A6px%3Bbox%2Dshadow%3Ainset%200%20%2D1px%200%20var%28%2D%2Dcolor%2Dneutral%2Dmuted%29%7D%2Emarkdown%2Dbody%20h1%2C%2Emarkdown%2Dbody%20h2%2C%2Emarkdown%2Dbody%20h3%2C%2Emarkdown%2Dbody%20h4%2C%2Emarkdown%2Dbody%20h5%2C%2Emarkdown%2Dbody%20h6%7Bmargin%2Dtop%3A24px%3Bmargin%2Dbottom%3A16px%3Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bline%2Dheight%3A1%2E25%7D%2Emarkdown%2Dbody%20h2%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bpadding%2Dbottom%3A%2E3em%3Bfont%2Dsize%3A1%2E5em%3Bborder%2Dbottom%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Dmuted%29%7D%2Emarkdown%2Dbody%20h3%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bfont%2Dsize%3A1%2E25em%7D%2Emarkdown%2Dbody%20h4%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bfont%2Dsize%3A1em%7D%2Emarkdown%2Dbody%20h5%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bfont%2Dsize%3A%2E875em%7D%2Emarkdown%2Dbody%20h6%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bfont%2Dsize%3A%2E85em%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Dmuted%29%7D%2Emarkdown%2Dbody%20p%7Bmargin%2Dtop%3A0%3Bmargin%2Dbottom%3A10px%7D%2Emarkdown%2Dbody%20blockquote%7Bmargin%3A0%3Bpadding%3A0%201em%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Dmuted%29%3Bborder%2Dleft%3A%2E25em%20solid%20var%28%2D%2Dcolor%2Dborder%2Ddefault%29%7D%2Emarkdown%2Dbody%20ol%2C%2Emarkdown%2Dbody%20ul%7Bmargin%2Dtop%3A0%3Bmargin%2Dbottom%3A0%3Bpadding%2Dleft%3A2em%7D%2Emarkdown%2Dbody%20ol%20ol%2C%2Emarkdown%2Dbody%20ul%20ol%7Blist%2Dstyle%2Dtype%3Alower%2Droman%7D%2Emarkdown%2Dbody%20ol%20ol%20ol%2C%2Emarkdown%2Dbody%20ol%20ul%20ol%2C%2Emarkdown%2Dbody%20ul%20ol%20ol%2C%2Emarkdown%2Dbody%20ul%20ul%20ol%7Blist%2Dstyle%2Dtype%3Alower%2Dalpha%7D%2Emarkdown%2Dbody%20dd%7Bmargin%2Dleft%3A0%7D%2Emarkdown%2Dbody%20code%2C%2Emarkdown%2Dbody%20samp%2C%2Emarkdown%2Dbody%20tt%7Bfont%2Dfamily%3Aui%2Dmonospace%2CSFMono%2DRegular%2CSF%20Mono%2CMenlo%2CConsolas%2CLiberation%20Mono%2Cmonospace%3Bfont%2Dsize%3A12px%7D%2Emarkdown%2Dbody%20pre%7Bmargin%2Dtop%3A0%3Bmargin%2Dbottom%3A0%3Bfont%2Dfamily%3Aui%2Dmonospace%2CSFMono%2DRegular%2CSF%20Mono%2CMenlo%2CConsolas%2CLiberation%20Mono%2Cmonospace%3Bfont%2Dsize%3A12px%3Bword%2Dwrap%3Anormal%7D%2Emarkdown%2Dbody%20%2Eocticon%7Bdisplay%3Ainline%2Dblock%3Boverflow%3Avisible%21important%3Bvertical%2Dalign%3Atext%2Dbottom%3Bfill%3AcurrentColor%7D%2Emarkdown%2Dbody%20input%3A%3A%2Dwebkit%2Dinner%2Dspin%2Dbutton%2C%2Emarkdown%2Dbody%20input%3A%3A%2Dwebkit%2Douter%2Dspin%2Dbutton%7Bmargin%3A0%3B%2Dwebkit%2Dappearance%3Anone%3Bappearance%3Anone%7D%2Emarkdown%2Dbody%20%2Emr%2D2%7Bmargin%2Dright%3Avar%28%2D%2Dbase%2Dsize%2D8%2C8px%29%21important%7D%2Emarkdown%2Dbody%3A%3Abefore%7Bdisplay%3Atable%3Bcontent%3A%22%22%7D%2Emarkdown%2Dbody%3A%3Aafter%7Bdisplay%3Atable%3Bclear%3Aboth%3Bcontent%3A%22%22%7D%2Emarkdown%2Dbody%3E%3Afirst%2Dchild%7Bmargin%2Dtop%3A0%21important%7D%2Emarkdown%2Dbody%3E%3Alast%2Dchild%7Bmargin%2Dbottom%3A0%21important%7D%2Emarkdown%2Dbody%20a%3Anot%28%5Bhref%5D%29%7Bcolor%3Ainherit%3Btext%2Ddecoration%3Anone%7D%2Emarkdown%2Dbody%20%2Eabsent%7Bcolor%3Avar%28%2D%2Dcolor%2Ddanger%2Dfg%29%7D%2Emarkdown%2Dbody%20%2Eanchor%7Bfloat%3Aleft%3Bpadding%2Dright%3A4px%3Bmargin%2Dleft%3A%2D20px%3Bline%2Dheight%3A1%7D%2Emarkdown%2Dbody%20%2Eanchor%3Afocus%7Boutline%3A0%7D%2Emarkdown%2Dbody%20blockquote%2C%2Emarkdown%2Dbody%20details%2C%2Emarkdown%2Dbody%20dl%2C%2Emarkdown%2Dbody%20ol%2C%2Emarkdown%2Dbody%20p%2C%2Emarkdown%2Dbody%20pre%2C%2Emarkdown%2Dbody%20table%2C%2Emarkdown%2Dbody%20ul%7Bmargin%2Dtop%3A0%3Bmargin%2Dbottom%3A16px%7D%2Emarkdown%2Dbody%20blockquote%3E%3Afirst%2Dchild%7Bmargin%2Dtop%3A0%7D%2Emarkdown%2Dbody%20blockquote%3E%3Alast%2Dchild%7Bmargin%2Dbottom%3A0%7D%2Emarkdown%2Dbody%20h1%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h2%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h3%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h4%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h5%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h6%20%2Eocticon%2Dlink%7Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%3Bvertical%2Dalign%3Amiddle%3Bvisibility%3Ahidden%7D%2Emarkdown%2Dbody%20h1%3Ahover%20%2Eanchor%2C%2Emarkdown%2Dbody%20h2%3Ahover%20%2Eanchor%2C%2Emarkdown%2Dbody%20h3%3Ahover%20%2Eanchor%2C%2Emarkdown%2Dbody%20h4%3Ahover%20%2Eanchor%2C%2Emarkdown%2Dbody%20h5%3Ahover%20%2Eanchor%2C%2Emarkdown%2Dbody%20h6%3Ahover%20%2Eanchor%7Btext%2Ddecoration%3Anone%7D%2Emarkdown%2Dbody%20h1%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h2%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h3%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h4%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h5%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%2C%2Emarkdown%2Dbody%20h6%3Ahover%20%2Eanchor%20%2Eocticon%2Dlink%7Bvisibility%3Avisible%7D%2Emarkdown%2Dbody%20h1%20code%2C%2Emarkdown%2Dbody%20h1%20tt%2C%2Emarkdown%2Dbody%20h2%20code%2C%2Emarkdown%2Dbody%20h2%20tt%2C%2Emarkdown%2Dbody%20h3%20code%2C%2Emarkdown%2Dbody%20h3%20tt%2C%2Emarkdown%2Dbody%20h4%20code%2C%2Emarkdown%2Dbody%20h4%20tt%2C%2Emarkdown%2Dbody%20h5%20code%2C%2Emarkdown%2Dbody%20h5%20tt%2C%2Emarkdown%2Dbody%20h6%20code%2C%2Emarkdown%2Dbody%20h6%20tt%7Bpadding%3A0%20%2E2em%3Bfont%2Dsize%3Ainherit%7D%2Emarkdown%2Dbody%20summary%20h1%2C%2Emarkdown%2Dbody%20summary%20h2%2C%2Emarkdown%2Dbody%20summary%20h3%2C%2Emarkdown%2Dbody%20summary%20h4%2C%2Emarkdown%2Dbody%20summary%20h5%2C%2Emarkdown%2Dbody%20summary%20h6%7Bdisplay%3Ainline%2Dblock%7D%2Emarkdown%2Dbody%20summary%20h1%20%2Eanchor%2C%2Emarkdown%2Dbody%20summary%20h2%20%2Eanchor%2C%2Emarkdown%2Dbody%20summary%20h3%20%2Eanchor%2C%2Emarkdown%2Dbody%20summary%20h4%20%2Eanchor%2C%2Emarkdown%2Dbody%20summary%20h5%20%2Eanchor%2C%2Emarkdown%2Dbody%20summary%20h6%20%2Eanchor%7Bmargin%2Dleft%3A%2D40px%7D%2Emarkdown%2Dbody%20summary%20h1%2C%2Emarkdown%2Dbody%20summary%20h2%7Bpadding%2Dbottom%3A0%3Bborder%2Dbottom%3A0%7D%2Emarkdown%2Dbody%20ol%2Eno%2Dlist%2C%2Emarkdown%2Dbody%20ul%2Eno%2Dlist%7Bpadding%3A0%3Blist%2Dstyle%2Dtype%3Anone%7D%2Emarkdown%2Dbody%20ol%5Btype%3D%22a%20s%22%5D%7Blist%2Dstyle%2Dtype%3Alower%2Dalpha%7D%2Emarkdown%2Dbody%20ol%5Btype%3D%22A%20s%22%5D%7Blist%2Dstyle%2Dtype%3Aupper%2Dalpha%7D%2Emarkdown%2Dbody%20ol%5Btype%3D%22i%20s%22%5D%7Blist%2Dstyle%2Dtype%3Alower%2Droman%7D%2Emarkdown%2Dbody%20ol%5Btype%3D%22I%20s%22%5D%7Blist%2Dstyle%2Dtype%3Aupper%2Droman%7D%2Emarkdown%2Dbody%20ol%5Btype%3D%221%22%5D%7Blist%2Dstyle%2Dtype%3Adecimal%7D%2Emarkdown%2Dbody%20div%3Eol%3Anot%28%5Btype%5D%29%7Blist%2Dstyle%2Dtype%3Adecimal%7D%2Emarkdown%2Dbody%20ol%20ol%2C%2Emarkdown%2Dbody%20ol%20ul%2C%2Emarkdown%2Dbody%20ul%20ol%2C%2Emarkdown%2Dbody%20ul%20ul%7Bmargin%2Dtop%3A0%3Bmargin%2Dbottom%3A0%7D%2Emarkdown%2Dbody%20li%3Ep%7Bmargin%2Dtop%3A16px%7D%2Emarkdown%2Dbody%20li%2Bli%7Bmargin%2Dtop%3A%2E25em%7D%2Emarkdown%2Dbody%20dl%7Bpadding%3A0%7D%2Emarkdown%2Dbody%20dl%20dt%7Bpadding%3A0%3Bmargin%2Dtop%3A16px%3Bfont%2Dsize%3A1em%3Bfont%2Dstyle%3Aitalic%3Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%7D%2Emarkdown%2Dbody%20dl%20dd%7Bpadding%3A0%2016px%3Bmargin%2Dbottom%3A16px%7D%2Emarkdown%2Dbody%20table%20th%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%7D%2Emarkdown%2Dbody%20table%20td%2C%2Emarkdown%2Dbody%20table%20th%7Bpadding%3A6px%2013px%3Bborder%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Ddefault%29%7D%2Emarkdown%2Dbody%20table%20td%3E%3Alast%2Dchild%7Bmargin%2Dbottom%3A0%7D%2Emarkdown%2Dbody%20table%20tr%7Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Ddefault%29%3Bborder%2Dtop%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Dmuted%29%7D%2Emarkdown%2Dbody%20table%20tr%3Anth%2Dchild%282n%29%7Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Dsubtle%29%7D%2Emarkdown%2Dbody%20table%20img%7Bbackground%2Dcolor%3Atransparent%7D%2Emarkdown%2Dbody%20img%5Balign%3Dright%5D%7Bpadding%2Dleft%3A20px%7D%2Emarkdown%2Dbody%20img%5Balign%3Dleft%5D%7Bpadding%2Dright%3A20px%7D%2Emarkdown%2Dbody%20%2Eemoji%7Bmax%2Dwidth%3Anone%3Bvertical%2Dalign%3Atext%2Dtop%3Bbackground%2Dcolor%3Atransparent%7D%2Emarkdown%2Dbody%20span%2Eframe%7Bdisplay%3Ablock%3Boverflow%3Ahidden%7D%2Emarkdown%2Dbody%20span%2Eframe%3Espan%7Bdisplay%3Ablock%3Bfloat%3Aleft%3Bwidth%3Aauto%3Bpadding%3A7px%3Bmargin%3A13px%200%200%3Boverflow%3Ahidden%3Bborder%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Ddefault%29%7D%2Emarkdown%2Dbody%20span%2Eframe%20span%20img%7Bdisplay%3Ablock%3Bfloat%3Aleft%7D%2Emarkdown%2Dbody%20span%2Eframe%20span%20span%7Bdisplay%3Ablock%3Bpadding%3A5px%200%200%3Bclear%3Aboth%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dcenter%7Bdisplay%3Ablock%3Boverflow%3Ahidden%3Bclear%3Aboth%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dcenter%3Espan%7Bdisplay%3Ablock%3Bmargin%3A13px%20auto%200%3Boverflow%3Ahidden%3Btext%2Dalign%3Acenter%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dcenter%20span%20img%7Bmargin%3A0%20auto%3Btext%2Dalign%3Acenter%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dright%7Bdisplay%3Ablock%3Boverflow%3Ahidden%3Bclear%3Aboth%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dright%3Espan%7Bdisplay%3Ablock%3Bmargin%3A13px%200%200%3Boverflow%3Ahidden%3Btext%2Dalign%3Aright%7D%2Emarkdown%2Dbody%20span%2Ealign%2Dright%20span%20img%7Bmargin%3A0%3Btext%2Dalign%3Aright%7D%2Emarkdown%2Dbody%20span%2Efloat%2Dleft%7Bdisplay%3Ablock%3Bfloat%3Aleft%3Bmargin%2Dright%3A13px%3Boverflow%3Ahidden%7D%2Emarkdown%2Dbody%20span%2Efloat%2Dleft%20span%7Bmargin%3A13px%200%200%7D%2Emarkdown%2Dbody%20span%2Efloat%2Dright%7Bdisplay%3Ablock%3Bfloat%3Aright%3Bmargin%2Dleft%3A13px%3Boverflow%3Ahidden%7D%2Emarkdown%2Dbody%20span%2Efloat%2Dright%3Espan%7Bdisplay%3Ablock%3Bmargin%3A13px%20auto%200%3Boverflow%3Ahidden%3Btext%2Dalign%3Aright%7D%2Emarkdown%2Dbody%20code%2C%2Emarkdown%2Dbody%20tt%7Bpadding%3A%2E2em%20%2E4em%3Bmargin%3A0%3Bfont%2Dsize%3A85%25%3Bwhite%2Dspace%3Abreak%2Dspaces%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dneutral%2Dmuted%29%3Bborder%2Dradius%3A6px%7D%2Emarkdown%2Dbody%20code%20br%2C%2Emarkdown%2Dbody%20tt%20br%7Bdisplay%3Anone%7D%2Emarkdown%2Dbody%20del%20code%7Btext%2Ddecoration%3Ainherit%7D%2Emarkdown%2Dbody%20samp%7Bfont%2Dsize%3A85%25%7D%2Emarkdown%2Dbody%20pre%20code%7Bfont%2Dsize%3A100%25%7D%2Emarkdown%2Dbody%20pre%3Ecode%7Bpadding%3A0%3Bmargin%3A0%3Bword%2Dbreak%3Anormal%3Bwhite%2Dspace%3Apre%3Bbackground%3A0%200%3Bborder%3A0%7D%2Emarkdown%2Dbody%20%2Ehighlight%7Bmargin%2Dbottom%3A16px%7D%2Emarkdown%2Dbody%20%2Ehighlight%20pre%7Bmargin%2Dbottom%3A0%3Bword%2Dbreak%3Anormal%7D%2Emarkdown%2Dbody%20%2Ehighlight%20pre%2C%2Emarkdown%2Dbody%20pre%7Bpadding%3A16px%3Boverflow%3Aauto%3Bfont%2Dsize%3A85%25%3Bline%2Dheight%3A1%2E45%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dcanvas%2Dsubtle%29%3Bborder%2Dradius%3A6px%7D%2Emarkdown%2Dbody%20pre%20code%2C%2Emarkdown%2Dbody%20pre%20tt%7Bdisplay%3Ainline%3Bmax%2Dwidth%3Aauto%3Bpadding%3A0%3Bmargin%3A0%3Boverflow%3Avisible%3Bline%2Dheight%3Ainherit%3Bword%2Dwrap%3Anormal%3Bbackground%2Dcolor%3Atransparent%3Bborder%3A0%7D%2Emarkdown%2Dbody%20%2Ecsv%2Ddata%20td%2C%2Emarkdown%2Dbody%20%2Ecsv%2Ddata%20th%7Bpadding%3A5px%3Boverflow%3Ahidden%3Bfont%2Dsize%3A12px%3Bline%2Dheight%3A1%3Btext%2Dalign%3Aleft%3Bwhite%2Dspace%3Anowrap%7D%2Emarkdown%2Dbody%20%2Ecsv%2Ddata%20%2Eblob%2Dnum%7Bpadding%3A10px%208px%209px%3Btext%2Dalign%3Aright%3Bbackground%3Avar%28%2D%2Dcolor%2Dcanvas%2Ddefault%29%3Bborder%3A0%7D%2Emarkdown%2Dbody%20%2Ecsv%2Ddata%20tr%7Bborder%2Dtop%3A0%7D%2Emarkdown%2Dbody%20%2Ecsv%2Ddata%20th%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dsemibold%2C600%29%3Bbackground%3Avar%28%2D%2Dcolor%2Dcanvas%2Dsubtle%29%3Bborder%2Dtop%3A0%7D%2Emarkdown%2Dbody%20%5Bdata%2Dfootnote%2Dref%5D%3A%3Abefore%7Bcontent%3A%22%5B%22%7D%2Emarkdown%2Dbody%20%5Bdata%2Dfootnote%2Dref%5D%3A%3Aafter%7Bcontent%3A%22%5D%22%7D%2Emarkdown%2Dbody%20%2Efootnotes%7Bfont%2Dsize%3A12px%3Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Dmuted%29%3Bborder%2Dtop%3A1px%20solid%20var%28%2D%2Dcolor%2Dborder%2Ddefault%29%7D%2Emarkdown%2Dbody%20%2Efootnotes%20ol%7Bpadding%2Dleft%3A16px%7D%2Emarkdown%2Dbody%20%2Efootnotes%20ol%20ul%7Bdisplay%3Ainline%2Dblock%3Bpadding%2Dleft%3A16px%3Bmargin%2Dtop%3A16px%7D%2Emarkdown%2Dbody%20%2Efootnotes%20li%7Bposition%3Arelative%7D%2Emarkdown%2Dbody%20%2Efootnotes%20li%3Atarget%3A%3Abefore%7Bposition%3Aabsolute%3Btop%3A%2D8px%3Bright%3A%2D8px%3Bbottom%3A%2D8px%3Bleft%3A%2D24px%3Bpointer%2Devents%3Anone%3Bcontent%3A%22%22%3Bborder%3A2px%20solid%20var%28%2D%2Dcolor%2Daccent%2Demphasis%29%3Bborder%2Dradius%3A6px%7D%2Emarkdown%2Dbody%20%2Efootnotes%20li%3Atarget%7Bcolor%3Avar%28%2D%2Dcolor%2Dfg%2Ddefault%29%7D%2Emarkdown%2Dbody%20%2Efootnotes%20%2Edata%2Dfootnote%2Dbackref%20g%2Demoji%7Bfont%2Dfamily%3Amonospace%7D%2Emarkdown%2Dbody%20%2Epl%2Dc%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcomment%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dc1%2C%2Emarkdown%2Dbody%20%2Epl%2Ds%20%2Epl%2Dv%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%29%7D%2Emarkdown%2Dbody%20%2Epl%2De%2C%2Emarkdown%2Dbody%20%2Epl%2Den%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%29%7D%2Emarkdown%2Dbody%20%2Epl%2Ds%20%2Epl%2Ds1%2C%2Emarkdown%2Dbody%20%2Epl%2Dsmi%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstorage%2Dmodifier%2Dimport%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dent%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dentity%2Dtag%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dk%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dkeyword%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dpds%2C%2Emarkdown%2Dbody%20%2Epl%2Ds%2C%2Emarkdown%2Dbody%20%2Epl%2Ds%20%2Epl%2Dpse%20%2Epl%2Ds1%2C%2Emarkdown%2Dbody%20%2Epl%2Dsr%2C%2Emarkdown%2Dbody%20%2Epl%2Dsr%20%2Epl%2Dcce%2C%2Emarkdown%2Dbody%20%2Epl%2Dsr%20%2Epl%2Dsra%2C%2Emarkdown%2Dbody%20%2Epl%2Dsr%20%2Epl%2Dsre%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dsmw%2C%2Emarkdown%2Dbody%20%2Epl%2Dv%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dvariable%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dbu%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dunmatched%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dii%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dinvalid%2Dillegal%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dc2%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dcarriage%2Dreturn%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dsr%20%2Epl%2Dcce%7Bfont%2Dweight%3A700%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dstring%2Dregexp%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dml%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dlist%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmh%2C%2Emarkdown%2Dbody%20%2Epl%2Dmh%20%2Epl%2Den%2C%2Emarkdown%2Dbody%20%2Epl%2Dms%7Bfont%2Dweight%3A700%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dheading%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmi%7Bfont%2Dstyle%3Aitalic%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ditalic%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmb%7Bfont%2Dweight%3A700%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dbold%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmd%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Ddeleted%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmi1%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dinserted%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmc%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dchanged%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmi2%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dtext%29%3Bbackground%2Dcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmarkup%2Dignored%2Dbg%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dmdr%7Bfont%2Dweight%3A700%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dmeta%2Ddiff%2Drange%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dba%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dbrackethighlighter%2Dangle%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dsg%7Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dsublimelinter%2Dgutter%2Dmark%29%7D%2Emarkdown%2Dbody%20%2Epl%2Dcorl%7Btext%2Ddecoration%3Aunderline%3Bcolor%3Avar%28%2D%2Dcolor%2Dprettylights%2Dsyntax%2Dconstant%2Dother%2Dreference%2Dlink%29%7D%2Emarkdown%2Dbody%20g%2Demoji%7Bdisplay%3Ainline%2Dblock%3Bmin%2Dwidth%3A1ch%3Bfont%2Dfamily%3A%22Apple%20Color%20Emoji%22%2C%22Segoe%20UI%20Emoji%22%2C%22Segoe%20UI%20Symbol%22%3Bfont%2Dsize%3A1em%3Bfont%2Dstyle%3Anormal%21important%3Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dnormal%2C400%29%3Bline%2Dheight%3A1%3Bvertical%2Dalign%3A%2D%2E075em%7D%2Emarkdown%2Dbody%20g%2Demoji%20img%7Bwidth%3A1em%3Bheight%3A1em%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%7Blist%2Dstyle%2Dtype%3Anone%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%20label%7Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dnormal%2C400%29%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%2Eenabled%20label%7Bcursor%3Apointer%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%2B%2Etask%2Dlist%2Ditem%7Bmargin%2Dtop%3A4px%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%20%2Ehandle%7Bdisplay%3Anone%7D%2Emarkdown%2Dbody%20%2Etask%2Dlist%2Ditem%2Dcheckbox%7Bmargin%3A0%20%2E2em%20%2E25em%20%2D1%2E4em%3Bvertical%2Dalign%3Amiddle%7D%2Emarkdown%2Dbody%20%2Econtains%2Dtask%2Dlist%3Adir%28rtl%29%20%2Etask%2Dlist%2Ditem%2Dcheckbox%7Bmargin%3A0%20%2D1%2E6em%20%2E25em%20%2E2em%7D%2Emarkdown%2Dbody%20%2Econtains%2Dtask%2Dlist%7Bposition%3Arelative%7D%2Emarkdown%2Dbody%20%2Econtains%2Dtask%2Dlist%3Afocus%2Dwithin%20%2Etask%2Dlist%2Ditem%2Dconvert%2Dcontainer%2C%2Emarkdown%2Dbody%20%2Econtains%2Dtask%2Dlist%3Ahover%20%2Etask%2Dlist%2Ditem%2Dconvert%2Dcontainer%7Bdisplay%3Ablock%3Bwidth%3Aauto%3Bheight%3A24px%3Boverflow%3Avisible%3Bclip%3Aauto%7D%2Emarkdown%2Dbody%20%3A%3A%2Dwebkit%2Dcalendar%2Dpicker%2Dindicator%7Bfilter%3Ainvert%2850%25%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%7Bpadding%3Avar%28%2D%2Dbase%2Dsize%2D8%29%20var%28%2D%2Dbase%2Dsize%2D16%29%3Bmargin%2Dbottom%3A16px%3Bcolor%3Ainherit%3Bborder%2Dleft%3A%2E25em%20solid%20var%28%2D%2Dcolor%2Dborder%2Ddefault%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%3E%3Afirst%2Dchild%7Bmargin%2Dtop%3A0%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%3E%3Alast%2Dchild%7Bmargin%2Dbottom%3A0%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%20%2Emarkdown%2Dalert%2Dtitle%7Bdisplay%3Aflex%3Bfont%2Dweight%3Avar%28%2D%2Dbase%2Dtext%2Dweight%2Dmedium%2C500%29%3Balign%2Ditems%3Acenter%3Bline%2Dheight%3A1%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dnote%7Bborder%2Dleft%2Dcolor%3Avar%28%2D%2Dcolor%2Daccent%2Demphasis%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dnote%20%2Emarkdown%2Dalert%2Dtitle%7Bcolor%3Avar%28%2D%2Dcolor%2Daccent%2Dfg%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dimportant%7Bborder%2Dleft%2Dcolor%3Avar%28%2D%2Dcolor%2Ddone%2Demphasis%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dimportant%20%2Emarkdown%2Dalert%2Dtitle%7Bcolor%3Avar%28%2D%2Dcolor%2Ddone%2Dfg%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dwarning%7Bborder%2Dleft%2Dcolor%3Avar%28%2D%2Dcolor%2Dattention%2Demphasis%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dwarning%20%2Emarkdown%2Dalert%2Dtitle%7Bcolor%3Avar%28%2D%2Dcolor%2Dattention%2Dfg%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dtip%7Bborder%2Dleft%2Dcolor%3Avar%28%2D%2Dcolor%2Dsuccess%2Demphasis%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dtip%20%2Emarkdown%2Dalert%2Dtitle%7Bcolor%3Avar%28%2D%2Dcolor%2Dsuccess%2Dfg%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dcaution%7Bborder%2Dleft%2Dcolor%3Avar%28%2D%2Dcolor%2Ddanger%2Demphasis%29%7D%2Emarkdown%2Dbody%20%2Emarkdown%2Dalert%2Emarkdown%2Dalert%2Dcaution%20%2Emarkdown%2Dalert%2Dtitle%7Bcolor%3Avar%28%2D%2Dcolor%2Ddanger%2Dfg%29%7D%0A" rel="stylesheet" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SmartFormat Product Plan</h1>
+</header>
+<h1 id="план-развития-smartformat-продуктовая-стратегия">План развития
+SmartFormat — Продуктовая стратегия</h1>
+<h2 id="стратегическое-видение">Стратегическое видение</h2>
+<p><strong>Миссия:</strong> Стать стандартом автоматического
+форматирования студенческих работ в России, используя уникальное
+преимущество — загрузку методички вуза.</p>
+<p><strong>North Star Metric:</strong> Количество полностью обработанных
+документов / месяц</p>
+<p><strong>Ресурсы:</strong> Время основателя + Claude Code Max.
+Маркетолог на доле 70/30%.</p>
+<p><strong>Главный принцип:</strong> Не конкурируем по цене с
+бесплатными сервисами. Конкурируем по ценности — кастомизация под
+методичку вуза + библиотека требований вузов.</p>
+<hr />
+<h2 id="фаза-0-аналитика-день-1-4-часа">ФАЗА 0: АНАЛИТИКА (День 1, ~4
+часа)</h2>
+<p>Без данных невозможно принимать решения. Блокер для всего
+остального.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 48%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+<th>Файл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Yandex.Metrika (код + цели:
+загрузка→обработка→скачивание→оплата)</td>
+<td>2ч</td>
+<td><code>src/app/layout.tsx</code></td>
+</tr>
+<tr>
+<td>Google Analytics 4</td>
+<td>1ч</td>
+<td><code>src/app/layout.tsx</code></td>
+</tr>
+<tr>
+<td>Yandex.Webmaster + Google Search Console</td>
+<td>30мин</td>
+<td>Внешние сервисы</td>
+</tr>
+<tr>
+<td>Настроить воронку конверсии в Metrika</td>
+<td>30мин</td>
+<td>Metrika UI</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="месяц-1-конверсия-quick-wins-seo-база">МЕСЯЦ 1: КОНВЕРСИЯ +
+QUICK WINS + SEO-БАЗА</h2>
+<p><strong>Цель:</strong> Первые платящие клиенты. Конверсионная
+воронка. SEO-фундамент.</p>
+<h3 id="неделя-1-форматирование-без-методички-улучшение-hook-offer-аналитика-16ч">Неделя
+1: Форматирование без методички + Улучшение hook-offer + Аналитика
+(~16ч)</h3>
+<p><strong>Новая фича: “Оформить по ГОСТу” без методички.</strong>
+Сейчас загрузка методички обязательна (кнопка заблокирована без неё). Но
+система УЖЕ имеет <code>DEFAULT_GOST_RULES</code> с полным набором
+правил по ГОСТ 7.32. В FAQ даже написано: “если методички нет, система
+применит стандартные ГОСТ 7.32”. Нужно это разблокировать в UI.</p>
+<table>
+<colgroup>
+<col style="width: 53%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Методичка опциональна:</strong> убрать обязательность
+второго файла, добавить выбор типа работы
+(диплом/курсовая/реферат/…)</td>
+<td><code>src/app/create/page.tsx</code>,
+<code>src/features/constructor/</code></td>
+</tr>
+<tr>
+<td><strong>Галочка “Оформить по ГОСТу”</strong> — если методички нет,
+используются DEFAULT_GOST_RULES</td>
+<td><code>src/app/create/page.tsx</code></td>
+</tr>
+<tr>
+<td><strong>Библиотека методичек вузов (M1-MVP):</strong> собрать 10-15
+методичек крупнейших вузов (МГУ, ВШЭ, СПбГУ, МФТИ, МГТУ, РАНХиГС и др.),
+при выборе вуза показывать превью методички</td>
+<td><code>src/lib/university-guidelines/</code>,
+<code>src/app/create/</code></td>
+</tr>
+<tr>
+<td><strong>API: сделать requirementsDocument опциональным</strong> —
+если нет, вернуть DEFAULT_GOST_RULES с confidence:0</td>
+<td><code>src/app/api/extract-rules/route.ts</code></td>
+</tr>
+<tr>
+<td>Визуальный preview результата: показать 3 отформатированные страницы
++ размытие остальных с CTA</td>
+<td><code>src/app/result/[jobId]/page.tsx</code></td>
+</tr>
+<tr>
+<td>“До/После” сравнение (визуально показать что поменялось)</td>
+<td><code>src/features/result/</code></td>
+</tr>
+<tr>
+<td>Yandex.Metrika + GA4</td>
+<td><code>src/app/layout.tsx</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>UX-флоу на /create (обновлённый):</strong></p>
+<pre><code>1. Загрузите документ (.docx)
+2. Выберите тип работы: [Диплом ▾] [Курсовая ▾] [Реферат ▾] ...
+3. Требования к оформлению (одно из трёх):
+   ├─ [📎 Загрузить методичку вуза] — максимальная точность
+   ├─ [🏛 Выбрать вуз] → выпадающий список → превью методички
+   └─ [✓ Оформить по стандарту ГОСТ] — стандартные правила</code></pre>
+<p><strong>Библиотека методичек — краудсорсинг (M2+):</strong> - После
+обработки показать: “Поделитесь методичкой вашего вуза — поможете другим
+студентам!” - Сохранять загруженные методички (с согласия) → модерация →
+добавление в библиотеку - К M3: 50+ вузов в библиотеке</p>
+<h3 id="неделя-2-чат-с-методичкой-13ч">Неделя 2: Чат с методичкой
+(~13ч)</h3>
+<p>Quick win: методичка УЖЕ парсится. ~13ч работы = premium-фича,
+которую конкуренты продают за 499₽/мес.</p>
+<table>
+<colgroup>
+<col style="width: 53%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сохранение guidelinesText в job data</td>
+<td><code>src/lib/storage/job-store.ts</code></td>
+</tr>
+<tr>
+<td>API <code>/api/ask-guidelines</code></td>
+<td><code>src/app/api/ask-guidelines/route.ts</code></td>
+</tr>
+<tr>
+<td>Промпт для чата с методичкой</td>
+<td><code>src/lib/ai/prompts.ts</code></td>
+</tr>
+<tr>
+<td>UI чат-компонент на странице подтверждения правил</td>
+<td><code>src/app/confirm-rules/[jobId]/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="неделя-3-генерация-плана-работы-14ч">Неделя 3: Генерация плана
+работы (~14ч)</h3>
+<p>Бесплатный инструмент → трафик → воронка в форматирование.</p>
+<table>
+<colgroup>
+<col style="width: 53%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API <code>/api/generate-outline</code></td>
+<td><code>src/app/api/generate-outline/route.ts</code></td>
+</tr>
+<tr>
+<td>Страница <code>/outline</code> (форма: тип работы + тема →
+результат)</td>
+<td><code>src/app/outline/page.tsx</code></td>
+</tr>
+<tr>
+<td>Промпт генерации (учитывает тип работы, ГОСТ)</td>
+<td><code>src/lib/ai/prompts.ts</code></td>
+</tr>
+<tr>
+<td>CTA на /create: “Нет плана? Сгенерируем!”</td>
+<td><code>src/app/create/</code></td>
+</tr>
+<tr>
+<td>SEO-метаданные для /outline</td>
+<td><code>src/lib/seo/metadata.ts</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="неделя-4-seo-контент-дизайн-блога-rss-24ч">Неделя 4: SEO-контент
++ Дизайн блога + RSS (~24ч)</h3>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5 новых статей в блог (включая “проблемные” запросы, см.
+контент-план)</td>
+<td>10ч</td>
+</tr>
+<tr>
+<td><strong>Улучшение блога: поддержка изображений в статьях</strong>
+(расширить formatContent(), добавить coverImage)</td>
+<td>4ч</td>
+</tr>
+<tr>
+<td><strong>Скриншоты “до/после”</strong> для статей про оформление</td>
+<td>2ч</td>
+</tr>
+<tr>
+<td><strong>RSS-фид</strong> (<code>/api/rss</code> или
+<code>/feed.xml</code>) для кросс-постинга</td>
+<td>2ч</td>
+</tr>
+<tr>
+<td><strong>Подключить RSS к Яндекс Дзен</strong> (автоматический импорт
+контента)</td>
+<td>1ч</td>
+</tr>
+<tr>
+<td>Оптимизация метатегов всех страниц</td>
+<td>2ч</td>
+</tr>
+<tr>
+<td>Internal linking (блог↔︎FAQ↔︎лендинги↔︎инструменты)</td>
+<td>2ч</td>
+</tr>
+<tr>
+<td>Добавить “Похожие статьи” в блог-посты</td>
+<td>1ч</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="месяц-2-seo-масштабирование-инструменты-viral">МЕСЯЦ 2:
+SEO-МАСШТАБИРОВАНИЕ + ИНСТРУМЕНТЫ + VIRAL</h2>
+<p><strong>Цель:</strong> Органический трафик растёт. Новые бесплатные
+инструменты. 80 платящих, 25К₽ MRR.</p>
+<h3 id="недели-5-6-сумматор-рерайт-22ч">Недели 5-6: Сумматор + Рерайт
+(~22ч)</h3>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 46%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API <code>/api/summarize</code> (short/medium/detailed)</td>
+<td>4ч</td>
+<td><code>src/app/api/summarize/</code></td>
+</tr>
+<tr>
+<td>Страница <code>/summarize</code> (ввод текста/файл → результат)</td>
+<td>6ч</td>
+<td><code>src/app/summarize/</code></td>
+</tr>
+<tr>
+<td>API <code>/api/rewrite</code> (light/medium/heavy)</td>
+<td>4ч</td>
+<td><code>src/app/api/rewrite/</code></td>
+</tr>
+<tr>
+<td>Страница <code>/rewrite</code> (split-view с diff)</td>
+<td>8ч</td>
+<td><code>src/app/rewrite/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="недели-7-8-viral-механики-seo-вторая-волна-автопостинг-26ч">Недели
+7-8: Viral-механики + SEO вторая волна + Автопостинг (~26ч)</h3>
+<table>
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 61%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Реферальная программа (пригласи друга → +1 обработка, до 5)</td>
+<td>12ч</td>
+</tr>
+<tr>
+<td>5 новых статей с изображениями (вторая волна, включая “проблемные”
+запросы)</td>
+<td>8ч</td>
+</tr>
+<tr>
+<td><strong>Автоматический кросс-постинг</strong> (VK API wall.post +
+Telegram Bot API) при публикации</td>
+<td>4ч</td>
+</tr>
+<tr>
+<td><strong>vc.ru</strong> — адаптированная статья-обзор для охвата
+(маркетолог публикует)</td>
+<td>2ч</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="месяц-3-экосистема-подготовка-к-сезону">МЕСЯЦ 3: ЭКОСИСТЕМА +
+ПОДГОТОВКА К СЕЗОНУ</h2>
+<p><strong>Цель:</strong> Грамматика, подбор литературы, сезонные
+страницы. 200 платящих, 60К₽ MRR.</p>
+<h3 id="недели-9-10-грамматика-литература-20ч">Недели 9-10: Грамматика +
+Литература (~20ч)</h3>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 46%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LanguageTool API интеграция</td>
+<td>4ч</td>
+<td><code>src/app/api/grammar/</code></td>
+</tr>
+<tr>
+<td>Вкладка “Грамматика” в результатах</td>
+<td>6ч</td>
+<td><code>src/app/result/</code></td>
+</tr>
+<tr>
+<td>Подбор литературы (OpenAlex/CrossRef API)</td>
+<td>6ч</td>
+<td><code>src/app/api/find-sources/</code></td>
+</tr>
+<tr>
+<td>Страница <code>/find-sources</code></td>
+<td>4ч</td>
+<td><code>src/app/find-sources/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="недели-11-12-сезонные-лендинги-seo-третья-волна-16ч">Недели
+11-12: Сезонные лендинги + SEO третья волна (~16ч)</h3>
+<table>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Трудозатраты</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сезонные страницы: “Диплом 2026”, “Курсовая к сессии”</td>
+<td>6ч</td>
+</tr>
+<tr>
+<td>5 новых статей (третья волна)</td>
+<td>8ч</td>
+</tr>
+<tr>
+<td>Годовая подписка (2990₽/год)</td>
+<td>2ч</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="seo-контент-стратегия-детальный-план">SEO-КОНТЕНТ СТРАТЕГИЯ
+(ДЕТАЛЬНЫЙ ПЛАН)</h2>
+<h3 id="принципы">Принципы</h3>
+<ul>
+<li>Каждая статья = ответ на конкретный запрос студента</li>
+<li>Каждая статья содержит CTA на SmartFormat (естественный, не
+навязчивый)</li>
+<li>Internal linking: статья ↔︎ FAQ ↔︎ лендинг типа работы ↔︎
+инструмент</li>
+<li>Формат: 1500-3000 слов, структурированный H2/H3, списки,
+таблицы</li>
+</ul>
+<h3 id="keyword-стратегия-по-тирам">Keyword-стратегия по тирам</h3>
+<p><strong>Tier 1 — Высокий intent (конверсионные):</strong> | Запрос |
+Страница | Приоритет | |——–|———-|———–| | “оформление диплома по ГОСТу
+онлайн” | /diplom | Уже есть | | “автоматическое форматирование
+курсовой” | /kursovaya | Уже есть | | “форматирование по ГОСТу
+бесплатно” | Главная | Оптимизировать | | “нейросеть для оформления
+работ” | Блог-обзор (уже есть) | Оптимизировать | | “оформить работу по
+ГОСТу онлайн бесплатно” | Главная | Оптимизировать |</p>
+<p><strong>Tier 2 — Средний intent (информационные →
+конверсия):</strong> | Запрос | Страница | Статус | |——–|———-|——–| |
+“как оформить список литературы по ГОСТ 7.1” | Блог | Уже есть | |
+“отступы в дипломной работе ГОСТ” | Блог | Уже есть | | “как оформить
+содержание по ГОСТу” | Блог | Написать M1 | | “оформление приложений к
+диплому” | Блог | Написать M1 | | “нумерация страниц по ГОСТу” | Блог |
+Уже есть | | “как оформить титульный лист” | Блог | Уже есть |</p>
+<p><strong>Tier 3 — Низкий intent (трафик + authority):</strong> |
+Запрос | Страница | Статус | |——–|———-|——–| | “ГОСТ 7.32-2017” | Блог |
+Уже есть | | “шаблон титульного листа” | Блог | Написать M2 | |
+“требования к курсовой 2026” | Блог | Уже есть | | “антиплагиат как
+работает” | Блог | Уже есть |</p>
+<h3 id="контент-план-по-месяцам">Контент-план по месяцам</h3>
+<h4 id="месяц-1-неделя-4-5-статей">Месяц 1: Неделя 4 (5 статей)</h4>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 20%" />
+<col style="width: 51%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Тема</th>
+<th>Целевой запрос</th>
+<th>Тип</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>“Как оформить содержание (оглавление) по ГОСТу”</td>
+<td>“оформление содержания ГОСТ”</td>
+<td>How-to гайд</td>
+</tr>
+<tr>
+<td>2</td>
+<td>“Оформление приложений к диплому по ГОСТу”</td>
+<td>“приложения в дипломе ГОСТ”</td>
+<td>How-to гайд</td>
+</tr>
+<tr>
+<td>3</td>
+<td>“Преподаватель вернул работу: топ-10 ошибок оформления и как их
+исправить за 2 минуты”</td>
+<td>“преподаватель вернул на доработку” / “ошибки в оформлении
+диплома”</td>
+<td>Проблемный запрос + CTA</td>
+</tr>
+<tr>
+<td>4</td>
+<td>“Чек-лист проверки оформления перед сдачей работы”</td>
+<td>“чек-лист оформления диплома”</td>
+<td>Практический инструмент</td>
+</tr>
+<tr>
+<td>5</td>
+<td>“Оформление презентации к защите диплома/ВКР”</td>
+<td>“презентация к защите диплома”</td>
+<td>How-to гайд</td>
+</tr>
+</tbody>
+</table>
+<h4 id="месяц-2-недели-7-8-5-статей">Месяц 2: Недели 7-8 (5 статей)</h4>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 20%" />
+<col style="width: 51%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Тема</th>
+<th>Целевой запрос</th>
+<th>Тип</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6</td>
+<td>“Сравнение сервисов форматирования по ГОСТу 2026”</td>
+<td>“сервис оформления по ГОСТ”</td>
+<td>Обзор + позиционирование</td>
+</tr>
+<tr>
+<td>7</td>
+<td>“Разница между ГОСТ 7.32 и ГОСТ Р 7.0.11: какой нужен вам”</td>
+<td>“разница ГОСТ 7.32 7.0.11”</td>
+<td>Экспертная статья</td>
+</tr>
+<tr>
+<td>8</td>
+<td>“Шаблоны титульных листов для всех типов работ”</td>
+<td>“шаблон титульного листа”</td>
+<td>Ресурс + CTA</td>
+</tr>
+<tr>
+<td>9</td>
+<td>“Работу не приняли из-за оформления: что делать и как исправить
+быстро”</td>
+<td>“работу не приняли оформление” / “доработка диплома”</td>
+<td>Проблемный запрос</td>
+</tr>
+<tr>
+<td>10</td>
+<td>“Кейс: как я оформил ВКР за 5 минут вместо 8 часов”</td>
+<td>viral + social proof</td>
+<td>Кейс-стади</td>
+</tr>
+</tbody>
+</table>
+<h4 id="месяц-3-недели-11-12-5-статей">Месяц 3: Недели 11-12 (5
+статей)</h4>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 20%" />
+<col style="width: 51%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Тема</th>
+<th>Целевой запрос</th>
+<th>Тип</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11</td>
+<td>“Подготовка к защите диплома 2026: полный гайд”</td>
+<td>сезонный, высокочастотный</td>
+<td>Сезонная статья</td>
+</tr>
+<tr>
+<td>12</td>
+<td>“Как проверить грамматику в научной работе: инструменты 2026”</td>
+<td>“проверка грамматики онлайн”</td>
+<td>Обзор + CTA на /grammar</td>
+</tr>
+<tr>
+<td>13</td>
+<td>“Где найти научные источники для курсовой/диплома бесплатно”</td>
+<td>“научные источники бесплатно”</td>
+<td>Обзор + CTA на /find-sources</td>
+</tr>
+<tr>
+<td>14</td>
+<td>“Как повысить уникальность работы без плагиата”</td>
+<td>“повысить уникальность работы”</td>
+<td>How-to + CTA на /rewrite</td>
+</tr>
+<tr>
+<td>15</td>
+<td>“Курсовая к сессии: пошаговый план оформления”</td>
+<td>сезонный</td>
+<td>Сезонная статья</td>
+</tr>
+</tbody>
+</table>
+<h3 id="seo-оптимизация-существующих-страниц">SEO-оптимизация
+существующих страниц</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr>
+<th>Страница</th>
+<th>Что оптимизировать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Все лендинги (/diplom, /kursovaya, etc.)</td>
+<td>Добавить FAQ-секцию с JSON-LD FAQPage schema</td>
+</tr>
+<tr>
+<td>Главная</td>
+<td>A/B тест hero-текста: методичка vs скорость vs цена</td>
+</tr>
+<tr>
+<td>/pricing</td>
+<td>Добавить Product schema с price, сравнение с конкурентами</td>
+</tr>
+<tr>
+<td>/blog</td>
+<td>Добавить категории/теги, фильтрацию, пагинацию</td>
+</tr>
+<tr>
+<td>Все блог-посты</td>
+<td>Добавить “Похожие статьи”, author markup, dateModified</td>
+</tr>
+</tbody>
+</table>
+<h3 id="проблемные-запросы-высококонверсионный-контент">“Проблемные”
+запросы — высококонверсионный контент</h3>
+<p>Студенты, у которых преподаватель вернул работу, — самая горячая
+аудитория. Они УЖЕ написали работу, им нужно ТОЛЬКО оформление.
+Идеальный клиент.</p>
+<p><strong>Целевые запросы:</strong> | Запрос | Статья | Месяц |
+|——–|——–|——-| | “преподаватель вернул на доработку оформление” | “Топ-10
+ошибок оформления” | M1 | | “ошибки в оформлении диплома” | То же | M1 |
+| “работу не приняли из-за оформления” | “Что делать если не приняли” |
+M2 | | “доработка диплома оформление” | То же | M2 | | “замечания к
+оформлению курсовой” | “Как быстро исправить замечания” | M3 | | “не
+прошел нормоконтроль” | “Нормоконтроль: что проверяют и как пройти с
+первого раза” | M3 |</p>
+<p><strong>Формат статей:</strong> - Список конкретных ошибок с
+визуальными примерами (скриншоты “до/после”) - Каждая ошибка →
+“SmartFormat исправит это автоматически” - CTA: “Загрузите работу —
+исправим все ошибки за 2 минуты”</p>
+<h3 id="кросс-постинг-автоматическая-дистрибуция-контента">Кросс-постинг:
+автоматическая дистрибуция контента</h3>
+<p><strong>Проблема:</strong> Статьи в блоге на сайте видят только те,
+кто уже пришёл. Нужно публиковать контент на внешних площадках для
+охвата.</p>
+<p><strong>Топ-10 площадок для кросс-постинга (Россия
+2026):</strong></p>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 21%" />
+<col style="width: 23%" />
+<col style="width: 23%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Площадка</th>
+<th>Аудитория</th>
+<th>API/Метод</th>
+<th>Приоритет</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Яндекс Дзен</strong></td>
+<td>462M визитов/мес</td>
+<td>RSS-фид / Zen Studio API</td>
+<td>Максимальный</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>VC.ru</strong></td>
+<td>~20M визитов/мес</td>
+<td>Ручная публикация</td>
+<td>Высокий</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>VK</strong> (группа/паблик)</td>
+<td>100M+ MAU</td>
+<td>VK API (wall.post)</td>
+<td>Высокий</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Telegram-канал</strong></td>
+<td>Прямой доступ</td>
+<td>Telegram Bot API</td>
+<td>Высокий</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Habr</strong></td>
+<td>~40M визитов/мес</td>
+<td>Ручная (если техническая тема)</td>
+<td>Средний</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Pikabu</strong></td>
+<td>~50M визитов/мес</td>
+<td>Ручная публикация</td>
+<td>Средний</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>RuTube</strong></td>
+<td>Видео-формат</td>
+<td>API</td>
+<td>Низкий (видео)</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>YouTube</strong></td>
+<td>Видео-формат</td>
+<td>YouTube Data API</td>
+<td>Низкий (видео)</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Одноклассники</strong></td>
+<td>Старшая аудитория</td>
+<td>OK API</td>
+<td>Низкий</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>TenChat</strong></td>
+<td>B2B/профессионалы</td>
+<td>Ручная</td>
+<td>Низкий</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Стратегия автоматизации:</strong></p>
+<p><strong>Фаза 1 (M1): RSS + ручной кросс-постинг</strong> - Добавить
+RSS-фид на сайт (<code>/api/rss</code> или <code>/feed.xml</code>) —
+Next.js route - Подключить RSS к Яндекс Дзен (автоматический импорт) -
+VK: ручной кросс-пост через маркетолога (или VK API для автопостинга) -
+Telegram-канал: ручной анонс с ссылкой на полную статью</p>
+<p><strong>Фаза 2 (M2): Автоматический кросс-постинг</strong> - Webhook
+при публикации новой статьи → кросс-пост в VK, Telegram, Дзен -
+Адаптация формата: полный текст для Дзен, анонс+ссылка для VK/Telegram -
+Или использовать сервис автопостинга (SMMBox, LiveDune — бесплатные
+тарифы)</p>
+<p><strong>Фаза 3 (M3): Vc.ru и Habr</strong> - Уникальные статьи для
+vc.ru (не дубли из блога, а адаптированные) - Habr — если есть
+технический контент (например, “Как мы строили AI-форматирование”)</p>
+<p><strong>Файлы для реализации RSS:</strong> -
+<code>src/app/api/rss/route.ts</code> или
+<code>src/app/feed.xml/route.ts</code> - Использовать существующие
+<code>blogPosts</code> из <code>src/lib/blog/posts.ts</code></p>
+<h3 id="улучшение-дизайна-блога-медиа-контент">Улучшение дизайна блога:
+медиа-контент</h3>
+<p><strong>Текущее состояние:</strong> Блог полностью текстовый. Нет
+изображений, скриншотов, графиков. Контент рендерится через простой
+regex markdown→HTML конвертер в
+<code>src/app/blog/[slug]/page.tsx</code>.</p>
+<p><strong>Что добавить:</strong></p>
+<p><strong>1. Изображения в статьях (~6ч)</strong> - Расширить
+<code>formatContent()</code> для поддержки markdown-изображений:
+<code>![alt](url)</code> - Хранить изображения в
+<code>/public/blog/images/{slug}/</code> (статически) - Или в Supabase
+Storage (если нужен CDN)</p>
+<p><strong>2. “До/После” скриншоты (~4ч)</strong> - Для каждой статьи
+про оформление: скриншот “до” (кривой документ) и “после”
+(отформатированный) - Компонент BeforeAfter с slider или toggle -
+Максимальный визуальный эффект для конверсии</p>
+<p><strong>3. Инфографика и схемы (~4ч)</strong> - Схемы работы
+SmartFormat (Mermaid → SVG или готовые PNG) - Таблицы сравнения (уже
+поддерживаются в markdown) - Иконки для шагов инструкций</p>
+<p><strong>4. Hero-изображение для каждой статьи (~2ч)</strong> -
+Добавить поле <code>coverImage</code> в <code>BlogPost</code> interface
+- Показывать в карточке на /blog и в header статьи - Можно генерировать
+через AI (Midjourney/DALL-E) или использовать стоковые</p>
+<p><strong>Файлы:</strong> - <code>src/lib/blog/posts.ts</code> —
+добавить поле <code>coverImage?</code> в интерфейс -
+<code>src/app/blog/[slug]/page.tsx</code> — расширить
+<code>formatContent()</code> для изображений -
+<code>src/app/blog/page.tsx</code> — показывать обложку в карточках -
+<code>/public/blog/images/</code> — хранилище изображений</p>
+<h3 id="internal-linking-стратегия">Internal Linking стратегия</h3>
+<pre><code>Блог-статья &quot;Как оформить содержание&quot;
+  → CTA: &quot;Попробуйте SmartFormat бесплатно&quot; → /create
+  → Ссылка: &quot;Подробнее про ГОСТ 7.32&quot; → /blog/gosty-...
+  → Ссылка: &quot;Все требования к диплому&quot; → /diplom
+  → Ссылка: &quot;FAQ по оформлению&quot; → /faq#formatting
+  → Ссылка: &quot;Сгенерировать план работы&quot; → /outline</code></pre>
+<hr />
+<h2 id="маркетинговая-стратегия-zero-budget">МАРКЕТИНГОВАЯ СТРАТЕГИЯ
+(Zero Budget)</h2>
+<h3 id="разделение-обязанностей-с-маркетологом">Разделение обязанностей
+с маркетологом</h3>
+<p><strong>Рекомендуемое разделение:</strong></p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 44%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Область</th>
+<th>Основатель (вы)</th>
+<th>Маркетолог</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SEO-контент</td>
+<td>Техническая SEO, метаданные, структура</td>
+<td>Написание статей (с вашей помощью через Claude)</td>
+</tr>
+<tr>
+<td>Соцсети</td>
+<td>—</td>
+<td>Telegram-канал, VK, outreach в студенческие группы</td>
+</tr>
+<tr>
+<td>Партнерства</td>
+<td>Техническая интеграция (API)</td>
+<td>Outreach к блогерам, антиплагиат-сервисам</td>
+</tr>
+<tr>
+<td>Аналитика</td>
+<td>Настройка Metrika/GA, дашборды</td>
+<td>Анализ трафика, отчеты, A/B тесты</td>
+</tr>
+<tr>
+<td>Видео-контент</td>
+<td>Запись screencast’ов</td>
+<td>Редактирование, публикация, продвижение</td>
+</tr>
+<tr>
+<td>Продукт</td>
+<td>Разработка, дизайн, архитектура</td>
+<td>Feedback от пользователей, UX-замечания</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Первая задача для маркетолога:</strong> 1. Составить список
+50+ студенческих Telegram-каналов/чатов крупных вузов 2. Подготовить
+скрипт для “партизанского” продвижения (кейс, не реклама) 3.
+Зарегистрировать Telegram-канал <span class="citation" data-cites="SmartFormat">@SmartFormat</span> и начать постинг</p>
+<h3 id="бесплатные-каналы-привлечения-приоритизированные">Бесплатные
+каналы привлечения (приоритизированные)</h3>
+<h4 id="seo-content-hub-приоритет-максимальный">1. SEO Content Hub
+(Приоритет: МАКСИМАЛЬНЫЙ)</h4>
+<p><strong>Почему:</strong> Долгосрочный, компаундный рост. Каждая
+статья работает 24/7. - 15 статей уже есть → довести до 30 за 3 месяца -
+Фокус на long-tail запросы с низкой конкуренцией - Каждая статья =
+воронка в продукт</p>
+<h4 id="бесплатные-инструменты-как-growth-hack-приоритет-высокий">2.
+Бесплатные инструменты как growth-hack (Приоритет: ВЫСОКИЙ)</h4>
+<p><strong>Почему:</strong> Привлекают трафик + показывают ценность без
+оплаты. - /outline — генерация плана (бесплатный, безлимитный) -
+/summarize — сумматор (1 бесплатный) - /rewrite — рерайт (только для
+платных)</p>
+<p><strong>Воронка:</strong></p>
+<pre><code>Студент ищет &quot;план курсовой работы&quot;
+  → Находит /outline в Google/Yandex
+  → Генерирует план бесплатно
+  → Видит CTA: &quot;У вас уже есть работа? Отформатируем по ГОСТу&quot;
+  → Переходит на /create
+  → Пробует бесплатно (30 стр.)
+  → Видит результат → платит 159₽</code></pre>
+<h4 id="партизанский-маркетинг-в-соцсетях-приоритет-высокий">3.
+Партизанский маркетинг в соцсетях (Приоритет: ВЫСОКИЙ)</h4>
+<p><strong>Формат:</strong> Кейсы, а не реклама. - “Препод вернул работу
+из-за отступов? Я нашёл решение за 2 минуты” - “Потратил 8 часов на
+оформление. Потом узнал про SmartFormat. Теперь 2 минуты.” - Короткие
+видео (30 сек screencast: загрузка → результат)</p>
+<p><strong>Каналы маркетолога:</strong> - Telegram: студенческие чаты
+крупных вузов (МГУ, ВШЭ, СПбГУ, МФТИ, и т.д.) - VK: группы вузов, группы
+по типам работ - Форумы: студенческие форумы, ответы на вопросы</p>
+<h4 id="youtube-shorts-vk-clips-reels-приоритет-средний">4. YouTube
+Shorts / VK Clips / Reels (Приоритет: СРЕДНИЙ)</h4>
+<p><strong>Формат:</strong> 30-60 сек screencast. - Показать магию:
+кривой файл → загрузка методички → идеальный результат - Акцент на “ваша
+методичка” (уникальность) - CTA: “Попробуйте бесплатно — ссылка в
+описании”</p>
+<h4 id="партнерства-приоритет-средний-m2-m3">5. Партнерства (Приоритет:
+СРЕДНИЙ, M2-M3)</h4>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 41%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>Партнер</th>
+<th>Что предложить</th>
+<th>Что получить</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Студенческие блогеры (YouTube/Telegram 10k+)</td>
+<td>Бесплатный Pro на год</td>
+<td>Обзор/рекомендация</td>
+</tr>
+<tr>
+<td>Text.ru / eTXT</td>
+<td>Взаимный трафик (“отформатировал → проверь уникальность”)</td>
+<td>Бренд, пользователи</td>
+</tr>
+<tr>
+<td>Студенческие паблики</td>
+<td>Бесплатные обработки для админов</td>
+<td>Посты, охват</td>
+</tr>
+</tbody>
+</table>
+<h3 id="сезонный-календарь">Сезонный календарь</h3>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 53%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Период</th>
+<th>Активность студентов</th>
+<th>Действия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Февраль-Март</strong></td>
+<td>Написание курсовых, подготовка</td>
+<td>SEO-контент “как написать курсовую”</td>
+</tr>
+<tr>
+<td><strong>Апрель</strong></td>
+<td>Дедлайны курсовых</td>
+<td>Усиленный outreach, “срочное оформление”</td>
+</tr>
+<tr>
+<td><strong>Май-Июнь</strong></td>
+<td>ПИКОВЫЙ: защита дипломов/ВКР</td>
+<td>Максимальная активность, сезонные лендинги</td>
+</tr>
+<tr>
+<td><strong>Июль-Август</strong></td>
+<td>МЕРТВЫЙ СЕЗОН</td>
+<td>Разработка, подготовка контента</td>
+</tr>
+<tr>
+<td><strong>Сентябрь-Октябрь</strong></td>
+<td>Начало семестра, планирование</td>
+<td>“Как спланировать курсовую”</td>
+</tr>
+<tr>
+<td><strong>Ноябрь-Январь</strong></td>
+<td>Заочники, сессия</td>
+<td>Второй пик, “курсовая к сессии”</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Важно:</strong> Сейчас февраль 2026 — до пикового сезона
+(май-июнь) ~3 месяца. План рассчитан на готовность к пику.</p>
+<hr />
+<h2 id="продуктовые-детали">ПРОДУКТОВЫЕ ДЕТАЛИ</h2>
+<h3 id="архитектура-новых-инструментов">Архитектура новых
+инструментов</h3>
+<p>Все новые инструменты используют существующую инфраструктуру: -
+<strong>AI Gateway</strong> (<code>src/lib/ai/</code>) — уже есть 11
+моделей с fallback - <strong>Rate Limiting</strong>
+(<code>src/lib/ai/rate-limiter.ts</code>) — уже есть RPM/RPD трекинг -
+<strong>Auth</strong> (<code>src/lib/auth/</code>) — уже есть Supabase
+Auth - <strong>Payment</strong> (<code>src/lib/payment/</code>) — уже
+есть Lava.top</p>
+<p><strong>Паттерн для каждого нового инструмента:</strong></p>
+<pre><code>1. API route: src/app/api/{tool}/route.ts
+   → Валидация входа
+   → Проверка лимитов (free/paid)
+   → Вызов AI Gateway
+   → Возврат результата
+
+2. Page: src/app/{tool}/page.tsx
+   → Форма ввода
+   → Результат с CTA
+   → SEO-метаданные
+
+3. Prompt: src/lib/ai/prompts.ts
+   → Добавить create{Tool}Prompt()</code></pre>
+<h3 id="форматирование-без-методички-библиотека-вузов-детали">Форматирование
+без методички + Библиотека вузов — детали</h3>
+<p><strong>Техническая база:</strong> - <code>DEFAULT_GOST_RULES</code>
+уже определены в <code>src/types/formatting-rules.ts</code> (строки
+466-863) — полный ГОСТ 7.32 - <code>mergeWithDefaults()</code> уже
+заполняет пробелы дефолтами - <code>parseFormattingRules()</code> уже
+имеет fallback на DEFAULT_GOST_RULES при ошибке</p>
+<p><strong>Что нужно сделать:</strong></p>
+<ol type="1">
+<li><strong>UI на /create:</strong> сделать методичку опциональной
+<ul>
+<li>Изменить <code>canProcess</code> → <code>sourceDoc.isValid</code>
+(без проверки requirementsDoc)</li>
+<li>Добавить радио-группу: “Загрузить методичку” / “Выбрать вуз” /
+“Стандартный ГОСТ”</li>
+<li>Добавить выпадающий список типа работы (диплом, курсовая, ВКР,
+реферат, эссе, отчет)</li>
+</ul></li>
+<li><strong>API <code>/api/extract-rules</code>:</strong> обработать
+отсутствие методички
+<ul>
+<li>Если нет requirementsFile → вернуть DEFAULT_GOST_RULES, confidence:
+0, warnings: [“Используются стандартные правила ГОСТ 7.32”]</li>
+<li>Если выбран вуз → подгрузить сохранённую методичку из
+библиотеки</li>
+</ul></li>
+<li><strong>Библиотека методичек (MVP):</strong>
+<ul>
+<li>Структура:
+<code>src/lib/university-guidelines/universities.ts</code> — массив
+объектов</li>
+</ul>
+<pre><code>{ id, name, shortName, city, logoUrl?, guidelinesUrl, lastUpdated }</code></pre>
+<ul>
+<li>Начальный список (10-15 вузов): МГУ, ВШЭ, СПбГУ, МФТИ, МГТУ им.
+Баумана, РАНХиГС, РУДН, КФУ, УрФУ, НГУ, ТГУ, ЮФУ, ДВФУ, НГТУ</li>
+<li>Методички хранятся в Supabase Storage (или просто в
+/public/guidelines/)</li>
+<li>При выборе вуза — показать превью первой страницы методички</li>
+</ul></li>
+<li><strong>Краудсорсинг (M2+):</strong>
+<ul>
+<li>После обработки: “Хотите помочь студентам вашего вуза? Разрешите
+сохранить методичку”</li>
+<li>Checkbox + согласие → методичка сохраняется в Supabase Storage</li>
+<li>Модерация перед добавлением в библиотеку</li>
+</ul></li>
+</ol>
+<h3 id="чат-с-методичкой-детали">Чат с методичкой — детали</h3>
+<p><strong>Как работает:</strong> 1. Пользователь загружает методичку →
+текст уже парсится в <code>guidelinesText</code> 2. На странице
+<code>/confirm-rules/[jobId]</code> появляется кнопка “Спросить про
+методичку” 3. Открывается чат-виджет (боковая панель или модальное окно)
+4. Промпт:
+<code>Ты — эксперт по оформлению научных работ. Вот методичка: {guidelinesText}. Ответь на вопрос студента: {question}</code>
+5. Лимиты: 3 вопроса бесплатно, 10 для Разовой, безлимит для Pro</p>
+<p><strong>Примеры вопросов студентов:</strong> - “Какой шрифт нужен по
+этой методичке?” - “Сколько источников минимум в списке литературы?” -
+“Нужно ли нумеровать приложения?” - “Какой объем работы должен
+быть?”</p>
+<h3 id="генерация-плана-детали">Генерация плана — детали</h3>
+<p><strong>Форма ввода:</strong> - Тип работы (выпадающий: курсовая,
+диплом, ВКР, реферат, эссе, отчет) - Тема работы (текстовое поле) -
+Специальность/направление (опционально) - Количество глав (по умолчанию:
+3 для курсовой, 4 для диплома)</p>
+<p><strong>Результат:</strong> - Структурированный план (Введение, Глава
+1, 1.1, 1.2, …, Заключение, Список литературы) - Кнопки: “Копировать”,
+“Скачать .txt”, “Отформатировать работу →” - CTA: “Уже написали?
+Отформатируйте по ГОСТу бесплатно!”</p>
+<h3 id="hook-offer-улучшение-детали">Hook-offer улучшение — детали</h3>
+<p><strong>Текущее состояние:</strong> Полная версия сохраняется,
+обрезается до 30 стр., после оплаты разблокируется.</p>
+<p><strong>Улучшение:</strong> 1. Показать первые 3 страницы
+отформатированного документа в HTML-preview 2. Остальные страницы —
+размытый overlay с CTA 3. Статистика: “Исправлено X нарушений” /
+“Соответствие ГОСТу: Y%” 4. До/После визуальное сравнение (уже есть
+side-by-side, усилить) 5. Социальное доказательство: “Z студентов уже
+отформатировали работы”</p>
+<hr />
+<h2 id="монетизация">МОНЕТИЗАЦИЯ</h2>
+<h3 id="текущие-тарифы-не-менять-в-m1">Текущие тарифы (не менять в
+M1)</h3>
+<table>
+<thead>
+<tr>
+<th>Тариф</th>
+<th>Цена</th>
+<th>Включено</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Пробный</td>
+<td>0₽</td>
+<td>1 док, до 30 стр</td>
+</tr>
+<tr>
+<td>Разовая</td>
+<td>159₽</td>
+<td>1 док, без ограничений</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>399₽/мес</td>
+<td>10 док/мес</td>
+</tr>
+</tbody>
+</table>
+<h3 id="расширение-тарифов-новыми-инструментами-m2">Расширение тарифов
+новыми инструментами (M2)</h3>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Free</th>
+<th>Разовая (159₽)</th>
+<th>Pro (399₽/мес)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Форматирование</td>
+<td>1 (30 стр)</td>
+<td>1 полный</td>
+<td>10/мес</td>
+</tr>
+<tr>
+<td>Чат с методичкой</td>
+<td>3 вопроса</td>
+<td>10 вопросов</td>
+<td>Безлимит</td>
+</tr>
+<tr>
+<td>Генерация плана</td>
+<td>Безлимит</td>
+<td>Безлимит</td>
+<td>Безлимит</td>
+</tr>
+<tr>
+<td>Сумматор</td>
+<td>1</td>
+<td>3</td>
+<td>Безлимит</td>
+</tr>
+<tr>
+<td>Рерайт</td>
+<td>—</td>
+<td>1</td>
+<td>10/мес</td>
+</tr>
+<tr>
+<td>Грамматика</td>
+<td>—</td>
+<td>1</td>
+<td>Безлимит</td>
+</tr>
+<tr>
+<td>Подбор литературы</td>
+<td>—</td>
+<td>10 источников</td>
+<td>50/мес</td>
+</tr>
+</tbody>
+</table>
+<h3 id="m3-годовая-подписка">M3: Годовая подписка</h3>
+<ul>
+<li>2990₽/год (249₽/мес, экономия 37%)</li>
+<li>Безлимитные документы и инструменты</li>
+</ul>
+<h3 id="эксперименты-по-ценообразованию-m2-после-данных">Эксперименты по
+ценообразованию (M2, после данных)</h3>
+<ul>
+<li>A/B тест: 159₽ vs 129₽ vs 199₽ (Разовая)</li>
+<li>A/B тест: 399₽ vs 299₽ (Pro)</li>
+<li>Bundle: “Форматирование + Рерайт” за 199₽</li>
+</ul>
+<hr />
+<h2 id="метрики-и-kpi">МЕТРИКИ И KPI</h2>
+<h3 id="ежедневный-dashboard">Ежедневный dashboard</h3>
+<ul>
+<li>Новые пользователи | Обработано документов | Конверсия в оплату |
+Доход</li>
+</ul>
+<h3 id="еженедельная-аналитика">Еженедельная аналитика</h3>
+<ul>
+<li>Органический трафик по страницам | Bounce rate | Топ запросов |
+Воронка</li>
+</ul>
+<h3 id="целевые-kpi">Целевые KPI</h3>
+<table>
+<thead>
+<tr>
+<th>Метрика</th>
+<th>M1</th>
+<th>M2</th>
+<th>M3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAU (веб)</td>
+<td>500</td>
+<td>1500</td>
+<td>3000</td>
+</tr>
+<tr>
+<td>Обработано документов</td>
+<td>200</td>
+<td>600</td>
+<td>1500</td>
+</tr>
+<tr>
+<td>Платящих пользователей</td>
+<td>20</td>
+<td>80</td>
+<td>200</td>
+</tr>
+<tr>
+<td>MRR</td>
+<td>5К₽</td>
+<td>25К₽</td>
+<td>60К₽</td>
+</tr>
+<tr>
+<td>Органический трафик</td>
+<td>300</td>
+<td>800</td>
+<td>2000</td>
+</tr>
+<tr>
+<td>CR free→paid</td>
+<td>3%</td>
+<td>5%</td>
+<td>7%</td>
+</tr>
+<tr>
+<td>Статей в блоге</td>
+<td>20</td>
+<td>25</td>
+<td>30</td>
+</tr>
+<tr>
+<td>Реферальный viral coefficient</td>
+<td>—</td>
+<td>0.3</td>
+<td>0.5</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="риски">РИСКИ</h2>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 33%" />
+<col style="width: 23%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Риск</th>
+<th>Вероятность</th>
+<th>Влияние</th>
+<th>Митигация</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Конкурент добавит методичку</td>
+<td>Средняя</td>
+<td>Высокое</td>
+<td>Скорость + библиотека методичек + UX moat</td>
+</tr>
+<tr>
+<td>Низкая конверсия free→paid</td>
+<td>Высокая</td>
+<td>Критическое</td>
+<td>A/B тесты preview/цены/messaging. Если CR&lt;2% после 1 мес — pivot
+к модели “все бесплатно, платить за рерайт”</td>
+</tr>
+<tr>
+<td>Сезонность (лето = 0)</td>
+<td>Определенная</td>
+<td>Среднее</td>
+<td>Расширение на научные статьи, PhD, корпоративные отчеты</td>
+</tr>
+<tr>
+<td>AI-лимиты/стоимость</td>
+<td>Средняя</td>
+<td>Высокое</td>
+<td>11 моделей с fallback. Мониторинг расходов. Переход на cheaper
+models для простых задач</td>
+</tr>
+<tr>
+<td>GostDiploma бесплатный</td>
+<td>Определенная</td>
+<td>Среднее</td>
+<td>Конкурировать ценностью (методичка), не ценой</td>
+</tr>
+<tr>
+<td>Маркетолог не приводит клиентов</td>
+<td>Средняя</td>
+<td>Среднее</td>
+<td>Параллельно развивать SEO (не зависит от маркетолога). Пересмотр
+split через 2 мес</td>
+</tr>
+</tbody>
+</table>
+<h3 id="plan-b-если-первые-2-месяца-не-дают-результатов">Plan B (если
+первые 2 месяца не дают результатов)</h3>
+<ol type="1">
+<li>Увеличить бесплатный лимит до 50 стр. (покроет курсовые)</li>
+<li>Сделать все инструменты бесплатными, монетизировать только
+рерайт</li>
+<li>Добавить B2B оффер для вузов (99₽/студент/год)</li>
+<li>Telegram-бот как основной канал (если SEO не работает)</li>
+</ol>
+<hr />
+<h2 id="позиционирование">ПОЗИЦИОНИРОВАНИЕ</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 33%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Конкурент</th>
+<th>Их слабость</th>
+<th>Наш messaging</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GostDiploma (бесплатный, 23k users)</td>
+<td>Шаблонный ГОСТ без методички</td>
+<td>“Шаблонное оформление ≠ требования вашего вуза. Загрузите
+методичку.”</td>
+</tr>
+<tr>
+<td>Kampus/Studgen (генераторы)</td>
+<td>Генерация контента = риск</td>
+<td>“Мы форматируем ВАШУ работу — никаких рисков для академической
+честности.”</td>
+</tr>
+<tr>
+<td>Avtor24/Work5 (ручные, 4000₽+)</td>
+<td>Дорого и долго</td>
+<td>“159₽ за 2 минуты вместо 27 800₽ за 21 день.”</td>
+</tr>
+<tr>
+<td>Шаблоны Word (бесплатные)</td>
+<td>Ручная работа, ошибки</td>
+<td>“Никаких технических навыков. Загрузите → Скачайте. Бесплатно.”</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="бэклог-после-m3">БЭКЛОГ (после M3)</h2>
+<p>Не планируем сейчас, но держим в уме: - <strong>Telegram-бот</strong>
+— когда появится трафик и product-market fit - <strong>Библиотека
+методичек (масштабирование)</strong> — MVP в M1 (10-15 вузов),
+краудсорсинг с M2, к M3 цель 50+ вузов - <strong>B2B University
+Tier</strong> — институциональная лицензия - <strong>LaTeX
+экспорт</strong> — для технических специальностей - <strong>Мобильное
+приложение</strong> — если бот не покроет потребность</p>
+<hr />
+<h2 id="проверка-плана">ПРОВЕРКА ПЛАНА</h2>
+<h3 id="как-валидировать-каждую-фазу">Как валидировать каждую фазу</h3>
+<ol type="1">
+<li><strong>Фаза 0:</strong> Metrika/GA работают, воронка отображается →
+переходим к M1</li>
+<li><strong>Неделя 1:</strong> CR free→paid замерен до и после улучшения
+hook-offer</li>
+<li><strong>Неделя 2:</strong> &gt;30% пользователей используют чат с
+методичкой</li>
+<li><strong>Неделя 3:</strong> /outline генерирует &gt;100 планов/мес,
+&gt;10% переходят на /create</li>
+<li><strong>Неделя 4:</strong> Новые статьи начинают индексироваться
+(Webmaster)</li>
+<li><strong>M2:</strong> Органический трафик &gt;800, MRR &gt;25К₽</li>
+<li><strong>M3:</strong> Органический трафик &gt;2000, MRR &gt;60К₽,
+готовность к сезону защит</li>
+</ol>
+<h3 id="e2e-тестирование">E2E тестирование</h3>
+<ul>
+<li>Пройти путь пользователя: лендинг → /create → загрузка → результат →
+оплата → скачивание</li>
+<li>Проверить каждый новый инструмент: /outline, /summarize,
+/rewrite</li>
+<li>Проверить SEO: все страницы в индексе, метаданные корректны, JSON-LD
+валиден</li>
+</ul>
+</body>
+</html>

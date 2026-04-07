@@ -7,20 +7,18 @@ paths: ["**"]
 Always check MCP before asking the user or guessing.
 
 ## Code & repos
-- **filesystem** — read/write project files (scoped to repo)
-- **Git / GitLab** — commits, branches, diffs, MR context
+- **Git / GitHub** — commits, branches, diffs, PR context
 - Inspect only relevant files/dirs
-- Use Git/GitLab for history, blame, diff, pipeline status
+- Use Git for history, blame, diff
 - Do NOT ask user to paste files reachable via MCP
 
 ## Databases & analytics
-- **PostgreSQL** — operational schema, queries, migrations
-- **ClickHouse** — analytical schema, heavy queries
+- **PostgreSQL (Supabase)** — schema, queries, migrations
 - Always introspect schemas via MCP before designing
 - Never assume table/column names — read via MCP
 
 ## CI/CD & infrastructure
-- **GitLab CI / GitLab MCP** — pipelines, jobs, logs, environments
+- **GitHub Actions** — CI pipeline (lint, typecheck, test, build): `.github/workflows/ci.yml`
 - **Vercel** — deployments, build logs, project config
 - Inspect pipeline status and logs before proposing fixes
 - Edit CI configs based on real failures, not assumptions
