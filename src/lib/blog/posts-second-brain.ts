@@ -2,10 +2,10 @@ import type { BlogPost } from "./types";
 
 export const blogPostsSecondBrain: BlogPost[] = [
   {
-    slug: "nejroset-dlya-kursovoj-raboty",
-    coverImage: undefined,
+    slug: "kursovaya-s-ai-botom",
+    coverImage: "/blog/nejroset-dlya-kursovoj-raboty.png",
     title:
-      "Нейросеть для курсовой работы: как AI-бот ускоряет подготовку в 3 раза",
+      "Курсовая с AI-ботом: от источников до сдачи за 6 этапов",
     description:
       "Как использовать нейросеть и AI-бота в Telegram для написания курсовой работы: поиск источников, структура, редактура и оформление по ГОСТу.",
     datePublished: "2026-04-08",
