@@ -799,3 +799,50 @@ export function referralWeeklyReminderEmail({
             </td>
           </tr>`);
 }
+
+interface PaymentAbandonedEmailParams {
+  offerType: "one_time" | "subscription" | "subscription_plus";
+}
+
+/**
+ * Письмо при незавершённой оплате (30 минут после инициации).
+ */
+export function paymentAbandonedEmail({ offerType }: PaymentAbandonedEmailParams): string {
+  const offerLabel =
+    offerType === "subscription" ? "подписку Pro (399 ₽/мес)"
+    : offerType === "subscription_plus" ? "подписку Pro Plus (1 499 ₽/мес)"
+    : "обработку документа (159 ₽)";
+
+  return emailLayout("Оплата не завершена", `
+          <!-- Content -->
+          <tr>
+            <td style="padding:32px 32px 24px;">
+              <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0a0a0a;line-height:1.3;">
+                Оплата не завершена
+              </h1>
+              <p style="margin:0 0 16px;font-size:14px;color:#666666;line-height:1.6;">
+                Ты начал оформлять ${offerLabel}, но что-то пошло не так. Бывает — карта не прошла, страница закрылась, отвлекли.
+              </p>
+              <p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.6;">
+                Документ всё ещё ждёт обработки. Нажми кнопку — и вернись к оплате.
+              </p>
+
+              <!-- CTA -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="https://diplox.online/create?ref=abandoned-30m"
+                       target="_blank"
+                       style="display:inline-block;padding:14px 32px;background-color:#0a0a0a;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.3px;">
+                      Вернуться к оплате
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:12px;color:#999999;line-height:1.5;">
+                Если ты уже оплатил — проигнорируй это письмо. Доступ активируется автоматически.
+              </p>
+            </td>
+          </tr>`);
+}

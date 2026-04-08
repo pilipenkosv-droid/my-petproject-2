@@ -16,7 +16,8 @@ export type EmailType =
   | "reactivation_14d"
   | "csat_low"
   | "csat_high"
-  | "marathon_blast";
+  | "marathon_blast"
+  | "payment_abandoned_30m";
 
 /**
  * Проверяет, было ли уже отправлено письмо данного типа пользователю
