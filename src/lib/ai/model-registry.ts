@@ -54,20 +54,20 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 1,
   },
 
-  // ── Groq (Llama 70B — основная рабочая лошадка, 14400 RPD) ──
+  // ── Cerebras Qwen 235B — лучший баланс качества/скорости, 60K TPM ──
   {
-    id: "groq-llama-3.3-70b",
-    displayName: "Groq Llama 3.3 70B",
+    id: "cerebras-qwen-3-235b",
+    displayName: "Cerebras Qwen 3 235B",
     protocol: "openai-compatible",
-    apiKeyEnv: "GROQ_API_KEY",
-    modelId: "llama-3.3-70b-versatile",
-    baseUrl: "https://api.groq.com/openai/v1",
-    limits: { rpm: 30, rpd: 14400, tpm: 6000 },
+    apiKeyEnv: "CEREBRAS_API_KEY",
+    modelId: "qwen-3-235b-a22b-instruct-2507",
+    baseUrl: "https://api.cerebras.ai/v1",
+    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
     supportsJsonMode: true,
     priority: 3,
   },
 
-  // ── OpenRouter (GPT-OSS 120B — подтверждён тестом) ──
+  // ── OpenRouter GPT-OSS 120B — подтверждён тестом и продом ──
   {
     id: "openrouter-gpt-oss-120b",
     displayName: "OpenRouter GPT-OSS 120B",
@@ -86,26 +86,15 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     },
   },
 
-  // ── Cerebras (GPT-OSS 120B + Qwen 235B — резерв, работают с Vercel) ──
+  // ── Groq Llama 70B — качественная, но жёсткий TPM лимит (6K) ──
   {
-    id: "cerebras-gpt-oss-120b",
-    displayName: "Cerebras GPT-OSS 120B",
+    id: "groq-llama-3.3-70b",
+    displayName: "Groq Llama 3.3 70B",
     protocol: "openai-compatible",
-    apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "gpt-oss-120b",
-    baseUrl: "https://api.cerebras.ai/v1",
-    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
-    supportsJsonMode: true,
-    priority: 6,
-  },
-  {
-    id: "cerebras-qwen-3-235b",
-    displayName: "Cerebras Qwen 3 235B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "qwen-3-235b-a22b-instruct-2507",
-    baseUrl: "https://api.cerebras.ai/v1",
-    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
+    apiKeyEnv: "GROQ_API_KEY",
+    modelId: "llama-3.3-70b-versatile",
+    baseUrl: "https://api.groq.com/openai/v1",
+    limits: { rpm: 30, rpd: 14400, tpm: 6000 },
     supportsJsonMode: true,
     priority: 7,
   },
