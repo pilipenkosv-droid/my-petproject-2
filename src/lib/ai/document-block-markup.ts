@@ -16,6 +16,8 @@ import {
   createBlockMarkupPrompt,
 } from "./block-markup-prompts";
 
+import type { BlockType } from "./block-markup-schemas";
+
 /** Максимум параграфов в одном AI-запросе */
 const CHUNK_SIZE = 150;
 
@@ -42,7 +44,7 @@ function createFallbackMarkup(
  */
 async function parseChunk(
   paragraphs: Array<{ index: number; text: string; style?: string }>
-): Promise<DocumentBlockMarkup> {
+): Promise<DocumentBlockMarkup & { modelId?: string }> {
   const response = await callAI({
     systemPrompt: BLOCK_MARKUP_SYSTEM_PROMPT,
     userPrompt: createBlockMarkupPrompt(paragraphs),
@@ -53,7 +55,82 @@ async function parseChunk(
   console.log(
     `[block-markup] Chunk (${paragraphs.length} paragraphs) parsed via ${response.modelName}`
   );
-  return parsed;
+  return { ...parsed, modelId: response.modelId };
+}
+
+/**
+ * Post-processing валидация: исправляет очевидные ошибки AI-разметки rule-based логикой.
+ * Не использует AI — работает моментально и бесплатно.
+ */
+function validateAndFixMarkup(
+  blocks: BlockMarkupItem[],
+  paragraphs: Array<{ index: number; text: string; style?: string }>
+): { blocks: BlockMarkupItem[]; fixes: string[] } {
+  const textMap = new Map(paragraphs.map((p) => [p.index, p]));
+  const fixes: string[] = [];
+
+  const fixed = blocks.map((block) => {
+    const para = textMap.get(block.paragraphIndex);
+    if (!para) return block;
+
+    const text = para.text.trim();
+    const style = para.style?.toLowerCase() ?? "";
+    let correctedType: BlockType | null = null;
+
+    // 1. Пустой параграф должен быть empty
+    if (text === "" && block.blockType !== "empty") {
+      correctedType = "empty";
+    }
+
+    // 2. Параграф с только числом (1-4 цифры) → page_number
+    if (/^\d{1,4}$/.test(text) && block.blockType !== "page_number" && block.blockType !== "toc_entry") {
+      correctedType = "page_number";
+    }
+
+    // 3. "Рисунок N" → figure_caption, не body_text
+    if (/^Рисунок\s+\d|^Рис\.\s*\d/i.test(text) && block.blockType === "body_text") {
+      correctedType = "figure_caption";
+    }
+
+    // 4. "Таблица N" → table_caption, не body_text
+    if (/^Таблица\s+\d|^Табл\.\s*\d/i.test(text) && block.blockType === "body_text") {
+      correctedType = "table_caption";
+    }
+
+    // 5. Heading стиль в Word → заголовок, не body_text
+    if (style.startsWith("heading") && block.blockType === "body_text") {
+      const level = parseInt(style.replace(/\D/g, ""), 10);
+      if (level >= 1 && level <= 4) {
+        correctedType = `heading_${level}` as BlockType;
+      }
+    }
+
+    // 6. Списочный маркер → list_item
+    if (/^[–\-•*]\s/.test(text) && block.blockType === "body_text") {
+      correctedType = "list_item";
+    }
+    if (/^[а-яa-z]\)\s|^\d+\)\s/i.test(text) && block.blockType === "body_text") {
+      correctedType = "list_item";
+    }
+
+    // 7. bibliography_entry без metadata.language → добавляем
+    if (block.blockType === "bibliography_entry" && !block.metadata?.language) {
+      const isEnglish = /[a-zA-Z]{3,}/.test(text) && !/[а-яА-Я]{3,}/.test(text);
+      return {
+        ...block,
+        metadata: { ...block.metadata, language: isEnglish ? "en" as const : "ru" as const },
+      };
+    }
+
+    if (correctedType) {
+      fixes.push(`[${block.paragraphIndex}] ${block.blockType} → ${correctedType}`);
+      return { ...block, blockType: correctedType, confidence: 0.8 };
+    }
+
+    return block;
+  });
+
+  return { blocks: fixed, fixes };
 }
 
 /**
@@ -62,7 +139,7 @@ async function parseChunk(
  */
 export async function parseDocumentBlocks(
   paragraphs: Array<{ index: number; text: string; style?: string }>
-): Promise<DocumentBlockMarkup> {
+): Promise<DocumentBlockMarkup & { modelId?: string }> {
   if (paragraphs.length === 0) {
     return { blocks: [], warnings: [] };
   }
@@ -70,7 +147,12 @@ export async function parseDocumentBlocks(
   // Маленький документ — один запрос
   if (paragraphs.length <= CHUNK_SIZE) {
     try {
-      return await parseChunk(paragraphs);
+      const result = await parseChunk(paragraphs);
+      const { blocks: validated, fixes } = validateAndFixMarkup(result.blocks, paragraphs);
+      if (fixes.length > 0) {
+        console.log(`[block-markup] Post-validation fixed ${fixes.length} blocks: ${fixes.join(", ")}`);
+      }
+      return { ...result, blocks: validated };
     } catch (error) {
       console.error("Error in AI block markup:", error);
       return createFallbackMarkup(paragraphs);
@@ -85,6 +167,7 @@ export async function parseDocumentBlocks(
   const allBlocks: BlockMarkupItem[] = [];
   const allWarnings: string[] = [];
   let failedChunks = 0;
+  let primaryModelId: string | undefined;
 
   const chunks: Array<{ index: number; text: string; style?: string }>[] = [];
   for (let i = 0; i < paragraphs.length; i += CHUNK_SIZE) {
@@ -97,6 +180,9 @@ export async function parseDocumentBlocks(
     try {
       const result = await parseChunk(chunk);
       allBlocks.push(...result.blocks);
+      if (!primaryModelId && result.modelId) {
+        primaryModelId = result.modelId;
+      }
       if (result.warnings) {
         allWarnings.push(...result.warnings);
       }
@@ -115,12 +201,19 @@ export async function parseDocumentBlocks(
     }
   }
 
+  // Post-validation: исправляем очевидные ошибки AI rule-based логикой
+  const { blocks: validated, fixes } = validateAndFixMarkup(allBlocks, paragraphs);
+  if (fixes.length > 0) {
+    console.log(`[block-markup] Post-validation fixed ${fixes.length} blocks: ${fixes.join(", ")}`);
+  }
+
   console.log(
-    `[block-markup] Done: ${chunks.length} chunks, ${failedChunks} failed, ${allBlocks.length} blocks total`
+    `[block-markup] Done: ${chunks.length} chunks, ${failedChunks} failed, ${validated.length} blocks total`
   );
 
   return {
-    blocks: allBlocks,
+    blocks: validated,
     warnings: allWarnings.length > 0 ? allWarnings : undefined,
+    modelId: primaryModelId,
   };
 }

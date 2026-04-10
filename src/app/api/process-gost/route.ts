@@ -107,7 +107,12 @@ export async function POST(request: NextRequest) {
     // Парсим структуру и размечаем блоки через AI
     await updateJobProgress(jobId, "analyzing", 20, "AI-разметка блоков документа");
     const docxStructure = await parseDocxStructure(sourceBuffer);
-    const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const enrichedParagraphs = blockMarkupResult.paragraphs;
+
+    if (blockMarkupResult.modelId) {
+      updateJob(jobId, { modelId: blockMarkupResult.modelId }).catch(() => {});
+    }
 
     // Анализируем документ
     await updateJobProgress(jobId, "analyzing", 50, "Проверка документа на соответствие ГОСТ");

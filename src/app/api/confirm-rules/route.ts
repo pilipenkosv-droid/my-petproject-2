@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
+import { getJob, updateJobProgress, updateJob, completeJob, failJob } from "@/lib/storage/job-store";
 import { getFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
@@ -81,7 +81,12 @@ export async function POST(request: NextRequest) {
     // Парсим структуру и размечаем блоки через AI
     await updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
     const docxStructure = await parseDocxStructure(sourceBuffer);
-    const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const enrichedParagraphs = blockMarkupResult.paragraphs;
+
+    if (blockMarkupResult.modelId) {
+      updateJob(jobId, { modelId: blockMarkupResult.modelId }).catch(() => {});
+    }
 
     // Анализируем документ
     await updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");

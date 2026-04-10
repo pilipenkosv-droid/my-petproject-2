@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { saveFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
-import { createJob, updateJobProgress, completeJob, failJob } from "@/lib/storage/job-store";
+import { createJob, updateJobProgress, updateJob, completeJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
@@ -135,7 +135,13 @@ export async function POST(request: NextRequest) {
 
     // Парсим структуру и размечаем блоки через AI
     const docxStructure = await parseDocxStructure(sourceBuffer);
-    const enrichedParagraphs = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const enrichedParagraphs = blockMarkupResult.paragraphs;
+
+    // Сохраняем model_id для корреляции с CSAT (fire-and-forget)
+    if (blockMarkupResult.modelId) {
+      updateJob(jobId, { modelId: blockMarkupResult.modelId }).catch(() => {});
+    }
 
     await updateJobProgress(jobId, "analyzing", 60, "Проверка документа на соответствие требованиям");
 

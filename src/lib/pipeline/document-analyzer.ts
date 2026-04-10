@@ -1334,7 +1334,7 @@ function checkDashes(
  */
 export async function enrichWithBlockMarkup(
   paragraphs: DocxParagraph[]
-): Promise<DocxParagraph[]> {
+): Promise<{ paragraphs: DocxParagraph[]; modelId?: string }> {
   const input = paragraphs.map((p) => ({
     index: p.index,
     text: p.text,
@@ -1348,7 +1348,7 @@ export async function enrichWithBlockMarkup(
     markup.blocks.map((b) => [b.paragraphIndex, b])
   );
 
-  return paragraphs.map((p) => {
+  const enriched = paragraphs.map((p) => {
     const block = blockMap.get(p.index);
     if (!block) return p;
 
@@ -1364,6 +1364,8 @@ export async function enrichWithBlockMarkup(
         : undefined,
     };
   });
+
+  return { paragraphs: enriched, modelId: markup.modelId };
 }
 
 /**

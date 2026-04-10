@@ -59,6 +59,9 @@ export interface JobState {
   // Текст методички (для чата с методичкой)
   guidelinesText?: string;
 
+  // AI-модель, использованная для основной обработки
+  modelId?: string;
+
   // Аналитика: привязка анонимных сессий
   sessionId?: string;
   yandexClientId?: string;
@@ -95,6 +98,7 @@ function rowToJob(row: Record<string, unknown>): JobState {
     workType: row.work_type as string | undefined,
     requirementsMode: row.requirements_mode as string | undefined,
     guidelinesText: row.guidelines_text as string | undefined,
+    modelId: row.model_id as string | undefined,
     sessionId: row.session_id as string | undefined,
     yandexClientId: row.yandex_client_id as string | undefined,
     referrer: row.referrer as string | undefined,
@@ -136,6 +140,7 @@ function jobToRow(
   if (updates.workType !== undefined) row.work_type = updates.workType;
   if (updates.requirementsMode !== undefined) row.requirements_mode = updates.requirementsMode;
   if (updates.guidelinesText !== undefined) row.guidelines_text = updates.guidelinesText;
+  if (updates.modelId !== undefined) row.model_id = updates.modelId;
   if (updates.sessionId !== undefined) row.session_id = updates.sessionId;
   if (updates.yandexClientId !== undefined) row.yandex_client_id = updates.yandexClientId;
   if (updates.referrer !== undefined) row.referrer = updates.referrer;

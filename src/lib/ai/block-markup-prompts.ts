@@ -55,7 +55,61 @@ export const BLOCK_MARKUP_SYSTEM_PROMPT = `Ты — эксперт по разм
 - Верни разметку для КАЖДОГО параграфа из входных данных
 - confidence: 0.0-1.0 — уверенность в определении типа
 - metadata.language обязателен для bibliography_entry
-- Если не уверен — ставь "unknown" с низким confidence`;
+- Если не уверен — ставь "unknown" с низким confidence
+
+ПРИМЕР ВВОДА:
+[0] <Normal> МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ
+[1] <Normal> Федеральное государственное бюджетное образовательное учреждение
+[2] <Normal> КУРСОВАЯ РАБОТА
+[3] <Normal> на тему: «Анализ финансовой отчётности предприятия»
+[4] <Normal> Выполнил: студент группы ФК-301 Иванов И.И.
+[5] <Normal> Москва 2026
+[6] <Normal>
+[7] <Heading1> СОДЕРЖАНИЕ
+[8] <Normal> Введение	3
+[9] <Normal> 1. Теоретические основы анализа	5
+[10] <Normal> 1.1 Понятие финансовой отчётности	5
+[11] <Normal>
+[12] <Heading1> ВВЕДЕНИЕ
+[13] <Normal> Актуальность темы исследования обусловлена необходимостью повышения эффективности управления финансами предприятий.
+[14] <Normal> – повышение прозрачности отчётности;
+[15] <Normal> – улучшение контроля за расходами.
+[16] <Heading1> 1 ТЕОРЕТИЧЕСКИЕ ОСНОВЫ АНАЛИЗА
+[17] <Heading2> 1.1 Понятие финансовой отчётности
+[18] <Normal> Финансовая отчётность представляет собой систему показателей, отражающих имущественное положение организации [1, с. 45].
+[19] <Normal> Таблица 1 – Основные формы финансовой отчётности
+[20] <Normal> Рисунок 1 – Структура бухгалтерского баланса
+[21] <Heading1> СПИСОК ИСПОЛЬЗОВАННЫХ ИСТОЧНИКОВ
+[22] <Normal> 1. Ковалёв, В. В. Финансовый анализ: методы и процедуры / В. В. Ковалёв. – М.: Финансы и статистика, 2022. – 560 с.
+[23] <Normal> 2. Porter, M. E. Competitive Strategy / M. E. Porter. – New York: Free Press, 2021. – 396 p.
+
+ПРИМЕР ВЫВОДА:
+{"blocks":[
+{"paragraphIndex":0,"blockType":"title_page","confidence":0.95},
+{"paragraphIndex":1,"blockType":"title_page","confidence":0.95},
+{"paragraphIndex":2,"blockType":"title_page","confidence":0.95},
+{"paragraphIndex":3,"blockType":"title_page","confidence":0.95},
+{"paragraphIndex":4,"blockType":"title_page","confidence":0.95},
+{"paragraphIndex":5,"blockType":"title_page","confidence":0.9},
+{"paragraphIndex":6,"blockType":"empty","confidence":1.0},
+{"paragraphIndex":7,"blockType":"toc","confidence":0.95},
+{"paragraphIndex":8,"blockType":"toc_entry","confidence":0.9},
+{"paragraphIndex":9,"blockType":"toc_entry","confidence":0.9},
+{"paragraphIndex":10,"blockType":"toc_entry","confidence":0.9},
+{"paragraphIndex":11,"blockType":"empty","confidence":1.0},
+{"paragraphIndex":12,"blockType":"heading_1","confidence":0.95},
+{"paragraphIndex":13,"blockType":"body_text","confidence":0.95},
+{"paragraphIndex":14,"blockType":"list_item","confidence":0.9},
+{"paragraphIndex":15,"blockType":"list_item","confidence":0.9},
+{"paragraphIndex":16,"blockType":"heading_1","confidence":0.95},
+{"paragraphIndex":17,"blockType":"heading_2","confidence":0.95},
+{"paragraphIndex":18,"blockType":"body_text","confidence":0.95},
+{"paragraphIndex":19,"blockType":"table_caption","confidence":0.95},
+{"paragraphIndex":20,"blockType":"figure_caption","confidence":0.95},
+{"paragraphIndex":21,"blockType":"bibliography_title","confidence":0.95},
+{"paragraphIndex":22,"blockType":"bibliography_entry","confidence":0.95,"metadata":{"language":"ru"}},
+{"paragraphIndex":23,"blockType":"bibliography_entry","confidence":0.95,"metadata":{"language":"en"}}
+]}`;
 
 /**
  * Создаёт промпт для разметки блоков документа
