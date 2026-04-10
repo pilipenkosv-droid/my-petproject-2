@@ -11,9 +11,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig, getAvailableModels } from "./model-registry";
 import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFailure } from "./rate-limiter";
 
-// Таймаут для AI вызовов: платные модели быстрее, бесплатные могут тормозить
-const AI_CALL_TIMEOUT_PAID_MS = 15000;
-const AI_CALL_TIMEOUT_FREE_MS = 30000;
+// Таймаут для AI вызовов: агрессивный — Vercel maxDuration=60s,
+// нужно успеть попробовать 3-4 модели
+const AI_CALL_TIMEOUT_PAID_MS = 10000;
+const AI_CALL_TIMEOUT_FREE_MS = 12000;
+
+/** Максимум моделей для попыток (Vercel 60s / 12s timeout = 5 попыток с запасом) */
+const MAX_MODEL_ATTEMPTS = 4;
 
 /** Платные провайдеры (по apiKeyEnv) */
 const PAID_PROVIDERS = new Set(["ANTHROPIC_API_KEY"]);
@@ -314,8 +318,14 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
   }
 
   const errors: string[] = [];
+  let attempts = 0;
 
   for (const model of models) {
+    if (attempts >= MAX_MODEL_ATTEMPTS) {
+      errors.push(`Достигнут лимит попыток (${MAX_MODEL_ATTEMPTS})`);
+      break;
+    }
+
     // Проверяем лимиты
     const available = await canUseModel(
       model.id,
@@ -327,6 +337,7 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
       continue;
     }
 
+    attempts++;
     try {
       let rawText: string;
       const timeout = PAID_PROVIDERS.has(model.apiKeyEnv)
