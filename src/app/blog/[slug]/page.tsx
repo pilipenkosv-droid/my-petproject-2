@@ -297,7 +297,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 function formatContent(content: string): string {
   // Сначала обрабатываем таблицы
   const tableRegex = /(\|.+\|\n)+/g;
-  let processedContent = content.replace(tableRegex, (tableMatch) => {
+  const processedContent = content.replace(tableRegex, (tableMatch) => {
     const lines = tableMatch.trim().split('\n').filter(line => line.trim());
     if (lines.length < 2) return tableMatch;
 

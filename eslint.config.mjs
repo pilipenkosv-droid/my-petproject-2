@@ -20,6 +20,8 @@ const eslintConfig = [
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_",
       }],
+      // Пустые интерфейсы используются как маркерные типы
+      "@typescript-eslint/no-empty-object-type": "warn",
     },
   },
 ];

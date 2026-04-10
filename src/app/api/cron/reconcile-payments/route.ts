@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
   console.log(`[reconcile] Done: ${JSON.stringify(summary)}`);
 
   // Разблокировка файлов для оплаченных, но не разблокированных jobs
-  let unlockSummary = { unlocked: 0, failed: 0 };
+  const unlockSummary = { unlocked: 0, failed: 0 };
   try {
     const { data: stuckPayments } = await supabase
       .from("payments")

@@ -46,6 +46,7 @@ function PaymentSuccessContent() {
     }
 
     const startTime = Date.now();
+    // eslint-disable-next-line prefer-const
     let timer: ReturnType<typeof setInterval>;
 
     const poll = async () => {
