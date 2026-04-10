@@ -147,7 +147,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Неизвестная ошибка";
       animatedProgress.fail(msg);
-      setIsProcessing(false);
+      // НЕ сбрасываем isProcessing — ProcessingStatus покажет ошибку
+      // с кнопкой «Попробовать снова» (которая и вызовет setIsProcessing(false))
     }
   }, [rules, jobId, animatedProgress, router]);
 
