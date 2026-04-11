@@ -123,10 +123,14 @@ export const BLOCK_MARKUP_SYSTEM_PROMPT = `Ты — эксперт по разм
 ]}`;
 
 /**
- * Создаёт промпт для разметки блоков документа
+ * Создаёт промпт для разметки блоков документа.
+ *
+ * @param paragraphs — параграфы для разметки
+ * @param context — опциональный контекст: текущий раздел, предыдущие параграфы
  */
 export function createBlockMarkupPrompt(
-  paragraphs: Array<{ index: number; text: string; style?: string }>
+  paragraphs: Array<{ index: number; text: string; style?: string }>,
+  context?: { sectionHeading?: string; overlapParagraphs?: Array<{ index: number; text: string; blockType?: string }> }
 ): string {
   const lines = paragraphs.map((p) => {
     const style = p.style ? ` <${p.style}>` : "";
@@ -134,10 +138,23 @@ export function createBlockMarkupPrompt(
     return `[${p.index}]${style} ${text}`;
   });
 
-  return `Разметь тип каждого параграфа документа.
+  // Контекст: текущий раздел + предыдущие параграфы
+  let contextBlock = "";
+  if (context?.sectionHeading) {
+    contextBlock += `\nТекущий раздел документа: "${context.sectionHeading}"\n`;
+  }
+  if (context?.overlapParagraphs && context.overlapParagraphs.length > 0) {
+    const overlapLines = context.overlapParagraphs.map((p) => {
+      const text = p.text.length > 100 ? p.text.slice(0, 100) + "..." : p.text;
+      return `  [${p.index}] (${p.blockType || "?"}) ${text}`;
+    });
+    contextBlock += `\nПредыдущие параграфы (уже размечены, НЕ включай их в ответ):\n${overlapLines.join("\n")}\n`;
+  }
 
-Параграфы:
+  return `Разметь тип каждого параграфа документа.
+${contextBlock}
+Параграфы для разметки:
 ${lines.join("\n")}
 
-Верни JSON с массивом blocks — по одной записи на каждый параграф.`;
+Верни JSON с массивом blocks — по одной записи на КАЖДЫЙ параграф из списка выше (НЕ включай предыдущие).`;
 }

@@ -166,15 +166,22 @@ function normalizeAiResponse(raw: unknown): unknown {
   return raw;
 }
 
+/** Контекст для чанка: заголовок секции + предыдущие параграфы (overlap) */
+interface ChunkContext {
+  sectionHeading?: string;
+  overlapParagraphs?: Array<{ index: number; text: string; blockType?: string }>;
+}
+
 /**
  * Размечает один чанк параграфов через AI
  */
 async function parseChunk(
-  paragraphs: Array<{ index: number; text: string; style?: string }>
+  paragraphs: Array<{ index: number; text: string; style?: string }>,
+  context?: ChunkContext
 ): Promise<DocumentBlockMarkup & { modelId?: string }> {
   const response = await callAI({
     systemPrompt: BLOCK_MARKUP_SYSTEM_PROMPT,
-    userPrompt: createBlockMarkupPrompt(paragraphs),
+    userPrompt: createBlockMarkupPrompt(paragraphs, context),
     temperature: 0.1,
     maxTokens: 4096,
   });
@@ -306,6 +313,36 @@ export async function parseDocumentBlocks(
     `[block-markup] Large document: ${paragraphs.length} paragraphs → ${chunks.length} structural chunks (${chunks.map(c => c.length).join(", ")} paragraphs)`
   );
 
+  // Определяем контекст для каждого чанка: текущий раздел + overlap
+  const OVERLAP_SIZE = 5;
+  const paraMap = new Map(paragraphs.map(p => [p.index, p]));
+
+  // Предвычисляем заголовки секций для O(n) вместо O(n²)
+  const sectionHeadings = new Map<number, string>(); // index → heading text
+  let currentHeading = "";
+  for (const p of paragraphs) {
+    const text = p.text.trim();
+    const style = (p.style || "").toLowerCase();
+    if (style.startsWith("heading") || SECTION_BOUNDARY_RE.test(text) ||
+        /^\d+\.\d*\s+[А-ЯЁA-Z]/.test(text)) {
+      currentHeading = text.slice(0, 100);
+    }
+    if (currentHeading) sectionHeadings.set(p.index, currentHeading);
+  }
+
+  const chunkContexts: ChunkContext[] = chunks.map((chunk) => {
+    const ctx: ChunkContext = {};
+    const firstIdx = chunk[0].index;
+    // Ищем heading для первого параграфа (или ближайшего до него)
+    if (firstIdx > 0) {
+      for (let i = firstIdx - 1; i >= 0; i--) {
+        const h = sectionHeadings.get(i);
+        if (h) { ctx.sectionHeading = h; break; }
+      }
+    }
+    return ctx;
+  });
+
   const allBlocks: BlockMarkupItem[] = [];
   const allWarnings: string[] = [];
   let failedChunks = 0;
@@ -315,10 +352,24 @@ export async function parseDocumentBlocks(
   const PARALLEL_BATCH = 3;
   for (let bi = 0; bi < chunks.length; bi += PARALLEL_BATCH) {
     const batch = chunks.slice(bi, bi + PARALLEL_BATCH);
+
+    // Заполняем overlap из уже обработанных блоков
+    for (let offset = 0; offset < batch.length; offset++) {
+      const ci = bi + offset;
+      if (allBlocks.length > 0 && ci > 0) {
+        const lastBlocks = allBlocks.slice(-OVERLAP_SIZE);
+        chunkContexts[ci].overlapParagraphs = lastBlocks.map(b => ({
+          index: b.paragraphIndex,
+          text: (paraMap.get(b.paragraphIndex)?.text || "").slice(0, 100),
+          blockType: b.blockType,
+        }));
+      }
+    }
+
     const batchResults = await Promise.allSettled(
       batch.map((chunk, offset) => {
         const ci = bi + offset;
-        return parseChunk(chunk).then(result => ({ ci, chunk, result }));
+        return parseChunk(chunk, chunkContexts[ci]).then(result => ({ ci, chunk, result }));
       })
     );
 
