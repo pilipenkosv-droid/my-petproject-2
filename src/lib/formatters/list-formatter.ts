@@ -348,7 +348,7 @@ async function ensureNumberingXml(
   rules: FormattingRules
 ): Promise<void> {
   const numberingPath = "word/numbering.xml";
-  let numberingXml = await zip.file(numberingPath)?.async("string");
+  const numberingXml = await zip.file(numberingPath)?.async("string");
 
   if (numberingXml) {
     // numbering.xml существует — добавляем наши определения
