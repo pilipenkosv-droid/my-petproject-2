@@ -19,6 +19,7 @@ import { applyTextFixesToXmlParagraph } from "../formatters/text-fixes-xml-forma
 import { applyCaptionNumbering } from "../formatters/caption-numbering-formatter";
 import { applyTocGeneration } from "../formatters/toc-generator";
 import { applyAiCaptions } from "../formatters/ai-caption-generator";
+import { applyDocumentCleanup } from "../formatters/document-cleanup-formatter";
 import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
 import { LAVA_CONFIG } from "../payment/config";
 import {
@@ -175,8 +176,11 @@ async function createFormattedDocumentXml(
   // Применяем текстовые замены (NBSP, кавычки, тире, сокращения)
   const intermediateBuffer = await formatter.saveDocument();
 
+  // Очистка: нумерация заголовков, пустые параграфы в таблицах, overflow рисунков, лишние пустые строки
+  const afterCleanup = await applyDocumentCleanup(intermediateBuffer, enrichedParagraphs, rules);
+
   const afterTextFixes = await applyAllTextFixes(
-    intermediateBuffer,
+    afterCleanup,
     enrichedParagraphs
   );
 
