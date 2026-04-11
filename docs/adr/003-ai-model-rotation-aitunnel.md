@@ -1,6 +1,6 @@
 # ADR-003: Ротация AI-моделей и подключение AITUNNEL
 
-**Дата:** 2026-04-11
+**Дата:** 2026-04-11 (обновлено 2026-04-11)
 **Статус:** Принято
 **Контекст:** CSAT 2.1/5, 80% трафика на слабой 8B модели, 5 из 8 моделей мертвы
 
@@ -30,10 +30,14 @@ AI Gateway использовал 8 моделей, из которых:
 | Priority | ID | Провайдер | Модель | Тип | Стоимость |
 |----------|----|-----------|--------|-----|-----------|
 | 1 | gemini-2.5-flash-lite | Google (прямой) | Gemini 2.5 Flash Lite | бесплатный | $0, лимит 20 RPD |
-| 2 | aitunnel-gemini-flash-lite | AITUNNEL | Gemini 2.5 Flash Lite | платный | ~19₽/1M input |
-| 3 | cerebras-qwen-3-235b | Cerebras | Qwen 3 235B | бесплатный | $0, лимит 200 RPD |
-| 4 | aitunnel-llama-3.3-70b | AITUNNEL | Llama 3.3 70B | платный | ~23₽/1M input |
+| 2 | vercel-gemini-flash-lite | Vercel AI Gateway | Gemini 2.5 Flash Lite | платный | $0.10/1M in ($5 free credit) |
+| 3 | aitunnel-gemini-flash-lite | AITUNNEL | Gemini 2.5 Flash Lite | платный | ~19₽/1M in (дожигаем 1150₽) |
+| 8 | cerebras-qwen-3-235b | Cerebras | Qwen 3 235B | бесплатный | $0, ~59% success rate |
 | 10 | cerebras-llama-3.1-8b | Cerebras | Llama 3.1 8B | аварийный | $0, слабая модель |
+
+**Vercel AI Gateway** — основной платный провайдер. Endpoint: `https://ai-gateway.vercel.sh/v1/`, OpenAI-compatible. Встроенный fallback между Vertex AI и Google. $5 free credit хватит на ~125 дней при 100 запросов/день. После исчерпания — auto-billing с привязанной карты.
+
+**AITUNNEL** — временный fallback для дожигания баланса 1150₽. Когда кончится — удалить `AITUNNEL_API_KEY` из Vercel env.
 
 ### 3. Защита от таймаутов
 
@@ -56,11 +60,12 @@ AI Gateway использовал 8 моделей, из которых:
 
 ## Стоимость
 
-При текущем трафике (~100 AI-запросов/день, ~10K токенов/запрос):
-- Бесплатные модели покроют ~220 запросов/день (20 Gemini + 200 Cerebras)
-- AITUNNEL используется только при исчерпании бесплатных лимитов
-- Расход AITUNNEL: ~20-50₽/день → ~600-1500₽/мес
-- Баланс 1150₽ хватит на 3-4 недели
+При текущем трафике (~100 AI-запросов/день, ~2500 tok input + 500 tok output/запрос):
+- Бесплатный Gemini покроет 20 RPD
+- Vercel AI Gateway: ~$0.04/день → ~$1.20/мес (96₽)
+- $5 free credit хватит на ~125 дней
+- AITUNNEL (fallback): ~7.68₽/день если бы был основным, но реально ~0₽ (Vercel не падает)
+- Cerebras: бесплатный, но ненадёжный (59% success) — только как страховка
 
 ## Альтернативы рассмотренные
 
