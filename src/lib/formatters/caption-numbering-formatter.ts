@@ -28,8 +28,8 @@ const FIGURE_CAPTION_PATTERN = /^(Рисунок|Рис\.?)\s*(\d+(?:\.\d+)?)/i;
 const TABLE_CAPTION_PATTERN = /^(Таблица|Табл\.?)\s*(\d+(?:\.\d+)?)/i;
 
 // Паттерны для ссылок в тексте (не в начале строки)
-const FIGURE_REF_PATTERN = /(рисунок|рисунке|рисунка|рисунком|рис\.?)\s*(\d+(?:\.\d+)?)/gi;
-const TABLE_REF_PATTERN = /(таблица|таблице|таблицы|таблицей|таблицу|табл\.?)\s*(\d+(?:\.\d+)?)/gi;
+const FIGURE_REF_PATTERN = /(рисунок|рисунке|рисунка|рисунком|рис\.?)\s*№?\s*(\d+(?:\.\d+)?)/gi;
+const TABLE_REF_PATTERN = /(таблица|таблице|таблицы|таблицей|таблицу|табл\.?)\s*№?\s*(\d+(?:\.\d+)?)/gi;
 
 interface NumberMapping {
   oldNumber: string;

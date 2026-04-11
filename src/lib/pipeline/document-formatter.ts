@@ -20,6 +20,8 @@ import { applyCaptionNumbering } from "../formatters/caption-numbering-formatter
 import { applyTocGeneration } from "../formatters/toc-generator";
 import { applyAiCaptions } from "../formatters/ai-caption-generator";
 import { applyDocumentCleanup } from "../formatters/document-cleanup-formatter";
+import { applyListFormatting } from "../formatters/list-formatter";
+import { applyLandscapeForWideTables } from "../formatters/table-landscape-formatter";
 import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
 import { LAVA_CONFIG } from "../payment/config";
 import {
@@ -178,8 +180,11 @@ async function createFormattedDocumentXml(
   // Очистка: нумерация заголовков, пустые параграфы в таблицах, overflow рисунков, лишние пустые строки
   const afterCleanup = await applyDocumentCleanup(intermediateBuffer, enrichedParagraphs, rules);
 
+  // Списки: Word numbering (w:numPr) + удаление ручных маркеров
+  const afterLists = await applyListFormatting(afterCleanup, enrichedParagraphs, rules);
+
   const afterTextFixes = await applyAllTextFixes(
-    afterCleanup,
+    afterLists,
     enrichedParagraphs
   );
 
@@ -195,7 +200,10 @@ async function createFormattedDocumentXml(
   // TOC генерация — заменяет существующий TOC на field code или вставляет после title_page
   const { buffer: afterToc } = await applyTocGeneration(afterAiCaptions, enrichedParagraphs, rules);
 
-  return afterToc;
+  // Широкие таблицы → альбомная ориентация (ГОСТ 7.32-2017 п.6.7)
+  const afterLandscape = await applyLandscapeForWideTables(afterToc);
+
+  return afterLandscape;
 }
 
 /**
@@ -224,13 +232,16 @@ async function applyAllTextFixes(
   const enrichedMap = new Map(enrichedParagraphs.map((p) => [p.index, p]));
 
   // Типы, к которым НЕ применяем текстовые замены
-  const skipTextFixes = new Set(["title_page", "toc", "figure", "table", "empty"]);
+  const skipTextFixes = new Set(["toc", "figure", "table", "empty"]);
 
   let changed = false;
 
   for (const { node, paragraphIndex } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
     const blockType = enriched?.blockType || "unknown";
+
+    // Пропускаем все title_page* подтипы
+    if (blockType.startsWith("title_page")) continue;
 
     // Библиография — специфическая логика
     if (blockType === "bibliography_entry") {

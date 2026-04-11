@@ -24,6 +24,7 @@ import {
   children,
   createNode,
   ensurePPr,
+  removeChild,
 } from "../xml/docx-xml";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 import { FormattingRules } from "@/types/formatting-rules";
@@ -52,6 +53,9 @@ export async function applyDocumentCleanup(
   const enrichedMap = new Map(enrichedParagraphs.map((p) => [p.index, p]));
   const paragraphs = getParagraphsWithPositions(body);
 
+  // 0. Объединение многострочных заголовков (до нумерации!)
+  mergeMultilineHeadings(bodyChildren, paragraphs, enrichedMap);
+
   // 1. Нумерация заголовков
   applyHeadingNumbering(paragraphs, enrichedMap, rules);
 
@@ -68,7 +72,11 @@ export async function applyDocumentCleanup(
   // 5. Разрыв секции после титульной страницы (ГОСТ: нумерация начинается со 2-й стр.)
   insertSectionBreakAfterTitle(paragraphs, enrichedMap, bodyChildren);
 
-  // 6. Удаление лишних пустых параграфов в body (>2 подряд → 1)
+  // 6. Удаление page breaks из пустых параграфов перед заголовками
+  // heading_1 уже имеет pageBreakBefore — ручные page breaks создают пустую страницу
+  removeRedundantPageBreaks(bodyChildren, paragraphs, enrichedMap);
+
+  // 7. Удаление лишних пустых параграфов в body (>2 подряд → 1)
   // Выполняем ПОСЛЕДНИМ, т.к. меняет индексы
   collapseConsecutiveEmptyParagraphs(bodyChildren, paragraphs, enrichedMap);
 
@@ -79,6 +87,121 @@ export async function applyDocumentCleanup(
     type: "nodebuffer",
     compression: "DEFLATE",
   })) as Buffer;
+}
+
+/**
+ * Объединяет многострочные заголовки.
+ *
+ * Проблема: пользователь нажал Enter внутри заголовка → два параграфа.
+ * AI разметил первый как heading_N, второй как body_text.
+ * В TOC попадёт только первая строка.
+ *
+ * Эвристика для определения продолжения:
+ * - Следующий параграф идёт сразу после heading_N (bodyIndex + 1)
+ * - blockType = body_text или unknown
+ * - Текст заголовка не заканчивается типичным завершением (.!?)
+ * - Следующий текст начинается с маленькой буквы, предлога, или союза
+ * - Следующий текст короткий (<120 символов)
+ * - Следующий параграф не содержит характерных признаков body_text (ссылки [1], формулы)
+ */
+function mergeMultilineHeadings(
+  bodyChildren: OrderedXmlNode[],
+  paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
+  enrichedMap: Map<number, DocxParagraph>
+): void {
+  // Строим lookup: bodyIndex → paragraphInfo
+  const bodyIndexMap = new Map<number, typeof paragraphs[0]>();
+  for (const p of paragraphs) {
+    bodyIndexMap.set(p.bodyIndex, p);
+  }
+
+  const mergedPairs: Array<{ headingIdx: number; continuationIdx: number }> = [];
+
+  for (const { paragraphIndex, bodyIndex, node } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    if (!enriched?.blockType?.startsWith("heading_")) continue;
+
+    const headingText = getFullParagraphText(node).trim();
+    if (!headingText) continue;
+
+    // Ищем следующий параграф (bodyIndex + 1)
+    const nextInfo = bodyIndexMap.get(bodyIndex + 1);
+    if (!nextInfo) continue;
+
+    const nextEnriched = enrichedMap.get(nextInfo.paragraphIndex);
+    const nextType = nextEnriched?.blockType || "unknown";
+
+    // Только body_text или unknown могут быть продолжением
+    if (nextType !== "body_text" && nextType !== "unknown") continue;
+
+    const nextText = getFullParagraphText(nextInfo.node).trim();
+    if (!nextText) continue;
+
+    // Проверка длины: продолжение не должно быть длинным (это уже body_text)
+    if (nextText.length > 120) continue;
+
+    // Заголовок заканчивается типичным завершением — не нужно объединять
+    if (/[.!?:;]$/.test(headingText)) continue;
+
+    // Следующий текст содержит признаки body_text — не объединяем
+    if (/\[\d+/.test(nextText) || /^\d+\.\d+/.test(nextText)) continue;
+
+    // Следующий текст начинается с маленькой буквы, предлога, союза, или дефиса
+    const startsLowerOrConnector = /^[а-яёa-z\-(]/.test(nextText) ||
+      /^(?:и|в|на|с|по|из|к|о|об|от|у|для|при|без|над|под|до|за|через|между|а|но|или|что|как|где|который|которая|которое|которые)\s/i.test(nextText);
+
+    if (!startsLowerOrConnector) continue;
+
+    mergedPairs.push({ headingIdx: bodyIndex, continuationIdx: bodyIndex + 1 });
+  }
+
+  // Объединяем в обратном порядке (чтобы не сбить индексы)
+  for (let i = mergedPairs.length - 1; i >= 0; i--) {
+    const { headingIdx, continuationIdx } = mergedPairs[i];
+    const headingNode = bodyChildren[headingIdx];
+    const contNode = bodyChildren[continuationIdx];
+
+    if (!headingNode || !contNode) continue;
+
+    // Добавляем пробел + текст из continuation в heading
+    const headingRuns = getRuns(headingNode);
+    const contRuns = getRuns(contNode);
+
+    if (headingRuns.length > 0 && contRuns.length > 0) {
+      // Добавляем пробел-разделитель как текстовый run с форматированием первого heading run
+      const firstHeadingRun = headingRuns[0];
+      const rPr = findChild(firstHeadingRun, "w:rPr");
+
+      const spaceRun = createNode("w:r", undefined, [
+        ...(rPr ? [structuredCloneNode(rPr)] : []),
+        createNode("w:t", { "xml:space": "preserve" }, [{ "#text": " " }]),
+      ]);
+
+      // Переносим все runs из continuation в heading
+      const headingChildren = children(headingNode);
+      headingChildren.push(spaceRun);
+      for (const run of contRuns) {
+        headingChildren.push(run);
+      }
+
+      // Удаляем continuation параграф
+      bodyChildren.splice(continuationIdx, 1);
+
+      const headingText = getFullParagraphText(headingNode).trim();
+      console.log(`[cleanup] Merged multiline heading at bodyIndex ${headingIdx}: "${headingText.substring(0, 60)}..."`);
+    }
+  }
+
+  if (mergedPairs.length > 0) {
+    console.log(`[cleanup] Merged ${mergedPairs.length} multiline heading(s)`);
+  }
+}
+
+/**
+ * Глубокое копирование XML-узла (для клонирования rPr)
+ */
+function structuredCloneNode(node: OrderedXmlNode): OrderedXmlNode {
+  return JSON.parse(JSON.stringify(node));
 }
 
 /**
@@ -104,7 +227,7 @@ function applyHeadingNumbering(
     "введение", "заключение", "список литературы", "список использованных источников",
     "список источников", "содержание", "оглавление", "аннотация", "реферат",
     "приложение", "приложения", "abstract", "библиография",
-    "список использованной литературы",
+    "список использованной литературы", "выводы",
   ]);
 
   const counters = [0, 0, 0, 0]; // level1, level2, level3, level4
@@ -152,13 +275,10 @@ function applyHeadingNumbering(
 }
 
 /**
- * Очищает лишние пустые параграфы внутри ячеек таблиц.
+ * Очищает ВСЕ пустые параграфы внутри ячеек таблиц.
  *
- * Агрессивная очистка:
- * 1. Удаляет ВСЕ пустые leading параграфы (до первого непустого)
- * 2. Удаляет ВСЕ пустые trailing параграфы (после последнего непустого)
- * 3. Удаляет 2+ подряд пустых параграфов внутри контента
- * 4. В ячейке всегда остаётся минимум 1 параграф (требование Word)
+ * Удаляет любой пустой параграф: leading, trailing и внутри контента.
+ * В ячейке всегда остаётся минимум 1 параграф (требование Word).
  */
 function cleanTableCellEmptyParagraphs(bodyChildren: OrderedXmlNode[]): void {
   let cleaned = 0;
@@ -178,55 +298,17 @@ function cleanTableCellEmptyParagraphs(bodyChildren: OrderedXmlNode[]): void {
 
         if (paraIndices.length <= 1) continue;
 
-        // Определяем первый и последний непустой параграф
-        let firstNonEmpty = -1;
-        let lastNonEmpty = -1;
-        for (const idx of paraIndices) {
-          if (!isParagraphEmpty(cellChildren[idx])) {
-            if (firstNonEmpty === -1) firstNonEmpty = idx;
-            lastNonEmpty = idx;
-          }
-        }
-
+        // Собираем ВСЕ пустые параграфы для удаления
         const toRemove: number[] = [];
-
-        if (firstNonEmpty === -1) {
-          // Все параграфы пустые — оставляем только один
-          for (let i = 1; i < paraIndices.length; i++) {
-            toRemove.push(paraIndices[i]);
-          }
-        } else {
-          // Удаляем leading пустые (перед первым непустым)
-          for (const idx of paraIndices) {
-            if (idx < firstNonEmpty) toRemove.push(idx);
-            else break;
-          }
-
-          // Удаляем trailing пустые (после последнего непустого)
-          for (let i = paraIndices.length - 1; i >= 0; i--) {
-            if (paraIndices[i] > lastNonEmpty) toRemove.push(paraIndices[i]);
-            else break;
-          }
-
-          // Удаляем 2+ подряд пустых внутри контента
-          let consecutiveEmpty = 0;
-          for (const idx of paraIndices) {
-            if (idx <= firstNonEmpty || idx >= lastNonEmpty) continue;
-            if (isParagraphEmpty(cellChildren[idx])) {
-              consecutiveEmpty++;
-              if (consecutiveEmpty > 1) {
-                toRemove.push(idx);
-              }
-            } else {
-              consecutiveEmpty = 0;
-            }
+        for (const idx of paraIndices) {
+          if (isParagraphEmpty(cellChildren[idx])) {
+            toRemove.push(idx);
           }
         }
 
-        // Уникализируем и сортируем по убыванию (удаляем с конца)
-        const uniqueRemove = [...new Set(toRemove)].sort((a, b) => b - a);
-        for (const idx of uniqueRemove) {
-          // Всегда оставляем хотя бы 1 параграф
+        // Удаляем с конца, сохраняя минимум 1 параграф
+        const sorted = toRemove.sort((a, b) => b - a);
+        for (const idx of sorted) {
           const remainingP = cellChildren.filter((c) => "w:p" in c).length;
           if (remainingP > 1) {
             cellChildren.splice(idx, 1);
@@ -345,17 +427,20 @@ function updateGraphicExtent(
  * Вставляет разрыв секции (w:sectPr) в последний параграф title_page.
  * ГОСТ: нумерация страниц начинается со 2-й страницы,
  * для этого нужен section break после титульной.
+ *
+ * Титульная страница получает равные боковые поля (20мм/20мм) для корректного
+ * центрирования текста. Основной документ использует стандартные ГОСТ-поля (30/15).
  */
 function insertSectionBreakAfterTitle(
   paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
   enrichedMap: Map<number, DocxParagraph>,
   bodyChildren: OrderedXmlNode[]
 ): void {
-  // Находим последний title_page параграф
+  // Находим последний title_page* параграф (включая подтипы)
   let lastTitlePara: OrderedXmlNode | null = null;
   for (const { paragraphIndex, node } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
-    if (enriched?.blockType === "title_page") {
+    if (enriched?.blockType?.startsWith("title_page")) {
       lastTitlePara = node;
     }
   }
@@ -365,7 +450,11 @@ function insertSectionBreakAfterTitle(
   const pPr = findChild(lastTitlePara, "w:pPr");
   if (pPr && findChild(pPr, "w:sectPr")) return; // Уже есть
 
-  // Создаём sectPr с nextPage break и стандартными полями
+  // Секция титульной страницы: равные боковые поля для визуального центрирования
+  // top=20мм, bottom=20мм, left=20мм, right=20мм
+  const TITLE_MARGIN_MM = 20;
+  const titleMarginTwips = String(Math.round(TITLE_MARGIN_MM * 56.7));
+
   const sectPrNode: OrderedXmlNode = {
     "w:sectPr": [
       {
@@ -375,10 +464,10 @@ function insertSectionBreakAfterTitle(
       {
         "w:pgMar": [],
         ":@": {
-          "@_w:top": "1134",
-          "@_w:right": "851",
-          "@_w:bottom": "1134",
-          "@_w:left": "1701",
+          "@_w:top": titleMarginTwips,
+          "@_w:right": titleMarginTwips,
+          "@_w:bottom": titleMarginTwips,
+          "@_w:left": titleMarginTwips,
           "@_w:header": "709",
           "@_w:footer": "709",
           "@_w:gutter": "0",
@@ -395,7 +484,68 @@ function insertSectionBreakAfterTitle(
   // Вставляем в pPr последнего title_page параграфа
   const targetPPr = ensurePPr(lastTitlePara);
   children(targetPPr).push(sectPrNode);
-  console.log("[cleanup] Inserted section break after title page");
+  console.log("[cleanup] Inserted section break after title page (equal margins: 20mm all sides)");
+}
+
+/**
+ * Удаляет ручные page breaks (w:br type="page") из пустых параграфов
+ * и из последних параграфов перед heading_1.
+ *
+ * Проблема: heading_1 уже имеет w:pageBreakBefore (newPageForEach).
+ * Если перед ним есть пустой параграф с w:br type="page",
+ * получается пустая страница между разделами.
+ */
+function removeRedundantPageBreaks(
+  bodyChildren: OrderedXmlNode[],
+  paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
+  enrichedMap: Map<number, DocxParagraph>
+): void {
+  // Строим set heading bodyIndices
+  const headingIndices = new Set<number>();
+  for (const { paragraphIndex, bodyIndex } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    if (enriched?.blockType?.startsWith("heading_")) {
+      headingIndices.add(bodyIndex);
+    }
+  }
+
+  let removed = 0;
+
+  for (let i = 0; i < bodyChildren.length; i++) {
+    if (!("w:p" in bodyChildren[i])) continue;
+
+    // Проверяем: это пустой параграф или последний перед heading?
+    const isBeforeHeading = headingIndices.has(i + 1) || headingIndices.has(i + 2);
+
+    if (!isParagraphEmpty(bodyChildren[i]) && !isBeforeHeading) continue;
+
+    // Ищем и удаляем w:br type="page" из runs
+    const runs = findChildren(bodyChildren[i], "w:r");
+    for (const run of runs) {
+      const runCh = children(run);
+      for (let j = runCh.length - 1; j >= 0; j--) {
+        if ("w:br" in runCh[j]) {
+          const brType = runCh[j][":@"]?.["@_w:type"];
+          if (brType === "page") {
+            runCh.splice(j, 1);
+            removed++;
+          }
+        }
+      }
+    }
+
+    // Также удаляем w:pageBreakBefore из pPr (если это не heading)
+    if (!headingIndices.has(i)) {
+      const pPr = findChild(bodyChildren[i], "w:pPr");
+      if (pPr) {
+        removeChild(pPr, "w:pageBreakBefore");
+      }
+    }
+  }
+
+  if (removed > 0) {
+    console.log(`[cleanup] Removed ${removed} redundant page breaks before headings`);
+  }
 }
 
 /**
@@ -411,7 +561,7 @@ function collapseConsecutiveEmptyParagraphs(
   const titlePageIndices = new Set<number>();
   for (const { paragraphIndex, bodyIndex } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
-    if (enriched?.blockType === "title_page") {
+    if (enriched?.blockType?.startsWith("title_page")) {
       titlePageIndices.add(bodyIndex);
     }
   }

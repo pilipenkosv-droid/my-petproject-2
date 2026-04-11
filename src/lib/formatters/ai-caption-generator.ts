@@ -75,6 +75,23 @@ function extractTableText(tableNode: OrderedXmlNode): string {
 
 
 /**
+ * Проверяет качество AI-сгенерированной подписи.
+ * Отсекает мусор: "пустая таблица", слишком короткие, начинающиеся с "Таблица".
+ */
+function isValidCaption(caption: string): boolean {
+  const lower = caption.toLowerCase().trim();
+  if (lower.length < 5 || lower.length > 120) return false;
+  // Reject generic/meaningless captions
+  if (lower.includes("пустая таблица") || lower.includes("пустая")) return false;
+  if (lower.includes("без названия") || lower.includes("без заголовка")) return false;
+  if (lower === "таблица" || lower === "данные" || lower === "результаты") return false;
+  // AI should return description only, not "Таблица N — ..."
+  if (/^таблиц/i.test(lower)) return false;
+  if (/^рисун/i.test(lower)) return false;
+  return true;
+}
+
+/**
  * Генерирует подпись для таблицы через AI Gateway
  */
 async function generateTableCaption(tableText: string): Promise<string | null> {
@@ -87,8 +104,15 @@ async function generateTableCaption(tableText: string): Promise<string | null> {
     });
 
     const result = response.json as { caption?: string };
-    console.log(`[ai-caption] Generated table caption via ${response.modelName}: "${result.caption}"`);
-    return result.caption || null;
+    const caption = result.caption || null;
+
+    if (caption && !isValidCaption(caption)) {
+      console.warn(`[ai-caption] Rejected bad caption: "${caption}"`);
+      return null;
+    }
+
+    console.log(`[ai-caption] Generated table caption via ${response.modelName}: "${caption}"`);
+    return caption;
   } catch (e) {
     console.warn("[ai-caption] Table caption generation failed:", e);
     return null;

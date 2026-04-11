@@ -228,17 +228,37 @@ export class XmlDocumentFormatter {
       }
     }
 
-    // Разрыв страницы перед заголовком (newPageForEach)
+    // Заголовки: устанавливаем w:pStyle + w:outlineLvl (нужно для TOC field code)
     if (blockType.startsWith("heading_")) {
       const levelStr = blockType.split("_")[1];
+      const level = parseInt(levelStr, 10);
       const levelKey = `level${levelStr}` as keyof typeof rules.headings;
       const headingStyle = rules.headings[levelKey];
+
+      // w:pStyle — Word heading style (Heading1, Heading2, ...)
+      // Это ключевое для работы TOC \u (use heading styles)
+      setOrderedProp(pPr, "w:pStyle", { "w:val": `Heading${level}` });
+
+      // w:outlineLvl — outline level (0-based: Heading1=0, Heading2=1, ...)
+      // Это ключевое для работы TOC \o "1-3" (outline levels)
+      setOrderedProp(pPr, "w:outlineLvl", { "w:val": String(level - 1) });
+
+      // Разрыв страницы перед заголовком (newPageForEach)
       if (headingStyle?.newPageForEach) {
         if (!findChild(pPr, "w:pageBreakBefore")) {
           children(pPr).unshift(createNode("w:pageBreakBefore"));
         }
       } else {
         removeChild(pPr, "w:pageBreakBefore");
+      }
+    }
+
+    // bibliography_title: стиль Heading1 + outlineLvl 0 (для TOC) + pageBreakBefore
+    if (blockType === "bibliography_title") {
+      setOrderedProp(pPr, "w:pStyle", { "w:val": "Heading1" });
+      setOrderedProp(pPr, "w:outlineLvl", { "w:val": "0" });
+      if (!findChild(pPr, "w:pageBreakBefore")) {
+        children(pPr).unshift(createNode("w:pageBreakBefore"));
       }
     }
 
@@ -279,8 +299,10 @@ export class XmlDocumentFormatter {
         removeChild(rPr, "w:iCs");
       }
 
-      // Удаляем подчёркивание (ГОСТ п.4.3.6 — запрещено)
-      removeChild(rPr, "w:u");
+      // Удаляем подчёркивание (ГОСТ п.4.3.6 — запрещено), кроме титульной страницы (линии подписей)
+      if (!blockType.startsWith("title_page")) {
+        removeChild(rPr, "w:u");
+      }
 
       // Удаляем цветное выделение текста (жёлтое/зелёное и т.д.)
       removeChild(rPr, "w:highlight");
@@ -550,7 +572,7 @@ export class XmlDocumentFormatter {
           fontFamily: rules.headings.level1.fontFamily || rules.text.fontFamily,
           fontSize: rules.headings.level1.fontSize || rules.text.fontSize,
           bold: rules.headings.level1.bold ?? true,
-          alignment: rules.headings.level1.alignment || "center",
+          alignment: "center",
           firstLineIndent: 0,
           lineSpacing: rules.text.lineSpacing,
         };
@@ -588,9 +610,58 @@ export class XmlDocumentFormatter {
         };
 
       case "title_page":
+        // Generic fallback — только шрифт, сохраняем оригинальное форматирование
+        return {
+          fontFamily: rules.text.fontFamily,
+          lineSpacing: 1.0,
+        };
+
+      case "title_page_header":
+        // Шапка: вуз, министерство, кафедра — 14pt, по центру, одинарный интервал
         return {
           fontFamily: rules.text.fontFamily,
           fontSize: rules.text.fontSize,
+          alignment: "center",
+          firstLineIndent: 0,
+          lineSpacing: 1.0,
+        };
+
+      case "title_page_title":
+        // Тип и тема работы — 14pt, по центру, жирный, одинарный
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: rules.text.fontSize,
+          bold: true,
+          alignment: "center",
+          firstLineIndent: 0,
+          lineSpacing: 1.0,
+        };
+
+      case "title_page_info":
+        // Автор, руководитель — 14pt, сохраняем оригинальное выравнивание
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: rules.text.fontSize,
+          lineSpacing: 1.0,
+        };
+
+      case "title_page_annotation":
+        // Пояснительный текст "(подпись, оценка)" — 10pt, курсив
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: 10,
+          italic: true,
+          lineSpacing: 1.0,
+        };
+
+      case "title_page_footer":
+        // Город и год — 14pt, по центру
+        return {
+          fontFamily: rules.text.fontFamily,
+          fontSize: rules.text.fontSize,
+          alignment: "center",
+          firstLineIndent: 0,
+          lineSpacing: 1.0,
         };
 
       case "toc":

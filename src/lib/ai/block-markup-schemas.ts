@@ -9,6 +9,11 @@ import { z } from "zod";
 
 export const blockTypeSchema = z.enum([
   "title_page",
+  "title_page_header",
+  "title_page_title",
+  "title_page_info",
+  "title_page_annotation",
+  "title_page_footer",
   "toc",
   "toc_entry",
   "heading_1",

@@ -563,7 +563,8 @@ const TEXT_BLOCK_TYPES: Set<BlockType | undefined> = new Set([
 /** Типы блоков, которые пропускаем при проверке текста */
 const SKIP_BLOCK_TYPES: Set<BlockType> = new Set([
   "heading_1", "heading_2", "heading_3", "heading_4",
-  "title_page", "toc", "toc_entry",
+  "title_page", "title_page_header", "title_page_title", "title_page_info", "title_page_annotation", "title_page_footer",
+  "toc", "toc_entry",
   "figure_caption", "table_caption",
   "bibliography_title", "bibliography_entry",
   "table", "figure", "formula",

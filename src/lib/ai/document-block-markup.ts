@@ -114,7 +114,19 @@ function validateAndFixMarkup(
       correctedType = "list_item";
     }
 
-    // 7. bibliography_entry без metadata.language → добавляем
+    // 7. title_page → подтипы (если AI вернул generic title_page, уточняем)
+    if (block.blockType === "title_page") {
+      // Аннотации в скобках: "(подпись)", "(ФИО)", "(дата)", "(учёная степень, звание)"
+      if (/^\(.*\)$/.test(text)) {
+        correctedType = "title_page_annotation";
+      }
+      // Город и год в конце титульной: "Москва 2026", "г. Санкт-Петербург 2025"
+      else if (/^(?:г\.\s*)?[А-ЯЁ][а-яё\-]+\s+\d{4}\s*$/.test(text)) {
+        correctedType = "title_page_footer";
+      }
+    }
+
+    // 8. bibliography_entry без metadata.language → добавляем
     if (block.blockType === "bibliography_entry" && !block.metadata?.language) {
       const isEnglish = /[a-zA-Z]{3,}/.test(text) && !/[а-яА-Я]{3,}/.test(text);
       return {

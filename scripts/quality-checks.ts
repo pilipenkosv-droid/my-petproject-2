@@ -506,7 +506,7 @@ export async function runQualityChecks(
     for (const { node, paragraphIndex } of paragraphs) {
       const text = getFullText(node);
       const enriched = lookupEnriched(paragraphIndex, text);
-      if (enriched?.blockType === "title_page") continue;
+      if (enriched?.blockType?.startsWith("title_page")) continue;
       const runs = getRuns(node);
       for (const run of runs) {
         const rPr = findChild(run, "w:rPr");
@@ -539,7 +539,7 @@ export async function runQualityChecks(
     for (const { node, paragraphIndex } of paragraphs) {
       const pText = getFullText(node);
       const enriched = lookupEnriched(paragraphIndex, pText);
-      if (enriched?.blockType === "title_page") continue;
+      if (enriched?.blockType?.startsWith("title_page")) continue;
       const runs = getRuns(node);
       for (const run of runs) {
         const rPr = findChild(run, "w:rPr");
@@ -777,7 +777,7 @@ export async function runQualityChecks(
 
   // 4b. Title page presence
   {
-    const hasTitlePage = enrichedParagraphs.some((p) => p.blockType === "title_page");
+    const hasTitlePage = enrichedParagraphs.some((p) => p.blockType?.startsWith("title_page"));
     checks.push({
       id: "structure.titlePage",
       category: "structure",
@@ -797,7 +797,7 @@ export async function runQualityChecks(
     for (const { node, paragraphIndex, bodyIndex } of paragraphs) {
       const text = getFullText(node);
       const enriched = lookupEnriched(paragraphIndex, text);
-      if (enriched?.blockType === "title_page") {
+      if (enriched?.blockType?.startsWith("title_page")) {
         lastTitleBodyIdx = bodyIndex;
         if (hasSectionBreak(node)) {
           hasSectionBreakAfterTitle = true;
@@ -1092,14 +1092,15 @@ export async function runQualityChecks(
     count: origImageCount > fmtImageCount ? origImageCount - fmtImageCount : 0,
   });
 
-  // 7b. Tables preserved
+  // 7b. Tables preserved (допускаем потерю до 1 таблицы — table-based TOC удаляется намеренно)
+  const tableLoss = origTableCount - fmtTableCount;
   checks.push({
     id: "preservation.tables",
     category: "preservation",
     name: "Таблицы сохранены",
-    passed: fmtTableCount >= origTableCount,
+    passed: tableLoss <= 1,
     severity: "critical",
-    expected: `${origTableCount} таблиц`,
+    expected: `${origTableCount} таблиц (±1 для TOC-таблицы)`,
     actual: `${fmtTableCount}`,
   });
 

@@ -107,7 +107,7 @@ function expandAbbreviations(text: string): string {
  * Пробелы-отступы — антипаттерн, нарушающий структуру документа.
  */
 function stripLeadingSpaces(text: string): string {
-  return text.replace(/^[\t ]{2,}/, "");
+  return text.replace(/^[\t ]+/, "");
 }
 
 /**

@@ -263,12 +263,12 @@ function findTocInsertionPoint(
   for (const { paragraphIndex, bodyIndex, node } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
 
-    // Сигнал 1: section break после title_page — вставляем сразу после
-    if (enriched?.blockType === "title_page" && hasSectionBreak(node)) {
+    // Сигнал 1: section break после title_page* — вставляем сразу после
+    if (enriched?.blockType?.startsWith("title_page") && hasSectionBreak(node)) {
       return bodyIndex + 1;
     }
 
-    if (enriched?.blockType === "title_page") {
+    if (enriched?.blockType?.startsWith("title_page")) {
       lastTitlePageBodyIdx = bodyIndex;
     }
   }
@@ -320,17 +320,22 @@ export async function applyTocGeneration(
   const pageBreak = buildPageBreakParagraph();
   const tocElements = [tocHeading, tocField, pageBreak];
 
-  // Ищем существующий TOC
-  const existingToc = findExistingTocRange(paragraphs, enrichedMap);
+  // 1. Удаляем table-based TOC (пользовательские таблицы-содержания)
+  removeTableBasedToc(bodyChildren);
+
+  // 2. Ищем и заменяем paragraph-based TOC
+  // Переполучаем paragraphs после возможного удаления таблиц (индексы сдвинулись)
+  const paragraphsAfter = getParagraphsWithPositions(body);
+  const existingToc = findExistingTocRange(paragraphsAfter, enrichedMap);
 
   if (existingToc) {
-    // Заменяем существующий TOC на field code (одной операцией splice)
     const count = existingToc.lastIdx - existingToc.firstIdx + 1;
     bodyChildren.splice(existingToc.firstIdx, count, ...tocElements);
     console.log(`[toc] Replaced existing TOC (bodyIndex ${existingToc.firstIdx}-${existingToc.lastIdx}) with field code`);
   } else {
-    // Вставляем новый TOC после title_page
-    const insertIdx = findTocInsertionPoint(paragraphs, enrichedMap);
+    // Переполучаем paragraphs после удалений
+    const paragraphsForInsert = getParagraphsWithPositions(body);
+    const insertIdx = findTocInsertionPoint(paragraphsForInsert, enrichedMap);
     if (insertIdx < 0) {
       console.warn("[toc] No title_page found, skipping TOC insertion");
       return { buffer, tocInserted: false };
@@ -339,6 +344,8 @@ export async function applyTocGeneration(
     console.log(`[toc] Inserted new TOC at bodyIndex ${insertIdx}`);
   }
 
+  // 3. Гарантируем Heading1-3 стили в styles.xml
+  await ensureHeadingStyles(zip, rules);
   await ensureUpdateFieldsSetting(zip);
 
   const newXml = buildDocxXml(parsed);
@@ -350,6 +357,148 @@ export async function applyTocGeneration(
   })) as Buffer;
 
   return { buffer: resultBuffer, tocInserted: true };
+}
+
+/**
+ * Удаляет table-based TOC — пользовательские содержания, оформленные как таблицы (w:tbl).
+ *
+ * Ищет таблицы (w:tbl), в которых есть текст типичного содержания:
+ * - "Введение", "Заключение", "Список литературы", "Глава"
+ * - Или строки вида "1.1 Текст" + числа (страницы)
+ */
+function removeTableBasedToc(bodyChildren: OrderedXmlNode[]): void {
+  const tocKeywords = /(?:введение|заключение|список\s+(?:использованных\s+)?(?:источников|литературы)|глава\s+\d|содержание|оглавление)/i;
+  const tocEntryPattern = /^\d+(?:\.\d+)*\s+\S/; // "1.1 Текст..."
+
+  const toRemove: number[] = [];
+
+  for (let i = 0; i < bodyChildren.length; i++) {
+    const node = bodyChildren[i];
+    if (!("w:tbl" in node)) continue;
+
+    // Извлекаем весь текст из таблицы
+    const tableText = extractTableText(node);
+    if (!tableText) continue;
+
+    // Проверяем: содержит ли таблица типичные TOC-маркеры?
+    const keywordMatches = (tableText.match(tocKeywords) || []).length;
+    const entryMatches = tableText.split("\n").filter((line) => tocEntryPattern.test(line.trim())).length;
+
+    // Минимум 2 ключевых слова или 3+ записей с нумерацией → это TOC-таблица
+    if (keywordMatches >= 2 || entryMatches >= 3) {
+      toRemove.push(i);
+      console.log(`[toc] Found table-based TOC at bodyIndex ${i} (${keywordMatches} keywords, ${entryMatches} entries)`);
+    }
+  }
+
+  // Удаляем в обратном порядке (чтобы не сбить индексы)
+  for (let k = toRemove.length - 1; k >= 0; k--) {
+    bodyChildren.splice(toRemove[k], 1);
+  }
+
+  if (toRemove.length > 0) {
+    console.log(`[toc] Removed ${toRemove.length} table-based TOC(s)`);
+  }
+}
+
+/**
+ * Извлекает весь текст из w:tbl (через w:tr → w:tc → w:p → w:r → w:t)
+ */
+function extractTableText(tableNode: OrderedXmlNode): string {
+  const lines: string[] = [];
+  const rows = findChildren(tableNode, "w:tr");
+  for (const row of rows) {
+    const cells = findChildren(row, "w:tc");
+    const cellTexts: string[] = [];
+    for (const cell of cells) {
+      const paras = findChildren(cell, "w:p");
+      for (const p of paras) {
+        const runs = findChildren(p, "w:r");
+        let pText = "";
+        for (const run of runs) {
+          const tNodes = findChildren(run, "w:t");
+          for (const t of tNodes) {
+            pText += getText(t);
+          }
+        }
+        if (pText.trim()) cellTexts.push(pText.trim());
+      }
+    }
+    if (cellTexts.length > 0) lines.push(cellTexts.join(" "));
+  }
+  return lines.join("\n");
+}
+
+/**
+ * Гарантирует наличие стилей Heading1-3 в styles.xml.
+ * Без этих стилей TOC field code \u не сможет найти заголовки.
+ */
+async function ensureHeadingStyles(zip: JSZip, rules: FormattingRules): Promise<void> {
+  const stylesPath = "word/styles.xml";
+  const stylesXml = await zip.file(stylesPath)?.async("string");
+  if (!stylesXml) return;
+
+  const parsed = parseDocxXml(stylesXml);
+  const stylesNode = parsed.find((n) => "w:styles" in n);
+  if (!stylesNode) return;
+
+  const stylesChildren = children(stylesNode);
+
+  // Проверяем, какие Heading стили уже есть
+  const existingIds = new Set<string>();
+  for (const child of stylesChildren) {
+    if ("w:style" in child && child[":@"]?.["@_w:styleId"]) {
+      existingIds.add(child[":@"]["@_w:styleId"] as string);
+    }
+  }
+
+  const headingConfigs = [
+    { id: "Heading1", name: "heading 1", level: 1, rules: rules.headings.level1 },
+    { id: "Heading2", name: "heading 2", level: 2, rules: rules.headings.level2 },
+    { id: "Heading3", name: "heading 3", level: 3, rules: rules.headings.level3 },
+  ];
+
+  for (const cfg of headingConfigs) {
+    if (existingIds.has(cfg.id)) continue;
+
+    const fontFamily = cfg.rules.fontFamily || rules.text.fontFamily;
+    const fontSize = cfg.rules.fontSize || rules.text.fontSize;
+    const sizeHalf = fontSize * HALF_POINTS_PER_PT;
+
+    const styleNode: OrderedXmlNode = {
+      "w:style": [
+        createNode("w:name", { "w:val": cfg.name }),
+        createNode("w:basedOn", { "w:val": "Normal" }),
+        createNode("w:next", { "w:val": "Normal" }),
+        createNode("w:qFormat"),
+        createNode("w:pPr", undefined, [
+          createNode("w:keepNext"),
+          createNode("w:keepLines"),
+          createNode("w:outlineLvl", { "w:val": String(cfg.level - 1) }),
+        ]),
+        createNode("w:rPr", undefined, [
+          createNode("w:rFonts", {
+            "w:ascii": fontFamily,
+            "w:hAnsi": fontFamily,
+            "w:cs": fontFamily,
+          }),
+          createNode("w:b"),
+          createNode("w:sz", { "w:val": String(sizeHalf) }),
+          createNode("w:szCs", { "w:val": String(sizeHalf) }),
+        ]),
+      ],
+      ":@": {
+        "@_w:type": "paragraph",
+        "@_w:styleId": cfg.id,
+      },
+    };
+
+    stylesChildren.push(styleNode);
+    console.log(`[toc] Added missing style: ${cfg.id}`);
+  }
+
+  const newStylesXml = buildDocxXml(parsed);
+  zip.file(stylesPath, newStylesXml);
 }
 
 /**
