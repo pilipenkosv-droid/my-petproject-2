@@ -161,12 +161,19 @@ export class XmlDocumentFormatter {
     }
 
     // Применяем отступ первой строки
+    // ВАЖНО: firstLine и hanging взаимоисключающи в Word.
+    // Нужно удалять конфликтующий атрибут при установке другого.
     if (target.firstLineIndent !== undefined) {
       const indentTwips = Math.round(target.firstLineIndent * TWIPS_PER_MM);
       if (indentTwips > 0) {
         setOrderedProp(pPr, "w:ind", {
           "w:firstLine": String(indentTwips),
         });
+        // Удаляем hanging — он конфликтует с firstLine
+        const indNode = findChild(pPr, "w:ind");
+        if (indNode?.[":@"]) {
+          delete indNode[":@"]["@_w:hanging"];
+        }
       } else {
         // Убираем отступ первой строки
         const indNode = findChild(pPr, "w:ind");
@@ -184,6 +191,11 @@ export class XmlDocumentFormatter {
         "w:hanging": String(hangTwips),
         "w:left": String(leftTwips),
       });
+      // Удаляем firstLine — он конфликтует с hanging
+      const indNode = findChild(pPr, "w:ind");
+      if (indNode?.[":@"]) {
+        delete indNode[":@"]["@_w:firstLine"];
+      }
     }
 
     // Применяем межстрочный интервал
@@ -688,7 +700,21 @@ export class XmlDocumentFormatter {
       }
 
       const rows = findChildren(node, "w:tr");
-      for (const row of rows) {
+      for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+        const row = rows[rowIdx];
+
+        // Повтор заголовка таблицы при переносе на другую страницу (ГОСТ)
+        // w:tblHeader на первой строке — Word повторяет её на каждой странице
+        if (rowIdx === 0 && rows.length > 1) {
+          const trPr = findChild(row, "w:trPr") || createNode("w:trPr");
+          if (!findChild(row, "w:trPr")) {
+            children(row).unshift(trPr);
+          }
+          if (!findChild(trPr, "w:tblHeader")) {
+            children(trPr).push(createNode("w:tblHeader"));
+          }
+        }
+
         const cells = findChildren(row, "w:tc");
         for (const cell of cells) {
           // Удаляем шейдинг ячейки таблицы (тёмный фон ячейки)

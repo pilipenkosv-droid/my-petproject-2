@@ -111,11 +111,31 @@ function stripLeadingSpaces(text: string): string {
 }
 
 /**
+ * Схлопывает множественные пробелы в один.
+ * Два и более пробела подряд → один пробел.
+ * Не трогает NBSP (\u00A0) — они вставляются намеренно.
+ */
+function collapseMultipleSpaces(text: string): string {
+  return text.replace(/ {2,}/g, " ");
+}
+
+/**
+ * Исправляет двойные точки → одна точка.
+ * Не трогает "..." (троеточие) и "…" (символ троеточия).
+ */
+function fixDoubleDots(text: string): string {
+  // Заменяем ровно 2 точки подряд (не часть троеточия) на одну
+  return text.replace(/(?<!\.)\.\.(?!\.)/g, ".");
+}
+
+/**
  * Применяет все текстовые замены к тексту параграфа
  */
 export function applyTextFixes(text: string): string {
   let result = text;
   result = stripLeadingSpaces(result);
+  result = collapseMultipleSpaces(result);
+  result = fixDoubleDots(result);
   result = expandAbbreviations(result);
   result = addNBSPBeforeUnits(result);
   result = addNBSPAfterInitials(result);

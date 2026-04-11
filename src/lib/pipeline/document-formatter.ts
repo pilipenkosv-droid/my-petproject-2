@@ -28,6 +28,7 @@ import {
   buildDocxXml,
   getBody,
   getParagraphsWithPositions,
+  findChildren,
   ensureRPr,
   getRuns,
   children,
@@ -162,8 +163,6 @@ async function createFormattedDocumentXml(
   for (let i = 0; i < formatter.paragraphCount; i++) {
     const enriched = blockMap.get(i);
     const blockType = enriched?.blockType || "unknown";
-
-    // Применяем структурное форматирование (шрифт, размер, отступы)
     formatter.applyFormattingToParagraph(i, blockType, rules);
   }
 
@@ -245,6 +244,25 @@ async function applyAllTextFixes(
     if (!skipTextFixes.has(blockType)) {
       const wasFixed = applyTextFixesToXmlParagraph(node);
       if (wasFixed) changed = true;
+    }
+  }
+
+  // Применяем текстовые замены к параграфам ВНУТРИ таблиц
+  // (они не входят в getParagraphsWithPositions, которая видит только body-level)
+  const bodyNodes = children(body);
+  for (const node of bodyNodes) {
+    if (!("w:tbl" in node)) continue;
+
+    const rows = findChildren(node, "w:tr");
+    for (const row of rows) {
+      const cells = findChildren(row, "w:tc");
+      for (const cell of cells) {
+        const cellParas = findChildren(cell, "w:p");
+        for (const p of cellParas) {
+          const wasFixed = applyTextFixesToXmlParagraph(p);
+          if (wasFixed) changed = true;
+        }
+      }
     }
   }
 

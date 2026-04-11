@@ -6,6 +6,7 @@
  */
 
 import { callAI } from "./gateway";
+import { recordUsage } from "./rate-limiter";
 import {
   DocumentBlockMarkup,
   documentBlockMarkupSchema,
@@ -186,12 +187,20 @@ export async function parseDocumentBlocks(
       if (result.warnings) {
         allWarnings.push(...result.warnings);
       }
+      // Сбрасываем ошибки после успешного чанка (чтобы следующий чанк мог использовать модель)
+      if (result.modelId) {
+        await recordUsage(result.modelId);
+      }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.error(
         `[block-markup] Chunk ${ci + 1}/${chunks.length} failed: ${msg}`
       );
       failedChunks++;
+      // Сбрасываем rate-limiter после ошибки чанка — следующий чанк получит шанс
+      if (primaryModelId) {
+        await recordUsage(primaryModelId);
+      }
       // Fallback для этого чанка — остальные чанки продолжаем
       const fallback = createFallbackMarkup(chunk);
       allBlocks.push(...fallback.blocks);

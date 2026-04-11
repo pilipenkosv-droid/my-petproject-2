@@ -22,6 +22,8 @@ import {
   setText,
   getRuns,
   children,
+  createNode,
+  ensurePPr,
 } from "../xml/docx-xml";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 import { FormattingRules } from "@/types/formatting-rules";
@@ -59,7 +61,14 @@ export async function applyDocumentCleanup(
   // 3. Ограничение размеров drawing (overflow prevention)
   clampDrawingSizes(bodyChildren);
 
-  // 4. Удаление лишних пустых параграфов в body (>2 подряд → 1)
+  // 4. Универсальное схлопывание пробелов и двойных точек во ВСЕХ параграфах
+  // (включая title_page, toc, table cells — текстовые фиксы пропускают их)
+  collapseSpacesEverywhere(bodyChildren);
+
+  // 5. Разрыв секции после титульной страницы (ГОСТ: нумерация начинается со 2-й стр.)
+  insertSectionBreakAfterTitle(paragraphs, enrichedMap, bodyChildren);
+
+  // 6. Удаление лишних пустых параграфов в body (>2 подряд → 1)
   // Выполняем ПОСЛЕДНИМ, т.к. меняет индексы
   collapseConsecutiveEmptyParagraphs(bodyChildren, paragraphs, enrichedMap);
 
@@ -111,8 +120,8 @@ function applyHeadingNumbering(
     const text = getFullParagraphText(node).trim();
     if (!text) continue;
 
-    // Пропускаем структурные заголовки
-    const textLower = text.replace(/^\d[\d.]*\s*/, "").trim().toLowerCase();
+    // Пропускаем структурные заголовки (убираем номер, точки, пробелы)
+    const textLower = text.replace(/^(?:глава\s+)?\d[\d.\s]*/i, "").trim().replace(/\.+$/, "").toLowerCase();
     if (structuralHeadings.has(textLower)) continue;
 
     // Обновляем счётчики
@@ -127,7 +136,10 @@ function applyHeadingNumbering(
     const number = numberParts.join(".");
 
     // Удаляем существующий номер из текста (если есть)
-    const cleanText = text.replace(/^\d[\d.]*\s*/, "").trim();
+    // Обрабатываем сложные форматы: "1. 1 Текст", "1.1. Текст", "Глава 1 Текст"
+    const cleanText = text
+      .replace(/^(?:глава\s+)?\d[\d.\s]*(?:\.\s*)?/i, "")
+      .trim();
 
     // Записываем номер + текст в первый run
     setFirstRunText(node, `${number} ${cleanText}`);
@@ -141,8 +153,12 @@ function applyHeadingNumbering(
 
 /**
  * Очищает лишние пустые параграфы внутри ячеек таблиц.
- * Таблицы часто содержат пустые параграфы до/после контента.
- * Оставляем максимум 1 пустой параграф на границе контента.
+ *
+ * Агрессивная очистка:
+ * 1. Удаляет ВСЕ пустые leading параграфы (до первого непустого)
+ * 2. Удаляет ВСЕ пустые trailing параграфы (после последнего непустого)
+ * 3. Удаляет 2+ подряд пустых параграфов внутри контента
+ * 4. В ячейке всегда остаётся минимум 1 параграф (требование Word)
  */
 function cleanTableCellEmptyParagraphs(bodyChildren: OrderedXmlNode[]): void {
   let cleaned = 0;
@@ -155,34 +171,65 @@ function cleanTableCellEmptyParagraphs(bodyChildren: OrderedXmlNode[]): void {
       const cells = findChildren(row, "w:tc");
       for (const cell of cells) {
         const cellChildren = children(cell);
-        const paragraphs = cellChildren.filter((c) => "w:p" in c);
-
-        if (paragraphs.length <= 1) continue;
-
-        // Находим индексы пустых параграфов
-        const toRemove: number[] = [];
-        let consecutiveEmpty = 0;
-
+        const paraIndices: number[] = [];
         for (let i = 0; i < cellChildren.length; i++) {
-          if (!("w:p" in cellChildren[i])) continue;
+          if ("w:p" in cellChildren[i]) paraIndices.push(i);
+        }
 
-          if (isParagraphEmpty(cellChildren[i])) {
-            consecutiveEmpty++;
-            // Удаляем 2+ подряд пустых
-            if (consecutiveEmpty > 1) {
-              toRemove.push(i);
-            }
-          } else {
-            consecutiveEmpty = 0;
+        if (paraIndices.length <= 1) continue;
+
+        // Определяем первый и последний непустой параграф
+        let firstNonEmpty = -1;
+        let lastNonEmpty = -1;
+        for (const idx of paraIndices) {
+          if (!isParagraphEmpty(cellChildren[idx])) {
+            if (firstNonEmpty === -1) firstNonEmpty = idx;
+            lastNonEmpty = idx;
           }
         }
 
-        // Удаляем лишние пустые (с конца, чтобы индексы не съехали)
-        for (let i = toRemove.length - 1; i >= 0; i--) {
-          // В ячейке таблицы должен остаться хотя бы 1 параграф
+        const toRemove: number[] = [];
+
+        if (firstNonEmpty === -1) {
+          // Все параграфы пустые — оставляем только один
+          for (let i = 1; i < paraIndices.length; i++) {
+            toRemove.push(paraIndices[i]);
+          }
+        } else {
+          // Удаляем leading пустые (перед первым непустым)
+          for (const idx of paraIndices) {
+            if (idx < firstNonEmpty) toRemove.push(idx);
+            else break;
+          }
+
+          // Удаляем trailing пустые (после последнего непустого)
+          for (let i = paraIndices.length - 1; i >= 0; i--) {
+            if (paraIndices[i] > lastNonEmpty) toRemove.push(paraIndices[i]);
+            else break;
+          }
+
+          // Удаляем 2+ подряд пустых внутри контента
+          let consecutiveEmpty = 0;
+          for (const idx of paraIndices) {
+            if (idx <= firstNonEmpty || idx >= lastNonEmpty) continue;
+            if (isParagraphEmpty(cellChildren[idx])) {
+              consecutiveEmpty++;
+              if (consecutiveEmpty > 1) {
+                toRemove.push(idx);
+              }
+            } else {
+              consecutiveEmpty = 0;
+            }
+          }
+        }
+
+        // Уникализируем и сортируем по убыванию (удаляем с конца)
+        const uniqueRemove = [...new Set(toRemove)].sort((a, b) => b - a);
+        for (const idx of uniqueRemove) {
+          // Всегда оставляем хотя бы 1 параграф
           const remainingP = cellChildren.filter((c) => "w:p" in c).length;
           if (remainingP > 1) {
-            cellChildren.splice(toRemove[i], 1);
+            cellChildren.splice(idx, 1);
             cleaned++;
           }
         }
@@ -295,6 +342,63 @@ function updateGraphicExtent(
 }
 
 /**
+ * Вставляет разрыв секции (w:sectPr) в последний параграф title_page.
+ * ГОСТ: нумерация страниц начинается со 2-й страницы,
+ * для этого нужен section break после титульной.
+ */
+function insertSectionBreakAfterTitle(
+  paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
+  enrichedMap: Map<number, DocxParagraph>,
+  bodyChildren: OrderedXmlNode[]
+): void {
+  // Находим последний title_page параграф
+  let lastTitlePara: OrderedXmlNode | null = null;
+  for (const { paragraphIndex, node } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    if (enriched?.blockType === "title_page") {
+      lastTitlePara = node;
+    }
+  }
+  if (!lastTitlePara) return;
+
+  // Проверяем, есть ли уже sectPr
+  const pPr = findChild(lastTitlePara, "w:pPr");
+  if (pPr && findChild(pPr, "w:sectPr")) return; // Уже есть
+
+  // Создаём sectPr с nextPage break и стандартными полями
+  const sectPrNode: OrderedXmlNode = {
+    "w:sectPr": [
+      {
+        "w:pgSz": [],
+        ":@": { "@_w:w": "11906", "@_w:h": "16838" }, // A4
+      },
+      {
+        "w:pgMar": [],
+        ":@": {
+          "@_w:top": "1134",
+          "@_w:right": "851",
+          "@_w:bottom": "1134",
+          "@_w:left": "1701",
+          "@_w:header": "709",
+          "@_w:footer": "709",
+          "@_w:gutter": "0",
+        },
+      },
+      {
+        "w:pgNumType": [],
+        ":@": { "@_w:start": "1" },
+      },
+    ],
+    ":@": { "@_w:type": "nextPage" },
+  };
+
+  // Вставляем в pPr последнего title_page параграфа
+  const targetPPr = ensurePPr(lastTitlePara);
+  children(targetPPr).push(sectPrNode);
+  console.log("[cleanup] Inserted section break after title page");
+}
+
+/**
  * Удаляет подряд идущие пустые параграфы (>2 → оставляет 1).
  * Не трогает title_page область и пространство перед heading_1.
  */
@@ -360,6 +464,62 @@ function collapseConsecutiveEmptyParagraphs(
 
   if (toRemove.length > 0) {
     console.log(`[cleanup] Removed ${toRemove.length} excessive empty paragraphs`);
+  }
+}
+
+/**
+ * Схлопывает множественные пробелы и двойные точки во ВСЕХ параграфах документа.
+ *
+ * Применяется ко ВСЕМ параграфам без исключения (включая title_page, toc, таблицы),
+ * потому что множественные пробелы — всегда артефакт, никогда не намеренное форматирование.
+ *
+ * Обрабатывает: body-level параграфы + параграфы внутри таблиц.
+ */
+function collapseSpacesEverywhere(bodyChildren: OrderedXmlNode[]): void {
+  let fixed = 0;
+
+  function fixParagraph(node: OrderedXmlNode): void {
+    if (!("w:p" in node)) return;
+    const runs = getRuns(node);
+    for (const run of runs) {
+      const tNodes = findChildren(run, "w:t");
+      for (const t of tNodes) {
+        const text = getText(t);
+        if (!text) continue;
+
+        let newText = text;
+        // Множественные обычные пробелы → один
+        newText = newText.replace(/ {2,}/g, " ");
+        // Двойные точки (не часть троеточия) → одна
+        newText = newText.replace(/(?<!\.)\.\.(?!\.)/g, ".");
+
+        if (newText !== text) {
+          setText(t, newText);
+          fixed++;
+        }
+      }
+    }
+  }
+
+  for (const node of bodyChildren) {
+    if ("w:p" in node) {
+      fixParagraph(node);
+    } else if ("w:tbl" in node) {
+      const rows = findChildren(node, "w:tr");
+      for (const row of rows) {
+        const cells = findChildren(row, "w:tc");
+        for (const cell of cells) {
+          const cellParas = findChildren(cell, "w:p");
+          for (const p of cellParas) {
+            fixParagraph(p);
+          }
+        }
+      }
+    }
+  }
+
+  if (fixed > 0) {
+    console.log(`[cleanup] Collapsed spaces/dots in ${fixed} text nodes`);
   }
 }
 
