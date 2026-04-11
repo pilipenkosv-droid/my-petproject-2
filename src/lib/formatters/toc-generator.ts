@@ -283,8 +283,21 @@ function findTocInsertionPoint(
     }
   }
 
-  // Сигнал 2: после последнего title_page + пропуск пустых
+  // Сигнал 2: после последнего title_page
   if (lastTitlePageBodyIdx >= 0) {
+    // Пропускаем непустые параграфы после title_page, которые могут быть
+    // продолжением многострочного заголовка. Ищем первый пустой параграф
+    // или параграф с heading_1/heading_2 (начало новой главы).
+    for (const { paragraphIndex, bodyIndex } of paragraphs) {
+      if (bodyIndex <= lastTitlePageBodyIdx) continue;
+      const enriched = enrichedMap.get(paragraphIndex);
+      const bt = enriched?.blockType || "unknown";
+      // Нашли заголовок — вставляем TOC перед ним
+      if (bt.startsWith("heading_")) {
+        return bodyIndex;
+      }
+    }
+    // Fallback: сразу после title_page
     return lastTitlePageBodyIdx + 1;
   }
 

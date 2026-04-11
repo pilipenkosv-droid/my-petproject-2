@@ -23,6 +23,18 @@ import {
 } from "../xml/docx-xml";
 import { callAI } from "../ai/gateway";
 import { DocxParagraph } from "../pipeline/document-analyzer";
+
+/** Извлекает текст из параграфа */
+function getParagraphText(node: OrderedXmlNode): string {
+  const runs = getRuns(node);
+  let text = "";
+  for (const run of runs) {
+    for (const t of findChildren(run, "w:t")) {
+      text += getText(t);
+    }
+  }
+  return text;
+}
 import { FormattingRules } from "@/types/formatting-rules";
 
 const HALF_POINTS_PER_PT = 2;
@@ -201,11 +213,14 @@ export async function applyAiCaptions(
   for (let i = 0; i < bodyChildren.length; i++) {
     if ("w:tbl" in bodyChildren[i]) {
       // Проверяем, есть ли подпись рядом (±3 параграфа)
-      const hasCaption = paragraphs.some(({ paragraphIndex, bodyIndex }) => {
+      const hasCaption = paragraphs.some(({ paragraphIndex, bodyIndex, node }) => {
+        if (Math.abs(bodyIndex - i) > 3) return false;
         const enriched = enrichedMap.get(paragraphIndex);
-        if (enriched?.blockType === "table_caption") {
-          return Math.abs(bodyIndex - i) <= 3;
-        }
+        // Проверка 1: AI-размеченные table_caption
+        if (enriched?.blockType === "table_caption") return true;
+        // Проверка 2: текст начинается с "Таблица" (fallback для нераспознанных подписей)
+        const text = getParagraphText(node).trim();
+        if (/^Таблица\s*(?:№\s*)?\d/i.test(text)) return true;
         return false;
       });
 

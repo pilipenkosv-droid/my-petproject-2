@@ -82,12 +82,35 @@ function getColumnCount(tbl: OrderedXmlNode): number {
 
 function needsLandscape(tbl: OrderedXmlNode): boolean {
   const colCount = getColumnCount(tbl);
-  // Таблицы с <4 столбцами не поворачиваем, даже если gridWidth широкий
-  if (colCount < 4) return false;
+  // Таблицы с <3 столбцами не поворачиваем
+  if (colCount < 3) return false;
 
+  // Проверяем ширину по gridCol
   const gridW = getTableGridWidth(tbl);
   if (gridW && gridW > PORTRAIT_AVAIL) return true;
+
+  // Проверяем ширину по w:tblW (общая ширина таблицы)
+  if (!gridW) {
+    const tblPr = findChild(tbl, "w:tblPr");
+    if (tblPr) {
+      const tblW = findChild(tblPr, "w:tblW");
+      const wVal = tblW?.[":@"]?.["@_w:w"];
+      const wType = tblW?.[":@"]?.["@_w:type"];
+      if (wVal && wType !== "pct" && wType !== "auto") {
+        const width = parseInt(String(wVal));
+        if (width > PORTRAIT_AVAIL) return true;
+      }
+    }
+  }
+
+  // Много столбцов → landscape
   if (colCount >= MIN_COLS) return true;
+
+  // 5-6 столбцов без gridCol — проверяем по содержимому (длина текста)
+  if (colCount >= 5 && !gridW) {
+    return true; // скорее всего широкая таблица
+  }
+
   return false;
 }
 

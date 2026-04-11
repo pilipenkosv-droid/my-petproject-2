@@ -140,6 +140,20 @@ export class XmlDocumentFormatter {
     // Удаляем шейдинг параграфа (тёмный фон параграфа)
     removeChild(pPr, "w:shd");
 
+    // Удаляем outlineLvl у не-заголовков — иначе они попадают в TOC
+    const isHeading = blockType.startsWith("heading_") || blockType === "bibliography_title";
+    if (!isHeading) {
+      removeChild(pPr, "w:outlineLvl");
+      // Также убираем Heading pStyle если блок — не заголовок
+      const pStyleNode = findChild(pPr, "w:pStyle");
+      if (pStyleNode?.[":@"]) {
+        const styleVal = String(pStyleNode[":@"]["@_w:val"] || "");
+        if (/^Heading\d$/i.test(styleVal)) {
+          removeChild(pPr, "w:pStyle");
+        }
+      }
+    }
+
     // Очищаем запрещённое форматирование в paragraph-level rPr (default run props)
     const pPrRPr = findChild(pPr, "w:rPr");
     if (pPrRPr) {

@@ -93,8 +93,8 @@ function validateAndFixMarkup(
       correctedType = "figure_caption";
     }
 
-    // 4. "Таблица N" → table_caption, не body_text
-    if (/^Таблица\s+\d|^Табл\.\s*\d/i.test(text) && block.blockType === "body_text") {
+    // 4. "Таблица N" / "Таблица №N" → table_caption, не body_text
+    if (/^Таблица\s+(?:№\s*)?\d|^Табл\.\s*(?:№\s*)?\d/i.test(text) && block.blockType === "body_text") {
       correctedType = "table_caption";
     }
 
