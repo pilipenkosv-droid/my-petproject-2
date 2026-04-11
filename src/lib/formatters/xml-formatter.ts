@@ -144,6 +144,7 @@ export class XmlDocumentFormatter {
     const pPrRPr = findChild(pPr, "w:rPr");
     if (pPrRPr) {
       removeChild(pPrRPr, "w:u");
+      removeChild(pPrRPr, "w:highlight");
       removeChild(pPrRPr, "w:shd");
       const pColorNode = findChild(pPrRPr, "w:color");
       if (pColorNode?.[":@"]) {
@@ -268,6 +269,9 @@ export class XmlDocumentFormatter {
 
       // Удаляем подчёркивание (ГОСТ п.4.3.6 — запрещено)
       removeChild(rPr, "w:u");
+
+      // Удаляем цветное выделение текста (жёлтое/зелёное и т.д.)
+      removeChild(rPr, "w:highlight");
 
       // Удаляем шейдинг run (фон текста)
       removeChild(rPr, "w:shd");
@@ -674,6 +678,15 @@ export class XmlDocumentFormatter {
     for (const node of bodyNodes) {
       if (!("w:tbl" in node)) continue;
 
+      // Ограничиваем ширину таблицы: 100% ширины страницы (5000 = 100% в единицах pct)
+      const tblPr = findChild(node, "w:tblPr");
+      if (tblPr) {
+        // Устанавливаем ширину таблицы = 100% доступного пространства
+        setOrderedProp(tblPr, "w:tblW", { "w:w": "5000", "w:type": "pct" });
+        // Устанавливаем autofit: таблица подстраивается под содержимое в пределах ширины
+        setOrderedProp(tblPr, "w:tblLayout", { "w:type": "autofit" });
+      }
+
       const rows = findChildren(node, "w:tr");
       for (const row of rows) {
         const cells = findChildren(row, "w:tc");
@@ -696,8 +709,9 @@ export class XmlDocumentFormatter {
             for (const run of runs) {
               const rPr = ensureRPr(run);
 
-              // Удаляем подчёркивание и шейдинг в таблицах
+              // Удаляем подчёркивание, выделение и шейдинг в таблицах
               removeChild(rPr, "w:u");
+              removeChild(rPr, "w:highlight");
               removeChild(rPr, "w:shd");
               // Сбрасываем цвет текста на auto — все не-чёрные цвета
               const colorNode = findChild(rPr, "w:color");

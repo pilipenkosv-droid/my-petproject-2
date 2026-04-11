@@ -102,10 +102,20 @@ function expandAbbreviations(text: string): string {
 }
 
 /**
+ * Удаляет ведущие пробелы/табуляции в начале текста параграфа.
+ * Реальный отступ первой строки задаётся через w:ind firstLine в XML.
+ * Пробелы-отступы — антипаттерн, нарушающий структуру документа.
+ */
+function stripLeadingSpaces(text: string): string {
+  return text.replace(/^[\t ]{2,}/, "");
+}
+
+/**
  * Применяет все текстовые замены к тексту параграфа
  */
 export function applyTextFixes(text: string): string {
   let result = text;
+  result = stripLeadingSpaces(result);
   result = expandAbbreviations(result);
   result = addNBSPBeforeUnits(result);
   result = addNBSPAfterInitials(result);

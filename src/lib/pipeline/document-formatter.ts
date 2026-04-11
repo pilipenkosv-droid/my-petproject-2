@@ -17,8 +17,9 @@ import { XmlDocumentFormatter } from "../formatters/xml-formatter";
 import { applyBibliographyFormattingToXmlParagraph } from "../formatters/bibliography-xml-formatter";
 import { applyTextFixesToXmlParagraph } from "../formatters/text-fixes-xml-formatter";
 import { applyCaptionNumbering } from "../formatters/caption-numbering-formatter";
-import { applyTocGeneration } from "../formatters/toc-generator";
-import { applyAiCaptions } from "../formatters/ai-caption-generator";
+// TODO: re-enable when stable
+// import { applyTocGeneration } from "../formatters/toc-generator";
+// import { applyAiCaptions } from "../formatters/ai-caption-generator";
 import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
 import { LAVA_CONFIG } from "../payment/config";
 import {
@@ -186,21 +187,14 @@ async function createFormattedDocumentXml(
     enrichedParagraphs
   );
 
-  // AI-генерация подписей к таблицам и рисункам без подписей
-  const { buffer: afterAiCaptions } = await applyAiCaptions(
-    afterCaptions,
-    enrichedParagraphs,
-    rules
-  );
+  // TODO: AI-генерация подписей — отключена до стабилизации (разрушает документ при ошибках AI)
+  // const { buffer: afterAiCaptions } = await applyAiCaptions(afterCaptions, enrichedParagraphs, rules);
 
-  // Генерация/обновление TOC через Word Field Code (последний шаг — после всех вставок)
-  const { buffer: afterToc } = await applyTocGeneration(
-    afterAiCaptions,
-    enrichedParagraphs,
-    rules
-  );
+  // TODO: TOC генерация — отключена до улучшения определения title_page boundary
+  // (вставляет TOC внутри титульной страницы, дублирует существующий TOC)
+  // const { buffer: afterToc } = await applyTocGeneration(afterCaptions, enrichedParagraphs, rules);
 
-  return afterToc;
+  return afterCaptions;
 }
 
 /**
