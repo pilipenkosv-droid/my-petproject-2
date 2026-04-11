@@ -19,10 +19,93 @@ import {
 
 import type { BlockType } from "./block-markup-schemas";
 
-/** Максимум параграфов в одном AI-запросе.
- * 50 — оптимально для Gemini Flash Lite: ~10K chars input, ~2500 tokens output.
- * При 150 модель часто обрезает JSON → весь чанк fallback → "unknown". */
-const CHUNK_SIZE = 50;
+/** Целевой размер чанка (параграфов). Структурный чанкинг может дать ±20%. */
+const TARGET_CHUNK_SIZE = 50;
+/** Жёсткий максимум — если структурная граница не найдена, режем тут */
+const MAX_CHUNK_SIZE = 70;
+/** Минимум — не создавать слишком мелкие чанки */
+const MIN_CHUNK_SIZE = 15;
+
+/** Паттерны структурных границ документа — хорошие места для разрезания */
+const SECTION_BOUNDARY_RE =
+  /^(?:введение|заключение|глава\s+\d|список\s+(?:использованных?\s+)?(?:источников|литературы)|библиограф|приложение\s+[а-яА-Яa-zA-Z]|содержание|оглавление|аннотация|abstract|список\s+сокращений)\s*$/i;
+
+/**
+ * Структурный чанкинг: режет по смысловым границам документа.
+ *
+ * Приоритет границ (от лучшей к худшей):
+ * 1. Заголовок секции (Введение, Глава, Список литературы, Приложение)
+ * 2. Word Heading стиль (Heading1, Heading2, ...)
+ * 3. Пустой параграф после блока текста
+ * 4. Жёсткий лимит MAX_CHUNK_SIZE
+ */
+function splitIntoStructuralChunks(
+  paragraphs: Array<{ index: number; text: string; style?: string }>
+): Array<Array<{ index: number; text: string; style?: string }>> {
+  if (paragraphs.length <= MAX_CHUNK_SIZE) {
+    return [paragraphs];
+  }
+
+  const chunks: Array<Array<{ index: number; text: string; style?: string }>> = [];
+  let start = 0;
+
+  while (start < paragraphs.length) {
+    const remaining = paragraphs.length - start;
+
+    // Остаток помещается в один чанк
+    if (remaining <= MAX_CHUNK_SIZE) {
+      chunks.push(paragraphs.slice(start));
+      break;
+    }
+
+    // Ищем лучшую границу в диапазоне [TARGET..MAX]
+    let bestCut = -1;
+    let bestScore = 0;
+
+    for (let i = start + MIN_CHUNK_SIZE; i < start + MAX_CHUNK_SIZE && i < paragraphs.length; i++) {
+      const p = paragraphs[i];
+      const text = p.text.trim();
+      const style = (p.style || "").toLowerCase();
+      let score = 0;
+
+      // Секция документа (Введение, Заключение, Приложение...)
+      if (SECTION_BOUNDARY_RE.test(text)) {
+        score = 100;
+      }
+      // Heading стиль в Word
+      else if (style.startsWith("heading")) {
+        score = 80;
+      }
+      // Нумерованный заголовок ("1.2 Название")
+      else if (/^\d+\.\d*\s+[А-ЯЁA-Z]/.test(text)) {
+        score = 70;
+      }
+      // Пустой параграф — естественный разделитель
+      else if (text === "") {
+        score = 30;
+      }
+
+      // Бонус за близость к TARGET_CHUNK_SIZE (±5 — идеально)
+      const dist = Math.abs((i - start) - TARGET_CHUNK_SIZE);
+      if (dist <= 5) score += 10;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCut = i;
+      }
+    }
+
+    // Если хорошая граница не найдена — режем на TARGET_CHUNK_SIZE
+    if (bestCut <= start) {
+      bestCut = start + TARGET_CHUNK_SIZE;
+    }
+
+    chunks.push(paragraphs.slice(start, bestCut));
+    start = bestCut;
+  }
+
+  return chunks;
+}
 
 /**
  * Создаёт fallback-разметку при ошибке AI — все параграфы получают тип unknown
@@ -161,7 +244,7 @@ export async function parseDocumentBlocks(
   }
 
   // Маленький документ — один запрос
-  if (paragraphs.length <= CHUNK_SIZE) {
+  if (paragraphs.length <= MAX_CHUNK_SIZE) {
     try {
       const result = await parseChunk(paragraphs);
       const { blocks: validated, fixes } = validateAndFixMarkup(result.blocks, paragraphs);
@@ -175,20 +258,16 @@ export async function parseDocumentBlocks(
     }
   }
 
-  // Большой документ — разбиваем на чанки
+  // Большой документ — структурный чанкинг по границам секций
+  const chunks = splitIntoStructuralChunks(paragraphs);
   console.log(
-    `[block-markup] Large document: ${paragraphs.length} paragraphs, splitting into chunks of ${CHUNK_SIZE}`
+    `[block-markup] Large document: ${paragraphs.length} paragraphs → ${chunks.length} structural chunks (${chunks.map(c => c.length).join(", ")} paragraphs)`
   );
 
   const allBlocks: BlockMarkupItem[] = [];
   const allWarnings: string[] = [];
   let failedChunks = 0;
   let primaryModelId: string | undefined;
-
-  const chunks: Array<{ index: number; text: string; style?: string }>[] = [];
-  for (let i = 0; i < paragraphs.length; i += CHUNK_SIZE) {
-    chunks.push(paragraphs.slice(i, i + CHUNK_SIZE));
-  }
 
   // Обрабатываем чанки батчами по PARALLEL_BATCH — баланс скорости и rate limits
   const PARALLEL_BATCH = 3;
