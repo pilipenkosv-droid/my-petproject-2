@@ -54,7 +54,20 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 1,
   },
 
-  // ── AITUNNEL Gemini Flash Lite (платный, надёжный, ~19₽/1M input) ──
+  // ── Vercel AI Gateway Gemini Flash Lite ($0.10/1M in, $5 free credit) ──
+  {
+    id: "vercel-gemini-flash-lite",
+    displayName: "Vercel Gemini Flash Lite",
+    protocol: "openai-compatible",
+    apiKeyEnv: "AI_GATEWAY_API_KEY",
+    modelId: "google/gemini-2.5-flash-lite",
+    baseUrl: "https://ai-gateway.vercel.sh/v1",
+    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
+    supportsJsonMode: true,
+    priority: 2,
+  },
+
+  // ── AITUNNEL Gemini Flash Lite (платный fallback, ~19₽/1M input) ──
   {
     id: "aitunnel-gemini-flash-lite",
     displayName: "AITUNNEL Gemini Flash Lite",
@@ -64,10 +77,10 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     baseUrl: "https://api.aitunnel.ru/v1",
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
-    priority: 2,
+    priority: 3,
   },
 
-  // ── AITUNNEL Llama 3.3 70B (платный, надёжный, ~23₽/1M input) ──
+  // ── AITUNNEL Llama 3.3 70B (платный fallback, ~23₽/1M input) ──
   {
     id: "aitunnel-llama-3.3-70b",
     displayName: "AITUNNEL Llama 3.3 70B",
@@ -77,7 +90,7 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     baseUrl: "https://api.aitunnel.ru/v1",
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
-    priority: 3,
+    priority: 4,
   },
 
   // ── Cerebras Qwen 235B — бесплатный, но ~59% success rate ──

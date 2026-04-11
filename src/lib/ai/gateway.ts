@@ -20,7 +20,7 @@ const AI_CALL_TIMEOUT_FREE_MS = 12000;
 const MAX_MODEL_ATTEMPTS = 4;
 
 /** Платные провайдеры (по apiKeyEnv) */
-const PAID_PROVIDERS = new Set(["ANTHROPIC_API_KEY", "AITUNNEL_API_KEY"]);
+const PAID_PROVIDERS = new Set(["ANTHROPIC_API_KEY", "AITUNNEL_API_KEY", "AI_GATEWAY_API_KEY"]);
 
 /**
  * Ошибка когда все AI-модели недоступны.
