@@ -1237,7 +1237,7 @@ function checkProhibitedAbbreviations(
             endOffset: match.index + match[0].length,
             text: match[0],
           },
-          autoFixable: false,
+          autoFixable: true,
         });
       }
     });

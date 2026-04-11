@@ -2,7 +2,7 @@
 
 import { DocumentStatistics } from "@/types/formatting-rules";
 import { NumberTicker } from "@/components/ui/number-ticker";
-import { FileText, BookOpen, AlertTriangle, CheckCircle } from "lucide-react";
+import { FileText, BookOpen, AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
 
 interface StatisticsPanelProps {
   statistics: DocumentStatistics;
@@ -15,42 +15,46 @@ export function StatisticsPanel({
   violationsCount,
   fixesApplied,
 }: StatisticsPanelProps) {
+  const manualFixCount = violationsCount - fixesApplied;
+
   const stats = [
     {
       label: "Символов",
       value: statistics.totalCharacters,
       icon: FileText,
-      gradient: "",
       delay: 0,
+      subtitle: null as string | null,
     },
     {
       label: "Страниц",
       value: statistics.pageCount,
       icon: BookOpen,
-      gradient: "",
       delay: 0.1,
+      subtitle: null as string | null,
     },
     {
-      label: "Найдено нарушений",
+      label: "Обнаружено",
       value: violationsCount,
       icon: AlertTriangle,
-      gradient: "",
       delay: 0.2,
+      subtitle: null as string | null,
     },
     {
       label: "Исправлено",
       value: fixesApplied,
       icon: CheckCircle,
-      gradient: "",
       delay: 0.3,
+      subtitle: manualFixCount > 0
+        ? `${manualFixCount} треб. ручной правки`
+        : "все нарушения исправлены",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
       {stats.map((stat) => (
-        <div 
-          key={stat.label} 
+        <div
+          key={stat.label}
           className="bg-surface border border-surface-border p-4 transition-all duration-300 hover:bg-surface-hover hover:border-surface-border"
         >
           <div className="w-10 h-10 bg-foreground flex items-center justify-center mb-3 shadow-sm">
@@ -62,6 +66,11 @@ export function StatisticsPanel({
           <div className="text-xs text-on-surface-subtle mt-1">
             {stat.label}
           </div>
+          {stat.subtitle && (
+            <div className="text-[10px] text-on-surface-subtle mt-1 opacity-70">
+              {stat.subtitle}
+            </div>
+          )}
         </div>
       ))}
     </div>
