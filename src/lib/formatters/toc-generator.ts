@@ -407,8 +407,9 @@ function removeTableBasedToc(bodyChildren: OrderedXmlNode[]): void {
     const keywordMatches = (tableText.match(tocKeywords) || []).length;
     const entryMatches = tableText.split("\n").filter((line) => tocEntryPattern.test(line.trim())).length;
 
-    // Минимум 2 ключевых слова или 3+ записей с нумерацией → это TOC-таблица
-    if (keywordMatches >= 2 || entryMatches >= 3) {
+    // TOC-таблица: 2+ ключевых слов, или 1 ключевое + 3 нумерованных записей
+    // Без ключевых слов не удаляем — это могут быть обычные нумерованные таблицы
+    if (keywordMatches >= 2 || (keywordMatches >= 1 && entryMatches >= 3)) {
       toRemove.push(i);
       console.log(`[toc] Found table-based TOC at bodyIndex ${i} (${keywordMatches} keywords, ${entryMatches} entries)`);
     }

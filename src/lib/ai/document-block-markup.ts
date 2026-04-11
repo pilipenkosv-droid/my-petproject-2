@@ -125,6 +125,47 @@ function createFallbackMarkup(
   };
 }
 
+/** Маппинг частых AI-галлюцинаций → валидные blockType.
+ * Предотвращает Zod-ошибку на весь чанк из-за одного невалидного значения. */
+const HALLUCINATION_MAP: Record<string, BlockType> = {
+  annotation: "title_page_annotation",
+  header: "title_page_header",
+  footer: "title_page_footer",
+  title: "title_page_title",
+  info: "title_page_info",
+  reference: "bibliography_entry",
+  references: "bibliography_entry",
+  bibliography: "bibliography_entry",
+  figure_text: "figure_caption",
+  table_text: "table_caption",
+  heading: "heading_1",
+  text: "body_text",
+  paragraph: "body_text",
+  content: "body_text",
+  appendix: "appendix_content",
+  toc_heading: "toc",
+};
+
+/**
+ * Нормализует AI-ответ перед Zod-валидацией: исправляет невалидные blockType.
+ */
+function normalizeAiResponse(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const obj = raw as Record<string, unknown>;
+  if (!Array.isArray(obj.blocks)) return raw;
+
+  obj.blocks = obj.blocks.map((block: unknown) => {
+    if (!block || typeof block !== "object") return block;
+    const b = block as Record<string, unknown>;
+    const bt = b.blockType;
+    if (typeof bt === "string" && bt in HALLUCINATION_MAP) {
+      b.blockType = HALLUCINATION_MAP[bt];
+    }
+    return b;
+  });
+  return raw;
+}
+
 /**
  * Размечает один чанк параграфов через AI
  */
@@ -138,7 +179,8 @@ async function parseChunk(
     maxTokens: 4096,
   });
 
-  const parsed = documentBlockMarkupSchema.parse(response.json);
+  const normalized = normalizeAiResponse(response.json);
+  const parsed = documentBlockMarkupSchema.parse(normalized);
   console.log(
     `[block-markup] Chunk (${paragraphs.length} paragraphs) parsed via ${response.modelName}`
   );

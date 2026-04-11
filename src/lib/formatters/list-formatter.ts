@@ -214,7 +214,11 @@ function findBibliographyStart(
   }
 
   // Сигнал 2: текстовый поиск заголовка библиографии
+  // ВАЖНО: пропускаем toc/toc_entry — там тоже может быть текст "Список литературы"
   for (const { paragraphIndex, node } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    const bt = enriched?.blockType || "unknown";
+    if (bt === "toc" || bt === "toc_entry" || bt.startsWith("heading_")) continue;
     const text = getFullText(node).trim();
     if (BIBLIO_TITLE_PATTERNS.test(text)) {
       return paragraphIndex;
