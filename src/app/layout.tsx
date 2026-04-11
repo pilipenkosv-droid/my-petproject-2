@@ -4,7 +4,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { JsonLd } from "@/components/JsonLd";
-import { YandexMetrika } from "@/components/analytics/YandexMetrika";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { getSoftwareApplicationSchema, getWebSiteSchema, getOrganizationSchema } from "@/lib/seo/schemas";
@@ -96,7 +95,6 @@ export default function RootLayout({
         </ThemeProvider>
         <Analytics />
         <Suspense fallback={null}>
-          <YandexMetrika />
           <GoogleAnalytics />
           <PageTracker />
         </Suspense>
