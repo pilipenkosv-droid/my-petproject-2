@@ -112,43 +112,68 @@ Blog CTA
 
 ## AI-шлюз (Multi-Provider Gateway)
 
-**Файл:** `src/lib/ai/gateway.ts`
+**Файлы:** `src/lib/ai/gateway.ts`, `src/lib/ai/model-registry.ts`
+**ADR:** `docs/adr/003-ai-model-rotation-aitunnel.md`
 
-Шлюз автоматически выбирает доступную модель из нескольких провайдеров с фоллбэком:
+Гибридная архитектура: бесплатные провайдеры (Gemini, Cerebras) + платный агрегатор (AITUNNEL).
+Шлюз перебирает модели по приоритету, при ошибке — следующая модель.
 
 ```
-Запрос → [Rate Limiter] → Gemini → Groq → OpenRouter → Cerebras → OpenAI → Claude
-                              ↓         ↓
-                          если 429   если ошибка
-                          → следующий провайдер
+Запрос → [Rate Limiter] → Gemini (free) → AITUNNEL Gemini (paid)
+                              → Cerebras Qwen 235B (free) → AITUNNEL Llama 70B (paid)
+                              → Cerebras 8B (emergency)
 ```
 
-### Провайдеры и модели
+### Ротация моделей (актуальная на 2026-04-11)
 
-| Провайдер | Модели | Лимиты |
-|-----------|--------|--------|
-| Gemini | gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro | 20 RPD на модель |
-| Groq | llama-3.3-70b | 14400 RPD |
-| OpenRouter | бесплатные модели (Llama, Gemma) | зависит от модели |
-| Cerebras | llama-3.3-70b | 1000 RPD |
-| OpenAI | gpt-4o, gpt-4o-mini | платный |
-| Anthropic | claude-3.5-sonnet | платный |
+| Priority | ID | Провайдер | Модель | Тип | ENV ключа |
+|----------|----|-----------|--------|-----|-----------|
+| 1 | gemini-2.5-flash-lite | Google | Gemini 2.5 Flash Lite | бесплатный (20 RPD) | GEMINI_API_KEY |
+| 2 | aitunnel-gemini-flash-lite | AITUNNEL | Gemini 2.5 Flash Lite | платный (~19₽/1M) | AITUNNEL_API_KEY |
+| 3 | cerebras-qwen-3-235b | Cerebras | Qwen 3 235B | бесплатный (200 RPD) | CEREBRAS_API_KEY |
+| 4 | aitunnel-llama-3.3-70b | AITUNNEL | Llama 3.3 70B | платный (~23₽/1M) | AITUNNEL_API_KEY |
+| 10 | cerebras-llama-3.1-8b | Cerebras | Llama 3.1 8B | аварийный fallback | CEREBRAS_API_KEY |
+
+### Таймауты и защита
+
+- Платные провайдеры (AITUNNEL): 10с таймаут
+- Бесплатные (Gemini, Cerebras): 12с таймаут
+- Максимум 4 попытки за запрос (48с < 60с Vercel maxDuration)
+- При consecutive errors модель временно блокируется (exponential backoff)
 
 ### Rate Limiter
 
 **Файл:** `src/lib/ai/rate-limiter.ts`
 
-- Отслеживание RPM (requests per minute) и RPD (requests per day)
-- Хранение счётчиков в Supabase (`rate_limits` таблица)
+- Отслеживание RPM и RPD в Supabase (`rate_limits` таблица)
+- Consecutive errors tracking с временной блокировкой
+- Историческая статистика в `ai_usage_daily` таблице
 - Автоматический пропуск модели при исчерпании лимита
+
+### Качество AI-ответов
+
+**Few-shot промпты** (`block-markup-prompts.ts`): 24-строчный пример для разметки блоков.
+
+**Post-validation** (`document-block-markup.ts`): rule-based проверка и автоисправление 7 типов ошибок AI:
+1. Пустые параграфы → `empty`
+2. Номера страниц (1-4 цифры) → `page_number`
+3. Подписи рисунков ("Рисунок N") → `figure_caption`
+4. Подписи таблиц ("Таблица N") → `table_caption`
+5. Стили заголовков из Word (Heading1-4) → `heading_*`
+6. Элементы списков (–, -, •, *, нумерованные) → `list_item`
+7. Язык библиографических записей (ru/en)
 
 ### Промпты
 
 | Файл | Назначение |
 |------|-----------|
-| `prompts.ts` | Основные промпты: извлечение правил из методички |
+| `prompts.ts` | Извлечение правил из методички |
 | `semantic-prompts.ts` | Семантический анализ структуры документа |
-| `block-markup-prompts.ts` | Разметка блоков документа |
+| `block-markup-prompts.ts` | Разметка блоков документа (с few-shot примером) |
+
+### Трекинг модели в джобах
+
+Поле `model_id` в таблице `jobs` — какая модель обработала документ. Записывается после успешной AI-разметки блоков.
 
 ## Схема базы данных (Supabase PostgreSQL)
 
@@ -172,6 +197,7 @@ Blog CTA
 | violations | JSONB | Массив найденных нарушений |
 | statistics | JSONB | Статистика документа |
 | error | TEXT | Сообщение об ошибке |
+| model_id | TEXT | ID AI-модели, обработавшей документ (nullable) |
 | user_id | UUID | FK → auth.users (nullable для анонимных) |
 | created_at | TIMESTAMPTZ | Время создания |
 | updated_at | TIMESTAMPTZ | Время обновления |
@@ -224,9 +250,24 @@ CSAT-отзывы пользователей.
 |------|-----|----------|
 | model_id | TEXT PK | Идентификатор модели |
 | minute_requests | INTEGER | Запросов в текущей минуте |
+| minute_start | BIGINT | Timestamp начала текущей минуты |
 | day_requests | INTEGER | Запросов за день |
+| day_start | BIGINT | Timestamp начала текущего дня |
+| consecutive_errors | INTEGER | Ошибок подряд (сброс при успехе) |
+| blocked_until | BIGINT | Timestamp блокировки модели после ошибок |
 
-**Row Level Security (RLS):** Таблица защищена RLS с политикой доступа только для service_role. Пользователи не имеют прямого доступа к rate_limits.
+### Таблица `ai_usage_daily`
+
+Историческая статистика использования моделей (по дням).
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| model_id | TEXT | Идентификатор модели |
+| date | DATE | Дата |
+| successful_requests | INTEGER | Успешных запросов за день |
+| failed_requests | INTEGER | Неудачных запросов за день |
+
+**Row Level Security (RLS):** Обе таблицы защищены RLS с политикой доступа только для service_role.
 
 ### Supabase Storage
 
@@ -305,3 +346,4 @@ CSAT-отзывы пользователей.
 | migration-005-rate-limits-rls.sql | RLS для rate_limits |
 | migration-006-jobs-has-full-version.sql | has_full_version для jobs |
 | migration-007-payments-unlock-job-id.sql | unlock_job_id для payments |
+| migration-018-jobs-model-id.sql | model_id для jobs + индекс |
