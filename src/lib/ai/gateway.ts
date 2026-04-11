@@ -307,7 +307,13 @@ export async function warmupModels(): Promise<{
  * При ошибке пробует следующую модель.
  */
 export async function callAI(request: GatewayRequest): Promise<GatewayResponse> {
-  const models = getAvailableModels();
+  let models = getAvailableModels();
+
+  // Bench mode: форсируем конкретную модель
+  const forceModel = process.env.BENCH_FORCE_MODEL;
+  if (forceModel) {
+    models = models.filter(m => m.id === forceModel);
+  }
 
   console.log(`[ai-gateway] Available models: ${models.map(m => m.id).join(", ") || "NONE"}`);
 

@@ -123,29 +123,26 @@ Blog CTA
 **Файлы:** `src/lib/ai/gateway.ts`, `src/lib/ai/model-registry.ts`
 **ADR:** `docs/adr/003-ai-model-rotation-aitunnel.md`
 
-Гибридная архитектура: бесплатные провайдеры (Gemini, Cerebras) + платный агрегатор (AITUNNEL).
-Шлюз перебирает модели по приоритету, при ошибке — следующая модель.
+Единая модель Gemini 2.5 Flash через два провайдера. Шлюз перебирает по приоритету, при ошибке — следующий провайдер.
 
 ```
-Запрос → [Rate Limiter] → Gemini (free) → AITUNNEL Gemini (paid)
-                              → Cerebras Qwen 235B (free) → AITUNNEL Llama 70B (paid)
-                              → Cerebras 8B (emergency)
+Запрос → [Rate Limiter] → Vercel AI Gateway (Gemini 2.5 Flash) → AITUNNEL (Gemini 2.5 Flash)
 ```
 
 ### Ротация моделей (актуальная на 2026-04-11)
 
-| Priority | ID | Провайдер | Модель | Тип | ENV ключа |
-|----------|----|-----------|--------|-----|-----------|
-| 1 | gemini-2.5-flash-lite | Google | Gemini 2.5 Flash Lite | бесплатный (20 RPD) | GEMINI_API_KEY |
-| 2 | aitunnel-gemini-flash-lite | AITUNNEL | Gemini 2.5 Flash Lite | платный (~19₽/1M) | AITUNNEL_API_KEY |
-| 3 | cerebras-qwen-3-235b | Cerebras | Qwen 3 235B | бесплатный (200 RPD) | CEREBRAS_API_KEY |
-| 4 | aitunnel-llama-3.3-70b | AITUNNEL | Llama 3.3 70B | платный (~23₽/1M) | AITUNNEL_API_KEY |
-| 10 | cerebras-llama-3.1-8b | Cerebras | Llama 3.1 8B | аварийный fallback | CEREBRAS_API_KEY |
+| Priority | ID | Провайдер | Модель | Стоимость | ENV ключа |
+|----------|----|-----------|--------|-----------|-----------|
+| 1 | vercel-gemini-flash | Vercel AI Gateway | Gemini 2.5 Flash | ~$0.075/1M in | AI_GATEWAY_API_KEY |
+| 2 | aitunnel-gemini-flash | AITUNNEL | Gemini 2.5 Flash | ~58₽/1M in | AITUNNEL_API_KEY |
+
+**Почему только Gemini 2.5 Flash:** quality bench показал, что Flash Lite даёт 1% unknown, 5 bibliography (vs 30), 26 captions (vs 40), 17 ложных H4. Flash Full: 0% unknown, точная разметка. Стоимость ~5-8₽/документ (3-5% от цены 159₽).
+
+**Убраны из ротации:** Gemini Flash Lite (слабая разметка), Cerebras Qwen/Llama (нестабильны, слабый русский), direct Gemini API (20 RPD лимит).
 
 ### Таймауты и защита
 
-- Платные провайдеры (AITUNNEL): 10с таймаут
-- Бесплатные (Gemini, Cerebras): 12с таймаут
+- Оба провайдера платные: 10с таймаут
 - Максимум 4 попытки за запрос (48с < 60с Vercel maxDuration)
 - При consecutive errors модель временно блокируется (exponential backoff)
 

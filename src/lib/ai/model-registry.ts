@@ -3,6 +3,9 @@
  *
  * Каждая модель описывает провайдера, модельный ID, лимиты и
  * способ вызова (gemini-native или openai-compatible).
+ *
+ * Только Gemini 2.5 Flash (полный) — Flash Lite даёт слабую разметку
+ * (5 vs 30 bibliography, 26 vs 40 captions, 17 ложных H4).
  */
 
 export type ModelProtocol = "gemini" | "openai-compatible" | "anthropic";
@@ -39,71 +42,36 @@ export interface ModelConfig {
 
 /**
  * Все поддерживаемые модели.
- * Порядок priority определяет предпочтение при прочих равных.
+ *
+ * Ротация: Vercel (primary) → AITUNNEL (fallback).
+ * Обе используют Gemini 2.5 Flash (полный) — единственная модель,
+ * прошедшая quality bench с 0% unknown.
  */
 export const MODEL_REGISTRY: ModelConfig[] = [
-  // ── Google Gemini (бесплатный, но жёсткий RPD лимит) ──
+  // ── Vercel AI Gateway — Gemini 2.5 Flash (primary, прод) ──
   {
-    id: "gemini-2.5-flash-lite",
-    displayName: "Gemini 2.5 Flash Lite",
-    protocol: "gemini",
-    apiKeyEnv: "GEMINI_API_KEY",
-    modelId: "gemini-2.5-flash-lite",
-    limits: { rpm: 10, rpd: 20, tpm: 250_000 },
+    id: "vercel-gemini-flash",
+    displayName: "Vercel Gemini 2.5 Flash",
+    protocol: "openai-compatible",
+    apiKeyEnv: "AI_GATEWAY_API_KEY",
+    modelId: "google/gemini-2.5-flash",
+    baseUrl: "https://ai-gateway.vercel.sh/v1",
+    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
     priority: 1,
   },
 
-  // ── Vercel AI Gateway Gemini Flash Lite ($0.10/1M in, $5 free credit) ──
+  // ── AITUNNEL — Gemini 2.5 Flash (fallback, баланс ~1150₽) ──
   {
-    id: "vercel-gemini-flash-lite",
-    displayName: "Vercel Gemini Flash Lite",
-    protocol: "openai-compatible",
-    apiKeyEnv: "AI_GATEWAY_API_KEY",
-    modelId: "google/gemini-2.5-flash-lite",
-    baseUrl: "https://ai-gateway.vercel.sh/v1",
-    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
-    supportsJsonMode: true,
-    priority: 2,
-  },
-
-  // ── AITUNNEL Gemini Flash Lite (fallback, дожигаем баланс 1150₽) ──
-  {
-    id: "aitunnel-gemini-flash-lite",
-    displayName: "AITUNNEL Gemini Flash Lite",
+    id: "aitunnel-gemini-flash",
+    displayName: "AITUNNEL Gemini 2.5 Flash",
     protocol: "openai-compatible",
     apiKeyEnv: "AITUNNEL_API_KEY",
-    modelId: "gemini-2.5-flash-lite",
+    modelId: "gemini-2.5-flash",
     baseUrl: "https://api.aitunnel.ru/v1",
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
-    priority: 3,
-  },
-
-  // ── Cerebras Qwen 235B — бесплатный, но ~59% success rate ──
-  {
-    id: "cerebras-qwen-3-235b",
-    displayName: "Cerebras Qwen 3 235B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "qwen-3-235b-a22b-instruct-2507",
-    baseUrl: "https://api.cerebras.ai/v1",
-    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
-    supportsJsonMode: true,
-    priority: 8,
-  },
-
-  // ── Cerebras Llama 8B (аварийный fallback — слабая модель) ──
-  {
-    id: "cerebras-llama-3.1-8b",
-    displayName: "Cerebras Llama 3.1 8B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "llama3.1-8b",
-    baseUrl: "https://api.cerebras.ai/v1",
-    limits: { rpm: 30, rpd: 1000, tpm: 60_000 },
-    supportsJsonMode: true,
-    priority: 10,
+    priority: 2,
   },
 ];
 

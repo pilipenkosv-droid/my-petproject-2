@@ -13,11 +13,17 @@ import * as fs from "fs";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
-// Стенд использует ТОЛЬКО AITUNNEL — остальные провайдеры отключаем,
-// чтобы не тратить лимиты бесплатных API и не засорять логи 429-ми.
-delete process.env.GEMINI_API_KEY;
+// Стенд использует ТОЛЬКО AITUNNEL — Vercel AI Gateway не нужен в bench.
 delete process.env.AI_GATEWAY_API_KEY;
-delete process.env.CEREBRAS_API_KEY;
+
+// Поддержка выбора модели через --model=<model_id>
+// По умолчанию: aitunnel-gemini-flash (Gemini 2.5 Flash через AITUNNEL)
+// Пример: --model=aitunnel-gemini-flash
+const modelArg = process.argv.find(a => a.startsWith("--model="));
+const BENCH_MODEL = modelArg ? modelArg.split("=")[1] : null;
+if (BENCH_MODEL) {
+  process.env.BENCH_FORCE_MODEL = BENCH_MODEL;
+}
 
 import { createClient } from "@supabase/supabase-js";
 import JSZip from "jszip";
@@ -392,11 +398,12 @@ async function deepInspect(
 // ── Main ──
 
 async function main() {
-  const fileId = process.argv[2];
+  const fileId = process.argv.slice(2).find(a => !a.startsWith("--"));
   if (!fileId) {
-    console.error("Usage: npx tsx scripts/test-quality-bench.ts <source_document_id>");
+    console.error("Usage: npx tsx scripts/test-quality-bench.ts <source_document_id> [--model=<model_id>]");
     console.error("\nExamples:");
     console.error("  npx tsx scripts/test-quality-bench.ts ndN3Vip2HhVo6cWoL89hv");
+    console.error("  npx tsx scripts/test-quality-bench.ts ndN3Vip2HhVo6cWoL89hv --model=aitunnel-gemini-flash");
     console.error("  npx tsx scripts/test-quality-bench.ts prqZG08LGNO58ld0s_Ajk");
     process.exit(1);
   }
