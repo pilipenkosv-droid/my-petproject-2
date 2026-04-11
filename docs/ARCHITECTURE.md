@@ -39,11 +39,19 @@
    - Генерация списка нарушений с привязкой к параграфам
    - Подсчёт статистики (символы, страницы, compliance %)
 4. **Форматирование** (`document-formatter.ts` + `xml-formatter.ts`):
-   - Применение правил на уровне DOCX XML
+   - Применение правил на уровне DOCX XML (шрифты, отступы, интервалы, поля)
+   - Разрешение конфликтов `firstLine`/`hanging` indent в `w:ind`
+   - `w:tblHeader` на первой строке таблиц (ГОСТ: повтор шапки при разрыве)
+   - Text fixes в таблицах (`w:tbl→w:tr→w:tc→w:p`)
    - Специальная обработка библиографии (`bibliography-xml-formatter.ts`)
    - Вставка комментариев с описанием нарушений
-5. Сохранение двух файлов: marked original + formatted
-6. Статус → `completed`
+5. **Очистка** (`document-cleanup-formatter.ts`):
+   - Нумерация заголовков (regex: `Глава N`, `1. 1 Текст`, структурные без номеров)
+   - `collapseSpacesEverywhere` — множественные пробелы и двойные точки во всех параграфах
+   - `insertSectionBreakAfterTitle` — разрыв секции после титула (нумерация с 1)
+   - Очистка пустых параграфов в ячейках таблиц
+6. Сохранение двух файлов: marked original + formatted
+7. Статус → `completed`
 
 ### Альтернативный путь: всё в одном (`/api/process`)
 
@@ -153,6 +161,8 @@ Blog CTA
 ### Качество AI-ответов
 
 **Few-shot промпты** (`block-markup-prompts.ts`): 24-строчный пример для разметки блоков.
+
+**Inter-chunk recovery** (`document-block-markup.ts`): для документов >150 параграфов — `recordUsage()` между чанками сбрасывает consecutiveErrors, предотвращая каскадный отказ при truncated JSON.
 
 **Post-validation** (`document-block-markup.ts`): rule-based проверка и автоисправление 7 типов ошибок AI:
 1. Пустые параграфы → `empty`
@@ -329,9 +339,20 @@ CSAT-отзывы пользователей.
 
 Форматирование работает напрямую с XML-содержимым DOCX-файла (через JSZip + fast-xml-parser):
 
-- `xml-formatter.ts` — основная логика: шрифты, размеры, отступы, интервалы, поля
+- `xml-formatter.ts` — основная логика: шрифты, размеры, отступы, интервалы, поля, firstLine/hanging indent, w:tblHeader
+- `document-cleanup-formatter.ts` — post-processing: нумерация заголовков, section break, очистка пробелов/точек
+- `text-fixes-xml-formatter.ts` — collapse spaces, double dots, abbreviation expansion
 - `bibliography-xml-formatter.ts` — специальные правила для библиографии
 - `bibliography-formatter.ts` — неразрывные пробелы, кавычки, тире, нумерация
+
+### Quality Bench (`scripts/`)
+
+Автоматический бенчмарк качества форматирования (ADR-005):
+
+- `format-quality-bench.ts` — оркестратор: загрузка документа → форматирование → проверка
+- `quality-checks.ts` — 30+ XML-проверок по 7 категориям (page, text, headings, structure, tables, images, preservation)
+- Text-based paragraph matching с fallback для сдвинутых индексов после TOC/captions
+- Baseline score: **95/100** (2026-04-11)
 
 ## Миграции БД
 
