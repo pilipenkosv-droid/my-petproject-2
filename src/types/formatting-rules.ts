@@ -917,4 +917,8 @@ export interface DocumentStatistics {
   originalPageCount?: number;
   /** Применённый лимит страниц */
   pageLimitApplied?: number;
+  /** Время работы пайплайна (парсинг + AI-разметка + анализ + форматирование), мс */
+  pipelineTimeMs?: number;
+  /** Время AI-разметки блоков, мс */
+  markupTimeMs?: number;
 }

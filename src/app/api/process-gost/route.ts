@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rules = DEFAULT_GOST_RULES;
+    const pipelineStart = Date.now();
 
     // Парсим структуру и размечаем блоки через AI
     await updateJobProgress(jobId, "analyzing", 20, "AI-разметка блоков документа");
@@ -138,8 +139,11 @@ export async function POST(request: NextRequest) {
       hasFullVersion = true;
     }
 
+    const pipelineTimeMs = Date.now() - pipelineStart;
     const statistics = {
       ...analysisResult.statistics,
+      pipelineTimeMs,
+      markupTimeMs: blockMarkupResult.markupDurationMs,
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,

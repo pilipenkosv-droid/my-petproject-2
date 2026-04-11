@@ -13,6 +13,12 @@ import * as fs from "fs";
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
+// Стенд использует ТОЛЬКО AITUNNEL — остальные провайдеры отключаем,
+// чтобы не тратить лимиты бесплатных API и не засорять логи 429-ми.
+delete process.env.GEMINI_API_KEY;
+delete process.env.AI_GATEWAY_API_KEY;
+delete process.env.CEREBRAS_API_KEY;
+
 import { createClient } from "@supabase/supabase-js";
 import JSZip from "jszip";
 import {

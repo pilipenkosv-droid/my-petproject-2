@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Парсим структуру и размечаем блоки через AI
     await updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
+    const pipelineStart = Date.now();
     const docxStructure = await parseDocxStructure(sourceBuffer);
     const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
     const enrichedParagraphs = blockMarkupResult.paragraphs;
@@ -115,9 +116,12 @@ export async function POST(request: NextRequest) {
       console.log(`[confirm-rules] Saved full versions for job ${jobId} (hook-offer)`);
     }
 
-    // Добавляем информацию об обрезке в статистику (если была)
+    // Добавляем информацию об обрезке и таймингах в статистику
+    const pipelineTimeMs = Date.now() - pipelineStart;
     const statistics = {
       ...analysisResult.statistics,
+      pipelineTimeMs,
+      markupTimeMs: blockMarkupResult.markupDurationMs,
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,

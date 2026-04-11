@@ -172,26 +172,66 @@ interface ChunkContext {
   overlapParagraphs?: Array<{ index: number; text: string; blockType?: string }>;
 }
 
+/** Минимальный размер чанка для рекурсивного разбиения */
+const MIN_RETRY_CHUNK = 10;
+
 /**
- * Размечает один чанк параграфов через AI
+ * Размечает один чанк параграфов через AI.
+ * При ошибке рекурсивно разбивает пополам и повторяет (до MIN_RETRY_CHUNK).
  */
 async function parseChunk(
   paragraphs: Array<{ index: number; text: string; style?: string }>,
-  context?: ChunkContext
+  context?: ChunkContext,
+  depth = 0
 ): Promise<DocumentBlockMarkup & { modelId?: string }> {
-  const response = await callAI({
-    systemPrompt: BLOCK_MARKUP_SYSTEM_PROMPT,
-    userPrompt: createBlockMarkupPrompt(paragraphs, context),
-    temperature: 0.1,
-    maxTokens: 4096,
-  });
+  try {
+    const response = await callAI({
+      systemPrompt: BLOCK_MARKUP_SYSTEM_PROMPT,
+      userPrompt: createBlockMarkupPrompt(paragraphs, context),
+      temperature: 0.1,
+      maxTokens: 4096,
+    });
 
-  const normalized = normalizeAiResponse(response.json);
-  const parsed = documentBlockMarkupSchema.parse(normalized);
-  console.log(
-    `[block-markup] Chunk (${paragraphs.length} paragraphs) parsed via ${response.modelName}`
-  );
-  return { ...parsed, modelId: response.modelId };
+    const normalized = normalizeAiResponse(response.json);
+    const parsed = documentBlockMarkupSchema.parse(normalized);
+    console.log(
+      `[block-markup] Chunk (${paragraphs.length} paragraphs${depth > 0 ? `, retry depth ${depth}` : ""}) parsed via ${response.modelName}`
+    );
+    return { ...parsed, modelId: response.modelId };
+  } catch (error) {
+    // Если чанк достаточно мал или уже глубоко — сдаёмся
+    if (paragraphs.length <= MIN_RETRY_CHUNK || depth >= 2) {
+      throw error;
+    }
+
+    // Рекурсивное разбиение пополам
+    const mid = Math.floor(paragraphs.length / 2);
+    const firstHalf = paragraphs.slice(0, mid);
+    const secondHalf = paragraphs.slice(mid);
+
+    console.log(
+      `[block-markup] Chunk (${paragraphs.length} paragraphs) failed, splitting → ${firstHalf.length} + ${secondHalf.length}`
+    );
+
+    // Контекст для второй половины: последние параграфы первой
+    const secondContext: ChunkContext = {
+      sectionHeading: context?.sectionHeading,
+    };
+
+    // Задержка перед retry — даём rate limit восстановиться (500ms × глубину)
+    await new Promise((r) => setTimeout(r, 500 * (depth + 1)));
+
+    // Последовательно, а не параллельно — снижает нагрузку при retry
+    const result1 = await parseChunk(firstHalf, context, depth + 1);
+    await new Promise((r) => setTimeout(r, 300));
+    const result2 = await parseChunk(secondHalf, secondContext, depth + 1);
+
+    return {
+      blocks: [...result1.blocks, ...result2.blocks],
+      warnings: [...(result1.warnings || []), ...(result2.warnings || [])],
+      modelId: result1.modelId || result2.modelId,
+    };
+  }
 }
 
 /**
@@ -287,9 +327,11 @@ function validateAndFixMarkup(
  */
 export async function parseDocumentBlocks(
   paragraphs: Array<{ index: number; text: string; style?: string }>
-): Promise<DocumentBlockMarkup & { modelId?: string }> {
+): Promise<DocumentBlockMarkup & { modelId?: string; durationMs?: number }> {
+  const startTime = Date.now();
+
   if (paragraphs.length === 0) {
-    return { blocks: [], warnings: [] };
+    return { blocks: [], warnings: [], durationMs: 0 };
   }
 
   // Маленький документ — один запрос
@@ -300,10 +342,12 @@ export async function parseDocumentBlocks(
       if (fixes.length > 0) {
         console.log(`[block-markup] Post-validation fixed ${fixes.length} blocks: ${fixes.join(", ")}`);
       }
-      return { ...result, blocks: validated };
+      const durationMs = Date.now() - startTime;
+      console.log(`[block-markup] Completed in ${(durationMs / 1000).toFixed(1)}s`);
+      return { ...result, blocks: validated, durationMs };
     } catch (error) {
       console.error("Error in AI block markup:", error);
-      return createFallbackMarkup(paragraphs);
+      return { ...createFallbackMarkup(paragraphs), durationMs: Date.now() - startTime };
     }
   }
 
@@ -411,13 +455,15 @@ export async function parseDocumentBlocks(
     console.log(`[block-markup] Post-validation fixed ${fixes.length} blocks: ${fixes.join(", ")}`);
   }
 
+  const durationMs = Date.now() - startTime;
   console.log(
-    `[block-markup] Done: ${chunks.length} chunks, ${failedChunks} failed, ${validated.length} blocks total`
+    `[block-markup] Done: ${chunks.length} chunks, ${failedChunks} failed, ${validated.length} blocks total in ${(durationMs / 1000).toFixed(1)}s`
   );
 
   return {
     blocks: validated,
     warnings: allWarnings.length > 0 ? allWarnings : undefined,
     modelId: primaryModelId,
+    durationMs,
   };
 }
