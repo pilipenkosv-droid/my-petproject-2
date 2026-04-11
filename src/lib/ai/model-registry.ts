@@ -42,7 +42,7 @@ export interface ModelConfig {
  * Порядок priority определяет предпочтение при прочих равных.
  */
 export const MODEL_REGISTRY: ModelConfig[] = [
-  // ── Google Gemini ──
+  // ── Google Gemini (бесплатный, но жёсткий RPD лимит) ──
   {
     id: "gemini-2.5-flash-lite",
     displayName: "Gemini 2.5 Flash Lite",
@@ -54,7 +54,20 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 1,
   },
 
-  // ── Cerebras Qwen 235B — лучший баланс качества/скорости, 60K TPM ──
+  // ── AITUNNEL Gemini Flash Lite (платный, надёжный, ~19₽/1M input) ──
+  {
+    id: "aitunnel-gemini-flash-lite",
+    displayName: "AITUNNEL Gemini Flash Lite",
+    protocol: "openai-compatible",
+    apiKeyEnv: "AITUNNEL_API_KEY",
+    modelId: "gemini-2.5-flash-lite",
+    baseUrl: "https://api.aitunnel.ru/v1",
+    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
+    supportsJsonMode: true,
+    priority: 2,
+  },
+
+  // ── Cerebras Qwen 235B — лучший баланс качества/скорости (бесплатный) ──
   {
     id: "cerebras-qwen-3-235b",
     displayName: "Cerebras Qwen 3 235B",
@@ -67,36 +80,17 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 3,
   },
 
-  // ── OpenRouter GPT-OSS 120B — подтверждён тестом и продом ──
+  // ── AITUNNEL Llama 3.3 70B (платный fallback, без лимитов Groq, ~23₽/1M) ──
   {
-    id: "openrouter-gpt-oss-120b",
-    displayName: "OpenRouter GPT-OSS 120B",
+    id: "aitunnel-llama-3.3-70b",
+    displayName: "AITUNNEL Llama 3.3 70B",
     protocol: "openai-compatible",
-    apiKeyEnv: "OPENROUTER_API_KEY",
-    modelId: "openai/gpt-oss-120b:free",
-    baseUrl: "https://openrouter.ai/api/v1",
-    limits: { rpm: 20, rpd: 200, tpm: 100_000 },
+    apiKeyEnv: "AITUNNEL_API_KEY",
+    modelId: "llama-3.3-70b-instruct",
+    baseUrl: "https://api.aitunnel.ru/v1",
+    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
-    priority: 5,
-    extraParams: {
-      headers: {
-        "HTTP-Referer": "https://diplox.online",
-        "X-Title": "Diplox",
-      },
-    },
-  },
-
-  // ── Groq Llama 70B — качественная, но жёсткий TPM лимит (6K) ──
-  {
-    id: "groq-llama-3.3-70b",
-    displayName: "Groq Llama 3.3 70B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "GROQ_API_KEY",
-    modelId: "llama-3.3-70b-versatile",
-    baseUrl: "https://api.groq.com/openai/v1",
-    limits: { rpm: 30, rpd: 14400, tpm: 6000 },
-    supportsJsonMode: true,
-    priority: 7,
+    priority: 4,
   },
 
   // ── Cerebras Llama 8B (аварийный fallback — слабая модель) ──
