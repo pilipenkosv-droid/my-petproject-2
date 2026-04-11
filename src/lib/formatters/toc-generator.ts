@@ -19,6 +19,9 @@ import {
   createNode,
   createTextNode,
   children,
+  findChild,
+  findChildren,
+  getText,
 } from "../xml/docx-xml";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 import { FormattingRules } from "@/types/formatting-rules";
@@ -171,19 +174,129 @@ function buildPageBreakParagraph(): OrderedXmlNode {
 }
 
 /**
+ * Извлекает текст из XML-параграфа (все w:t внутри w:r)
+ */
+function getParagraphText(node: OrderedXmlNode): string {
+  const runs = findChildren(node, "w:r");
+  let text = "";
+  for (const run of runs) {
+    const tNodes = findChildren(run, "w:t");
+    for (const t of tNodes) {
+      text += getText(t);
+    }
+  }
+  return text;
+}
+
+/**
+ * Проверяет, содержит ли параграф разрыв секции (w:sectPr внутри w:pPr).
+ * Section break после title page — самый надёжный маркер конца титульной.
+ */
+function hasSectionBreak(node: OrderedXmlNode): boolean {
+  const pPr = findChild(node, "w:pPr");
+  return pPr ? !!findChild(pPr, "w:sectPr") : false;
+}
+
+/**
+ * Находит диапазон bodyIndex существующего ручного TOC.
+ *
+ * Ищет по двум сигналам:
+ * 1. AI block markup: toc / toc_entry блоки
+ * 2. Текстовый поиск: параграф с текстом "СОДЕРЖАНИЕ" + следующие за ним
+ *    строки с точками/номерами страниц (паттерн "…N стр" или "…N")
+ */
+function findExistingTocRange(
+  paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
+  enrichedMap: Map<number, DocxParagraph>
+): { firstIdx: number; lastIdx: number } | null {
+  // Сигнал 1: AI-размеченные toc/toc_entry
+  const tocIndices: number[] = [];
+  for (const { paragraphIndex, bodyIndex } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    if (enriched && (enriched.blockType === "toc" || enriched.blockType === "toc_entry")) {
+      tocIndices.push(bodyIndex);
+    }
+  }
+  if (tocIndices.length > 0) {
+    return { firstIdx: Math.min(...tocIndices), lastIdx: Math.max(...tocIndices) };
+  }
+
+  // Сигнал 2: текстовый поиск "СОДЕРЖАНИЕ" + записи с точками
+  for (let i = 0; i < paragraphs.length; i++) {
+    const text = getParagraphText(paragraphs[i].node).trim().toUpperCase();
+    if (text === "СОДЕРЖАНИЕ" || text === "ОГЛАВЛЕНИЕ") {
+      const firstIdx = paragraphs[i].bodyIndex;
+      let lastIdx = firstIdx;
+
+      // Ищем записи TOC после заголовка (строки с "…" или номерами страниц)
+      for (let j = i + 1; j < paragraphs.length; j++) {
+        const entryText = getParagraphText(paragraphs[j].node).trim();
+        // TOC entry: содержит точки-заполнители или "стр." и номера
+        if (entryText && (entryText.includes("…") || entryText.includes("..") || /\d+\s*стр/i.test(entryText))) {
+          lastIdx = paragraphs[j].bodyIndex;
+        } else if (entryText.length > 0) {
+          break; // Первый не-TOC параграф
+        }
+      }
+
+      return { firstIdx, lastIdx };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Находит bodyIndex для вставки TOC после титульной страницы.
+ *
+ * Приоритет сигналов:
+ * 1. Section break (w:sectPr в pPr) — самый надёжный
+ * 2. Последний title_page параграф + пропуск пустых строк
+ * 3. Fallback: не вставляем TOC (возвращаем -1)
+ */
+function findTocInsertionPoint(
+  paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
+  enrichedMap: Map<number, DocxParagraph>
+): number {
+  let lastTitlePageBodyIdx = -1;
+
+  for (const { paragraphIndex, bodyIndex, node } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+
+    // Сигнал 1: section break после title_page — вставляем сразу после
+    if (enriched?.blockType === "title_page" && hasSectionBreak(node)) {
+      return bodyIndex + 1;
+    }
+
+    if (enriched?.blockType === "title_page") {
+      lastTitlePageBodyIdx = bodyIndex;
+    }
+  }
+
+  // Сигнал 2: после последнего title_page + пропуск пустых
+  if (lastTitlePageBodyIdx >= 0) {
+    return lastTitlePageBodyIdx + 1;
+  }
+
+  // Fallback: не вставляем TOC — нет title_page блоков
+  return -1;
+}
+
+/**
  * Вставляет или заменяет TOC в документе.
  *
  * Логика:
- * 1. Если есть блоки toc/toc_entry — удаляем их и вставляем field code на их место
- * 2. Если нет TOC — вставляем после title_page (или в начало)
- * 3. Добавляем разрыв страницы после TOC
+ * 1. Ищем существующий TOC (AI-разметка или текстовый поиск "СОДЕРЖАНИЕ")
+ * 2. Если найден — заменяем весь диапазон на field code
+ * 3. Если не найден — вставляем после title_page (section break или последний title_page)
+ * 4. Если title_page не найден — пропускаем (не ломаем документ)
  */
 export async function applyTocGeneration(
   buffer: Buffer,
   enrichedParagraphs: DocxParagraph[],
   rules: FormattingRules
 ): Promise<{ buffer: Buffer; tocInserted: boolean }> {
-  // Проверяем, есть ли заголовки в документе (нужен хотя бы один heading)
+  // Проверяем, есть ли заголовки в документе
   const hasHeadings = enrichedParagraphs.some((p) =>
     p.blockType?.startsWith("heading_")
   );
@@ -201,51 +314,31 @@ export async function applyTocGeneration(
   const paragraphs = getParagraphsWithPositions(body);
   const enrichedMap = new Map(enrichedParagraphs.map((p) => [p.index, p]));
 
-  // Ищем существующий TOC (toc + toc_entry блоки)
-  const tocIndices: number[] = [];
-  for (const { paragraphIndex, bodyIndex } of paragraphs) {
-    const enriched = enrichedMap.get(paragraphIndex);
-    if (enriched && (enriched.blockType === "toc" || enriched.blockType === "toc_entry")) {
-      tocIndices.push(bodyIndex);
-    }
-  }
-
   // Создаём TOC элементы
   const tocHeading = buildTocHeadingParagraph(rules);
   const tocField = buildTocFieldParagraph(rules);
   const pageBreak = buildPageBreakParagraph();
   const tocElements = [tocHeading, tocField, pageBreak];
 
-  if (tocIndices.length > 0) {
-    // Заменяем существующий TOC на field code
-    const firstTocIdx = Math.min(...tocIndices);
-    const lastTocIdx = Math.max(...tocIndices);
+  // Ищем существующий TOC
+  const existingToc = findExistingTocRange(paragraphs, enrichedMap);
 
-    // Удаляем старые toc-параграфы (с конца, чтобы индексы не съехали)
-    for (let i = lastTocIdx; i >= firstTocIdx; i--) {
-      if (tocIndices.includes(i)) {
-        bodyChildren.splice(i, 1);
-      }
-    }
-
-    // Вставляем новые на место первого
-    bodyChildren.splice(firstTocIdx, 0, ...tocElements);
+  if (existingToc) {
+    // Заменяем существующий TOC на field code (одной операцией splice)
+    const count = existingToc.lastIdx - existingToc.firstIdx + 1;
+    bodyChildren.splice(existingToc.firstIdx, count, ...tocElements);
+    console.log(`[toc] Replaced existing TOC (bodyIndex ${existingToc.firstIdx}-${existingToc.lastIdx}) with field code`);
   } else {
-    // Вставляем TOC после title_page блоков
-    let insertIdx = 0;
-    for (const { paragraphIndex, bodyIndex } of paragraphs) {
-      const enriched = enrichedMap.get(paragraphIndex);
-      if (enriched && enriched.blockType === "title_page") {
-        insertIdx = bodyIndex + 1;
-      } else if (insertIdx > 0) {
-        break; // Первый не-title_page после title_page блоков
-      }
+    // Вставляем новый TOC после title_page
+    const insertIdx = findTocInsertionPoint(paragraphs, enrichedMap);
+    if (insertIdx < 0) {
+      console.warn("[toc] No title_page found, skipping TOC insertion");
+      return { buffer, tocInserted: false };
     }
-
     bodyChildren.splice(insertIdx, 0, ...tocElements);
+    console.log(`[toc] Inserted new TOC at bodyIndex ${insertIdx}`);
   }
 
-  // Добавляем настройку updateFields в document settings
   await ensureUpdateFieldsSetting(zip);
 
   const newXml = buildDocxXml(parsed);

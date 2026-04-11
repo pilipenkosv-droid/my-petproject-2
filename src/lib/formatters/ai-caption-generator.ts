@@ -1,13 +1,12 @@
 /**
  * AI-генерация подписей к таблицам и рисункам
  *
- * - Таблицы: извлекает текст из ячеек → AI генерирует описание
- * - Рисунки: извлекает изображение из docx → vision AI описывает содержимое
+ * - Таблицы: извлекает текст из ячеек → AI через gateway генерирует описание
+ * - Рисунки: пока отключены (EMF/WMF не поддерживаются, vision требует отдельного API)
  *
- * Использует Gemini через Google Generative AI SDK (поддержка vision).
+ * Использует AI Gateway для автоматического failover между моделями.
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import JSZip from "jszip";
 import {
   type OrderedXmlNode,
@@ -16,20 +15,23 @@ import {
   getBody,
   getParagraphsWithPositions,
   findChildren,
-  findChild,
   getText,
   getRuns,
   children,
   createNode,
   createTextNode,
 } from "../xml/docx-xml";
+import { callAI } from "../ai/gateway";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 import { FormattingRules } from "@/types/formatting-rules";
 
 const HALF_POINTS_PER_PT = 2;
 
+/** Максимум AI-запросов на генерацию подписей (защита от перерасхода) */
+const MAX_CAPTION_REQUESTS = 10;
+
 const CAPTION_SYSTEM_PROMPT = `Ты — помощник для оформления академических документов.
-Тебе дают содержимое таблицы или описание рисунка. Верни краткую подпись на русском языке.
+Тебе дают содержимое таблицы. Верни краткую подпись на русском языке.
 
 Правила:
 - Подпись должна быть краткой (3-8 слов)
@@ -71,150 +73,24 @@ function extractTableText(tableNode: OrderedXmlNode): string {
   return result.join("\n").slice(0, 500);
 }
 
-/**
- * Извлекает изображение из docx по relationship ID
- */
-async function extractImageFromDocx(
-  zip: JSZip,
-  relsXml: string,
-  rId: string
-): Promise<{ data: Buffer; mimeType: string } | null> {
-  const relsData = parseDocxXml(relsXml);
-  const relsRoot = relsData.find((n) => "Relationships" in n);
-  if (!relsRoot) return null;
-
-  const rels = children(relsRoot);
-  const rel = rels.find((r) => r[":@"]?.["@_Id"] === rId);
-  if (!rel) return null;
-
-  const target = rel[":@"]?.["@_Target"];
-  if (typeof target !== "string") return null;
-
-  const imagePath = target.startsWith("/") ? target.slice(1) : `word/${target}`;
-  const imageFile = zip.file(imagePath);
-  if (!imageFile) return null;
-
-  const data = await imageFile.async("nodebuffer");
-
-  // Определяем MIME-тип по расширению
-  const ext = imagePath.split(".").pop()?.toLowerCase();
-  const mimeMap: Record<string, string> = {
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    gif: "image/gif",
-    bmp: "image/bmp",
-    tiff: "image/tiff",
-    emf: "image/emf",
-    wmf: "image/wmf",
-  };
-
-  return { data: Buffer.from(data), mimeType: mimeMap[ext || ""] || "image/png" };
-}
 
 /**
- * Находит relationship ID изображения в параграфе
- */
-function findImageRId(paragraph: OrderedXmlNode): string | null {
-  const runs = findChildren(paragraph, "w:r");
-  for (const run of runs) {
-    const drawings = findChildren(run, "w:drawing");
-    for (const drawing of drawings) {
-      // Ищем в inline и anchor
-      const inlines = findChildren(drawing, "wp:inline");
-      const anchors = findChildren(drawing, "wp:anchor");
-
-      for (const container of [...inlines, ...anchors]) {
-        // a:graphic → a:graphicData → pic:pic → pic:blipFill → a:blip
-        const graphic = findChild(container, "a:graphic");
-        if (!graphic) continue;
-        const graphicData = findChild(graphic, "a:graphicData");
-        if (!graphicData) continue;
-        const pic = findChild(graphicData, "pic:pic");
-        if (!pic) continue;
-        const blipFill = findChild(pic, "pic:blipFill");
-        if (!blipFill) continue;
-        const blip = findChild(blipFill, "a:blip");
-        if (!blip) continue;
-
-        const embed = blip[":@"]?.["@_r:embed"];
-        if (typeof embed === "string") return embed;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Генерирует подпись для таблицы через AI (текстовый режим)
+ * Генерирует подпись для таблицы через AI Gateway
  */
 async function generateTableCaption(tableText: string): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_GATEWAY_API_KEY;
-  if (!apiKey) return null;
-
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-      generationConfig: {
-        temperature: 0.3,
-        responseMimeType: "application/json",
-        maxOutputTokens: 100,
-      },
+    const response = await callAI({
+      systemPrompt: CAPTION_SYSTEM_PROMPT,
+      userPrompt: `Содержимое таблицы:\n${tableText}`,
+      temperature: 0.3,
+      maxTokens: 100,
     });
 
-    const prompt = `${CAPTION_SYSTEM_PROMPT}\n\nСодержимое таблицы:\n${tableText}`;
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const parsed = JSON.parse(text);
-    return parsed.caption || null;
+    const result = response.json as { caption?: string };
+    console.log(`[ai-caption] Generated table caption via ${response.modelName}: "${result.caption}"`);
+    return result.caption || null;
   } catch (e) {
     console.warn("[ai-caption] Table caption generation failed:", e);
-    return null;
-  }
-}
-
-/**
- * Генерирует подпись для рисунка через vision AI
- */
-async function generateFigureCaption(
-  imageData: Buffer,
-  mimeType: string
-): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_GATEWAY_API_KEY;
-  if (!apiKey) return null;
-
-  // Пропускаем EMF/WMF — Gemini не поддерживает
-  if (mimeType === "image/emf" || mimeType === "image/wmf") return null;
-
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
-      generationConfig: {
-        temperature: 0.3,
-        responseMimeType: "application/json",
-        maxOutputTokens: 100,
-      },
-    });
-
-    const base64 = imageData.toString("base64");
-
-    const result = await model.generateContent([
-      CAPTION_SYSTEM_PROMPT + "\n\nОпиши содержимое рисунка для академического документа.",
-      {
-        inlineData: {
-          mimeType,
-          data: base64,
-        },
-      },
-    ]);
-
-    const text = result.response.text();
-    const parsed = JSON.parse(text);
-    return parsed.caption || null;
-  } catch (e) {
-    console.warn("[ai-caption] Figure caption generation failed:", e);
     return null;
   }
 }
@@ -281,9 +157,6 @@ export async function applyAiCaptions(
   const documentXml = await zip.file("word/document.xml")?.async("string");
   if (!documentXml) return { buffer, captionsAdded: 0 };
 
-  const relsPath = "word/_rels/document.xml.rels";
-  const relsXml = await zip.file(relsPath)?.async("string");
-
   const parsed = parseDocxXml(documentXml);
   const body = getBody(parsed);
   if (!body) return { buffer, captionsAdded: 0 };
@@ -294,20 +167,15 @@ export async function applyAiCaptions(
 
   // Собираем таблицы без подписей
   const tableTasks: { bodyIndex: number; tableNode: OrderedXmlNode; number: number }[] = [];
-  const figureTasks: { bodyIndex: number; paragraphNode: OrderedXmlNode; number: number }[] = [];
 
   // Считаем существующие подписи для нумерации
   const existingTableCaptions = enrichedParagraphs.filter(
     (p) => p.blockType === "table_caption"
   ).length;
-  const existingFigureCaptions = enrichedParagraphs.filter(
-    (p) => p.blockType === "figure_caption"
-  ).length;
 
   // Находим таблицы в body (w:tbl элементы)
   for (let i = 0; i < bodyChildren.length; i++) {
     if ("w:tbl" in bodyChildren[i]) {
-
       // Проверяем, есть ли подпись рядом (±3 параграфа)
       const hasCaption = paragraphs.some(({ paragraphIndex, bodyIndex }) => {
         const enriched = enrichedMap.get(paragraphIndex);
@@ -327,80 +195,38 @@ export async function applyAiCaptions(
     }
   }
 
-  // Находим рисунки без подписей
-  for (const { paragraphIndex, bodyIndex, node } of paragraphs) {
-    const enriched = enrichedMap.get(paragraphIndex);
-    if (enriched?.blockType !== "figure") continue;
-
-    // Проверяем, есть ли подпись рядом (±2 параграфа)
-    const hasCaption = paragraphs.some(({ paragraphIndex: pIdx }) => {
-      const e = enrichedMap.get(pIdx);
-      if (e?.blockType === "figure_caption") {
-        return Math.abs(pIdx - paragraphIndex) <= 2;
-      }
-      return false;
-    });
-
-    if (!hasCaption) {
-      figureTasks.push({
-        bodyIndex,
-        paragraphNode: node,
-        number: existingFigureCaptions + figureTasks.length + 1,
-      });
-    }
-  }
-
-  if (tableTasks.length === 0 && figureTasks.length === 0) {
+  if (tableTasks.length === 0) {
     return { buffer, captionsAdded: 0 };
   }
 
-  // Генерируем подписи последовательно (batch по 5) чтобы не превысить rate limit
+  // Ограничиваем количество AI-запросов
+  const tasksToProcess = tableTasks.slice(0, MAX_CAPTION_REQUESTS);
+  if (tableTasks.length > MAX_CAPTION_REQUESTS) {
+    console.log(`[ai-caption] Limiting to ${MAX_CAPTION_REQUESTS} captions (${tableTasks.length} tables without captions)`);
+  }
+
+  // Генерируем подписи последовательно (batch по 3) чтобы не превысить rate limit
   type CaptionResult = {
     bodyIndex: number;
-    type: "table" | "figure";
     number: number;
     caption: string | null;
-    position: "before" | "after";
   };
 
-  const tasks: (() => Promise<CaptionResult>)[] = [];
+  const BATCH_SIZE = 3;
+  const results: CaptionResult[] = [];
 
-  for (const task of tableTasks) {
-    const tableText = extractTableText(task.tableNode);
-    tasks.push(async () => ({
-      bodyIndex: task.bodyIndex,
-      type: "table" as const,
-      number: task.number,
-      caption: await generateTableCaption(tableText),
-      position: "before" as const,
-    }));
-  }
-
-  for (const task of figureTasks) {
-    const rId = findImageRId(task.paragraphNode);
-    if (rId && relsXml) {
-      tasks.push(async () => {
-        const image = await extractImageFromDocx(zip, relsXml, rId);
-        const caption = image
-          ? await generateFigureCaption(image.data, image.mimeType)
-          : null;
+  for (let i = 0; i < tasksToProcess.length; i += BATCH_SIZE) {
+    const batch = tasksToProcess.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map(async (task) => {
+        const tableText = extractTableText(task.tableNode);
         return {
           bodyIndex: task.bodyIndex,
-          type: "figure" as const,
           number: task.number,
-          caption,
-          position: "after" as const,
+          caption: await generateTableCaption(tableText),
         };
-      });
-    }
-  }
-
-  // Process in batches of 5 to respect rate limits
-  const BATCH_SIZE = 5;
-  const results: CaptionResult[] = [];
-  for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
-    const batch = tasks.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.all(batch.map((fn) => fn()));
+      })
+    );
     results.push(...batchResults);
   }
 
@@ -413,14 +239,14 @@ export async function applyAiCaptions(
 
   for (const ins of insertions) {
     const captionParagraph = buildCaptionParagraph(
-      ins.type,
+      "table",
       ins.number,
       ins.caption!,
       rules
     );
 
-    const insertIdx = ins.position === "before" ? ins.bodyIndex : ins.bodyIndex + 1;
-    bodyChildren.splice(insertIdx, 0, captionParagraph);
+    // Подпись таблицы вставляется ДО таблицы
+    bodyChildren.splice(ins.bodyIndex, 0, captionParagraph);
     captionsAdded++;
   }
 

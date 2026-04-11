@@ -13,7 +13,7 @@ import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFai
 
 // Таймаут для AI вызовов: агрессивный — Vercel maxDuration=60s,
 // нужно успеть попробовать 3-4 модели
-const AI_CALL_TIMEOUT_PAID_MS = 10000;
+const AI_CALL_TIMEOUT_PAID_MS = 15000;
 const AI_CALL_TIMEOUT_FREE_MS = 12000;
 
 /** Максимум моделей для попыток (Vercel 60s / 12s timeout = 5 попыток с запасом) */
