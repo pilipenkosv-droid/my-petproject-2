@@ -19,8 +19,10 @@ import {
 
 import type { BlockType } from "./block-markup-schemas";
 
-/** Максимум параграфов в одном AI-запросе */
-const CHUNK_SIZE = 150;
+/** Максимум параграфов в одном AI-запросе.
+ * 50 — оптимально для Gemini Flash Lite: ~10K chars input, ~2500 tokens output.
+ * При 150 модель часто обрезает JSON → весь чанк fallback → "unknown". */
+const CHUNK_SIZE = 50;
 
 /**
  * Создаёт fallback-разметку при ошибке AI — все параграфы получают тип unknown
@@ -50,6 +52,7 @@ async function parseChunk(
     systemPrompt: BLOCK_MARKUP_SYSTEM_PROMPT,
     userPrompt: createBlockMarkupPrompt(paragraphs),
     temperature: 0.1,
+    maxTokens: 4096,
   });
 
   const parsed = documentBlockMarkupSchema.parse(response.json);
@@ -187,38 +190,46 @@ export async function parseDocumentBlocks(
     chunks.push(paragraphs.slice(i, i + CHUNK_SIZE));
   }
 
-  // Обрабатываем чанки последовательно (чтобы не исчерпать rate limits)
-  for (let ci = 0; ci < chunks.length; ci++) {
-    const chunk = chunks[ci];
-    try {
-      const result = await parseChunk(chunk);
-      allBlocks.push(...result.blocks);
-      if (!primaryModelId && result.modelId) {
-        primaryModelId = result.modelId;
+  // Обрабатываем чанки батчами по PARALLEL_BATCH — баланс скорости и rate limits
+  const PARALLEL_BATCH = 3;
+  for (let bi = 0; bi < chunks.length; bi += PARALLEL_BATCH) {
+    const batch = chunks.slice(bi, bi + PARALLEL_BATCH);
+    const batchResults = await Promise.allSettled(
+      batch.map((chunk, offset) => {
+        const ci = bi + offset;
+        return parseChunk(chunk).then(result => ({ ci, chunk, result }));
+      })
+    );
+
+    for (const settled of batchResults) {
+      if (settled.status === "fulfilled") {
+        const { ci, result } = settled.value;
+        allBlocks.push(...result.blocks);
+        if (!primaryModelId && result.modelId) {
+          primaryModelId = result.modelId;
+        }
+        if (result.warnings) {
+          allWarnings.push(...result.warnings);
+        }
+        if (result.modelId) {
+          await recordUsage(result.modelId);
+        }
+      } else {
+        const ci = bi + batchResults.indexOf(settled);
+        const chunk = chunks[ci];
+        const msg = settled.reason instanceof Error ? settled.reason.message : String(settled.reason);
+        console.error(
+          `[block-markup] Chunk ${ci + 1}/${chunks.length} failed: ${msg}`
+        );
+        failedChunks++;
+        if (chunk) {
+          const fallback = createFallbackMarkup(chunk);
+          allBlocks.push(...fallback.blocks);
+          allWarnings.push(
+            `Чанк ${ci + 1}/${chunks.length} (параграфы ${chunk[0].index}-${chunk[chunk.length - 1].index}) — fallback`
+          );
+        }
       }
-      if (result.warnings) {
-        allWarnings.push(...result.warnings);
-      }
-      // Сбрасываем ошибки после успешного чанка (чтобы следующий чанк мог использовать модель)
-      if (result.modelId) {
-        await recordUsage(result.modelId);
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error(
-        `[block-markup] Chunk ${ci + 1}/${chunks.length} failed: ${msg}`
-      );
-      failedChunks++;
-      // Сбрасываем rate-limiter после ошибки чанка — следующий чанк получит шанс
-      if (primaryModelId) {
-        await recordUsage(primaryModelId);
-      }
-      // Fallback для этого чанка — остальные чанки продолжаем
-      const fallback = createFallbackMarkup(chunk);
-      allBlocks.push(...fallback.blocks);
-      allWarnings.push(
-        `Чанк ${ci + 1}/${chunks.length} (параграфы ${chunk[0].index}-${chunk[chunk.length - 1].index}) — fallback`
-      );
     }
   }
 
