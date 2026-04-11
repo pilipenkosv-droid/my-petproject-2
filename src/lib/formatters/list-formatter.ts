@@ -207,9 +207,8 @@ export async function applyListFormatting(
   enrichedParagraphs: DocxParagraph[],
   rules: FormattingRules
 ): Promise<Buffer> {
-  // Есть ли list_item вообще?
-  const hasLists = enrichedParagraphs.some((p) => p.blockType === "list_item");
-  if (!hasLists) return buffer;
+  // Проверяем наличие list_item в AI-разметке.
+  // НЕ делаем ранний выход — будем также проверять body_text/unknown на маркеры.
 
   const zip = await JSZip.loadAsync(buffer);
   const documentXml = await zip.file("word/document.xml")?.async("string");
@@ -226,9 +225,15 @@ export async function applyListFormatting(
   const usedTypes = new Set<ListType>();
   let processedCount = 0;
 
+  // Типы блоков, где ищем списки (list_item + fallback на body_text/unknown)
+  const LIST_CANDIDATE_TYPES = new Set(["list_item", "body_text", "unknown"]);
+
   for (const { paragraphIndex, node } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
-    if (enriched?.blockType !== "list_item") continue;
+    const blockType = enriched?.blockType || "unknown";
+
+    // Пропускаем заведомо не-списочные типы
+    if (!LIST_CANDIDATE_TYPES.has(blockType)) continue;
 
     const text = getFullText(node);
     const listType = detectListType(text);
@@ -261,7 +266,10 @@ export async function applyListFormatting(
     processedCount++;
   }
 
-  if (processedCount === 0) return buffer;
+  if (processedCount === 0) {
+    console.log(`[list] No list items detected (checked ${paragraphs.length} paragraphs)`);
+    return buffer;
+  }
 
   // Создаём/обновляем numbering.xml
   await ensureNumberingXml(zip, usedTypes, rules);

@@ -175,7 +175,10 @@ export async function applyLandscapeForWideTables(
       wideIndices.push(i);
     }
   }
-  if (wideIndices.length === 0) return buffer;
+  if (wideIndices.length === 0) {
+    console.log(`[landscape] No wide tables found (checked ${bc.filter(n => "w:tbl" in n).length} tables)`);
+    return buffer;
+  }
 
   // Process from end to preserve indices
   let count = 0;
@@ -198,15 +201,30 @@ export async function applyLandscapeForWideTables(
     }
 
     // 1. Portrait section break before table/caption
+    // Делаем параграф невидимым: шрифт 2pt, нулевые отступы (иначе серая полоса в Word)
     const portraitPara = createNode("w:p", undefined, [
-      createNode("w:pPr", undefined, [portraitSectPr()]),
+      createNode("w:pPr", undefined, [
+        createNode("w:spacing", { "w:before": "0", "w:after": "0", "w:line": "240", "w:lineRule": "auto" }),
+        createNode("w:rPr", undefined, [
+          createNode("w:sz", { "w:val": "2" }),
+          createNode("w:szCs", { "w:val": "2" }),
+        ]),
+        portraitSectPr(),
+      ]),
     ]);
     bc.splice(insertBefore, 0, portraitPara);
     tblIdx++; // shifted by insertion
 
     // 2. Landscape section break after table
     const landscapePara = createNode("w:p", undefined, [
-      createNode("w:pPr", undefined, [landscapeSectPr()]),
+      createNode("w:pPr", undefined, [
+        createNode("w:spacing", { "w:before": "0", "w:after": "0", "w:line": "240", "w:lineRule": "auto" }),
+        createNode("w:rPr", undefined, [
+          createNode("w:sz", { "w:val": "2" }),
+          createNode("w:szCs", { "w:val": "2" }),
+        ]),
+        landscapeSectPr(),
+      ]),
     ]);
     bc.splice(tblIdx + 1, 0, landscapePara);
 

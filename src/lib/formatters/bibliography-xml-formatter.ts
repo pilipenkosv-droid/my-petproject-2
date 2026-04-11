@@ -34,11 +34,15 @@ function formatInitialsWithNBSP(text: string, language?: string): string {
     // Между инициалами: Т. В. → Т.←NBSP→В.
     text = text.replace(/([А-ЯЁ])\.\s+([А-ЯЁ])\./g, `$1.${NBSP}$2.`);
     // Фамилия + инициал: Ахутина Т. → Ахутина←NBSP→Т.
-    text = text.replace(/([А-ЯЁ][а-яё]{2,})\s+([А-ЯЁ]\.)/g, `$1${NBSP}$2`);
+    text = text.replace(/([А-ЯЁ][а-яё]{1,})\s+([А-ЯЁ]\.)/g, `$1${NBSP}$2`);
+    // Инициал + Фамилия: Л.С. Выготский → Л.С.←NBSP→Выготский
+    text = text.replace(/([А-ЯЁ]\.)\s+([А-ЯЁ][а-яё]{2,})/g, `$1${NBSP}$2`);
   }
   if (!language || language === "en") {
     text = text.replace(/([A-Z])\.\s+([A-Z])\./g, `$1.${NBSP}$2.`);
-    text = text.replace(/([A-Z][a-z]{2,})\s+([A-Z]\.)/g, `$1${NBSP}$2`);
+    text = text.replace(/([A-Z][a-z]{1,})\s+([A-Z]\.)/g, `$1${NBSP}$2`);
+    // Initial + Surname: J.K. Rowling → J.K.←NBSP→Rowling
+    text = text.replace(/([A-Z]\.)\s+([A-Z][a-z]{2,})/g, `$1${NBSP}$2`);
   }
   return text;
 }
@@ -113,6 +117,7 @@ export function applyBibliographyFormattingToXmlParagraph(
   const formattedText = formatBibliographyText(fullText, language);
 
   if (formattedText === fullText) return; // Ничего не изменилось
+  console.log(`[bibliography] NBSP/quotes applied to entry: "${fullText.substring(0, 50)}..."`);
 
   // Записываем результат — весь текст в первый w:t первого run, остальные очищаем
   let written = false;

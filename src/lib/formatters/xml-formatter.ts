@@ -733,10 +733,13 @@ export class XmlDocumentFormatter {
 
       case "unknown":
       default:
-        // Fallback: применяем базовое форматирование body_text вместо пропуска
+        // Fallback: применяем body_text форматирование (включая отступ и выравнивание)
+        // AITUNNEL может вернуть unknown при сбое — параграфы не должны терять отступы
         return {
           fontFamily: rules.text.fontFamily,
           fontSize: rules.text.fontSize,
+          alignment: rules.text.alignment,
+          firstLineIndent: rules.text.paragraphIndent,
           lineSpacing: rules.text.lineSpacing,
         };
     }

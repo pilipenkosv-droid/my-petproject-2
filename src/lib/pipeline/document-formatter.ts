@@ -161,6 +161,18 @@ async function createFormattedDocumentXml(
     enrichedParagraphs.map((p) => [p.index, p])
   );
 
+  // Логируем статистику blockType для диагностики
+  const typeCounts = new Map<string, number>();
+  for (const p of enrichedParagraphs) {
+    const t = p.blockType || "unknown";
+    typeCounts.set(t, (typeCounts.get(t) || 0) + 1);
+  }
+  const typeStats = [...typeCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([t, c]) => `${t}:${c}`)
+    .join(", ");
+  console.log(`[formatter] ${enrichedParagraphs.length} enriched paragraphs, ${formatter.paragraphCount} XML paragraphs. Types: ${typeStats}`);
+
   // Применяем форматирование к каждому параграфу
   for (let i = 0; i < formatter.paragraphCount; i++) {
     const enriched = blockMap.get(i);

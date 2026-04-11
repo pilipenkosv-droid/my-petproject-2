@@ -221,20 +221,30 @@ function findExistingTocRange(
     return { firstIdx: Math.min(...tocIndices), lastIdx: Math.max(...tocIndices) };
   }
 
-  // Сигнал 2: текстовый поиск "СОДЕРЖАНИЕ" + записи с точками
+  // Сигнал 2: текстовый поиск "СОДЕРЖАНИЕ" + записи с точками/табами/номерами
   for (let i = 0; i < paragraphs.length; i++) {
     const text = getParagraphText(paragraphs[i].node).trim().toUpperCase();
     if (text === "СОДЕРЖАНИЕ" || text === "ОГЛАВЛЕНИЕ") {
       const firstIdx = paragraphs[i].bodyIndex;
       let lastIdx = firstIdx;
 
-      // Ищем записи TOC после заголовка (строки с "…" или номерами страниц)
+      // Ищем записи TOC после заголовка
       for (let j = i + 1; j < paragraphs.length; j++) {
         const entryText = getParagraphText(paragraphs[j].node).trim();
-        // TOC entry: содержит точки-заполнители или "стр." и номера
-        if (entryText && (entryText.includes("…") || entryText.includes("..") || /\d+\s*стр/i.test(entryText))) {
+        if (!entryText) {
+          // Пустые параграфы внутри TOC — включаем
           lastIdx = paragraphs[j].bodyIndex;
-        } else if (entryText.length > 0) {
+          continue;
+        }
+        // TOC entry: точки-заполнители, "стр.", или номер в конце строки
+        const isTocEntry =
+          entryText.includes("…") ||
+          entryText.includes("..") ||
+          /\d+\s*стр/i.test(entryText) ||
+          /\d+\s*$/.test(entryText); // строка заканчивается номером страницы
+        if (isTocEntry) {
+          lastIdx = paragraphs[j].bodyIndex;
+        } else {
           break; // Первый не-TOC параграф
         }
       }
