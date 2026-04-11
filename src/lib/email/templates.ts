@@ -734,7 +734,7 @@ export function marathonBlastEmail(): string {
                       Акция до 1 июня
                     </p>
                     <p style="margin:0;font-size:13px;color:#166534;">
-                      +5 проверок за каждого приглашённого друга (обычно +3)
+                      +1 проверка за каждого оплатившего друга
                     </p>
                   </td>
                 </tr>

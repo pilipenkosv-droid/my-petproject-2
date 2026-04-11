@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { nanoid } from "nanoid";
 import { extendSubscription } from "@/lib/payment/access";
 
-const DEFAULT_REFERRAL_BONUS = 3;
+const REFERRAL_BONUS_PER_PAYMENT = 1;
 
 export const REWARD_THRESHOLDS = [
   { threshold: 1, rewardType: "uses" as const, uses: 1 },
@@ -109,7 +109,7 @@ export async function getReferralStats(
 ): Promise<ReferralStats> {
   const supabase = getSupabaseAdmin();
 
-  // Считаем клики (уникальные session_id) и регистрации
+  // Считаем клики (уникальные session_id) и оплатившие рефералы
   const { data: events } = await supabase
     .from("referral_events")
     .select("event_type, session_id")
@@ -125,7 +125,7 @@ export async function getReferralStats(
   const clicks = uniqueSessionIds.size;
 
   const registrations = allEvents.filter(
-    (e) => e.event_type === "registration"
+    (e) => e.event_type === "payment"
   ).length;
 
   // Получаем уже выданные награды
@@ -168,14 +168,14 @@ export async function checkAndGrantRewards(
 ): Promise<{ granted: boolean; months?: number }> {
   const supabase = getSupabaseAdmin();
 
-  // Считаем регистрации
-  const { count: registrationCount } = await supabase
+  // Считаем оплатившие рефералы
+  const { count: paymentCount } = await supabase
     .from("referral_events")
     .select("id", { count: "exact", head: true })
     .eq("referrer_id", userId)
-    .eq("event_type", "registration");
+    .eq("event_type", "payment");
 
-  const registrations = registrationCount ?? 0;
+  const registrations = paymentCount ?? 0;
 
   // Получаем уже выданные награды
   const { data: existingRewards } = await supabase
@@ -263,38 +263,75 @@ export async function getReferrerByCode(
 }
 
 /**
- * Возвращает количество бонусных обработок для приглашённого.
- * Если активна сезонная кампания — возвращает повышенный бонус.
+ * Начисляет реферальный бонус (+1 обработка) рефереру при оплате друга.
+ * Идемпотентно: один платёж друга = одно начисление.
+ * Также проверяет пороговые награды (Pro месяцы).
  */
-export async function getCampaignBonusUses(): Promise<number> {
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase
-      .from("campaign_config")
-      .select("value")
-      .eq("key", "marathon_2026")
-      .single();
+export async function grantReferrerBonusForPayment(
+  refereeId: string
+): Promise<{ granted: boolean; referrerId?: string }> {
+  const supabase = getSupabaseAdmin();
 
-    if (!data?.value) return DEFAULT_REFERRAL_BONUS;
+  // Находим реферера по профилю приглашённого
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("referred_by_user_id, referred_by_code")
+    .eq("user_id", refereeId)
+    .single();
 
-    const config = data.value as {
-      active?: boolean;
-      starts_at?: string;
-      ends_at?: string;
-      referral_bonus_uses?: number;
-    };
-
-    if (!config.active || !config.starts_at || !config.ends_at) {
-      return DEFAULT_REFERRAL_BONUS;
-    }
-
-    const now = new Date();
-    if (now >= new Date(config.starts_at) && now <= new Date(config.ends_at)) {
-      return config.referral_bonus_uses ?? DEFAULT_REFERRAL_BONUS;
-    }
-  } catch {
-    // При ошибке — дефолтный бонус
+  if (!profile?.referred_by_user_id || !profile?.referred_by_code) {
+    return { granted: false };
   }
 
-  return DEFAULT_REFERRAL_BONUS;
+  const referrerId = profile.referred_by_user_id;
+  const code = profile.referred_by_code;
+
+  // Идемпотентность: проверяем, не записывали ли уже payment-событие для этого referee
+  const { count: existingPaymentEvents } = await supabase
+    .from("referral_events")
+    .select("id", { count: "exact", head: true })
+    .eq("referrer_id", referrerId)
+    .eq("referee_id", refereeId)
+    .eq("event_type", "payment");
+
+  if ((existingPaymentEvents ?? 0) > 0) {
+    return { granted: false, referrerId };
+  }
+
+  // Записываем payment-событие
+  await supabase.from("referral_events").insert({
+    referrer_id: referrerId,
+    referee_id: refereeId,
+    code,
+    event_type: "payment",
+  });
+
+  // Начисляем +1 обработку рефереру
+  const { data: currentAccess } = await supabase
+    .from("user_access")
+    .select("remaining_uses")
+    .eq("user_id", referrerId)
+    .single();
+
+  const currentUses = currentAccess?.remaining_uses ?? 0;
+  await supabase.from("user_access").upsert(
+    {
+      user_id: referrerId,
+      access_type: "one_time",
+      remaining_uses: currentUses + REFERRAL_BONUS_PER_PAYMENT,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  console.log("[referral_payment_bonus]", {
+    referrerId,
+    refereeId,
+    bonus: REFERRAL_BONUS_PER_PAYMENT,
+  });
+
+  // Проверяем пороговые награды (Pro месяцы за 5/15/30 друзей)
+  await checkAndGrantRewards(referrerId);
+
+  return { granted: true, referrerId };
 }
