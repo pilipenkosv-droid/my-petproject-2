@@ -15,6 +15,7 @@ import { getJob, updateJob } from "@/lib/storage/job-store";
 import { canGrantBotAccess, getUserProfile, provisionBotUser, storeBotAccess } from "@/lib/bot/provision";
 import { sendEmail } from "@/lib/email/transport";
 import { subscriptionWelcomeEmail, oneTimePurchaseEmail } from "@/lib/email/templates";
+import { grantReferrerBonusForPayment } from "@/lib/referral/utils";
 
 export const maxDuration = 60;
 
@@ -101,6 +102,16 @@ async function runPostPaymentTasks(payment: {
     } catch (botError) {
       console.error("Bot provisioning failed (non-critical):", botError);
     }
+  }
+
+  // Реферальный бонус: +1 обработка рефереру при оплате друга
+  try {
+    const result = await grantReferrerBonusForPayment(payment.user_id);
+    if (result.granted) {
+      console.log(`🎁 Referral bonus granted to ${result.referrerId} for payment by ${payment.user_id}`);
+    }
+  } catch (refError) {
+    console.error("Referral bonus failed (non-critical):", refError);
   }
 
   // Welcome-email после оплаты

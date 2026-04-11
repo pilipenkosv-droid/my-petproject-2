@@ -10,11 +10,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   getReferrerByCode,
   recordReferralEvent,
-  checkAndGrantRewards,
-  getCampaignBonusUses,
   getReferralStats,
 } from "@/lib/referral/utils";
-import { activateAccess } from "@/lib/payment/access";
 import { sendEmail } from "@/lib/email/transport";
 import { referralRegisteredEmail } from "@/lib/email/templates";
 
@@ -68,38 +65,13 @@ export async function POST(request: NextRequest) {
       refereeId: userId,
     });
 
-    // Бонус приглашённому: динамический (3 или 5 во время кампании)
-    const bonusUses = await getCampaignBonusUses();
-    const currentAccess = await admin
-      .from("user_access")
-      .select("remaining_uses")
-      .eq("user_id", userId)
-      .single();
-
-    const currentUses = currentAccess.data?.remaining_uses ?? 0;
-    await admin.from("user_access").upsert(
-      {
-        user_id: userId,
-        access_type: "one_time",
-        remaining_uses: currentUses + bonusUses,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
-
-    // Проверяем награды для реферера
-    const rewardResult = await checkAndGrantRewards(referrer.userId);
-
-    // Отправляем email рефереру (в фоне)
-    sendReferrerEmail(referrer.userId, rewardResult.granted, rewardResult.months).catch(
+    // Награда реферера начисляется при оплате друга (в payment webhook)
+    // Отправляем email рефереру о регистрации
+    sendReferrerEmail(referrer.userId, false, undefined).catch(
       (err) => console.error("[referral/register] Email error:", err)
     );
 
-    return NextResponse.json({
-      ok: true,
-      bonusUses: bonusUses,
-      rewardGranted: rewardResult.granted,
-    });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[referral/register] Error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

@@ -37,7 +37,7 @@ export function MarathonBanner() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
             Дипломный марафон:{" "}
-            <span className="text-purple-400">+5 проверок</span> за каждого приглашённого друга
+            <span className="text-purple-400">+1 проверка</span> за каждого оплатившего друга
           </p>
           <Link
             href="/profile?ref=marathon-banner"
