@@ -67,20 +67,7 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 2,
   },
 
-  // ── Cerebras Qwen 235B — лучший баланс качества/скорости (бесплатный) ──
-  {
-    id: "cerebras-qwen-3-235b",
-    displayName: "Cerebras Qwen 3 235B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "CEREBRAS_API_KEY",
-    modelId: "qwen-3-235b-a22b-instruct-2507",
-    baseUrl: "https://api.cerebras.ai/v1",
-    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
-    supportsJsonMode: true,
-    priority: 3,
-  },
-
-  // ── AITUNNEL Llama 3.3 70B (платный fallback, без лимитов Groq, ~23₽/1M) ──
+  // ── AITUNNEL Llama 3.3 70B (платный, надёжный, ~23₽/1M input) ──
   {
     id: "aitunnel-llama-3.3-70b",
     displayName: "AITUNNEL Llama 3.3 70B",
@@ -90,7 +77,20 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     baseUrl: "https://api.aitunnel.ru/v1",
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
-    priority: 4,
+    priority: 3,
+  },
+
+  // ── Cerebras Qwen 235B — бесплатный, но ~59% success rate ──
+  {
+    id: "cerebras-qwen-3-235b",
+    displayName: "Cerebras Qwen 3 235B",
+    protocol: "openai-compatible",
+    apiKeyEnv: "CEREBRAS_API_KEY",
+    modelId: "qwen-3-235b-a22b-instruct-2507",
+    baseUrl: "https://api.cerebras.ai/v1",
+    limits: { rpm: 30, rpd: 200, tpm: 60_000 },
+    supportsJsonMode: true,
+    priority: 8,
   },
 
   // ── Cerebras Llama 8B (аварийный fallback — слабая модель) ──
