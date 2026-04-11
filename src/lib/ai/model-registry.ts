@@ -67,7 +67,7 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 2,
   },
 
-  // ── AITUNNEL Gemini Flash Lite (платный fallback, ~19₽/1M input) ──
+  // ── AITUNNEL Gemini Flash Lite (fallback, дожигаем баланс 1150₽) ──
   {
     id: "aitunnel-gemini-flash-lite",
     displayName: "AITUNNEL Gemini Flash Lite",
@@ -78,19 +78,6 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
     priority: 3,
-  },
-
-  // ── AITUNNEL Llama 3.3 70B (платный fallback, ~23₽/1M input) ──
-  {
-    id: "aitunnel-llama-3.3-70b",
-    displayName: "AITUNNEL Llama 3.3 70B",
-    protocol: "openai-compatible",
-    apiKeyEnv: "AITUNNEL_API_KEY",
-    modelId: "llama-3.3-70b-instruct",
-    baseUrl: "https://api.aitunnel.ru/v1",
-    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
-    supportsJsonMode: true,
-    priority: 4,
   },
 
   // ── Cerebras Qwen 235B — бесплатный, но ~59% success rate ──
