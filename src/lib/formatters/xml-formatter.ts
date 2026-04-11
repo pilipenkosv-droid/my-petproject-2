@@ -50,21 +50,6 @@ function alignmentToXml(alignment: string): string {
   }
 }
 
-/**
- * Проверяет, является ли hex-цвет "светлым" (невидим на белом фоне).
- * Используется для сброса цвета текста из документов с тёмной темой.
- */
-function isLightColor(hex: string): boolean {
-  const clean = hex.replace("#", "").toLowerCase();
-  if (clean === "ffffff" || clean === "auto") return false; // auto — уже дефолтный
-  if (clean.length !== 6) return false;
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  // Яркость по формуле ITU-R BT.709
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 180;
-}
 
 export class XmlDocumentFormatter {
   private zip!: JSZip;
@@ -154,6 +139,20 @@ export class XmlDocumentFormatter {
 
     // Удаляем шейдинг параграфа (тёмный фон параграфа)
     removeChild(pPr, "w:shd");
+
+    // Очищаем запрещённое форматирование в paragraph-level rPr (default run props)
+    const pPrRPr = findChild(pPr, "w:rPr");
+    if (pPrRPr) {
+      removeChild(pPrRPr, "w:u");
+      removeChild(pPrRPr, "w:shd");
+      const pColorNode = findChild(pPrRPr, "w:color");
+      if (pColorNode?.[":@"]) {
+        const pColorVal = pColorNode[":@"]["@_w:val"];
+        if (typeof pColorVal === "string" && pColorVal !== "auto" && pColorVal !== "000000") {
+          setOrderedProp(pPrRPr, "w:color", { "w:val": "auto" });
+        }
+      }
+    }
 
     // Применяем выравнивание
     if (target.alignment) {
@@ -267,15 +266,17 @@ export class XmlDocumentFormatter {
         removeChild(rPr, "w:iCs");
       }
 
+      // Удаляем подчёркивание (ГОСТ п.4.3.6 — запрещено)
+      removeChild(rPr, "w:u");
+
       // Удаляем шейдинг run (фон текста)
       removeChild(rPr, "w:shd");
 
-      // Сбрасываем цвет текста на auto (чёрный), если он был
-      // светлым из-за тёмной темы документа
+      // Сбрасываем цвет текста на auto (чёрный) — все не-чёрные цвета
       const colorNode = findChild(rPr, "w:color");
       if (colorNode?.[":@"]) {
         const colorVal = colorNode[":@"]["@_w:val"];
-        if (typeof colorVal === "string" && isLightColor(colorVal)) {
+        if (typeof colorVal === "string" && colorVal !== "auto" && colorVal !== "000000") {
           setOrderedProp(rPr, "w:color", { "w:val": "auto" });
         }
       }
@@ -695,12 +696,14 @@ export class XmlDocumentFormatter {
             for (const run of runs) {
               const rPr = ensureRPr(run);
 
-              // Удаляем шейдинг и светлый цвет текста в таблицах
+              // Удаляем подчёркивание и шейдинг в таблицах
+              removeChild(rPr, "w:u");
               removeChild(rPr, "w:shd");
+              // Сбрасываем цвет текста на auto — все не-чёрные цвета
               const colorNode = findChild(rPr, "w:color");
               if (colorNode?.[":@"]) {
                 const colorVal = colorNode[":@"]["@_w:val"];
-                if (typeof colorVal === "string" && isLightColor(colorVal)) {
+                if (typeof colorVal === "string" && colorVal !== "auto" && colorVal !== "000000") {
                   setOrderedProp(rPr, "w:color", { "w:val": "auto" });
                 }
               }

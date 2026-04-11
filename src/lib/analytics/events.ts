@@ -1,4 +1,3 @@
-import { reachGoal } from "@/components/analytics/YandexMetrika";
 import { sendGAEvent } from "@/components/analytics/GoogleAnalytics";
 
 /**
@@ -45,6 +44,5 @@ export function trackEvent(
   event: FunnelEvent,
   params?: Record<string, unknown>
 ) {
-  reachGoal(event, params);
   sendGAEvent(event, params);
 }

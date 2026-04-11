@@ -15,6 +15,10 @@ import JSZip from "jszip";
 import { formatViolationMessage } from "../utils/formatting-messages";
 import { XmlDocumentFormatter } from "../formatters/xml-formatter";
 import { applyBibliographyFormattingToXmlParagraph } from "../formatters/bibliography-xml-formatter";
+import { applyTextFixesToXmlParagraph } from "../formatters/text-fixes-xml-formatter";
+import { applyCaptionNumbering } from "../formatters/caption-numbering-formatter";
+import { applyTocGeneration } from "../formatters/toc-generator";
+import { applyAiCaptions } from "../formatters/ai-caption-generator";
 import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
 import { LAVA_CONFIG } from "../payment/config";
 import {
@@ -23,11 +27,8 @@ import {
   buildDocxXml,
   getBody,
   getParagraphsWithPositions,
-  ensurePPr,
   ensureRPr,
   getRuns,
-  findChild,
-  findChildren,
   children,
   createNode,
   createTextNode,
@@ -171,33 +172,48 @@ async function createFormattedDocumentXml(
   // Нумерация страниц через footer (если нет существующего)
   await formatter.applyPageNumbering(rules);
 
-  // Для библиографии — дополнительно применяем текстовые замены
-  // Нужно загрузить документ заново для работы с текстом через XML
+  // Применяем текстовые замены (NBSP, кавычки, тире, сокращения)
   const intermediateBuffer = await formatter.saveDocument();
 
-  // Применяем текстовые замены к библиографии
-  return await applyBibliographyTextFixes(
+  const afterTextFixes = await applyAllTextFixes(
     intermediateBuffer,
     enrichedParagraphs
   );
+
+  // Нормализация подписей (Рис. → Рисунок) + перенумерация + обновление ссылок
+  const { buffer: afterCaptions } = await applyCaptionNumbering(
+    afterTextFixes,
+    enrichedParagraphs
+  );
+
+  // AI-генерация подписей к таблицам и рисункам без подписей
+  const { buffer: afterAiCaptions } = await applyAiCaptions(
+    afterCaptions,
+    enrichedParagraphs,
+    rules
+  );
+
+  // Генерация/обновление TOC через Word Field Code (последний шаг — после всех вставок)
+  const { buffer: afterToc } = await applyTocGeneration(
+    afterAiCaptions,
+    enrichedParagraphs,
+    rules
+  );
+
+  return afterToc;
 }
 
 /**
- * Применяет текстовые замены в библиографии через XML
+ * Применяет текстовые замены ко всем параграфам через XML:
+ * - Общие: NBSP, кавычки, тире, сокращения (все кроме title_page, toc, figure, table)
+ * - Библиография: специфическая логика (формат инициалов, кавычки, тире)
+ *
+ * Возвращает { buffer, textFixCount } — количество параграфов, в которых были сделаны замены.
  */
-async function applyBibliographyTextFixes(
+async function applyAllTextFixes(
   buffer: Buffer,
   enrichedParagraphs: DocxParagraph[]
 ): Promise<Buffer> {
-  // Собираем индексы библиографических записей
-  const bibEntries = enrichedParagraphs.filter(
-    (p) => p.blockType === "bibliography_entry"
-  );
-
-  if (bibEntries.length === 0) {
-    return buffer;
-  }
-
   const zip = await JSZip.loadAsync(buffer);
   const documentXml = await zip.file("word/document.xml")?.async("string");
 
@@ -210,15 +226,33 @@ async function applyBibliographyTextFixes(
   if (!body) return buffer;
 
   const paragraphs = getParagraphsWithPositions(body);
-  const bibIndices = new Set(bibEntries.map((p) => p.index));
+  const enrichedMap = new Map(enrichedParagraphs.map((p) => [p.index, p]));
+
+  // Типы, к которым НЕ применяем текстовые замены
+  const skipTextFixes = new Set(["title_page", "toc", "figure", "table", "empty"]);
+
+  let changed = false;
 
   for (const { node, paragraphIndex } of paragraphs) {
-    if (bibIndices.has(paragraphIndex)) {
-      const enriched = enrichedParagraphs.find((p) => p.index === paragraphIndex);
+    const enriched = enrichedMap.get(paragraphIndex);
+    const blockType = enriched?.blockType || "unknown";
+
+    // Библиография — специфическая логика
+    if (blockType === "bibliography_entry") {
       const language = enriched?.blockMetadata?.language;
       applyBibliographyFormattingToXmlParagraph(node, language);
+      changed = true;
+      continue;
+    }
+
+    // Остальные параграфы — общие текстовые замены
+    if (!skipTextFixes.has(blockType)) {
+      const wasFixed = applyTextFixesToXmlParagraph(node);
+      if (wasFixed) changed = true;
     }
   }
+
+  if (!changed) return buffer;
 
   const newXml = buildDocxXml(parsed);
   zip.file("word/document.xml", newXml);
