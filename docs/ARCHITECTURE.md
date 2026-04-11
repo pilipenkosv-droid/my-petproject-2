@@ -160,18 +160,19 @@ Blog CTA
 
 ### Качество AI-ответов
 
-**Few-shot промпты** (`block-markup-prompts.ts`): 24-строчный пример для разметки блоков.
+**Структурный чанкинг** (ADR-007): документы >70 параграфов разбиваются по смысловым границам (секции, заголовки, пустые параграфы) с scoring system. TARGET=50, MAX=70, MIN=15.
 
-**Inter-chunk recovery** (`document-block-markup.ts`): для документов >150 параграфов — `recordUsage()` между чанками сбрасывает consecutiveErrors, предотвращая каскадный отказ при truncated JSON.
+**Контекстное обогащение**: каждый чанк получает section heading + 5 overlap-параграфов с blockType из предыдущего чанка.
 
-**Post-validation** (`document-block-markup.ts`): rule-based проверка и автоисправление 7 типов ошибок AI:
-1. Пустые параграфы → `empty`
-2. Номера страниц (1-4 цифры) → `page_number`
-3. Подписи рисунков ("Рисунок N") → `figure_caption`
-4. Подписи таблиц ("Таблица N") → `table_caption`
-5. Стили заголовков из Word (Heading1-4) → `heading_*`
-6. Элементы списков (–, -, •, *, нумерованные) → `list_item`
-7. Язык библиографических записей (ru/en)
+**Hallucination normalization**: 15+ маппингов частых AI-ошибок (`annotation` → `title_page_annotation`, `text` → `body_text` и т.д.) — применяется до Zod-валидации.
+
+**Recursive retry**: при ошибке чанка (JSON truncation) — разбиение пополам, последовательный retry с backoff (500ms × depth). Max depth=2, min chunk=10. Результат: 0 failed chunks на документе 1264 параграфов.
+
+**Post-validation**: rule-based автокоррекция 8 типов ошибок AI (empty, page_number, figure/table_caption, heading_*, list_item, title_page подтипы, bibliography language).
+
+**Pipeline timing**: `pipelineTimeMs` и `markupTimeMs` в DocumentStatistics → карточка "Время обработки" в UI.
+
+**Benchmark**: 1% unknown, 0 failed chunks, 50 lists, TOC PASS на 1264-параграфном документе (65s, ~$0.02).
 
 ### Промпты
 
@@ -347,12 +348,14 @@ CSAT-отзывы пользователей.
 
 ### Quality Bench (`scripts/`)
 
-Автоматический бенчмарк качества форматирования (ADR-005):
+Автоматический бенчмарк качества форматирования (ADR-005, ADR-007):
 
-- `format-quality-bench.ts` — оркестратор: загрузка документа → форматирование → проверка
+- `test-quality-bench.ts` — AITUNNEL-only bench: загрузка → AI-разметка → форматирование → deep XML inspection
+- `format-quality-bench.ts` — оркестратор (legacy): загрузка → форматирование → scoring
 - `quality-checks.ts` — 30+ XML-проверок по 7 категориям (page, text, headings, structure, tables, images, preservation)
+- Deep inspection: TOC (heading + field code), Lists (numPr/numIds), Landscape (sectPr orient), Bibliography NBSP, Content preservation
 - Text-based paragraph matching с fallback для сдвинутых индексов после TOC/captions
-- Baseline score: **95/100** (2026-04-11)
+- Baseline: **1% unknown, 0 failed chunks, 50 lists** (2026-04-11)
 
 ## Миграции БД
 
