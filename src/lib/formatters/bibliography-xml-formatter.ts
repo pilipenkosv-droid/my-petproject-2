@@ -11,10 +11,12 @@ import {
   type OrderedXmlNode,
   findChildren,
   getText,
-  children,
-  createNode,
-  createTextNode,
 } from "../xml/docx-xml";
+import {
+  collectRunSegments,
+  redistributeText,
+  writeBackSegments,
+} from "./text-fixes-xml-formatter";
 
 const NBSP = "\u00A0";
 const EN_DASH = "\u2013";
@@ -90,55 +92,21 @@ export function formatBibliographyText(
 }
 
 /**
- * Применяет форматирование библиографии к XML-параграфу (ordered-формат).
- *
- * Находит все w:t элементы, объединяет текст, применяет замены,
- * записывает результат обратно в первый w:t (остальные очищает).
+ * Применяет форматирование библиографии к XML-параграфу, сохраняя per-run форматирование.
  */
 export function applyBibliographyFormattingToXmlParagraph(
   paragraph: OrderedXmlNode,
   language?: string
 ): void {
-  const runs = findChildren(paragraph, "w:r");
-  if (runs.length === 0) return;
+  const segments = collectRunSegments(paragraph);
+  if (segments.length === 0) return;
 
-  // Собираем весь текст из всех w:t во всех runs
-  let fullText = "";
-  for (const run of runs) {
-    const tNodes = findChildren(run, "w:t");
-    for (const tNode of tNodes) {
-      fullText += getText(tNode);
-    }
-  }
-
+  const fullText = segments.map((s) => s.text).join("");
   if (!fullText.trim()) return;
 
-  // Применяем форматирование
   const formattedText = formatBibliographyText(fullText, language);
+  if (formattedText === fullText) return;
 
-  if (formattedText === fullText) return; // Ничего не изменилось
-  console.log(`[bibliography] NBSP/quotes applied to entry: "${fullText.substring(0, 50)}..."`);
-
-  // Записываем результат — весь текст в первый w:t первого run, остальные очищаем
-  let written = false;
-  for (const run of runs) {
-    const runCh = children(run);
-
-    for (let i = 0; i < runCh.length; i++) {
-      if (!("w:t" in runCh[i])) continue;
-
-      if (!written) {
-        // Заменяем первый w:t на новый с отформатированным текстом
-        runCh[i] = createNode("w:t", { "xml:space": "preserve" }, [
-          createTextNode(formattedText),
-        ]);
-        written = true;
-      } else {
-        // Очищаем остальные w:t
-        runCh[i] = createNode("w:t", { "xml:space": "preserve" }, [
-          createTextNode(""),
-        ]);
-      }
-    }
-  }
+  redistributeText(segments, fullText, formattedText);
+  writeBackSegments(segments);
 }

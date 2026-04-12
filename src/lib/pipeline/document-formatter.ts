@@ -209,13 +209,14 @@ async function createFormattedDocumentXml(
   // AI-генерация подписей к таблицам без подписей (через gateway, max 10 запросов)
   const { buffer: afterAiCaptions } = await applyAiCaptions(afterCaptions, enrichedParagraphs, rules);
 
-  // TOC генерация — заменяет существующий TOC на field code или вставляет после title_page
-  const { buffer: afterToc } = await applyTocGeneration(afterAiCaptions, enrichedParagraphs, rules);
-
   // Широкие таблицы → альбомная ориентация (ГОСТ 7.32-2017 п.6.7)
-  const afterLandscape = await applyLandscapeForWideTables(afterToc);
+  // ВАЖНО: landscape ПЕРЕД TOC, т.к. section breaks влияют на структуру страниц
+  const afterLandscape = await applyLandscapeForWideTables(afterAiCaptions);
 
-  return afterLandscape;
+  // TOC генерация — заменяет существующий TOC на field code или вставляет после title_page
+  const { buffer: afterToc } = await applyTocGeneration(afterLandscape, enrichedParagraphs, rules);
+
+  return afterToc;
 }
 
 /**

@@ -199,19 +199,19 @@ async function compareWithGolden(
   for (const pair of matched) {
     const fp = fmtParas[pair.fmtIdx].node;
     const gp = goldenParas[pair.goldenIdx].node;
-    const fpPr = findChild(fp, "w:pPr");
-    const gpPr = findChild(gp, "w:pPr");
+    const fpPr = findChild(fp, "w:pPr") as any;
+    const gpPr = findChild(gp, "w:pPr") as any;
 
-    const fJc = getAttr(findChild(fpPr, "w:jc"), "val");
-    const gJc = getAttr(findChild(gpPr, "w:jc"), "val");
+    const fJc = getAttr(fpPr ? findChild(fpPr, "w:jc") : undefined, "val");
+    const gJc = getAttr(gpPr ? findChild(gpPr, "w:jc") : undefined, "val");
     if (fJc !== gJc) { diffs++; cats["alignment"] = (cats["alignment"] || 0) + 1; }
 
-    const fInd = getAttr(findChild(fpPr, "w:ind"), "firstLine");
-    const gInd = getAttr(findChild(gpPr, "w:ind"), "firstLine");
+    const fInd = getAttr(fpPr ? findChild(fpPr, "w:ind") : undefined, "firstLine");
+    const gInd = getAttr(gpPr ? findChild(gpPr, "w:ind") : undefined, "firstLine");
     if (fInd !== gInd) { diffs++; cats["indent"] = (cats["indent"] || 0) + 1; }
 
-    const fSpacing = getAttr(findChild(fpPr, "w:spacing"), "line");
-    const gSpacing = getAttr(findChild(gpPr, "w:spacing"), "line");
+    const fSpacing = getAttr(fpPr ? findChild(fpPr, "w:spacing") : undefined, "line");
+    const gSpacing = getAttr(gpPr ? findChild(gpPr, "w:spacing") : undefined, "line");
     if (fSpacing !== gSpacing) { diffs++; cats["spacing"] = (cats["spacing"] || 0) + 1; }
   }
 
@@ -308,7 +308,7 @@ async function main() {
   // 5. Format
   console.log("5. Running formatter pipeline...");
   const t4 = Date.now();
-  const result = await formatDocument(buffer, rules, analysis.violations, enrichedParagraphs, "standalone");
+  const result = await formatDocument(buffer, rules, analysis.violations, enrichedParagraphs, "admin");
   const fmtTime = Date.now() - t4;
   console.log(`  ${result.fixesApplied} fixes applied in ${fmtTime}ms\n`);
 

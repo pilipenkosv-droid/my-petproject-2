@@ -55,18 +55,18 @@ interface ParaInfo {
 
 function extractParaInfo(p: any, index: number): ParaInfo {
   const text = getFullText(p);
-  const pPr = findChild(p, "w:pPr");
+  const pPr = findChild(p, "w:pPr") as any;
 
-  const jc = findChild(pPr, "w:jc");
+  const jc = pPr ? findChild(pPr, "w:jc") : undefined;
   const alignment = getAttr(jc, "val");
 
-  const ind = findChild(pPr, "w:ind");
+  const ind = pPr ? findChild(pPr, "w:ind") : undefined;
   const firstLine = getAttr(ind, "firstLine");
 
-  const spacing = findChild(pPr, "w:spacing");
+  const spacing = pPr ? findChild(pPr, "w:spacing") : undefined;
   const lineSpacing = getAttr(spacing, "line");
 
-  const pStyle = findChild(pPr, "w:pStyle");
+  const pStyle = pPr ? findChild(pPr, "w:pStyle") : undefined;
   const pStyleVal = getAttr(pStyle, "val");
 
   // First run formatting

@@ -104,97 +104,115 @@ export async function applyDocumentCleanup(
  * - Следующий текст короткий (<120 символов)
  * - Следующий параграф не содержит характерных признаков body_text (ссылки [1], формулы)
  */
+/** Проверяет, может ли параграф быть продолжением heading */
+function isContinuationCandidate(
+  combinedText: string,
+  nextText: string,
+  nextType: string,
+  headingIsUpperCase: boolean
+): boolean {
+  if (nextType !== "body_text" && nextType !== "unknown") return false;
+  if (!nextText || nextText.length > 120) return false;
+  if (/[.!?:;]$/.test(combinedText)) return false;
+  if (/\[\d+/.test(nextText) || /^\d+\.\d+/.test(nextText)) return false;
+
+  const startsLowerOrConnector = /^[а-яёa-z\-(]/.test(nextText) ||
+    /^(?:и|в|на|с|по|из|к|о|об|от|у|для|при|без|над|под|до|за|через|между|а|но|или|что|как|где|который|которая|которое|которые)\s/i.test(nextText);
+  if (startsLowerOrConnector) return true;
+  if (headingIsUpperCase && /^[А-ЯЁA-Z]/.test(nextText)) return true;
+  return false;
+}
+
 function mergeMultilineHeadings(
   bodyChildren: OrderedXmlNode[],
   paragraphs: { paragraphIndex: number; bodyIndex: number; node: OrderedXmlNode }[],
   enrichedMap: Map<number, DocxParagraph>
 ): void {
-  // Строим lookup: bodyIndex → paragraphInfo
   const bodyIndexMap = new Map<number, typeof paragraphs[0]>();
-  for (const p of paragraphs) {
-    bodyIndexMap.set(p.bodyIndex, p);
-  }
+  for (const p of paragraphs) bodyIndexMap.set(p.bodyIndex, p);
 
-  const mergedPairs: Array<{ headingIdx: number; continuationIdx: number }> = [];
+  const mergeGroups: Array<{ headingIdx: number; contIndices: number[] }> = [];
 
   for (const { paragraphIndex, bodyIndex, node } of paragraphs) {
     const enriched = enrichedMap.get(paragraphIndex);
     if (!enriched?.blockType?.startsWith("heading_")) continue;
 
     const headingText = getFullParagraphText(node).trim();
-    if (!headingText) continue;
+    if (!headingText || /[.!?:;]$/.test(headingText)) continue;
 
-    // Ищем следующий параграф (bodyIndex + 1)
-    const nextInfo = bodyIndexMap.get(bodyIndex + 1);
-    if (!nextInfo) continue;
+    const headingIsUpper = headingText === headingText.toUpperCase();
+    const contIndices: number[] = [];
+    let combined = headingText;
+    let checkIdx = bodyIndex + 1;
+    let emptyStreak = 0;
 
-    const nextEnriched = enrichedMap.get(nextInfo.paragraphIndex);
-    const nextType = nextEnriched?.blockType || "unknown";
+    while (checkIdx < bodyChildren.length) {
+      const nextInfo = bodyIndexMap.get(checkIdx);
+      if (!nextInfo) { checkIdx++; continue; }
 
-    // Только body_text или unknown могут быть продолжением
-    if (nextType !== "body_text" && nextType !== "unknown") continue;
+      const nextText = getFullParagraphText(nextInfo.node).trim();
+      if (!nextText) {
+        emptyStreak++;
+        if (emptyStreak > 1) break; // max 1 пустой подряд
+        contIndices.push(checkIdx);
+        checkIdx++;
+        continue;
+      }
+      emptyStreak = 0;
 
-    const nextText = getFullParagraphText(nextInfo.node).trim();
-    if (!nextText) continue;
+      const nextEnriched = enrichedMap.get(nextInfo.paragraphIndex);
+      const nextType = nextEnriched?.blockType || "unknown";
+      if (!isContinuationCandidate(combined, nextText, nextType, headingIsUpper)) break;
 
-    // Проверка длины: продолжение не должно быть длинным (это уже body_text)
-    if (nextText.length > 120) continue;
+      contIndices.push(checkIdx);
+      combined += " " + nextText;
+      checkIdx++;
+    }
 
-    // Заголовок заканчивается типичным завершением — не нужно объединять
-    if (/[.!?:;]$/.test(headingText)) continue;
-
-    // Следующий текст содержит признаки body_text — не объединяем
-    if (/\[\d+/.test(nextText) || /^\d+\.\d+/.test(nextText)) continue;
-
-    // Следующий текст начинается с маленькой буквы, предлога, союза, или дефиса
-    const startsLowerOrConnector = /^[а-яёa-z\-(]/.test(nextText) ||
-      /^(?:и|в|на|с|по|из|к|о|об|от|у|для|при|без|над|под|до|за|через|между|а|но|или|что|как|где|который|которая|которое|которые)\s/i.test(nextText);
-
-    if (!startsLowerOrConnector) continue;
-
-    mergedPairs.push({ headingIdx: bodyIndex, continuationIdx: bodyIndex + 1 });
+    // Убираем trailing пустые параграфы
+    while (contIndices.length > 0 && !getFullParagraphText(bodyChildren[contIndices[contIndices.length - 1]]).trim()) {
+      contIndices.pop();
+    }
+    if (contIndices.length > 0) mergeGroups.push({ headingIdx: bodyIndex, contIndices });
   }
 
   // Объединяем в обратном порядке (чтобы не сбить индексы)
-  for (let i = mergedPairs.length - 1; i >= 0; i--) {
-    const { headingIdx, continuationIdx } = mergedPairs[i];
+  let totalMerged = 0;
+  for (let i = mergeGroups.length - 1; i >= 0; i--) {
+    const { headingIdx, contIndices } = mergeGroups[i];
     const headingNode = bodyChildren[headingIdx];
-    const contNode = bodyChildren[continuationIdx];
+    if (!headingNode) continue;
 
-    if (!headingNode || !contNode) continue;
-
-    // Добавляем пробел + текст из continuation в heading
     const headingRuns = getRuns(headingNode);
-    const contRuns = getRuns(contNode);
+    if (headingRuns.length === 0) continue;
 
-    if (headingRuns.length > 0 && contRuns.length > 0) {
-      // Добавляем пробел-разделитель как текстовый run с форматированием первого heading run
-      const firstHeadingRun = headingRuns[0];
-      const rPr = findChild(firstHeadingRun, "w:rPr");
+    const firstRPr = findChild(headingRuns[0], "w:rPr");
+    const hChildren = children(headingNode);
 
-      const spaceRun = createNode("w:r", undefined, [
-        ...(rPr ? [structuredCloneNode(rPr)] : []),
+    for (const contIdx of contIndices) {
+      const contNode = bodyChildren[contIdx];
+      if (!contNode) continue;
+      const contRuns = getRuns(contNode);
+      if (contRuns.length === 0) continue;
+
+      hChildren.push(createNode("w:r", undefined, [
+        ...(firstRPr ? [structuredCloneNode(firstRPr)] : []),
         createNode("w:t", { "xml:space": "preserve" }, [{ "#text": " " }]),
-      ]);
-
-      // Переносим все runs из continuation в heading
-      const headingChildren = children(headingNode);
-      headingChildren.push(spaceRun);
-      for (const run of contRuns) {
-        headingChildren.push(run);
-      }
-
-      // Удаляем continuation параграф
-      bodyChildren.splice(continuationIdx, 1);
-
-      const headingText = getFullParagraphText(headingNode).trim();
-      console.log(`[cleanup] Merged multiline heading at bodyIndex ${headingIdx}: "${headingText.substring(0, 60)}..."`);
+      ]));
+      for (const run of contRuns) hChildren.push(run);
     }
+
+    // Удаляем continuation в обратном порядке
+    for (let j = contIndices.length - 1; j >= 0; j--) {
+      bodyChildren.splice(contIndices[j], 1);
+    }
+
+    totalMerged++;
+    const mergedText = getFullParagraphText(headingNode).trim();
+    console.log(`[cleanup] Merged multiline heading at bodyIndex ${headingIdx}: "${mergedText.substring(0, 60)}..."`);
   }
 
-  if (mergedPairs.length > 0) {
-    console.log(`[cleanup] Merged ${mergedPairs.length} multiline heading(s)`);
-  }
+  if (totalMerged > 0) console.log(`[cleanup] Merged ${totalMerged} multiline heading(s)`);
 }
 
 /**

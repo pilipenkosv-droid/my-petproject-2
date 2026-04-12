@@ -195,7 +195,7 @@ function buildLetterAbstractNum(rules: FormattingRules): OrderedXmlNode {
 // ── Bibliography Detection ──
 
 /** Паттерны заголовков библиографии */
-const BIBLIO_TITLE_PATTERNS = /^(?:список\s+(?:использованных?\s+)?(?:источников|литературы)|библиографи|литература)\s*$/i;
+const BIBLIO_TITLE_PATTERNS = /^(?:список\s+(?:использованн(?:ых|ой)\s+)?(?:источников|литературы)|библиографи|литература)\s*$/i;
 
 /**
  * Находит paragraphIndex, с которого начинается библиография.
@@ -269,6 +269,12 @@ export async function applyListFormatting(
   // Типы блоков, где ищем списки
   const LIST_CANDIDATE_TYPES = new Set(["list_item", "body_text", "unknown"]);
 
+  // Границы секций (heading_1) — список нумерация сбрасывается при пересечении
+  const heading1Indices = new Set<number>();
+  for (const [idx, ep] of enrichedMap) {
+    if (ep.blockType === "heading_1") heading1Indices.add(idx);
+  }
+
   // Phase 1: найти все list items и разбить на группы (каждый непрерывный блок = отдельный список)
   interface ListGroup {
     type: ListType;
@@ -280,6 +286,12 @@ export async function applyListFormatting(
   for (const { paragraphIndex, node } of paragraphs) {
     // Не обрабатываем параграфы в секции библиографии
     if (bibliographyStartIdx >= 0 && paragraphIndex >= bibliographyStartIdx) {
+      if (currentGroup) { groups.push(currentGroup); currentGroup = null; }
+      continue;
+    }
+
+    // Граница секции (heading_1) — разрываем текущую группу
+    if (heading1Indices.has(paragraphIndex)) {
       if (currentGroup) { groups.push(currentGroup); currentGroup = null; }
       continue;
     }

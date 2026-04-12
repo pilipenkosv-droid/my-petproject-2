@@ -453,7 +453,7 @@ async function main() {
       // Don't remove title page section break
       if (i < 30) continue;
       // Don't remove the final document section
-      const isLast = !bodyNodes.slice(i + 1).some(n => "w:p" in n && findChild(findChild(n, "w:pPr"), "w:sectPr"));
+      const isLast = !bodyNodes.slice(i + 1).some(n => "w:p" in n && findChild(findChild(n, "w:pPr") as any, "w:sectPr"));
       if (isLast) continue;
       sectBreakIndices.push(i);
     }

@@ -145,48 +145,116 @@ export function applyTextFixes(text: string): string {
 }
 
 /**
- * Применяет текстовые замены к XML-параграфу.
+ * Применяет текстовые замены к XML-параграфу, сохраняя per-run форматирование.
  *
- * Собирает текст из всех w:t, применяет замены,
- * записывает результат обратно (весь текст в первый w:t).
+ * Стратегия: собираем текст из всех w:t с маппингом позиций,
+ * применяем замены к объединённому тексту, затем распределяем результат
+ * обратно по runs пропорционально исходным длинам.
  */
 export function applyTextFixesToXmlParagraph(paragraph: OrderedXmlNode): boolean {
-  const runs = findChildren(paragraph, "w:r");
-  if (runs.length === 0) return false;
+  const segments = collectRunSegments(paragraph);
+  if (segments.length === 0) return false;
 
-  // Собираем весь текст
-  let fullText = "";
-  for (const run of runs) {
-    const tNodes = findChildren(run, "w:t");
-    for (const tNode of tNodes) {
-      fullText += getText(tNode);
-    }
-  }
-
+  const fullText = segments.map((s) => s.text).join("");
   if (!fullText.trim()) return false;
 
   const fixedText = applyTextFixes(fullText);
   if (fixedText === fullText) return false;
 
-  // Записываем результат — весь текст в первый w:t, остальные очищаем
-  let written = false;
+  redistributeText(segments, fullText, fixedText);
+  return writeBackSegments(segments);
+}
+
+/** Сегмент текста с привязкой к w:t узлу */
+export interface RunSegment {
+  tNodeIndex: number;  // индекс в runChildren
+  runChildren: OrderedXmlNode[];
+  text: string;
+  start: number;  // позиция начала в combined string
+}
+
+/** Собирает все w:t сегменты с позициями */
+export function collectRunSegments(paragraph: OrderedXmlNode): RunSegment[] {
+  const runs = findChildren(paragraph, "w:r");
+  const segments: RunSegment[] = [];
+  let offset = 0;
+
   for (const run of runs) {
     const runCh = children(run);
     for (let i = 0; i < runCh.length; i++) {
       if (!("w:t" in runCh[i])) continue;
-
-      if (!written) {
-        runCh[i] = createNode("w:t", { "xml:space": "preserve" }, [
-          createTextNode(fixedText),
-        ]);
-        written = true;
-      } else {
-        runCh[i] = createNode("w:t", { "xml:space": "preserve" }, [
-          createTextNode(""),
-        ]);
-      }
+      const text = getText(runCh[i]);
+      segments.push({ tNodeIndex: i, runChildren: runCh, text, start: offset });
+      offset += text.length;
     }
   }
+  return segments;
+}
 
+/**
+ * Распределяет исправленный текст обратно по сегментам, сохраняя per-run форматирование.
+ *
+ * Одинаковая длина → позиционное распределение (самый частый случай: тире, кавычки).
+ * Разная длина → находим зону изменения, расширяем/сжимаем первый затронутый сегмент,
+ * остальные затронутые очищаем, незатронутые сдвигаем.
+ */
+export function redistributeText(segments: RunSegment[], original: string, fixed: string): void {
+  if (original.length === fixed.length) {
+    let pos = 0;
+    for (const s of segments) {
+      s.text = fixed.substring(pos, pos + s.text.length);
+      pos += s.text.length;
+    }
+    return;
+  }
+
+  // Находим зону изменения через общий prefix/suffix
+  let pre = 0;
+  while (pre < original.length && pre < fixed.length && original[pre] === fixed[pre]) pre++;
+  let suf = 0;
+  const maxSuf = Math.min(original.length - pre, fixed.length - pre);
+  while (suf < maxSuf && original[original.length - 1 - suf] === fixed[fixed.length - 1 - suf]) suf++;
+
+  const origEnd = original.length - suf;
+  const delta = fixed.length - original.length;
+
+  // Находим первый и последний затронутый сегмент
+  let first = segments.length - 1;
+  let last = first;
+  for (let i = 0; i < segments.length; i++) {
+    if (segments[i].start + segments[i].text.length > pre) { first = i; break; }
+  }
+  for (let i = first; i < segments.length; i++) {
+    if (segments[i].start < origEnd) last = i; else break;
+  }
+
+  // До зоны изменения — без изменений (текст не менялся, но вырезаем из fixed для консистентности)
+  let pos = 0;
+  for (let i = 0; i < first; i++) {
+    segments[i].text = fixed.substring(pos, pos + segments[i].text.length);
+    pos += segments[i].text.length;
+  }
+
+  // Затронутые сегменты: первый получает весь новый текст из зоны, остальные пустые
+  const firstStart = segments[first].start;
+  const lastEnd = segments[last].start + segments[last].text.length;
+  const newLen = (lastEnd - firstStart) + delta;
+  segments[first].text = fixed.substring(firstStart, firstStart + newLen);
+  for (let i = first + 1; i <= last; i++) segments[i].text = "";
+
+  // После зоны изменения — сдвигаем
+  for (let i = last + 1; i < segments.length; i++) {
+    const newStart = segments[i].start + delta;
+    segments[i].text = fixed.substring(newStart, newStart + segments[i].text.length);
+  }
+}
+
+/** Записывает обновлённые тексты обратно в w:t узлы */
+export function writeBackSegments(segments: RunSegment[]): boolean {
+  for (const s of segments) {
+    s.runChildren[s.tNodeIndex] = createNode("w:t", { "xml:space": "preserve" }, [
+      createTextNode(s.text),
+    ]);
+  }
   return true;
 }
