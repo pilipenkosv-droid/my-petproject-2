@@ -154,6 +154,11 @@ export class XmlDocumentFormatter {
       }
     }
 
+    // TOC entries: убираем w:pStyle (TOC1/TOC2 наследуют sz=24/12pt из стиля)
+    if (blockType === "toc_entry") {
+      removeChild(pPr, "w:pStyle");
+    }
+
     // Очищаем запрещённое форматирование в paragraph-level rPr (default run props)
     const pPrRPr = findChild(pPr, "w:rPr");
     if (pPrRPr) {
@@ -333,6 +338,20 @@ export class XmlDocumentFormatter {
         }
       }
     }
+
+    // Устанавливаем fontSize в paragraph-level default run props (w:pPr > w:rPr)
+    // Это нужно для TOC entries: Word наследует sz из стиля TOC1/TOC2,
+    // paragraph-level rPr перебивает наследование стиля
+    if (target.fontSize !== undefined) {
+      const sizeHalf = target.fontSize * HALF_POINTS_PER_PT;
+      let pRPr = findChild(pPr, "w:rPr");
+      if (!pRPr) {
+        pRPr = createNode("w:rPr");
+        children(pPr).push(pRPr);
+      }
+      setOrderedProp(pRPr, "w:sz", { "w:val": String(sizeHalf) });
+      setOrderedProp(pRPr, "w:szCs", { "w:val": String(sizeHalf) });
+    }
   }
 
   /**
@@ -385,13 +404,23 @@ export class XmlDocumentFormatter {
     if (!relsRoot) return;
 
     const rels = children(relsRoot);
-    const hasFooterRel = rels.some((r) => {
+    const footerRel = rels.find((r) => {
       const type = r[":@"]?.["@_Type"];
       return typeof type === "string" && type.includes("/footer");
     });
 
-    // Если footer уже есть — не перезаписываем (сохраняем оригинальный)
-    if (hasFooterRel) return;
+    // Если footer уже есть — корректируем выравнивание и шрифт
+    if (footerRel) {
+      const target = footerRel[":@"]?.["@_Target"];
+      if (typeof target === "string") {
+        const footerPath = target.startsWith("word/") ? target : `word/${target}`;
+        const existingFooterXml = await this.zip.file(footerPath)?.async("string");
+        if (existingFooterXml) {
+          await this.fixExistingFooter(footerPath, existingFooterXml, rules);
+        }
+      }
+      return;
+    }
 
     // Генерируем footer XML
     const { buildPageNumberFooterXml, FOOTER_RELATIONSHIP_TYPE, FOOTER_CONTENT_TYPE } =
@@ -478,6 +507,76 @@ export class XmlDocumentFormatter {
         "w:start": String(startFrom),
       });
     }
+  }
+
+  /**
+   * Корректирует существующий footer: выравнивание → center, шрифт → ГОСТ
+   */
+  private async fixExistingFooter(
+    footerPath: string,
+    footerXml: string,
+    rules: FormattingRules
+  ): Promise<void> {
+    const pn = rules.additional?.pageNumbering;
+    const targetAlignment = alignmentToXml(pn?.alignment || "center");
+    const fontSize = pn?.fontSize || 12;
+    const sizeHalf = fontSize * HALF_POINTS_PER_PT;
+    const fontFamily = rules.text.fontFamily || "Times New Roman";
+
+    const parsed = parseDocxXml(footerXml);
+    const ftrRoot = parsed.find((n) => "w:ftr" in n);
+    if (!ftrRoot) return;
+
+    // Собираем все w:p — включая вложенные в w:sdt > w:sdtContent
+    const paragraphs: OrderedXmlNode[] = [];
+    const collectParagraphs = (parent: OrderedXmlNode) => {
+      for (const child of children(parent)) {
+        if ("w:p" in child) paragraphs.push(child);
+        if ("w:sdt" in child) {
+          const sdtContent = findChild(child, "w:sdtContent");
+          if (sdtContent) collectParagraphs(sdtContent);
+        }
+      }
+    };
+    collectParagraphs(ftrRoot);
+
+    for (const p of paragraphs) {
+      // Ищем параграф с полем PAGE
+      const runs = getRuns(p);
+      const hasPageField = runs.some((r) => {
+        const instrText = findChild(r, "w:instrText");
+        if (instrText) {
+          const text = children(instrText)
+            .filter((c): c is { "#text": string } => "#text" in c)
+            .map((c) => c["#text"])
+            .join("");
+          return text.toUpperCase().includes("PAGE");
+        }
+        const fldChar = findChild(r, "w:fldChar");
+        return !!fldChar;
+      });
+
+      if (!hasPageField && paragraphs.length > 1) continue;
+
+      // Обновляем выравнивание
+      const pPr = ensurePPr(p);
+      setOrderedProp(pPr, "w:jc", { "w:val": targetAlignment });
+
+      // Обновляем шрифт и размер во всех runs
+      for (const run of runs) {
+        const rPr = ensureRPr(run);
+        setOrderedProp(rPr, "w:sz", { "w:val": String(sizeHalf) });
+        setOrderedProp(rPr, "w:szCs", { "w:val": String(sizeHalf) });
+        setOrderedProp(rPr, "w:rFonts", {
+          "w:ascii": fontFamily,
+          "w:hAnsi": fontFamily,
+          "w:cs": fontFamily,
+        });
+      }
+    }
+
+    const newFooterXml = buildDocxXml(parsed);
+    this.zip.file(footerPath, newFooterXml);
   }
 
   /**
@@ -624,9 +723,10 @@ export class XmlDocumentFormatter {
         };
 
       case "title_page":
-        // Generic fallback — только шрифт, сохраняем оригинальное форматирование
+        // Generic fallback — только шрифт, убираем отступ, сохраняем оригинальное форматирование
         return {
           fontFamily: rules.text.fontFamily,
+          firstLineIndent: 0,
           lineSpacing: 1.0,
         };
 
@@ -656,6 +756,7 @@ export class XmlDocumentFormatter {
         return {
           fontFamily: rules.text.fontFamily,
           fontSize: rules.text.fontSize,
+          firstLineIndent: 0,
           lineSpacing: 1.0,
         };
 
@@ -665,6 +766,7 @@ export class XmlDocumentFormatter {
           fontFamily: rules.text.fontFamily,
           fontSize: 10,
           italic: true,
+          firstLineIndent: 0,
           lineSpacing: 1.0,
         };
 
@@ -813,11 +915,18 @@ export class XmlDocumentFormatter {
 
           const paragraphs = findChildren(cell, "w:p");
           for (const p of paragraphs) {
-            // Удаляем шейдинг параграфа в таблице
-            const pPr = findChild(p, "w:pPr");
-            if (pPr) {
-              removeChild(pPr, "w:shd");
+            // Устанавливаем межстрочный интервал 1.5 в ячейках таблицы
+            const cellPPr = ensurePPr(p);
+            const existingSpacing = findChild(cellPPr, "w:spacing");
+            if (existingSpacing?.[":@"]) {
+              existingSpacing[":@"]["@_w:line"] = "360";
+              existingSpacing[":@"]["@_w:lineRule"] = "auto";
+            } else {
+              setOrderedProp(cellPPr, "w:spacing", { "w:line": "360", "w:lineRule": "auto" });
             }
+
+            // Удаляем шейдинг параграфа в таблице
+            removeChild(cellPPr, "w:shd");
 
             const runs = getRuns(p);
             for (const run of runs) {

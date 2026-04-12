@@ -17,15 +17,28 @@ import {
   getParagraphsWithPositions,
   findChildren,
   getText,
+  getRuns,
   children,
   createNode,
   createTextNode,
 } from "../xml/docx-xml";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 
+/** Собирает полный текст параграфа из всех runs */
+function getFullParagraphText(p: OrderedXmlNode): string {
+  const runs = getRuns(p);
+  let text = "";
+  for (const run of runs) {
+    for (const t of findChildren(run, "w:t")) {
+      text += getText(t);
+    }
+  }
+  return text;
+}
+
 // Паттерны для подписей
 const FIGURE_CAPTION_PATTERN = /^(Рисунок|Рис\.?)\s*(\d+(?:\.\d+)?)/i;
-const TABLE_CAPTION_PATTERN = /^(Таблица|Табл\.?)\s*(\d+(?:\.\d+)?)/i;
+const TABLE_CAPTION_PATTERN = /^(Таблица|Табл\.?)\s*[№#]?\s*(\d+(?:\.\d+)?)/i;
 
 // Паттерны для ссылок в тексте (не в начале строки)
 const FIGURE_REF_PATTERN = /(рисунок|рисунке|рисунка|рисунком|рис\.?)\s*№?\s*(\d+(?:\.\d+)?)/gi;
@@ -47,10 +60,22 @@ function normalizeCaptionPrefix(text: string, type: "figure" | "table"): string 
       "Рисунок "
     );
   }
-  return text.replace(
+  // Нормализуем "Табл." → "Таблица" и убираем "№" перед номером
+  let result = text.replace(
     /^(Табл\.?)\s*/i,
     "Таблица "
   );
+  // Артефакт run-split: "Таблица ица №9" / "Таблица лица №9" → "Таблица №9"
+  result = result.replace(
+    /^Таблица\s+[а-яё]*ица\s*/i,
+    "Таблица "
+  );
+  // "Таблица №1" / "Таблица № 1" → "Таблица 1"
+  result = result.replace(
+    /^(Таблица)\s*[№#]\s*/i,
+    "Таблица "
+  );
+  return result;
 }
 
 /**
@@ -121,15 +146,48 @@ export async function applyCaptionNumbering(
   const paragraphs = getParagraphsWithPositions(body);
   const enrichedMap = new Map(enrichedParagraphs.map((p) => [p.index, p]));
 
+  // Fallback lookup: по тексту, если index-based lookup не сработал (после cleanup индексы сдвигаются)
+  const enrichedByText = new Map<string, DocxParagraph>();
+  for (const p of enrichedParagraphs) {
+    if (p.blockType === "table_caption" || p.blockType === "figure_caption" ||
+        p.blockType === "body_text" || p.blockType === "list_item" || p.blockType === "quote") {
+      const key = p.text.trim().substring(0, 80);
+      if (key && !enrichedByText.has(key)) {
+        enrichedByText.set(key, p);
+      }
+    }
+  }
+
+  function lookupEnriched(paragraphIndex: number, nodeText: string): DocxParagraph | undefined {
+    const byIndex = enrichedMap.get(paragraphIndex);
+    if (byIndex) return byIndex;
+    const key = nodeText.trim().substring(0, 80);
+    return key ? enrichedByText.get(key) : undefined;
+  }
+
   // Проход 1: Собираем подписи в порядке появления, строим маппинг
   const figureMappings: NumberMapping[] = [];
   const tableMappings: NumberMapping[] = [];
   let figureCounter = 0;
   let tableCounter = 0;
 
-  for (const { paragraphIndex } of paragraphs) {
-    const enriched = enrichedMap.get(paragraphIndex);
-    if (!enriched) continue;
+  for (const { node, paragraphIndex } of paragraphs) {
+    const nodeText = getFullParagraphText(node);
+    const enriched = lookupEnriched(paragraphIndex, nodeText);
+    if (!enriched) {
+      // Fallback: определяем по тексту, даже без enriched
+      const figMatch = nodeText.match(FIGURE_CAPTION_PATTERN);
+      if (figMatch) {
+        figureCounter++;
+        figureMappings.push({ oldNumber: figMatch[2], newNumber: figureCounter });
+      }
+      const tblMatch = nodeText.match(TABLE_CAPTION_PATTERN);
+      if (tblMatch) {
+        tableCounter++;
+        tableMappings.push({ oldNumber: tblMatch[2], newNumber: tableCounter });
+      }
+      continue;
+    }
 
     if (enriched.blockType === "figure_caption") {
       const match = enriched.text.match(FIGURE_CAPTION_PATTERN);
@@ -156,10 +214,12 @@ export async function applyCaptionNumbering(
   const figureNeedsRenumber = figureMappings.some((m) => m.oldNumber !== String(m.newNumber));
   const tableNeedsRenumber = tableMappings.some((m) => m.oldNumber !== String(m.newNumber));
 
-  // Проверяем, есть ли сокращения для нормализации
+  // Проверяем, есть ли сокращения или №/точки для нормализации
   const hasAbbreviations = enrichedParagraphs.some((p) => {
     if (p.blockType === "figure_caption") return /^Рис\.?\s/i.test(p.text);
-    if (p.blockType === "table_caption") return /^Табл\.?\s/i.test(p.text);
+    if (p.blockType === "table_caption") {
+      return /^Табл\.?\s/i.test(p.text) || /[№#]/i.test(p.text) || /\d+\.\s*$/i.test(p.text);
+    }
     return false;
   });
 
@@ -179,9 +239,19 @@ export async function applyCaptionNumbering(
   let changesCount = 0;
 
   for (const { node, paragraphIndex } of paragraphs) {
-    const enriched = enrichedMap.get(paragraphIndex);
-    if (!enriched) continue;
-    const blockType = enriched.blockType;
+    const nodeText = getFullParagraphText(node);
+    const enriched = lookupEnriched(paragraphIndex, nodeText);
+
+    // Определяем blockType: из enriched или по тексту
+    let blockType = enriched?.blockType || "unknown";
+
+    // Fallback: определяем caption по тексту если AI не классифицировал
+    if (blockType !== "table_caption" && blockType !== "figure_caption") {
+      if (TABLE_CAPTION_PATTERN.test(nodeText)) blockType = "table_caption";
+      else if (FIGURE_CAPTION_PATTERN.test(nodeText)) blockType = "figure_caption";
+    }
+
+    if (blockType === "unknown") continue;
 
     // Подписи к рисункам — нормализация + перенумерация
     if (blockType === "figure_caption") {
@@ -202,7 +272,7 @@ export async function applyCaptionNumbering(
       continue;
     }
 
-    // Подписи к таблицам — нормализация + перенумерация
+    // Подписи к таблицам — нормализация + перенумерация + формат разделителя
     if (blockType === "table_caption") {
       const changed = rewriteParagraphText(node, (text) => {
         let result = normalizeCaptionPrefix(text, "table");
@@ -215,6 +285,24 @@ export async function applyCaptionNumbering(
             }
           );
         }
+        // Нормализуем разделитель: "Таблица N." / "Таблица N. " → "Таблица N"
+        // "Таблица N. Title" → "Таблица N – Title"
+        // "Таблица N - Title" / "Таблица N — Title" → "Таблица N – Title"
+        result = result.replace(
+          /^(Таблица\s+\d+(?:\.\d+)?)\s*[.]\s*$/,
+          "$1"
+        );
+        result = result.replace(
+          /^(Таблица\s+\d+(?:\.\d+)?)\s*[.\-–—]\s+/,
+          "$1 – "
+        );
+        // Убираем trailing whitespace
+        result = result.trimEnd();
+        // Если после номера идёт текст (не тире) без разделителя — добавляем тире
+        result = result.replace(
+          /^(Таблица\s+\d+(?:\.\d+)?)\s+(?![–—\-])(\S)/,
+          "$1 – $2"
+        );
         return result;
       });
       if (changed) changesCount++;

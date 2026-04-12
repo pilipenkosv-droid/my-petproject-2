@@ -466,7 +466,7 @@ export interface FormattingRules {
 export const DEFAULT_GOST_RULES: FormattingRules = {
   document: {
     pageSize: "A4",
-    margins: { top: 20, bottom: 20, left: 30, right: 15 }, // По методичке ТГУ п.4.1.2
+    margins: { top: 20, bottom: 20, left: 30, right: 10 }, // ГОСТ Р 7.0.5 (правое поле ≥10мм)
     orientation: "portrait",
   },
   text: {

@@ -369,11 +369,12 @@ export async function runQualityChecks(
     });
   }
 
-  // 2c. Line spacing
+  // 2c. Line spacing (пропускаем пустые параграфы-разделители — у них часто line=240)
   {
     let wrongSpacing = 0;
     const examples: string[] = [];
     for (const { node, text } of sampleBodyText) {
+      if (!text.trim()) continue;
       const pPr = findChild(node, "w:pPr");
       const spacing = pPr ? findChild(pPr, "w:spacing") : undefined;
       const lineVal = getAttrNum(spacing, "w:line");
@@ -710,6 +711,7 @@ export async function runQualityChecks(
       "список источников", "содержание", "оглавление", "аннотация", "реферат",
       "приложение", "приложения", "abstract", "библиография",
       "список использованной литературы",
+      "выводы", "выводы по главе", "рекомендации",
     ]);
 
     let unnumbered = 0;

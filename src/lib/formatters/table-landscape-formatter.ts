@@ -32,9 +32,9 @@ const A4_H = 16838;
 const M_TOP = Math.round(20 * TWIPS_PER_MM);    // 1134
 const M_BOTTOM = Math.round(20 * TWIPS_PER_MM); // 1134
 const M_LEFT = Math.round(30 * TWIPS_PER_MM);   // 1701
-const M_RIGHT = Math.round(15 * TWIPS_PER_MM);  // 850
+const M_RIGHT = Math.round(10 * TWIPS_PER_MM);  // 567
 
-/** Доступная ширина в портрете: 210 - 30 - 15 = 165мм */
+/** Доступная ширина в портрете: 210 - 30 - 10 = 170мм */
 const PORTRAIT_AVAIL = A4_W - M_LEFT - M_RIGHT; // ~9355 twips
 
 /** Минимум столбцов для автоматического landscape */
@@ -103,13 +103,11 @@ function needsLandscape(tbl: OrderedXmlNode): boolean {
     }
   }
 
-  // Много столбцов → landscape
-  if (colCount >= MIN_COLS) return true;
+  // Очень много столбцов → landscape без проверки ширины
+  if (colCount >= 9) return true;
 
-  // 5-6 столбцов без gridCol — проверяем по содержимому (длина текста)
-  if (colCount >= 5 && !gridW) {
-    return true; // скорее всего широкая таблица
-  }
+  // 7-8 столбцов → landscape только если есть данные о ширине, подтверждающие ширину
+  if (colCount >= MIN_COLS && gridW && gridW > PORTRAIT_AVAIL * 0.85) return true;
 
   return false;
 }
