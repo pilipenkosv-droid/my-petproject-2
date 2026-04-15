@@ -1,6 +1,6 @@
 /**
  * Diagnostic endpoint to verify AI model availability.
- * Tests each model individually (bypasses cascading in callAI).
+ * Tests each model individually + raw HTTP connectivity.
  * DELETE THIS FILE after verification.
  */
 import { NextResponse } from "next/server";
@@ -10,6 +10,33 @@ import OpenAI from "openai";
 
 export const maxDuration = 30;
 
+async function testConnectivity(url: string, apiKey: string): Promise<{
+  reachable: boolean;
+  status?: number;
+  error?: string;
+  responseTime: number;
+}> {
+  const start = Date.now();
+  try {
+    const resp = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    return {
+      reachable: true,
+      status: resp.status,
+      responseTime: Date.now() - start,
+    };
+  } catch (error) {
+    return {
+      reachable: false,
+      error: error instanceof Error ? error.message : String(error),
+      responseTime: Date.now() - start,
+    };
+  }
+}
+
 async function testModel(model: ModelConfig): Promise<{
   id: string;
   displayName: string;
@@ -17,6 +44,7 @@ async function testModel(model: ModelConfig): Promise<{
   responseTime: number;
   response?: string;
   error?: string;
+  connectivity?: { reachable: boolean; status?: number; error?: string };
 }> {
   const start = Date.now();
   const apiKey = process.env[model.apiKeyEnv];
@@ -30,6 +58,12 @@ async function testModel(model: ModelConfig): Promise<{
       error: `ENV ${model.apiKeyEnv} not set`,
     };
   }
+
+  // First test raw connectivity
+  const connectivityUrl = model.baseUrl
+    ? `${model.baseUrl}/models`
+    : "https://generativelanguage.googleapis.com/v1beta/models";
+  const connectivity = await testConnectivity(connectivityUrl, apiKey);
 
   try {
     const openai = new OpenAI({
@@ -56,6 +90,7 @@ async function testModel(model: ModelConfig): Promise<{
       available: true,
       responseTime: Date.now() - start,
       response: content.trim(),
+      connectivity,
     };
   } catch (error) {
     return {
@@ -63,7 +98,10 @@ async function testModel(model: ModelConfig): Promise<{
       displayName: model.displayName,
       available: false,
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : String(error),
+      connectivity,
     };
   }
 }
@@ -74,7 +112,6 @@ export async function GET(request: Request) {
 
   const models = getAvailableModels();
 
-  // Optionally reset rate limiter blocks
   if (reset) {
     const supabase = getSupabaseAdmin();
     await supabase
@@ -88,25 +125,24 @@ export async function GET(request: Request) {
       .neq("model_id", "");
   }
 
-  // Get rate limiter state
   const supabase = getSupabaseAdmin();
   const { data: rateLimits } = await supabase
     .from("rate_limits")
-    .select("*");
+    .select("model_id, consecutive_errors, blocked_until, minute_requests, day_requests");
 
-  // Test each model directly (not through callAI cascade)
   const results = await Promise.all(models.map(testModel));
-
   const anyAvailable = results.some((r) => r.available);
 
   return NextResponse.json({
     status: anyAvailable ? "ok" : "error",
     modelsConfigured: models.length,
     results,
-    rateLimits: rateLimits || [],
+    rateLimits: (rateLimits || []).filter(r =>
+      r.model_id === "vercel-gemini-flash" || r.model_id === "aitunnel-gemini-flash"
+    ),
     envKeys: {
-      AI_GATEWAY_API_KEY: !!process.env.AI_GATEWAY_API_KEY,
-      AITUNNEL_API_KEY: !!process.env.AITUNNEL_API_KEY,
+      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY ? `${process.env.AI_GATEWAY_API_KEY.slice(0, 6)}...` : "NOT SET",
+      AITUNNEL_API_KEY: process.env.AITUNNEL_API_KEY ? `${process.env.AITUNNEL_API_KEY.slice(0, 6)}...` : "NOT SET",
     },
     resetDone: reset,
   });
