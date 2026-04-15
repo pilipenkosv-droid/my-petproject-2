@@ -1,6 +1,6 @@
 /**
  * Diagnostic endpoint to verify AI model availability.
- * Tests each model individually + raw HTTP connectivity.
+ * Tests: raw fetch + OpenAI SDK for each model.
  * DELETE THIS FILE after verification.
  */
 import { NextResponse } from "next/server";
@@ -10,60 +10,54 @@ import OpenAI from "openai";
 
 export const maxDuration = 30;
 
-async function testConnectivity(url: string, apiKey: string): Promise<{
-  reachable: boolean;
+async function testRawFetch(baseUrl: string, modelId: string, apiKey: string): Promise<{
+  ok: boolean;
   status?: number;
+  body?: string;
   error?: string;
   responseTime: number;
 }> {
   const start = Date.now();
   try {
-    const resp = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(10000),
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 5,
+        temperature: 0,
+      }),
+      signal: AbortSignal.timeout(15000),
     });
+    const text = await resp.text();
     return {
-      reachable: true,
+      ok: resp.ok,
       status: resp.status,
+      body: text.slice(0, 500),
       responseTime: Date.now() - start,
     };
   } catch (error) {
     return {
-      reachable: false,
-      error: error instanceof Error ? error.message : String(error),
+      ok: false,
+      error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
       responseTime: Date.now() - start,
     };
   }
 }
 
-async function testModel(model: ModelConfig): Promise<{
-  id: string;
-  displayName: string;
-  available: boolean;
-  responseTime: number;
+async function testModelSDK(model: ModelConfig): Promise<{
+  ok: boolean;
   response?: string;
   error?: string;
-  connectivity?: { reachable: boolean; status?: number; error?: string };
+  responseTime: number;
 }> {
   const start = Date.now();
   const apiKey = process.env[model.apiKeyEnv];
-
-  if (!apiKey) {
-    return {
-      id: model.id,
-      displayName: model.displayName,
-      available: false,
-      responseTime: 0,
-      error: `ENV ${model.apiKeyEnv} not set`,
-    };
-  }
-
-  // First test raw connectivity
-  const connectivityUrl = model.baseUrl
-    ? `${model.baseUrl}/models`
-    : "https://generativelanguage.googleapis.com/v1beta/models";
-  const connectivity = await testConnectivity(connectivityUrl, apiKey);
+  if (!apiKey) return { ok: false, error: "no key", responseTime: 0 };
 
   try {
     const openai = new OpenAI({
@@ -71,37 +65,22 @@ async function testModel(model: ModelConfig): Promise<{
       baseURL: model.baseUrl,
       timeout: 15000,
     });
-
     const resp = await openai.chat.completions.create({
       model: model.modelId,
-      messages: [
-        { role: "system", content: "Reply with exactly one word: OK" },
-        { role: "user", content: "ping" },
-      ],
-      max_tokens: 10,
+      messages: [{ role: "user", content: "ping" }],
+      max_tokens: 5,
       temperature: 0,
     });
-
-    const content = resp.choices[0]?.message?.content || "";
-
     return {
-      id: model.id,
-      displayName: model.displayName,
-      available: true,
+      ok: true,
+      response: resp.choices[0]?.message?.content?.slice(0, 100) || "",
       responseTime: Date.now() - start,
-      response: content.trim(),
-      connectivity,
     };
   } catch (error) {
     return {
-      id: model.id,
-      displayName: model.displayName,
-      available: false,
+      ok: false,
+      error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
       responseTime: Date.now() - start,
-      error: error instanceof Error
-        ? `${error.name}: ${error.message}`
-        : String(error),
-      connectivity,
     };
   }
 }
@@ -116,33 +95,42 @@ export async function GET(request: Request) {
     const supabase = getSupabaseAdmin();
     await supabase
       .from("rate_limits")
-      .update({
-        consecutive_errors: 0,
-        blocked_until: 0,
-        minute_requests: 0,
-        day_requests: 0,
-      })
+      .update({ consecutive_errors: 0, blocked_until: 0, minute_requests: 0, day_requests: 0 })
       .neq("model_id", "");
   }
 
   const supabase = getSupabaseAdmin();
   const { data: rateLimits } = await supabase
     .from("rate_limits")
-    .select("model_id, consecutive_errors, blocked_until, minute_requests, day_requests");
+    .select("model_id, consecutive_errors, blocked_until")
+    .in("model_id", ["vercel-gemini-flash", "aitunnel-gemini-flash"]);
 
-  const results = await Promise.all(models.map(testModel));
-  const anyAvailable = results.some((r) => r.available);
+  const results = await Promise.all(
+    models.map(async (model) => {
+      const apiKey = process.env[model.apiKeyEnv];
+      if (!apiKey || !model.baseUrl) {
+        return { id: model.id, rawFetch: { ok: false, error: "no key or baseUrl", responseTime: 0 }, sdk: { ok: false, error: "no key", responseTime: 0 } };
+      }
+
+      const [rawFetch, sdk] = await Promise.all([
+        testRawFetch(model.baseUrl, model.modelId, apiKey),
+        testModelSDK(model),
+      ]);
+
+      return { id: model.id, displayName: model.displayName, rawFetch, sdk };
+    })
+  );
+
+  const anyAvailable = results.some((r) => r.rawFetch.ok || r.sdk.ok);
 
   return NextResponse.json({
     status: anyAvailable ? "ok" : "error",
-    modelsConfigured: models.length,
+    nodeVersion: process.version,
     results,
-    rateLimits: (rateLimits || []).filter(r =>
-      r.model_id === "vercel-gemini-flash" || r.model_id === "aitunnel-gemini-flash"
-    ),
+    rateLimits: rateLimits || [],
     envKeys: {
-      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY ? `${process.env.AI_GATEWAY_API_KEY.slice(0, 6)}...` : "NOT SET",
-      AITUNNEL_API_KEY: process.env.AITUNNEL_API_KEY ? `${process.env.AITUNNEL_API_KEY.slice(0, 6)}...` : "NOT SET",
+      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY ? `${process.env.AI_GATEWAY_API_KEY.slice(0, 8)}...` : "NOT SET",
+      AITUNNEL_API_KEY: process.env.AITUNNEL_API_KEY ? `${process.env.AITUNNEL_API_KEY.slice(0, 8)}...` : "NOT SET",
     },
     resetDone: reset,
   });
