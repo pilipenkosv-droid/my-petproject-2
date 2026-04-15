@@ -207,12 +207,18 @@ export async function applyLandscapeForWideTables(
     let tblIdx = wideIndices[k];
 
     // Include preceding caption in landscape section
+    // Search back up to 3 paragraphs (caption may be separated by empty paragraphs)
     let insertBefore = tblIdx;
-    if (tblIdx > 0 && "w:p" in bc[tblIdx - 1]) {
-      const txt = getParagraphText(bc[tblIdx - 1]).trim();
+    for (let lookback = 1; lookback <= 3 && tblIdx - lookback >= 0; lookback++) {
+      const prev = bc[tblIdx - lookback];
+      if (!("w:p" in prev)) break;
+      const txt = getParagraphText(prev).trim();
       if (/^Таблица\s+\d+/i.test(txt)) {
-        insertBefore = tblIdx - 1;
+        insertBefore = tblIdx - lookback;
+        break;
       }
+      // Skip empty paragraphs between caption and table
+      if (txt !== "") break;
     }
 
     // Skip if already has section break nearby

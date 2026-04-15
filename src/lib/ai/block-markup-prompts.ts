@@ -62,6 +62,20 @@ export const BLOCK_MARKUP_SYSTEM_PROMPT = `Ты — эксперт по разм
 - metadata.language обязателен для bibliography_entry
 - Если не уверен — ставь "unknown" с низким confidence
 
+КРИТИЧНО — используй ТОЛЬКО полные имена blockType из списка выше. ЗАПРЕЩЕНЫ сокращённые формы:
+- НЕ "annotation" → используй "title_page_annotation"
+- НЕ "header" → используй "title_page_header"
+- НЕ "footer" → используй "title_page_footer"
+- НЕ "title" → используй "title_page_title"
+- НЕ "info" → используй "title_page_info"
+- НЕ "reference", "references", "bibliography" → используй "bibliography_entry" или "bibliography_title"
+- НЕ "figure_text" → используй "figure_caption"
+- НЕ "table_text" → используй "table_caption"
+- НЕ "heading" → используй "heading_1", "heading_2", "heading_3" или "heading_4" с конкретным уровнем
+- НЕ "text", "paragraph", "content" → используй "body_text"
+- НЕ "appendix" → используй "appendix_title" или "appendix_content"
+- НЕ "toc_heading" → используй "toc"
+
 ПРИМЕР ВВОДА:
 [0] <Normal> МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ
 [1] <Normal> Федеральное государственное бюджетное образовательное учреждение

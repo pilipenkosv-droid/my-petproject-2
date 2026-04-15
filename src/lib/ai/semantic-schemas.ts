@@ -40,7 +40,7 @@ export const sectionMetadataSchema = z.object({
  */
 export const documentSectionSchema = z.object({
   type: sectionTypeSchema,
-  level: z.number().min(1).max(4).optional(), // Для заголовков
+  level: z.number().min(1).max(4).nullable().optional(), // Для заголовков, AI может вернуть null
   startParagraph: z.number().min(0),
   endParagraph: z.number().min(0),
   metadata: sectionMetadataSchema.optional(),
@@ -63,11 +63,11 @@ export const bibliographyProblemSchema = z.enum([
  */
 export const bibliographyEntrySchema = z.object({
   paragraphIndex: z.number().min(0),
-  authors: z.string(),
-  title: z.string(),
-  language: languageSchema,
-  hasProblems: z.array(bibliographyProblemSchema),
-  rawText: z.string().optional(), // Исходный текст записи
+  authors: z.string().optional().default(""),
+  title: z.string().optional().default(""),
+  language: languageSchema.optional().default("ru"),
+  hasProblems: z.array(bibliographyProblemSchema).optional().default([]),
+  rawText: z.string().optional(),
 });
 
 /**
@@ -77,7 +77,7 @@ export const bibliographySectionSchema = z.object({
   startParagraph: z.number().min(0),
   endParagraph: z.number().min(0),
   hasNumbering: z.boolean(),
-  numberingFormat: z.string().optional(), // "1.", "1)", "[1]"
+  numberingFormat: z.string().nullable().optional(), // "1.", "1)", "[1]"
   entries: z.array(bibliographyEntrySchema),
 });
 
