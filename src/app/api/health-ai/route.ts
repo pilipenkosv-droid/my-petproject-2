@@ -1,45 +1,52 @@
 /**
  * Diagnostic endpoint to verify AI model availability.
- * Tests: raw fetch + OpenAI SDK for each model.
+ * Uses raw fetch (not OpenAI SDK) to match gateway implementation.
  * DELETE THIS FILE after verification.
  */
 import { NextResponse } from "next/server";
 import { getAvailableModels, type ModelConfig } from "@/lib/ai/model-registry";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import OpenAI from "openai";
+import { callAI } from "@/lib/ai/gateway";
 
 export const maxDuration = 30;
 
-async function testRawFetch(baseUrl: string, modelId: string, apiKey: string): Promise<{
+async function testRawFetch(model: ModelConfig): Promise<{
   ok: boolean;
   status?: number;
-  body?: string;
+  response?: string;
   error?: string;
   responseTime: number;
 }> {
   const start = Date.now();
+  const apiKey = process.env[model.apiKeyEnv];
+  if (!apiKey || !model.baseUrl) {
+    return { ok: false, error: "no key or baseUrl", responseTime: 0 };
+  }
+
   try {
-    const resp = await fetch(`${baseUrl}/chat/completions`, {
+    const resp = await fetch(`${model.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: modelId,
+        model: model.modelId,
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 5,
         temperature: 0,
       }),
       signal: AbortSignal.timeout(15000),
     });
-    const text = await resp.text();
-    return {
-      ok: resp.ok,
-      status: resp.status,
-      body: text.slice(0, 500),
-      responseTime: Date.now() - start,
-    };
+
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "");
+      return { ok: false, status: resp.status, error: errText.slice(0, 200), responseTime: Date.now() - start };
+    }
+
+    const data = await resp.json();
+    const content = data?.choices?.[0]?.message?.content || "";
+    return { ok: true, status: resp.status, response: content.slice(0, 100), responseTime: Date.now() - start };
   } catch (error) {
     return {
       ok: false,
@@ -49,37 +56,25 @@ async function testRawFetch(baseUrl: string, modelId: string, apiKey: string): P
   }
 }
 
-async function testModelSDK(model: ModelConfig): Promise<{
+async function testGateway(): Promise<{
   ok: boolean;
-  response?: string;
+  modelUsed?: string;
   error?: string;
   responseTime: number;
 }> {
   const start = Date.now();
-  const apiKey = process.env[model.apiKeyEnv];
-  if (!apiKey) return { ok: false, error: "no key", responseTime: 0 };
-
   try {
-    const openai = new OpenAI({
-      apiKey,
-      baseURL: model.baseUrl,
-      timeout: 15000,
-    });
-    const resp = await openai.chat.completions.create({
-      model: model.modelId,
-      messages: [{ role: "user", content: "ping" }],
-      max_tokens: 5,
+    const result = await callAI({
+      systemPrompt: "Reply with exactly: OK",
+      userPrompt: "ping",
       temperature: 0,
+      maxTokens: 10,
     });
-    return {
-      ok: true,
-      response: resp.choices[0]?.message?.content?.slice(0, 100) || "",
-      responseTime: Date.now() - start,
-    };
+    return { ok: true, modelUsed: result.modelName, responseTime: Date.now() - start };
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+      error: error instanceof Error ? error.message.slice(0, 300) : String(error),
       responseTime: Date.now() - start,
     };
   }
@@ -105,33 +100,18 @@ export async function GET(request: Request) {
     .select("model_id, consecutive_errors, blocked_until")
     .in("model_id", ["vercel-gemini-flash", "aitunnel-gemini-flash"]);
 
-  const results = await Promise.all(
-    models.map(async (model) => {
-      const apiKey = process.env[model.apiKeyEnv];
-      if (!apiKey || !model.baseUrl) {
-        return { id: model.id, rawFetch: { ok: false, error: "no key or baseUrl", responseTime: 0 }, sdk: { ok: false, error: "no key", responseTime: 0 } };
-      }
+  // Test each model directly via raw fetch
+  const directTests = await Promise.all(models.map(testRawFetch));
 
-      const [rawFetch, sdk] = await Promise.all([
-        testRawFetch(model.baseUrl, model.modelId, apiKey),
-        testModelSDK(model),
-      ]);
-
-      return { id: model.id, displayName: model.displayName, rawFetch, sdk };
-    })
-  );
-
-  const anyAvailable = results.some((r) => r.rawFetch.ok || r.sdk.ok);
+  // Test through the actual gateway (callAI)
+  const gatewayTest = await testGateway();
 
   return NextResponse.json({
-    status: anyAvailable ? "ok" : "error",
+    status: gatewayTest.ok ? "ok" : "error",
     nodeVersion: process.version,
-    results,
+    gateway: gatewayTest,
+    directTests: models.map((m, i) => ({ id: m.id, ...directTests[i] })),
     rateLimits: rateLimits || [],
-    envKeys: {
-      AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY ? `${process.env.AI_GATEWAY_API_KEY.slice(0, 8)}...` : "NOT SET",
-      AITUNNEL_API_KEY: process.env.AITUNNEL_API_KEY ? `${process.env.AITUNNEL_API_KEY.slice(0, 8)}...` : "NOT SET",
-    },
     resetDone: reset,
   });
 }
