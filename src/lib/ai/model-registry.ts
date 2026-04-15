@@ -59,6 +59,11 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
     priority: 1,
+    extraParams: {
+      // Gemini 2.5 Flash тратит все токены на thinking при тривиальных промптах,
+      // возвращая пустой content. Ограничиваем бюджет thinking.
+      thinking: { type: "enabled", budget_tokens: 1024 },
+    },
   },
 
   // ── AITUNNEL — Gemini 2.5 Flash (fallback, баланс ~1150₽) ──
@@ -72,6 +77,21 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
     priority: 2,
+    extraParams: {
+      thinking: { type: "enabled", budget_tokens: 1024 },
+    },
+  },
+
+  // ── Google AI — Gemini 2.5 Flash (native, бесплатный лимит) ──
+  {
+    id: "google-gemini-flash",
+    displayName: "Google Gemini 2.5 Flash",
+    protocol: "gemini",
+    apiKeyEnv: "GEMINI_API_KEY",
+    modelId: "gemini-2.5-flash",
+    limits: { rpm: 15, rpd: 1_500, tpm: 250_000 },
+    supportsJsonMode: true,
+    priority: 3,
   },
 ];
 

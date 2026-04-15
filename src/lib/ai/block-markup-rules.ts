@@ -31,11 +31,15 @@ const HALLUCINATION_MAP: Record<string, BlockType> = {
   toc_heading: "toc",
 };
 
-/** Нормализует AI-ответ перед Zod-валидацией: исправляет невалидные blockType. */
+/** Нормализует AI-ответ перед Zod-валидацией: исправляет невалидные blockType.
+ * Safety net: после B3 (negative examples в промптах) срабатывает 0 раз на бенче,
+ * но оставлен для защиты от регрессии при обновлении моделей. */
 export function normalizeAiResponse(raw: unknown): unknown {
   if (!raw || typeof raw !== "object") return raw;
   const obj = raw as Record<string, unknown>;
   if (!Array.isArray(obj.blocks)) return raw;
+
+  let fixCount = 0;
 
   obj.blocks = obj.blocks.map((block: unknown) => {
     if (!block || typeof block !== "object") return block;
@@ -43,9 +47,14 @@ export function normalizeAiResponse(raw: unknown): unknown {
     const bt = b.blockType;
     if (typeof bt === "string" && bt in HALLUCINATION_MAP) {
       b.blockType = HALLUCINATION_MAP[bt];
+      fixCount++;
     }
     return b;
   });
+
+  if (fixCount > 0) {
+    console.log(`[hallucination-map] Fixed ${fixCount} invalid blockType(s)`);
+  }
   return raw;
 }
 

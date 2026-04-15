@@ -170,17 +170,22 @@ async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   const rules = mergeWithDefaults({});
 
+  // Можно ограничить набор через BENCH_DOCS=id1,id2
+  const selectedDocs = process.env.BENCH_DOCS
+    ? process.env.BENCH_DOCS.split(",").map(s => s.trim()).filter(Boolean)
+    : TEST_DOCS;
+
   console.log("╔══════════════════════════════════════════════╗");
   console.log("║   BATCH TEST — Formatter v4 Pipeline         ║");
   console.log("╚══════════════════════════════════════════════╝");
-  console.log(`  Documents: ${TEST_DOCS.length}\n`);
+  console.log(`  Documents: ${selectedDocs.length}\n`);
 
   const results: DocResult[] = [];
 
-  for (let i = 0; i < TEST_DOCS.length; i++) {
-    const id = TEST_DOCS[i];
+  for (let i = 0; i < selectedDocs.length; i++) {
+    const id = selectedDocs[i];
     const shortId = id.substring(0, 12) + "...";
-    console.log(`[${i + 1}/${TEST_DOCS.length}] ${shortId}`);
+    console.log(`[${i + 1}/${selectedDocs.length}] ${shortId}`);
 
     const result = await processDoc(id, rules);
     results.push(result);

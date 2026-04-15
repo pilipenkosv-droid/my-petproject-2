@@ -14,6 +14,8 @@ import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFai
 // нужно успеть попробовать 3-4 модели
 const AI_CALL_TIMEOUT_PAID_MS = 15000;
 const AI_CALL_TIMEOUT_FREE_MS = 12000;
+/** Таймаут для native Gemini (thinking модели нужно больше времени) */
+const AI_CALL_TIMEOUT_GEMINI_MS = 30000;
 
 /** Максимум моделей для попыток (Vercel 60s / 12s timeout = 5 попыток с запасом) */
 const MAX_MODEL_ATTEMPTS = 4;
@@ -84,7 +86,10 @@ async function callGemini(
         ? "application/json"
         : undefined,
       maxOutputTokens: request.maxTokens,
-    },
+      // Ограничиваем thinking чтобы не тратить токены на тривиальных промптах
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      thinkingConfig: { thinkingBudget: 1024 },
+    } as any,
   });
 
   const prompt = `${request.systemPrompt}\n\n${request.userPrompt}`;
@@ -133,6 +138,15 @@ async function callOpenAICompatible(
 
   if (config.supportsJsonMode && !request.textMode) {
     body.response_format = { type: "json_object" };
+  }
+
+  // Прокидываем extraParams в тело запроса (кроме headers)
+  if (config.extraParams) {
+    for (const [key, value] of Object.entries(config.extraParams)) {
+      if (key !== "headers") {
+        body[key] = value;
+      }
+    }
   }
 
   const resp = await fetch(`${config.baseUrl}/chat/completions`, {
@@ -365,9 +379,11 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
     attempts++;
     try {
       let rawText: string;
-      const timeout = PAID_PROVIDERS.has(model.apiKeyEnv)
-        ? AI_CALL_TIMEOUT_PAID_MS
-        : AI_CALL_TIMEOUT_FREE_MS;
+      const timeout = model.protocol === "gemini"
+        ? AI_CALL_TIMEOUT_GEMINI_MS
+        : PAID_PROVIDERS.has(model.apiKeyEnv)
+          ? AI_CALL_TIMEOUT_PAID_MS
+          : AI_CALL_TIMEOUT_FREE_MS;
 
       if (model.protocol === "gemini") {
         rawText = await withTimeout(

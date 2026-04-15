@@ -51,9 +51,13 @@ next-env.d.ts
 CLAUDE.md
 plan.md
 
-# Test documents (local)
+# Test documents and output (local)
 docs/*.docx
 docs/*.pdf
+scripts/test-output/
+
+# Supabase temp
+supabase/.temp/
 
 # Misc
 *.log

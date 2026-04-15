@@ -63,11 +63,11 @@ export const bibliographyProblemSchema = z.enum([
  */
 export const bibliographyEntrySchema = z.object({
   paragraphIndex: z.number().min(0),
-  authors: z.string().optional().default(""),
-  title: z.string().optional().default(""),
-  language: languageSchema.optional().default("ru"),
-  hasProblems: z.array(bibliographyProblemSchema).optional().default([]),
-  rawText: z.string().optional(),
+  authors: z.string().nullable().optional().transform(v => v ?? ""),
+  title: z.string().nullable().optional().transform(v => v ?? ""),
+  language: languageSchema.nullable().optional().transform(v => v ?? "ru"),
+  hasProblems: z.array(bibliographyProblemSchema).nullable().optional().transform(v => v ?? []),
+  rawText: z.string().nullable().optional(),
 });
 
 /**
@@ -78,7 +78,7 @@ export const bibliographySectionSchema = z.object({
   endParagraph: z.number().min(0),
   hasNumbering: z.boolean(),
   numberingFormat: z.string().nullable().optional(), // "1.", "1)", "[1]"
-  entries: z.array(bibliographyEntrySchema),
+  entries: z.array(bibliographyEntrySchema).nullable().optional().transform(v => v ?? []),
 });
 
 /**
@@ -86,7 +86,7 @@ export const bibliographySectionSchema = z.object({
  */
 export const semanticStructureSchema = z.object({
   sections: z.array(documentSectionSchema),
-  bibliography: bibliographySectionSchema.optional(),
+  bibliography: bibliographySectionSchema.nullable().optional(),
   confidence: z.number().min(0).max(1), // Уверенность AI в разметке
   warnings: z.array(z.string()).optional(), // Предупреждения
 });
