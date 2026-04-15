@@ -226,11 +226,15 @@ export async function runQualityChecks(
       }
     }
     if (bt.startsWith("heading_")) {
-      // Фильтруем очевидные ошибки AI-классификации:
-      // - пустой текст → не заголовок
-      // - текст > 150 символов → вероятно body_text
+      // Верификация: enriched blockType = heading_*, но проверяем pStyle
+      // (после TOC/caption insert индексы сдвигаются → enriched может матчить не тот параграф)
+      const pPrH = findChild(node, "w:pPr");
+      const pStyleH = pPrH ? findChild(pPrH, "w:pStyle") : undefined;
+      const pStyleVal = getAttr(pStyleH, "w:val") || "";
+      const isActualHeading = /^Heading\d$/i.test(pStyleVal);
+
       const trimmed = text.trim();
-      if (trimmed.length > 0 && trimmed.length < 150) {
+      if (trimmed.length > 0 && trimmed.length < 150 && isActualHeading) {
         headingParas.push({ node, index: paragraphIndex, blockType: bt, text });
         headingCount++;
       }
@@ -777,17 +781,21 @@ export async function runQualityChecks(
     });
   }
 
-  // 4b. Title page presence
+  // 4b. Title page presence (опционально — если документ начинается с heading, title page отсутствует)
   {
     const hasTitlePage = enrichedParagraphs.some((p) => p.blockType?.startsWith("title_page"));
+    // Документ без текстовой title page: первый непустой параграф = heading
+    const firstNonEmpty = enrichedParagraphs.find((p) => p.blockType !== "empty" && p.blockType !== "page_number");
+    const startsWithHeading = firstNonEmpty?.blockType?.startsWith("heading_") ?? false;
+    const titlePageExpected = !startsWithHeading;
     checks.push({
       id: "structure.titlePage",
       category: "structure",
       name: "Титульная страница",
-      passed: hasTitlePage,
+      passed: hasTitlePage || !titlePageExpected,
       severity: "critical",
-      expected: "Есть параграфы с blockType=title_page",
-      actual: hasTitlePage ? "есть" : "нет",
+      expected: titlePageExpected ? "Есть параграфы с blockType=title_page" : "Title page не ожидается (документ начинается с heading)",
+      actual: hasTitlePage ? "есть" : "нет (документ начинается с heading)",
     });
   }
 
@@ -819,14 +827,16 @@ export async function runQualityChecks(
       }
     }
 
+    // Если нет title_page блоков — секция не нужна
+    const titlePageExists = lastTitleBodyIdx >= 0;
     checks.push({
       id: "structure.sectionBreakAfterTitle",
       category: "structure",
       name: "Разрыв секции после титульной",
-      passed: hasSectionBreakAfterTitle,
+      passed: hasSectionBreakAfterTitle || !titlePageExists,
       severity: "major",
-      expected: "w:sectPr после title_page",
-      actual: hasSectionBreakAfterTitle ? "есть" : "нет",
+      expected: titlePageExists ? "w:sectPr после title_page" : "Нет title_page — не применимо",
+      actual: !titlePageExists ? "нет title_page" : hasSectionBreakAfterTitle ? "есть" : "нет",
     });
   }
 

@@ -322,3 +322,94 @@ export function postValidateMarkup(
 
   return { blocks: fixed, fixes };
 }
+
+/**
+ * Определяет подтип title_page по содержимому текста.
+ */
+function inferTitlePageSubtype(
+  text: string,
+  position: number,
+  totalCount: number
+): BlockType | null {
+  // Город + год (последняя строка титульной)
+  if (/^(?:г\.\s*)?[А-ЯЁ][а-яё\-]+\s+\d{4}\s*$/.test(text)) {
+    return "title_page_footer";
+  }
+  // Подпись / дата / линия подчёркивания
+  if (/(?:подпись|оценка|дата|_{4,})/.test(text) || /^\(.*\)$/.test(text)) {
+    return "title_page_annotation";
+  }
+  // Название вуза / министерства / кафедры
+  if (/(?:министерство|федеральное|университет|академия|институт|кафедра|факультет|департамент)/i.test(text)) {
+    return "title_page_header";
+  }
+  // Короткий текст в середине → info (направление, специальность, группа)
+  if (text.length < 50 && position > 0 && position < totalCount - 1) {
+    return "title_page_info";
+  }
+  // Длинный текст в средней части → title (тема работы)
+  if (text.length >= 50 && position > 0 && position < totalCount - 1) {
+    return "title_page_title";
+  }
+  return "title_page";
+}
+
+/**
+ * Пост-обработка: определяет title_page блоки по позиции.
+ * Все параграфы до первого heading_1, которые не имеют heading/list/caption типа,
+ * переклассифицируются как title_page* подтипы.
+ */
+export function classifyTitlePageBlocks(
+  blocks: BlockMarkupItem[],
+  paragraphs: Array<{ index: number; text: string; style?: string }>
+): SequenceValidationResult {
+  const textMap = new Map(paragraphs.map((p) => [p.index, p]));
+
+  // Найти первый heading_1 (или bibliography_title, appendix_title — начало контента)
+  const firstContentIdx = blocks.findIndex(
+    (b) => b.blockType === "heading_1" || b.blockType === "bibliography_title"
+  );
+  if (firstContentIdx <= 0) return { blocks, fixes: [] };
+
+  // Максимум 10 параграфов до первого заголовка рассматриваем как title_page
+  const maxTitlePageRange = Math.min(firstContentIdx, 10);
+
+  // Проверяем, что AI не классифицировал их уже как title_page
+  const alreadyHasTitlePage = blocks
+    .slice(0, maxTitlePageRange)
+    .some((b) => b.blockType.startsWith("title_page"));
+  if (alreadyHasTitlePage) return { blocks, fixes: [] };
+
+  // Типы-кандидаты для переклассификации
+  const candidateTypes = new Set<BlockType>([
+    "body_text", "unknown",
+  ]);
+
+  const fixes: string[] = [];
+  const fixed = [...blocks];
+  let candidateCount = 0;
+
+  // Подсчёт реальных кандидатов (не empty/page_number)
+  for (let i = 0; i < maxTitlePageRange; i++) {
+    if (candidateTypes.has(fixed[i].blockType)) candidateCount++;
+  }
+
+  // Минимум 2 кандидата — иначе это не титульная страница
+  if (candidateCount < 2) return { blocks, fixes: [] };
+
+  for (let i = 0; i < maxTitlePageRange; i++) {
+    const block = fixed[i];
+    if (!candidateTypes.has(block.blockType)) continue;
+
+    const text = (textMap.get(block.paragraphIndex)?.text || "").trim();
+    if (!text) continue;
+
+    const newType = inferTitlePageSubtype(text, i, maxTitlePageRange);
+    if (newType) {
+      fixes.push(`[title_page:${block.paragraphIndex}] ${block.blockType} → ${newType}`);
+      fixed[i] = { ...block, blockType: newType, confidence: 0.75 };
+    }
+  }
+
+  return { blocks: fixed, fixes };
+}

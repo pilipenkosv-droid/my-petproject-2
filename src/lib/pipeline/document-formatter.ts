@@ -253,9 +253,6 @@ async function applyAllTextFixes(
     const enriched = enrichedMap.get(paragraphIndex);
     const blockType = enriched?.blockType || "unknown";
 
-    // Пропускаем все title_page* подтипы
-    if (blockType.startsWith("title_page")) continue;
-
     // Библиография — специфическая логика
     if (blockType === "bibliography_entry") {
       const language = enriched?.blockMetadata?.language;

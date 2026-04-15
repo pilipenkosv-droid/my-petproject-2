@@ -21,6 +21,7 @@ import {
   normalizeAiResponse,
   postValidateMarkup,
   sequenceValidateBlocks,
+  classifyTitlePageBlocks,
 } from "./block-markup-rules";
 import { verifyMarkupStructure, reclassifyBlocks } from "./markup-verifier";
 import { parseDocumentSemantics, getSectionByType } from "./document-semantic-parser";
@@ -254,8 +255,14 @@ export async function parseDocumentBlocks(
     console.log(`[block-markup] Sequence validation fixed ${seqFixes.length} blocks: ${seqFixes.join(", ")}`);
   }
 
+  // Шаг 5.5: Title page detection (позиционная эвристика)
+  const { blocks: titlePageValidated, fixes: titlePageFixes } = classifyTitlePageBlocks(seqValidated, paragraphs);
+  if (titlePageFixes.length > 0) {
+    console.log(`[block-markup] Title page detection: ${titlePageFixes.length} blocks: ${titlePageFixes.join(", ")}`);
+  }
+
   // Шаг 6: Структурная верификация + feedback loop
-  let finalBlocks = seqValidated;
+  let finalBlocks = titlePageValidated;
   const issues = verifyMarkupStructure(finalBlocks, paragraphs);
   if (issues.length > 0) {
     console.log(`[block-markup] Structural issues: ${issues.map((i) => `${i.type}(${i.severity})`).join(", ")}`);

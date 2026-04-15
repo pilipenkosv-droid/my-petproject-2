@@ -649,6 +649,8 @@ function collapseSpacesEverywhere(bodyChildren: OrderedXmlNode[]): void {
   function fixParagraph(node: OrderedXmlNode): void {
     if (!("w:p" in node)) return;
     const runs = getRuns(node);
+
+    // Фаза 1: collapse внутри каждого w:t
     for (const run of runs) {
       const tNodes = findChildren(run, "w:t");
       for (const t of tNodes) {
@@ -665,6 +667,23 @@ function collapseSpacesEverywhere(bodyChildren: OrderedXmlNode[]): void {
           setText(t, newText);
           fixed++;
         }
+      }
+    }
+
+    // Фаза 2: collapse пробелов на стыках runs
+    // (trailing space в run N + leading space в run N+1 → удалить leading)
+    const allTextNodes: OrderedXmlNode[] = [];
+    for (const run of runs) {
+      for (const t of findChildren(run, "w:t")) {
+        allTextNodes.push(t);
+      }
+    }
+    for (let i = 1; i < allTextNodes.length; i++) {
+      const prevText = getText(allTextNodes[i - 1]);
+      const currText = getText(allTextNodes[i]);
+      if (prevText?.endsWith(" ") && currText?.startsWith(" ")) {
+        setText(allTextNodes[i], currText.replace(/^ +/, ""));
+        fixed++;
       }
     }
   }

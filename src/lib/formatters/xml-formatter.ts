@@ -128,7 +128,10 @@ export class XmlDocumentFormatter {
     if (blockType === "empty") return;
 
     // Не трог��ем таблицы и рисунки — они могут со��ержать сложную разме��ку
-    if (blockType === "table" || blockType === "figure") return;
+    if (blockType === "table" || blockType === "figure") {
+      this.cleanProhibitedFormatting(p, true);
+      return;
+    }
 
     // Получаем целевые параметры форматирования
     const target = this.getTargetFormatting(blockType, rules);
@@ -262,10 +265,12 @@ export class XmlDocumentFormatter {
       // Это ключевое для работы TOC \o "1-3" (outline levels)
       setOrderedProp(pPr, "w:outlineLvl", { "w:val": String(level - 1) });
 
-      // Разрыв страницы перед заголовком (newPageForEach)
-      if (headingStyle?.newPageForEach) {
+      // Разрыв страницы перед заголовком
+      // heading_1: ГОСТ п.5.2 — всегда с новой страницы
+      const needsPageBreak = level === 1 || headingStyle?.newPageForEach;
+      if (needsPageBreak) {
         if (!findChild(pPr, "w:pageBreakBefore")) {
-          children(pPr).unshift(createNode("w:pageBreakBefore"));
+          children(pPr).push(createNode("w:pageBreakBefore"));
         }
       } else {
         removeChild(pPr, "w:pageBreakBefore");
@@ -277,7 +282,7 @@ export class XmlDocumentFormatter {
       setOrderedProp(pPr, "w:pStyle", { "w:val": "Heading1" });
       setOrderedProp(pPr, "w:outlineLvl", { "w:val": "0" });
       if (!findChild(pPr, "w:pageBreakBefore")) {
-        children(pPr).unshift(createNode("w:pageBreakBefore"));
+        children(pPr).push(createNode("w:pageBreakBefore"));
       }
     }
 
@@ -351,6 +356,49 @@ export class XmlDocumentFormatter {
       }
       setOrderedProp(pRPr, "w:sz", { "w:val": String(sizeHalf) });
       setOrderedProp(pRPr, "w:szCs", { "w:val": String(sizeHalf) });
+    }
+  }
+
+  /**
+   * Удаляет запрещённое форматирование (underline, highlight, shd, color)
+   * из paragraph-level rPr и всех runs.
+   */
+  private cleanProhibitedFormatting(
+    p: OrderedXmlNode,
+    removeUnderline: boolean
+  ): void {
+    const pPr = findChild(p, "w:pPr");
+    if (pPr) {
+      removeChild(pPr, "w:shd");
+      const pPrRPr = findChild(pPr, "w:rPr");
+      if (pPrRPr) {
+        if (removeUnderline) removeChild(pPrRPr, "w:u");
+        removeChild(pPrRPr, "w:highlight");
+        removeChild(pPrRPr, "w:shd");
+        const pColorNode = findChild(pPrRPr, "w:color");
+        if (pColorNode?.[":@"]) {
+          const cv = pColorNode[":@"]["@_w:val"];
+          if (typeof cv === "string" && cv !== "auto" && cv !== "000000") {
+            setOrderedProp(pPrRPr, "w:color", { "w:val": "auto" });
+          }
+        }
+      }
+    }
+
+    const runs = getRuns(p);
+    for (const run of runs) {
+      const rPr = findChild(run, "w:rPr");
+      if (!rPr) continue;
+      if (removeUnderline) removeChild(rPr, "w:u");
+      removeChild(rPr, "w:highlight");
+      removeChild(rPr, "w:shd");
+      const colorNode = findChild(rPr, "w:color");
+      if (colorNode?.[":@"]) {
+        const cv = colorNode[":@"]["@_w:val"];
+        if (typeof cv === "string" && cv !== "auto" && cv !== "000000") {
+          setOrderedProp(rPr, "w:color", { "w:val": "auto" });
+        }
+      }
     }
   }
 
@@ -795,6 +843,7 @@ export class XmlDocumentFormatter {
           fontSize: rules.text.fontSize,
           bold: false,
           lineSpacing: rules.text.lineSpacing,
+          firstLineIndent: 0,
         };
 
       case "appendix_title":

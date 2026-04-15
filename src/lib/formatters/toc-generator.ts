@@ -301,8 +301,18 @@ function findTocInsertionPoint(
     return lastTitlePageBodyIdx + 1;
   }
 
-  // Fallback: не вставляем TOC — нет title_page блоков
-  return -1;
+  // Fallback: вставить перед первым heading_1
+  for (const { paragraphIndex, bodyIndex } of paragraphs) {
+    const enriched = enrichedMap.get(paragraphIndex);
+    if (enriched?.blockType === "heading_1") {
+      console.log("[toc] No title_page found, inserting before first heading_1");
+      return bodyIndex;
+    }
+  }
+
+  // Ultimate fallback: начало документа
+  console.log("[toc] No title_page or heading_1 found, inserting at document start");
+  return 0;
 }
 
 /**
