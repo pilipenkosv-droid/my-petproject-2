@@ -6,7 +6,6 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig, getAvailableModels } from "./model-registry";
 import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFailure } from "./rate-limiter";
@@ -94,44 +93,64 @@ async function callGemini(
 }
 
 /**
- * Вызов OpenAI-compatible модели (Groq, OpenRouter, Cerebras и др.)
+ * Вызов OpenAI-compatible модели через raw fetch.
+ *
+ * OpenAI SDK v4.104 несовместим с Node.js v24 (Vercel runtime) —
+ * выбрасывает "Connection error" при рабочем соединении.
+ * Raw fetch доказанно работает на Vercel (тест 2026-04-15).
  */
 async function callOpenAICompatible(
   config: ModelConfig,
   request: GatewayRequest
 ): Promise<string> {
   const apiKey = process.env[config.apiKeyEnv]!;
+  const timeout = PAID_PROVIDERS.has(config.apiKeyEnv)
+    ? AI_CALL_TIMEOUT_PAID_MS
+    : AI_CALL_TIMEOUT_FREE_MS;
 
-  const clientOptions: ConstructorParameters<typeof OpenAI>[0] = {
-    apiKey,
-    baseURL: config.baseUrl,
-    timeout: AI_CALL_TIMEOUT_FREE_MS,
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
   };
 
   // OpenRouter требует дополнительные заголовки
   if (config.extraParams?.headers) {
-    clientOptions.defaultHeaders = config.extraParams.headers as Record<
-      string,
-      string
-    >;
+    Object.assign(headers, config.extraParams.headers);
   }
 
-  const openai = new OpenAI(clientOptions);
-
-  const response = await openai.chat.completions.create({
+  const body: Record<string, unknown> = {
     model: config.modelId,
     messages: [
       { role: "system", content: request.systemPrompt },
       { role: "user", content: request.userPrompt },
     ],
-    response_format: config.supportsJsonMode && !request.textMode
-      ? { type: "json_object" }
-      : undefined,
     temperature: request.temperature ?? 0.1,
-    max_tokens: request.maxTokens,
+  };
+
+  if (request.maxTokens) {
+    body.max_tokens = request.maxTokens;
+  }
+
+  if (config.supportsJsonMode && !request.textMode) {
+    body.response_format = { type: "json_object" };
+  }
+
+  const resp = await fetch(`${config.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeout),
   });
 
-  const content = response.choices[0]?.message?.content;
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "");
+    throw new Error(
+      `${config.displayName} HTTP ${resp.status}: ${errorText.slice(0, 200)}`
+    );
+  }
+
+  const data = await resp.json();
+  const content = data?.choices?.[0]?.message?.content;
   if (!content) {
     throw new Error(`${config.displayName} returned empty response`);
   }
