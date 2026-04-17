@@ -23,6 +23,7 @@ import {
   WorkTypeWorkflow,
   type WorkTypeWorkflowStep,
 } from "@/components/WorkTypeWorkflow";
+import { getPostsForWorkType } from "@/lib/blog/posts";
 
 export interface WorkTypeFAQ {
   question: string;
@@ -257,6 +258,47 @@ export function WorkTypeLanding({
             </div>
           </div>
         </div>
+
+        {/* 7b. Статьи из блога по теме */}
+        {(() => {
+          const posts = getPostsForWorkType(slug, 6);
+          if (posts.length === 0) return null;
+          return (
+            <section className="mb-12">
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Полезные статьи по теме
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {posts.map((p) => (
+                  <Link
+                    key={p.slug}
+                    href={`/blog/${p.slug}`}
+                    className="group flex items-start gap-3 bg-surface border border-surface-border p-4 hover:bg-surface-hover transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-foreground text-sm font-medium group-hover:text-primary transition-colors mb-1 line-clamp-2">
+                        {p.title}
+                      </div>
+                      <div className="text-muted-foreground text-xs line-clamp-2">
+                        {p.description}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 mt-0.5" />
+                  </Link>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1 text-primary text-sm hover:underline"
+                >
+                  Все статьи блога
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* 8. Другие типы работ */}
         <section className="mb-12">

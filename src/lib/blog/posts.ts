@@ -35,6 +35,34 @@ function getPostCluster(slug: string): "gost" | "second-brain" {
   return isSecondBrain ? "second-brain" : "gost";
 }
 
+/**
+ * Посты, релевантные лендингу (diplom/kursovaya/referat/…) по ключевому слову в title/keywords.
+ * Используется для hub-пажей — улучшает внутреннюю перелинковку и распределение PageRank.
+ */
+export function getPostsForWorkType(workType: string, limit = 6): BlogPost[] {
+  const terms: Record<string, string[]> = {
+    diplom: ["диплом", "дипломн", "вкр"],
+    kursovaya: ["курсов"],
+    referat: ["реферат"],
+    esse: ["эссе"],
+    vkr: ["вкр", "диплом"],
+    magisterskaya: ["магист", "диссерт"],
+    "otchet-po-praktike": ["практик", "отчёт", "отчет"],
+  };
+  const tokens = terms[workType] || [workType];
+  return blogPostsGost
+    .filter((p) => {
+      const hay = (p.title + " " + p.keywords.join(" ") + " " + p.slug).toLowerCase();
+      return tokens.some((t) => hay.includes(t));
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.datePublished).getTime() -
+        new Date(a.datePublished).getTime()
+    )
+    .slice(0, limit);
+}
+
 /** Похожие посты из того же кластера (исключая текущий) */
 export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
   const cluster = getPostCluster(slug);
