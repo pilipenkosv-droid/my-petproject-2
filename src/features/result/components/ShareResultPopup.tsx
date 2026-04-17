@@ -108,7 +108,7 @@ export function ShareResultPopup({
   const statsLine = fixesApplied > 0
     ? `\n*Исправлено ${fixesApplied} нарушений на ${pageCount} стр.`
     : `\n*${pageCount} стр. проверены и готовы к сдаче`;
-  const shareTitle = `Оформил ${accLabel} в Diplox${timeStr}! Минус одна бессонная ночь. Мой ${nomLabel} готов к сдаче. А твой?${statsLine}`;
+  const shareTitle = `Оформил ${accLabel} в Diplox${timeStr}! Минус одна бессонная ночь. Готово к сдаче — а у тебя как?${statsLine}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -140,7 +140,7 @@ export function ShareResultPopup({
             </h3>
             {timeStr ? (
               <p className="text-sm text-on-surface-muted mt-1">
-                Diplox оформил твой {nomLabel}{timeStr}. Покажи одногруппникам.
+                Diplox оформил твою работу{timeStr}. Покажи одногруппникам.
               </p>
             ) : (
               <p className="text-sm text-on-surface-muted mt-1">

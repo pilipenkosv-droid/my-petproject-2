@@ -135,6 +135,7 @@ function ConstructorPageContent() {
     if (requirementsMode === "upload" && !requirementsDoc.uploadedFile) return;
 
     setPageState("processing");
+    const flowStartedAt = Date.now();
     animatedProgress.start();
     trackEvent("processing_start");
 
@@ -187,7 +188,7 @@ function ConstructorPageContent() {
 
       animatedProgress.complete(() => {
         try {
-          const finalSec = Math.max(1, Math.round(animatedProgress.elapsedMs / 1000));
+          const finalSec = Math.max(1, Math.round((Date.now() - flowStartedAt) / 1000));
           localStorage.setItem(`dlx_flow_time_${data.jobId}`, String(finalSec));
         } catch {}
         router.push(redirectUrl);

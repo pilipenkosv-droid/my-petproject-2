@@ -1,5 +1,26 @@
 # Журнал изменений
 
+## Апрель 2026
+
+### UX-апгрейд форматирования + фикс 504 (2026-04-17 12:08 MSK)
+
+Релиз — [ADR-009](adr/009-formatter-ux-perceived-value.md). Цель: повысить воспринимаемую сложность алгоритма и конверсию в оплату.
+
+**Frontend:**
+- `/create`: «Тип работы» вынесен первым шагом с primary-рамкой «Обязательно»
+- ProcessingStatus: секундомер, flavor-фразы (5–9 на этап, `text-sm` + primary, не курсив), sub-steps лог `✓ Найдено N разделов`
+- Этапы: ГОСТ 3→6, методичка Phase1 3→5, Phase2 3→5
+- Искусственный минимум обработки: 60 сек + 0–30 сек jitter
+- `/result`: плашка «Обработано за X мин Y сек» под H1 (использует длительность user flow из localStorage)
+- ShareResultPopup: заголовок «−1 бессонная ночь 🌙», время в формате `1 мин 24 сек`
+
+**Backend:**
+- `maxDuration` 60s→300s на `process-gost`, `confirm-rules`, `extract-rules` — фикс 504 на сложных документах (у нас Vercel Pro)
+
+**Коммиты**: [ce73eae](https://github.com/pilipenkosv-droid/my-petproject-2/commit/ce73eae), [4e88db1](https://github.com/pilipenkosv-droid/my-petproject-2/commit/4e88db1).
+
+**Замер эффекта**: окно 2026-04-17 12:08 → 2026-04-24 12:08 MSK (см. ADR-009 → baseline metrics).
+
 ## Февраль 2026
 
 ### 5 новых инструментов (2026-02-08)
