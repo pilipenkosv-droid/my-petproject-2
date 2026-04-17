@@ -86,6 +86,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           slug: post.slug,
           datePublished: post.datePublished,
           dateModified: post.dateModified,
+          image: post.coverImage ? `${SITE_URL}${post.coverImage}` : undefined,
         })}
       />
 
@@ -100,18 +101,29 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {/* Заголовок */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 text-muted-foreground text-sm mb-4">
+          <div className="flex flex-wrap items-center gap-4 text-muted-foreground text-sm mb-4">
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {post.readingTime}
             </span>
             <span>
+              Опубликовано{" "}
               {new Date(post.datePublished).toLocaleDateString("ru-RU", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
               })}
             </span>
+            {post.dateModified && post.dateModified !== post.datePublished && (
+              <span className="text-foreground">
+                Обновлено{" "}
+                {new Date(post.dateModified).toLocaleDateString("ru-RU", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
             {post.title}
@@ -178,6 +190,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             title={post.title}
             description={post.description}
           />
+        </div>
+
+        {/* Автор */}
+        <div className="mb-12 bg-surface border border-surface-border p-5">
+          <div className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
+            Об авторе
+          </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-semibold text-lg shrink-0">
+              СП
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-foreground font-medium mb-1">
+                Сергей Пилипенко
+              </div>
+              <div className="text-muted-foreground text-sm mb-2">
+                Основатель Diplox. Строит AI-сервисы для студентов с 2025 года: форматирование по ГОСТ, проверка грамматики, подбор литературы, повышение уникальности.
+              </div>
+              <Link
+                href="/about"
+                className="text-primary text-sm hover:underline inline-flex items-center gap-1"
+              >
+                Подробнее о проекте
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Навигация между статьями */}

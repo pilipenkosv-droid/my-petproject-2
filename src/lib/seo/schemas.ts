@@ -154,6 +154,7 @@ export function getFAQPageSchema(faqs: FAQItem[]) {
  * Schema для Article (блог-пост)
  */
 export function getArticleSchema(post: BlogPost) {
+  const image = post.image || `${SITE_URL}/og-image.png`
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -162,21 +163,35 @@ export function getArticleSchema(post: BlogPost) {
     url: `${SITE_URL}/blog/${post.slug}`,
     datePublished: post.datePublished,
     dateModified: post.dateModified || post.datePublished,
-    image: post.image || `${SITE_URL}/og-image.png`,
+    image: {
+      '@type': 'ImageObject',
+      url: image,
+      width: 1792,
+      height: 1024,
+    },
     author: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: SITE_URL,
+      '@type': 'Person',
+      name: 'Сергей Пилипенко',
+      jobTitle: 'Founder & Developer, Diplox',
+      url: `${SITE_URL}/about`,
+      sameAs: ['https://sergejpilipenko.com'],
     },
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
       url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo/d-icon-full.png`,
+        width: 512,
+        height: 512,
+      },
     },
     mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': `${SITE_URL}/blog/${post.slug}`,
     },
+    inLanguage: 'ru-RU',
   }
 }
 
