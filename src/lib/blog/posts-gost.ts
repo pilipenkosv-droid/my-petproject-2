@@ -470,7 +470,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "kak-napisat-annotaciyu-k-diplomnoj-rabote",
-    coverImage: undefined,
+    coverImage: "/blog/kak-napisat-annotaciyu-k-diplomnoj-rabote.png",
     title: "Как написать аннотацию к дипломной работе: требования, структура и примеры",
     description:
       "Как написать аннотацию к дипломной работе и ВКР по ГОСТу. Структура, объём, обязательные элементы, примеры формулировок и типичные ошибки.",
@@ -602,7 +602,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "recenziya-na-diplomnuyu-rabotu",
-    coverImage: undefined,
+    coverImage: "/blog/recenziya-na-diplomnuyu-rabotu.png",
     title: "Рецензия на дипломную работу: как получить и оформить в 2026",
     description:
       "Что такое рецензия на дипломную работу, кто её пишет, какие требования к оформлению и как получить положительную рецензию с первого раза.",
@@ -739,7 +739,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "vypusknaya-kvalifikacionnaya-rabota",
-    coverImage: undefined,
+    coverImage: "/blog/vypusknaya-kvalifikacionnaya-rabota.png",
     title: "Выпускная квалификационная работа: требования, этапы и оформление",
     description:
       "Что такое выпускная квалификационная работа, чем она отличается от курсовой и диплома, какие требования предъявляет ГОСТ и как оформить ВКР без ошибок.",
@@ -890,7 +890,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "struktura-diplomnoj-raboty-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/struktura-diplomnoj-raboty-po-gostu.png",
     title: "Структура дипломной работы по ГОСТу: разделы, объём и порядок",
     description:
       "Какие разделы должны быть в дипломе, в каком порядке их располагать и какой объём нужен по ГОСТу. Полный разбор структуры ВКР с примерами.",
@@ -1029,7 +1029,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "rech-i-prezentaciya-dlya-zashchity-diploma",
-    coverImage: undefined,
+    coverImage: "/blog/rech-i-prezentaciya-dlya-zashchity-diploma.png",
     title: "Речь и презентация для защиты диплома: как подготовиться в 2026",
     description:
       "Как написать речь на защиту диплома и собрать презентацию, которая произведёт впечатление на комиссию. Пошаговая инструкция, структура выступления и типичные ошибки.",
@@ -1158,7 +1158,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "normokontrol-diplomnoj-raboty",
-    coverImage: undefined,
+    coverImage: "/blog/normokontrol-diplomnoj-raboty.png",
     title: "Нормоконтроль дипломной работы: что проверяют и как пройти",
     description:
       "Что такое нормоконтроль диплома, какие ошибки находят чаще всего и как пройти проверку с первого раза. Чек-лист требований ГОСТ 7.32-2017.",
@@ -1275,7 +1275,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "chek-list-oformleniya-diploma-pered-sdachej",
-    coverImage: undefined,
+    coverImage: "/blog/chek-list-oformleniya-diploma-pered-sdachej.png",
     title: "Чек-лист оформления диплома перед сдачей: 10 пунктов проверки",
     description:
       "Готовый чек-лист из 10 пунктов для проверки оформления дипломной работы перед сдачей. Титульный лист, поля, шрифт, ссылки, содержание — ничего не забудешь.",
@@ -1396,7 +1396,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "abzacnyj-otstup-po-gostu",
-    coverImage: undefined,
+    coverImage: "/blog/abzacnyj-otstup-po-gostu.png",
     title: "Абзацный отступ по ГОСТу: какой должен быть и как настроить",
     description:
       "Какой абзацный отступ требует ГОСТ 7.32-2017 для курсовых, дипломов и диссертаций. Как настроить красную строку в Word за минуту — пошаговая инструкция.",
@@ -1506,7 +1506,7 @@ export const blogPostsGost: BlogPost[] = [
   },
   {
     slug: "ai-formatirovanie-dokumentov",
-    coverImage: undefined,
+    coverImage: "/blog/ai-formatirovanie-dokumentov.png",
     title: "AI форматирование документов: как нейросеть оформляет работы по ГОСТу",
     description:
       "Как искусственный интеллект помогает форматировать курсовые, дипломы и диссертации по ГОСТу — сравнение подходов, плюсы и минусы, пошаговый гайд.",
