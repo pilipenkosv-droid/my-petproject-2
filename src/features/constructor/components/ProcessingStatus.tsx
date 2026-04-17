@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pickFlavor, buildSubSteps, type SubStep } from "@/features/constructor/lib/flavor-phrases";
 
 export interface StepDefinition {
   id: string;
@@ -13,8 +15,11 @@ interface ProcessingStatusProps {
   currentStep: string | null;
   progress: number;
   error?: string;
-  /** Custom steps list. If not provided, uses default full pipeline steps. */
   steps?: StepDefinition[];
+  /** Elapsed milliseconds from the animation hook. If provided, a stopwatch is rendered. */
+  elapsedMs?: number;
+  /** Pages in uploaded document — used to generate plausible sub-step counts. */
+  pageCount?: number;
 }
 
 const DEFAULT_STEPS: StepDefinition[] = [
@@ -26,17 +31,76 @@ const DEFAULT_STEPS: StepDefinition[] = [
   { id: "completed", label: "Готово" },
 ];
 
+function formatStopwatch(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 export function ProcessingStatus({
   currentStep,
   progress,
   error,
   steps,
+  elapsedMs,
+  pageCount = 30,
 }: ProcessingStatusProps) {
   const activeSteps = steps || DEFAULT_STEPS;
 
   const currentStepIndex = currentStep
     ? activeSteps.findIndex((s) => s.id === currentStep)
     : -1;
+
+  // Flavor phrase rotation
+  const [flavor, setFlavor] = useState<string | null>(null);
+  const prevFlavorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentStep || error) {
+      setFlavor(null);
+      return;
+    }
+    const initial = pickFlavor(currentStep, prevFlavorRef.current);
+    setFlavor(initial);
+    prevFlavorRef.current = initial;
+
+    const rotateInterval = setInterval(() => {
+      const next = pickFlavor(currentStep, prevFlavorRef.current);
+      setFlavor(next);
+      prevFlavorRef.current = next;
+    }, 2800 + Math.random() * 1200);
+
+    return () => clearInterval(rotateInterval);
+  }, [currentStep, error]);
+
+  // Sub-steps log — appear with delays based on the plan in flavor-phrases
+  const [visibleSubSteps, setVisibleSubSteps] = useState<SubStep[]>([]);
+  const [activeSubStepId, setActiveSubStepId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!currentStep || error) {
+      setVisibleSubSteps([]);
+      setActiveSubStepId(null);
+      return;
+    }
+    const plan = buildSubSteps(currentStep, pageCount);
+    if (plan.length === 0) {
+      setVisibleSubSteps([]);
+      setActiveSubStepId(null);
+      return;
+    }
+    setVisibleSubSteps([]);
+    setActiveSubStepId(plan[0].id);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    plan.forEach((sub, i) => {
+      const t = setTimeout(() => {
+        setVisibleSubSteps((prev) => [...prev, sub]);
+        const nextActive = plan[i + 1]?.id ?? null;
+        setActiveSubStepId(nextActive);
+      }, sub.delayMs);
+      timers.push(t);
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [currentStep, pageCount, error]);
 
   const getStepIcon = (index: number) => {
     if (error && index === currentStepIndex) {
@@ -70,38 +134,74 @@ export function ProcessingStatus({
     );
   };
 
+  const showStopwatch = typeof elapsedMs === "number";
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <div className="flex justify-between text-sm">
+        <div className="flex items-baseline justify-between text-sm">
           <span className="text-on-surface-subtle">Прогресс</span>
-          <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
+          <div className="flex items-baseline gap-3">
+            {showStopwatch && (
+              <span className="font-mono tabular-nums text-foreground">
+                {formatStopwatch(elapsedMs!)}
+              </span>
+            )}
+            <span className="font-semibold text-foreground">{Math.round(progress)}%</span>
+          </div>
         </div>
         <Progress value={progress} />
       </div>
 
       <div className="space-y-3">
-        {activeSteps.map((step, index) => (
-          <div
-            key={step.id}
-            className={cn(
-              "flex items-center gap-3 text-sm transition-all duration-300",
-              index <= currentStepIndex
-                ? "text-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            {getStepIcon(index)}
-            <span
+        {activeSteps.map((step, index) => {
+          const isActive = index === currentStepIndex && !error;
+          return (
+            <div
+              key={step.id}
               className={cn(
-                "transition-all duration-300",
-                index === currentStepIndex && !error && "font-medium text-foreground"
+                "flex items-start gap-3 text-sm transition-all duration-300",
+                index <= currentStepIndex ? "text-foreground" : "text-muted-foreground"
               )}
             >
-              {step.label}
-            </span>
-          </div>
-        ))}
+              {getStepIcon(index)}
+              <div className="flex-1 min-w-0">
+                <span
+                  className={cn(
+                    "transition-all duration-300 block",
+                    isActive && "font-medium text-foreground"
+                  )}
+                >
+                  {step.label}
+                </span>
+                {isActive && flavor && (
+                  <span className="block text-xs text-on-surface-muted italic mt-0.5 animate-in fade-in duration-300">
+                    {flavor}
+                  </span>
+                )}
+                {isActive && visibleSubSteps.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs font-mono tabular-nums text-on-surface-muted">
+                    {visibleSubSteps.map((sub) => (
+                      <li
+                        key={sub.id}
+                        className="animate-in fade-in slide-in-from-left-1 duration-300 flex items-center gap-2"
+                      >
+                        <span className="text-emerald-500">✓</span>
+                        <span>{sub.text}</span>
+                      </li>
+                    ))}
+                    {activeSubStepId && (
+                      <li className="flex items-center gap-2 text-on-surface-subtle">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>выполняется…</span>
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {error && (

@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb, GraduationCap } from "lucide-react";
+import { FileText, Sparkles, Zap, LogIn, BookOpen, Shield, Lightbulb, GraduationCap, CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -33,15 +34,20 @@ import { MarathonBanner } from "@/features/seasonal/components/MarathonBanner";
 type PageState = "upload" | "processing";
 
 const UPLOAD_STEPS: AnimatedStep[] = [
-  { id: "uploading", label: "Загрузка файлов", rangeStart: 0, rangeEnd: 20 },
-  { id: "extracting_text", label: "Извлечение текста", rangeStart: 20, rangeEnd: 55 },
-  { id: "parsing_rules", label: "Анализ требований с помощью AI", rangeStart: 55, rangeEnd: 100 },
+  { id: "uploading", label: "Загрузка файлов", rangeStart: 0, rangeEnd: 15 },
+  { id: "extracting_text", label: "Извлечение текста из документов", rangeStart: 15, rangeEnd: 35 },
+  { id: "parsing_rules", label: "Чтение методички", rangeStart: 35, rangeEnd: 60 },
+  { id: "ai_understanding", label: "AI-анализ требований", rangeStart: 60, rangeEnd: 85 },
+  { id: "building_ruleset", label: "Формирование свода правил", rangeStart: 85, rangeEnd: 100 },
 ];
 
 const GOST_STEPS: AnimatedStep[] = [
-  { id: "uploading", label: "Загрузка документа", rangeStart: 0, rangeEnd: 15 },
-  { id: "analyzing", label: "AI-разметка и проверка документа", rangeStart: 15, rangeEnd: 60 },
-  { id: "formatting", label: "Применение форматирования по ГОСТу", rangeStart: 60, rangeEnd: 100 },
+  { id: "uploading", label: "Загрузка документа", rangeStart: 0, rangeEnd: 10 },
+  { id: "parsing_structure", label: "Разбор структуры документа", rangeStart: 10, rangeEnd: 28 },
+  { id: "analyzing", label: "AI-разметка и поиск нарушений", rangeStart: 28, rangeEnd: 55 },
+  { id: "formatting", label: "Применение правил ГОСТ 7.32", rangeStart: 55, rangeEnd: 80 },
+  { id: "checking_compliance", label: "Проверка соответствия требованиям", rangeStart: 80, rangeEnd: 92 },
+  { id: "finalizing", label: "Сборка итогового документа", rangeStart: 92, rangeEnd: 100 },
 ];
 
 function ConstructorPageContent() {
@@ -94,8 +100,21 @@ function ConstructorPageContent() {
 
   const animatedProgress = useAnimatedProgress({
     steps: activeSteps,
-    minStepDuration: 1500,
+    minTotalDuration: 60000,
+    totalJitter: 30000,
   });
+
+  const [sourcePageEstimate, setSourcePageEstimate] = useState<number>(30);
+  useEffect(() => {
+    const file = sourceDoc.uploadedFile?.file;
+    if (!file) {
+      setSourcePageEstimate(30);
+      return;
+    }
+    // Rough estimate: ~3KB per page for docx, clamp to [10, 200]
+    const est = Math.max(10, Math.min(200, Math.round(file.size / 3072)));
+    setSourcePageEstimate(est);
+  }, [sourceDoc.uploadedFile]);
 
   const stepDefs = activeSteps.map(s => ({ id: s.id, label: s.label }));
 
@@ -271,7 +290,55 @@ function ConstructorPageContent() {
               </p>
             </div>
 
-            {/* 1. Исходный документ */}
+            {/* 1. Тип работы (контекст первым) */}
+            <BlurFade delay={0.15} inView>
+              <Card
+                className={cn(
+                  "group relative overflow-hidden transition-colors",
+                  workType
+                    ? "border-emerald-500/30"
+                    : "border-primary/40 ring-1 ring-primary/20"
+                )}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-foreground shadow-sm">
+                      <GraduationCap className="h-5 w-5 text-background" />
+                    </div>
+                    <span>Тип работы</span>
+                    {workType && (
+                      <CheckCircle className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {workType
+                      ? "Контекст учтён — алгоритм подстроится под этот тип работы"
+                      : "Обязательно: диплом, курсовая, реферат или другой тип"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Select value={workType} onValueChange={handleWorkTypeChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите тип работы" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WORK_TYPES.map((wt) => (
+                        <SelectItem key={wt.slug} value={wt.slug}>
+                          {wt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!workType && (
+                    <p className="text-xs text-primary mt-2">
+                      Без этого не получится запустить обработку
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </BlurFade>
+
+            {/* 2. Исходный документ */}
             <BlurFade delay={0.2} inView>
               <Card className="group relative overflow-hidden">
                 <CardHeader>
@@ -298,27 +365,6 @@ function ConstructorPageContent() {
                   />
                 </CardContent>
               </Card>
-            </BlurFade>
-
-            {/* 2. Тип работы */}
-            <BlurFade delay={0.25} inView>
-              <div className="flex items-center gap-3 px-1">
-                <label className="text-sm font-medium text-foreground whitespace-nowrap">
-                  Тип работы:
-                </label>
-                <Select value={workType} onValueChange={handleWorkTypeChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Выберите тип работы" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WORK_TYPES.map((wt) => (
-                      <SelectItem key={wt.slug} value={wt.slug}>
-                        {wt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </BlurFade>
 
             {/* Ссылка на генератор плана */}
@@ -424,10 +470,16 @@ function ConstructorPageContent() {
                   Обработать документ
                 </Button>
 
-                {/* Подсказка */}
-                {!canProcess && sourceDoc.uploadedFile && requirementsMode === "upload" && (
+                {/* Подсказка — какое поле не заполнено */}
+                {!canProcess && (
                   <p className="text-sm text-muted-foreground">
-                    Загрузите методичку или переключитесь на «Стандартный ГОСТ»
+                    {!workType
+                      ? "Выберите тип работы"
+                      : !sourceDoc.uploadedFile
+                        ? "Загрузите исходный документ"
+                        : requirementsMode === "upload" && !requirementsDoc.uploadedFile
+                          ? "Загрузите методичку или переключитесь на «Стандартный ГОСТ»"
+                          : "Заполните все поля выше"}
                   </p>
                 )}
               </div>
@@ -452,6 +504,8 @@ function ConstructorPageContent() {
                 progress={animatedProgress.displayProgress}
                 error={animatedProgress.error}
                 steps={stepDefs}
+                elapsedMs={animatedProgress.elapsedMs}
+                pageCount={sourcePageEstimate}
               />
               {animatedProgress.error && (
                 <div className="mt-6 flex justify-center">

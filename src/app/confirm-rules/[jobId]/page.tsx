@@ -38,9 +38,11 @@ interface JobData {
 }
 
 const PHASE2_STEPS: AnimatedStep[] = [
-  { id: "analyzing", label: "AI-разметка и проверка документа", rangeStart: 0, rangeEnd: 55 },
-  { id: "formatting", label: "Применение форматирования", rangeStart: 55, rangeEnd: 90 },
-  { id: "saving", label: "Сохранение результатов", rangeStart: 90, rangeEnd: 100 },
+  { id: "validating_rules", label: "Подготовка правил к применению", rangeStart: 0, rangeEnd: 12 },
+  { id: "analyzing", label: "AI-разметка и поиск нарушений", rangeStart: 12, rangeEnd: 45 },
+  { id: "formatting", label: "Применение форматирования", rangeStart: 45, rangeEnd: 75 },
+  { id: "checking_compliance", label: "Проверка соответствия методичке", rangeStart: 75, rangeEnd: 92 },
+  { id: "finalizing", label: "Сборка итогового документа", rangeStart: 92, rangeEnd: 100 },
 ];
 
 const PHASE2_STEP_DEFS = PHASE2_STEPS.map(s => ({ id: s.id, label: s.label }));
@@ -57,7 +59,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
 
   const animatedProgress = useAnimatedProgress({
     steps: PHASE2_STEPS,
-    minStepDuration: 1500,
+    minTotalDuration: 60000,
+    totalJitter: 30000,
   });
 
   // Загружаем данные задачи
@@ -252,6 +255,8 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
                 progress={animatedProgress.displayProgress}
                 error={animatedProgress.error}
                 steps={PHASE2_STEP_DEFS}
+                elapsedMs={animatedProgress.elapsedMs}
+                pageCount={30}
               />
               {animatedProgress.error && (
                 <div className="mt-6 flex justify-center">

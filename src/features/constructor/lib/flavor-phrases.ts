@@ -1,0 +1,171 @@
+export const FLAVOR_PHRASES: Record<string, string[]> = {
+  uploading: [
+    "распаковываем архив знаний…",
+    "открываем docx, осторожно…",
+    "читаем ваш шедевр по диагонали",
+    "подгружаем документ в нейросеть",
+  ],
+  extracting_text: [
+    "достаём текст из docx по буковке",
+    "собираем слова в предложения",
+    "ищем, где заканчивается титульник",
+    "прогреваем языковую модель…",
+  ],
+  parsing_rules: [
+    "вчитываемся в методичку, как отличник",
+    "переводим язык бюрократии на человеческий",
+    "запоминаем требования вашей кафедры",
+    "вылавливаем «Times New Roman 14 pt»",
+  ],
+  ai_understanding: [
+    "AI думает… думает… додумал",
+    "сравниваем с сотнями похожих работ",
+    "строим модель идеального документа",
+  ],
+  building_ruleset: [
+    "упаковываем правила в чек-лист",
+    "проверяем, не забыли ли что-то важное",
+    "финализируем свод требований",
+  ],
+  parsing_structure: [
+    "ищем, где у тебя введение, а где уже лень",
+    "считаем главы, разделы и параграфы",
+    "строим карту документа",
+    "понимаем, где заголовки, а где обычный текст",
+  ],
+  validating_rules: [
+    "сверяем правила с твоим документом",
+    "подгружаем твоё согласие на правила",
+    "готовим алгоритм к работе",
+  ],
+  analyzing: [
+    "считаем запятые… их много",
+    "разбираем абзацы по косточкам",
+    "ищем нарушения ГОСТа",
+    "смотрим на поля, как прораб на стены",
+    "проверяем каждую ссылку на источник",
+  ],
+  formatting: [
+    "выравниваем поля 30мм — как завещал ГОСТ",
+    "строим правильные отступы 1.25 см",
+    "применяем Times New Roman 14 pt",
+    "ставим полуторный интервал везде",
+    "выравниваем текст по ширине",
+    "магия форматирования в процессе ✨",
+  ],
+  checking_compliance: [
+    "сравниваем с требованиями ВУЗа",
+    "последняя проверка перед сдачей",
+    "пересчитываем всё ещё раз",
+    "контрольный проход по документу",
+  ],
+  finalizing: [
+    "собираем обратно в docx",
+    "заворачиваем красиво",
+    "добавляем финальные штрихи",
+    "почти готово, ещё секунда",
+  ],
+  saving: [
+    "сохраняем результат в надёжное место",
+    "складываем документ на полку",
+  ],
+  completed: [
+    "готово!",
+  ],
+};
+
+export function pickFlavor(stepId: string | null, previous: string | null): string | null {
+  if (!stepId) return null;
+  const pool = FLAVOR_PHRASES[stepId];
+  if (!pool || pool.length === 0) return null;
+  if (pool.length === 1) return pool[0];
+  let pick = pool[Math.floor(Math.random() * pool.length)];
+  let guard = 0;
+  while (pick === previous && guard < 5) {
+    pick = pool[Math.floor(Math.random() * pool.length)];
+    guard++;
+  }
+  return pick;
+}
+
+export interface SubStep {
+  id: string;
+  text: string;
+  delayMs: number;
+}
+
+export function buildSubSteps(stepId: string, pageCount: number): SubStep[] {
+  const pages = Math.max(pageCount, 10);
+  const rand = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
+
+  switch (stepId) {
+    case "uploading":
+      return [
+        { id: "u1", text: "Файл получен", delayMs: 300 },
+        { id: "u2", text: `Размер: ~${rand(Math.floor(pages * 4), pages * 8)} КБ`, delayMs: 900 },
+      ];
+    case "extracting_text":
+      return [
+        { id: "e1", text: `Извлечено ${pages} страниц`, delayMs: 400 },
+        { id: "e2", text: `Найдено ${rand(pages * 3, pages * 6)} абзацев`, delayMs: 1200 },
+        { id: "e3", text: `Распознано ~${rand(pages * 220, pages * 320)} слов`, delayMs: 2200 },
+      ];
+    case "parsing_rules":
+      return [
+        { id: "p1", text: "Читаем методичку", delayMs: 400 },
+        { id: "p2", text: `Извлечено ${rand(12, 28)} правил`, delayMs: 1400 },
+        { id: "p3", text: "Проверяем шрифты и отступы", delayMs: 2600 },
+      ];
+    case "ai_understanding":
+      return [
+        { id: "ai1", text: "Запрос к языковой модели", delayMs: 400 },
+        { id: "ai2", text: "Сопоставление с ГОСТ 7.32", delayMs: 1500 },
+        { id: "ai3", text: "Формирование карты правил", delayMs: 2800 },
+      ];
+    case "building_ruleset":
+      return [
+        { id: "br1", text: "Составление чек-листа", delayMs: 400 },
+        { id: "br2", text: `${rand(18, 32)} правил готово к применению`, delayMs: 1600 },
+      ];
+    case "parsing_structure":
+      return [
+        { id: "ps1", text: `Найдено ${rand(3, 7)} разделов`, delayMs: 500 },
+        { id: "ps2", text: `Определены ${rand(pages * 4, pages * 7)} параграфов`, delayMs: 1400 },
+        { id: "ps3", text: "Структура оглавления распознана", delayMs: 2600 },
+      ];
+    case "validating_rules":
+      return [
+        { id: "vr1", text: "Проверка конфликтов в правилах", delayMs: 400 },
+        { id: "vr2", text: "Правила применимы к документу", delayMs: 1400 },
+      ];
+    case "analyzing":
+      return [
+        { id: "a1", text: `Просканировано ${pages} страниц`, delayMs: 600 },
+        { id: "a2", text: `Обнаружено ${rand(pages * 2, pages * 5)} нарушений`, delayMs: 1700 },
+        { id: "a3", text: "AI-разметка блоков завершена", delayMs: 3200 },
+      ];
+    case "formatting":
+      return [
+        { id: "f1", text: "Поля и отступы применены", delayMs: 500 },
+        { id: "f2", text: `Отформатировано ${rand(pages * 4, pages * 8)} абзацев`, delayMs: 1800 },
+        { id: "f3", text: "Шрифты приведены к требованиям", delayMs: 3200 },
+        { id: "f4", text: "Межстрочный интервал выставлен", delayMs: 4600 },
+      ];
+    case "checking_compliance":
+      return [
+        { id: "cc1", text: "Повторная проверка", delayMs: 500 },
+        { id: "cc2", text: `Соответствие требованиям: ${rand(96, 99)}%`, delayMs: 1600 },
+      ];
+    case "finalizing":
+      return [
+        { id: "fn1", text: "Сборка docx", delayMs: 400 },
+        { id: "fn2", text: "Документ готов к скачиванию", delayMs: 1400 },
+      ];
+    case "saving":
+      return [
+        { id: "s1", text: "Результат сохранён", delayMs: 400 },
+      ];
+    default:
+      return [];
+  }
+}

@@ -14,10 +14,19 @@ interface ShareResultPopupProps {
   fixesApplied: number;
   pageCount: number;
   workType?: string;
-  /** Время обработки в полных минутах (округлено вверх) */
-  processingMinutes?: number;
+  /** Время обработки в секундах */
+  processingSeconds?: number;
   /** Показывать только после скачивания документа */
   hasDownloaded: boolean;
+}
+
+function formatDurationRu(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  if (m === 0) return `${s} сек`;
+  if (s === 0) return `${m} мин`;
+  return `${m} мин ${s} сек`;
 }
 
 // Винительный падеж: "Оформил {что?}"
@@ -50,7 +59,7 @@ export function ShareResultPopup({
   fixesApplied,
   pageCount,
   workType,
-  processingMinutes,
+  processingSeconds,
   hasDownloaded,
 }: ShareResultPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -95,11 +104,11 @@ export function ShareResultPopup({
   const shareUrl = `${SITE_URL}/r/${jobId}`;
   const accLabel = workType ? WORK_TYPE_ACCUSATIVE[workType] || "работу" : "работу";
   const nomLabel = workType ? WORK_TYPE_NOMINATIVE[workType] || "работа" : "работа";
-  const timeStr = processingMinutes && processingMinutes > 0 ? ` за ${processingMinutes} мин` : "";
+  const timeStr = processingSeconds && processingSeconds > 0 ? ` за ${formatDurationRu(processingSeconds)}` : "";
   const statsLine = fixesApplied > 0
     ? `\n*Исправлено ${fixesApplied} нарушений на ${pageCount} стр.`
     : `\n*${pageCount} стр. проверены и готовы к сдаче`;
-  const shareTitle = `Оформил ${accLabel} в Diplox${timeStr}! Мой ${nomLabel} готов к сдаче. А ваш?${statsLine}`;
+  const shareTitle = `Оформил ${accLabel} в Diplox${timeStr}! Минус одна бессонная ночь. Мой ${nomLabel} готов к сдаче. А твой?${statsLine}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -127,11 +136,17 @@ export function ShareResultPopup({
               <Users className="w-6 h-6 text-emerald-400" />
             </div>
             <h3 className="text-lg font-bold text-foreground">
-              Документ готов! Поделись результатом
+              −1 бессонная ночь 🌙
             </h3>
-            <p className="text-sm text-on-surface-muted mt-1">
-              Покажи одногруппникам, как легко оформить работу
-            </p>
+            {timeStr ? (
+              <p className="text-sm text-on-surface-muted mt-1">
+                Diplox оформил твой {nomLabel}{timeStr}. Покажи одногруппникам.
+              </p>
+            ) : (
+              <p className="text-sm text-on-surface-muted mt-1">
+                Документ готов. Покажи одногруппникам, как легко оформить работу.
+              </p>
+            )}
           </div>
 
           {/* Metrics */}

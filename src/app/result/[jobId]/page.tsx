@@ -347,10 +347,12 @@ export default function ResultPage({ params }: ResultPageProps) {
           fixesApplied={job.fixesApplied ?? 0}
           pageCount={job.statistics?.pageCount ?? 0}
           workType={job.workType}
-          processingMinutes={
-            job.createdAt && job.updatedAt
-              ? Math.ceil((new Date(job.updatedAt).getTime() - new Date(job.createdAt).getTime()) / 60000)
-              : undefined
+          processingSeconds={
+            job.statistics?.pipelineTimeMs
+              ? Math.round(job.statistics.pipelineTimeMs / 1000)
+              : job.createdAt && job.updatedAt
+                ? Math.round((new Date(job.updatedAt).getTime() - new Date(job.createdAt).getTime()) / 1000)
+                : undefined
           }
           hasDownloaded={hasDownloaded}
         />
