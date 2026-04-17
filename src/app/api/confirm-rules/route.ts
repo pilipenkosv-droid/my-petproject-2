@@ -6,7 +6,7 @@ import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 import { getUserAccess } from "@/lib/payment/access";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Второй этап: подтверждение правил и обработка документа

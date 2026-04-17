@@ -186,6 +186,10 @@ function ConstructorPageContent() {
         : `/confirm-rules/${data.jobId}`;
 
       animatedProgress.complete(() => {
+        try {
+          const finalSec = Math.max(1, Math.round(animatedProgress.elapsedMs / 1000));
+          localStorage.setItem(`dlx_flow_time_${data.jobId}`, String(finalSec));
+        } catch {}
         router.push(redirectUrl);
       });
     } catch (err) {

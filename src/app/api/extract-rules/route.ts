@@ -8,7 +8,7 @@ import { warmupModels } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Первый этап: извлечение правил форматирования из методички

@@ -145,6 +145,11 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
 
       // Let animation finish, then redirect
       animatedProgress.complete(() => {
+        try {
+          const finalSec = Math.max(1, Math.round(animatedProgress.elapsedMs / 1000));
+          const prev = parseInt(localStorage.getItem(`dlx_flow_time_${jobId}`) || "0", 10) || 0;
+          localStorage.setItem(`dlx_flow_time_${jobId}`, String(prev + finalSec));
+        } catch {}
         router.push(`/result/${jobId}`);
       });
     } catch (err) {

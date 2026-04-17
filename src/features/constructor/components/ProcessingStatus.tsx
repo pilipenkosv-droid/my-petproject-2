@@ -175,7 +175,7 @@ export function ProcessingStatus({
                   {step.label}
                 </span>
                 {isActive && flavor && (
-                  <span className="block text-xs text-on-surface-muted italic mt-0.5 animate-in fade-in duration-300">
+                  <span className="block text-sm font-medium text-primary/90 mt-1 animate-in fade-in duration-300">
                     {flavor}
                   </span>
                 )}

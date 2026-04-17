@@ -2,7 +2,7 @@
 
 import { DocumentStatistics } from "@/types/formatting-rules";
 import { NumberTicker } from "@/components/ui/number-ticker";
-import { FileText, BookOpen, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { FileText, BookOpen, AlertTriangle, CheckCircle } from "lucide-react";
 
 interface StatisticsPanelProps {
   statistics: DocumentStatistics;
@@ -48,21 +48,10 @@ export function StatisticsPanel({
         ? `${manualFixCount} треб. ручной правки`
         : "все нарушения исправлены",
     },
-    ...(statistics.pipelineTimeMs
-      ? [
-          {
-            label: "Время обработки",
-            value: Math.round(statistics.pipelineTimeMs / 1000),
-            icon: Clock,
-            delay: 0.4,
-            subtitle: "секунд",
-          },
-        ]
-      : []),
   ];
 
   return (
-    <div className={`grid grid-cols-2 gap-4 ${stats.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {stats.map((stat) => (
         <div
           key={stat.label}

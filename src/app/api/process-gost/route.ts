@@ -10,7 +10,7 @@ import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 /**
  * Обработка документа по стандартному ГОСТу (без методички).

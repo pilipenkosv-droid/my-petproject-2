@@ -10,7 +10,7 @@ import { EmailGateModal } from "@/features/result/components/EmailGateModal";
 import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight } from "lucide-react";
+import { Download, RefreshCw, Sparkles, CheckCircle, FileText, FileCheck, AlertTriangle, Gift, ArrowRight, Clock } from "lucide-react";
 
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
@@ -34,6 +34,17 @@ export default function ResultPage({ params }: ResultPageProps) {
   const [emailGateOpen, setEmailGateOpen] = useState(false);
   const [emailGateDownloadType, setEmailGateDownloadType] = useState<"original" | "formatted">("formatted");
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [flowTimeSec, setFlowTimeSec] = useState<number | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`dlx_flow_time_${jobId}`);
+      if (stored) {
+        const n = parseInt(stored, 10);
+        if (n > 0) setFlowTimeSec(n);
+      }
+    } catch {}
+  }, [jobId]);
 
   useEffect(() => {
     if (job?.status === "completed" && !trackedPreview.current) {
@@ -179,6 +190,22 @@ export default function ResultPage({ params }: ResultPageProps) {
             <p className="text-on-surface-subtle">
               Проанализирован и отформатирован в соответствии с требованиями
             </p>
+            {(() => {
+              const totalSec = flowTimeSec
+                ?? (job.statistics?.pipelineTimeMs ? Math.round(job.statistics.pipelineTimeMs / 1000) : 0);
+              if (totalSec <= 0) return null;
+              const m = Math.floor(totalSec / 60);
+              const s = totalSec % 60;
+              const label = m === 0 ? `${s} сек` : s === 0 ? `${m} мин` : `${m} мин ${s} сек`;
+              return (
+                <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-primary/10 border border-primary/30">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-foreground">
+                    Обработано за <span className="font-semibold">{label}</span>
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Статистика */}
@@ -348,11 +375,12 @@ export default function ResultPage({ params }: ResultPageProps) {
           pageCount={job.statistics?.pageCount ?? 0}
           workType={job.workType}
           processingSeconds={
-            job.statistics?.pipelineTimeMs
-              ? Math.round(job.statistics.pipelineTimeMs / 1000)
-              : job.createdAt && job.updatedAt
-                ? Math.round((new Date(job.updatedAt).getTime() - new Date(job.createdAt).getTime()) / 1000)
-                : undefined
+            flowTimeSec
+              ?? (job.statistics?.pipelineTimeMs
+                ? Math.round(job.statistics.pipelineTimeMs / 1000)
+                : job.createdAt && job.updatedAt
+                  ? Math.round((new Date(job.updatedAt).getTime() - new Date(job.createdAt).getTime()) / 1000)
+                  : undefined)
           }
           hasDownloaded={hasDownloaded}
         />
