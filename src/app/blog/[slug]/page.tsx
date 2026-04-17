@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getBreadcrumbSchema, getArticleSchema } from "@/lib/seo/schemas";
+import { getBreadcrumbSchema, getArticleSchema, getFAQPageSchema } from "@/lib/seo/schemas";
 import { getPostBySlug, getAllPosts, getRelatedPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/config/site";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen, SpellCheck, Pencil, FileText } from "lucide-react";
@@ -89,6 +89,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           image: post.coverImage ? `${SITE_URL}${post.coverImage}` : undefined,
         })}
       />
+      {post.faqs && post.faqs.length > 0 && (
+        <JsonLd data={getFAQPageSchema(post.faqs)} />
+      )}
 
       <main className="mx-auto max-w-3xl px-6 py-16">
         {/* Хлебные крошки */}
@@ -179,6 +182,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             ))}
           </div>
         </div>
+
+        {/* FAQ (видимый блок для юзеров + Google FAQPage policy) */}
+        {post.faqs && post.faqs.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Частые вопросы
+            </h2>
+            <div className="space-y-3">
+              {post.faqs.map((item, i) => (
+                <details
+                  key={i}
+                  className="bg-surface border border-surface-border p-4 group"
+                >
+                  <summary className="cursor-pointer font-medium text-foreground list-none flex items-start justify-between gap-3">
+                    <span>{item.question}</span>
+                    <span className="text-muted-foreground text-xl leading-none group-open:rotate-45 transition-transform">
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-on-surface-muted leading-relaxed">
+                    {item.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Поделиться */}
         <div className="mb-12">
