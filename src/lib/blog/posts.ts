@@ -8,11 +8,13 @@ import type { BlogPost } from "./types";
 import { blogPostsGost } from "./posts-gost";
 import { blogPostsSecondBrain } from "./posts-second-brain";
 import { seasonalDraftPosts } from "./posts-seasonal-draft";
+import { blogPostsPainClusters } from "./posts-pain-clusters";
 
 const allBlogPosts: BlogPost[] = [
   ...blogPostsGost,
   ...blogPostsSecondBrain,
   ...seasonalDraftPosts,
+  ...blogPostsPainClusters,
 ];
 
 /** Обратная совместимость */

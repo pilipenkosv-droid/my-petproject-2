@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getBreadcrumbSchema, getArticleSchema, getFAQPageSchema } from "@/lib/seo/schemas";
+import { getBreadcrumbSchema, getArticleSchema, getFAQPageSchema, getSpeakableSchema } from "@/lib/seo/schemas";
 import { getPostBySlug, getAllPosts, getRelatedPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/config/site";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen, SpellCheck, Pencil, FileText } from "lucide-react";
@@ -92,6 +92,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {post.faqs && post.faqs.length > 0 && (
         <JsonLd data={getFAQPageSchema(post.faqs)} />
       )}
+      <JsonLd
+        data={getSpeakableSchema([".article-tldr", "h1", ".article-conclusion"])}
+      />
 
       <main className="mx-auto max-w-3xl px-6 py-16">
         {/* Хлебные крошки */}
@@ -145,6 +148,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               className="w-full h-auto object-cover"
               priority
             />
+          </div>
+        )}
+
+        {/* TL;DR */}
+        {post.tldr && (
+          <div className="article-tldr bg-surface border border-surface-border p-5 mb-8">
+            <div className="text-muted-foreground text-xs uppercase tracking-wider mb-3">
+              Коротко о главном
+            </div>
+            {Array.isArray(post.tldr) ? (
+              <ul className="space-y-2">
+                {post.tldr.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-on-surface-muted text-sm leading-relaxed">
+                    <span className="text-primary mt-0.5 shrink-0">—</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-on-surface-muted text-sm leading-relaxed">{post.tldr}</p>
+            )}
           </div>
         )}
 

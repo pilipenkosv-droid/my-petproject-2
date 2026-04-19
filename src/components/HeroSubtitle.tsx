@@ -10,10 +10,10 @@ export function HeroSubtitle() {
         <span className="text-foreground">с первого раза.</span>
         <WordRotate
           words={[
+            "Сдача завтра? Успеем за 4 минуты",
+            "Ты написал — мы оформим",
+            "Нормоконтроль с первого раза",
             "Без ночи за отступами",
-            "Без «переделай оформление»",
-            "Без нормоконтроля по 3 кругу",
-            "Без Word, который всё ломает",
           ]}
           duration={2800}
           className="font-mono text-sm sm:text-lg md:text-xl lg:text-2xl font-medium text-muted-foreground"

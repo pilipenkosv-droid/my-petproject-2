@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
-import { getBreadcrumbSchema } from "@/lib/seo/schemas";
+import { getBreadcrumbSchema, getItemListSchema } from "@/lib/seo/schemas";
 import { getAllPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/config/site";
 import { BookOpen, Clock, ArrowRight, Sparkles, SpellCheck, Pencil, FileText } from "lucide-react";
@@ -38,6 +38,15 @@ export default function BlogPage() {
           { name: "Главная", url: "/" },
           { name: "Блог", url: "/blog" },
         ])}
+      />
+      <JsonLd
+        data={getItemListSchema(
+          posts.map((p) => ({
+            name: p.title,
+            url: `/blog/${p.slug}`,
+            description: p.description,
+          }))
+        )}
       />
 
       <PageHero

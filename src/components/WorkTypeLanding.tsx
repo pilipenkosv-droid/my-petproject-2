@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { JsonLd } from "@/components/JsonLd";
-import { getBreadcrumbSchema, getFAQPageSchema } from "@/lib/seo/schemas";
+import { getBreadcrumbSchema, getFAQPageSchema, getHowToSchema } from "@/lib/seo/schemas";
 import {
   Sparkles,
   CheckCircle,
@@ -90,6 +90,18 @@ export function WorkTypeLanding({
         ])}
       />
       <JsonLd data={getFAQPageSchema(faqs)} />
+      {workflowSteps && workflowSteps.length > 0 && (
+        <JsonLd
+          data={getHowToSchema(
+            `Как оформить ${type.toLowerCase()} с Diplox`,
+            subtitle,
+            workflowSteps.map((step) => ({
+              name: step.toolName,
+              text: step.action,
+            }))
+          )}
+        />
+      )}
 
       <PageHero
         badge={

@@ -37,8 +37,8 @@ export default async function LandingPage() {
       <div className="bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-purple-600/10 border-b border-purple-500/20 px-4 py-3">
         <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
           <Bot className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-foreground font-medium">ИИ-бот для учёбы в Telegram</span>
-          <span className="text-on-surface-muted hidden sm:inline">— конспекты голосом, ответы из своих заметок</span>
+          <span className="text-foreground font-medium">Пишешь диплом и застрял?</span>
+          <span className="text-on-surface-muted hidden sm:inline">— ИИ-бот поможет прямо в Telegram</span>
           <Link href="/second-brain" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors shrink-0">
             Узнать <ArrowRight className="w-3 h-3" />
           </Link>
@@ -58,9 +58,8 @@ export default async function LandingPage() {
 
             <BlurFade delay={0.4} inView>
               <p className="text-sm sm:text-base text-on-surface-subtle max-w-2xl mx-auto mb-10 leading-relaxed">
-                Ты написал работу. Диплом оформим мы — по твоей методичке, по ГОСТу.
-                <br />
-                За три минуты. Сдаёшь с первого раза — без замечаний.
+                <span className="block text-foreground font-medium">Сдача послезавтра. Текст готов, оформления нет — мы сделаем это за тебя за 4 минуты.</span>
+                <span className="block mt-2">По методичке твоего вуза. По ГОСТу. Нормоконтроль с первого раза.</span>
               </p>
             </BlurFade>
 
@@ -173,19 +172,19 @@ export default async function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 grid-rows-[1fr_1fr]">
             {[
               {
-                href: "/create",
-                icon: FileCheck,
-                label: "Форматирование по ГОСТу",
-                desc: "Нормоконтроль пройдён. С первого раза.",
-                gradient: "from-foreground to-foreground",
-                delay: 0.3,
-              },
-              {
                 href: "/outline",
                 icon: ListTree,
                 label: "Генератор плана",
                 desc: "Чистый лист → готовая структура за 60 секунд",
                 gradient: "from-brand-teal to-brand-teal-dark",
+                delay: 0.3,
+              },
+              {
+                href: "/rewrite",
+                icon: Pencil,
+                label: "Перефразирование",
+                desc: "Свои мысли — своими словами. Смысл тот же, текст — твой",
+                gradient: "from-brand-teal-dark to-brand-teal",
                 delay: 0.35,
               },
               {
@@ -197,20 +196,12 @@ export default async function LandingPage() {
                 delay: 0.4,
               },
               {
-                href: "/rewrite",
-                icon: Pencil,
-                label: "Перефразирование",
-                desc: "Свои мысли — своими словами. Смысл тот же, текст — твой",
-                gradient: "from-brand-teal-dark to-brand-teal",
+                href: "/create",
+                icon: FileCheck,
+                label: "Форматирование по ГОСТу",
+                desc: "Нормоконтроль пройдён. С первого раза.",
+                gradient: "from-foreground to-foreground",
                 delay: 0.45,
-              },
-              {
-                href: "/summarize",
-                icon: Sparkles,
-                label: "Краткое содержание",
-                desc: "Аннотация за 30 секунд — не за час",
-                gradient: "from-brand-teal-light to-brand-teal",
-                delay: 0.5,
               },
               {
                 href: "/sources",
@@ -218,6 +209,14 @@ export default async function LandingPage() {
                 label: "Подбор литературы",
                 desc: "Реальные источники. Не выдуманные ссылки.",
                 gradient: "from-foreground to-foreground",
+                delay: 0.5,
+              },
+              {
+                href: "/summarize",
+                icon: Sparkles,
+                label: "Краткое содержание",
+                desc: "Аннотация за 30 секунд — не за час",
+                gradient: "from-brand-teal-light to-brand-teal",
                 delay: 0.55,
               },
             ].map((tool) => {

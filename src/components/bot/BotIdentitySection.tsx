@@ -1,5 +1,5 @@
 import { BlurFade } from "@/components/ui/blur-fade";
-import { Brain, FolderOpen, Clock } from "lucide-react";
+import { Brain, FileQuestion, Clock } from "lucide-react";
 
 const identities = [
   {
@@ -8,8 +8,8 @@ const identities = [
     delay: 0.2,
   },
   {
-    icon: FolderOpen,
-    text: "...твои заметки разбросаны по телефону, личке и тетрадке — и ни в одном месте нельзя найти нужное",
+    icon: FileQuestion,
+    text: "...ты сидишь перед пустым Word уже час, тема есть, план есть, а первое предложение не написать",
     delay: 0.3,
   },
   {

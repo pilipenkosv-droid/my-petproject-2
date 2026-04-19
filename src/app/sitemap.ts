@@ -167,5 +167,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  return [...mainPages, ...workTypePages, ...toolPages, ...secondBrainPage, ...blogPage, ...blogPostPages]
+  // Нишевые лендинги (W5)
+  const nichePages: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/normokontrol`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/nauchnik`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+  ]
+
+  return [...mainPages, ...workTypePages, ...toolPages, ...secondBrainPage, ...nichePages, ...blogPage, ...blogPostPages]
 }

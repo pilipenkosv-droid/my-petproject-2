@@ -47,7 +47,7 @@ export default function SecondBrainPage() {
         <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
           <FileCheck className="w-4 h-4 text-foreground shrink-0" />
           <span className="text-on-surface-muted">
-            От создателей <span className="text-foreground font-medium">Diplox</span> — сервиса, который уже оформил тысячи работ по ГОСТу
+            ИИ-бот для студентов в Telegram — <span className="text-foreground font-medium">помогает писать, не только хранить</span>
           </span>
         </div>
       </div>

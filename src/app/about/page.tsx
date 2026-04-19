@@ -115,6 +115,26 @@ export default function AboutPage() {
         )}
       />
       <JsonLd data={getFounderSchema()} />
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'ProfilePage',
+          mainEntity: {
+            '@type': 'Person',
+            name: 'Сергей Пилипенко',
+            jobTitle: 'Founder & Developer, Diplox',
+            description:
+              'Основатель Diplox — сервиса автоматического форматирования научных работ по ГОСТу с помощью ИИ.',
+            url: `${SITE_URL}/about`,
+            sameAs: ['https://sergejpilipenko.com'],
+            worksFor: {
+              '@type': 'Organization',
+              name: 'Diplox',
+              url: SITE_URL,
+            },
+          },
+        }}
+      />
 
       <main className="mx-auto max-w-4xl px-6 py-16">
         {/* Hero секция */}

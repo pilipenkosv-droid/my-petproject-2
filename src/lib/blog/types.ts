@@ -18,4 +18,11 @@ export interface BlogPost {
    * Google "People Also Ask" boxes. Populate for top-impact posts.
    */
   faqs?: { question: string; answer: string }[];
+  /**
+   * TL;DR — краткое резюме поста (2-3 пункта с цифрами).
+   * Рендерится в блоке .article-tldr перед контентом статьи.
+   * Таргетируется SpeakableSpecification schema.org для AI-поиска.
+   * string — один параграф; string[] — маркированный список.
+   */
+  tldr?: string | string[];
 }

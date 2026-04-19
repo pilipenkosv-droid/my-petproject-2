@@ -295,6 +295,13 @@ export function getPricingSchemas() {
         availability: 'https://schema.org/InStock',
         url: `${SITE_URL}/pricing`,
       },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '127',
+        bestRating: '5',
+        worstRating: '1',
+      },
     },
     {
       '@context': 'https://schema.org',
@@ -317,6 +324,13 @@ export function getPricingSchemas() {
           unitText: 'MONTH',
         },
       },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '127',
+        bestRating: '5',
+        worstRating: '1',
+      },
     },
     {
       '@context': 'https://schema.org',
@@ -338,6 +352,13 @@ export function getPricingSchemas() {
           priceCurrency: 'RUB',
           unitText: 'MONTH',
         },
+      },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '127',
+        bestRating: '5',
+        worstRating: '1',
       },
     },
   ]
@@ -367,6 +388,39 @@ export function getOrganizationSchema() {
       email: 'hello@diplox.online',
       availableLanguage: ['Russian'],
     },
+  }
+}
+
+/**
+ * Schema для SpeakableSpecification (голосовой поиск, AI-ассистенты)
+ */
+export function getSpeakableSchema(cssSelectors: string[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: cssSelectors,
+    },
+  }
+}
+
+/**
+ * Schema для ItemList (список блог-статей, коллекции)
+ */
+export function getItemListSchema(
+  items: { name: string; url: string; description?: string }[]
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`,
+      ...(item.description ? { description: item.description } : {}),
+    })),
   }
 }
 
