@@ -22,6 +22,8 @@ import { applyAiCaptions } from "../formatters/ai-caption-generator";
 import { applyDocumentCleanup } from "../formatters/document-cleanup-formatter";
 import { applyListFormatting } from "../formatters/list-formatter";
 import { applyLandscapeForWideTables } from "../formatters/table-landscape-formatter";
+import { applyTableCellsFormatting } from "../formatters/table-cells-formatter";
+import { enforceStructuralFormatting } from "../formatters/post-pass-enforcer";
 import { DocxParagraph, truncateDocxToPageLimit } from "./document-analyzer";
 import { LAVA_CONFIG } from "../payment/config";
 import {
@@ -178,6 +180,7 @@ async function createFormattedDocumentXml(
     const enriched = blockMap.get(i);
     const blockType = enriched?.blockType || "unknown";
     formatter.applyFormattingToParagraph(i, blockType, rules);
+    formatter.collapseSpacesInParagraph(i, blockType);
   }
 
   // Применяем форматирование к таблицам (размер шрифта)
@@ -209,14 +212,22 @@ async function createFormattedDocumentXml(
   // AI-генерация подписей к таблицам без подписей (через gateway, max 10 запросов)
   const { buffer: afterAiCaptions } = await applyAiCaptions(afterCaptions, enrichedParagraphs, rules);
 
+  // Нормализация ячеек таблиц: шрифт, размер, w:jc (фикс table-N-rX-cY-fontsize / -align)
+  const { buffer: afterTableCells } = await applyTableCellsFormatting(afterAiCaptions, rules);
+
   // Широкие таблицы → альбомная ориентация (ГОСТ 7.32-2017 п.6.7)
   // ВАЖНО: landscape ПЕРЕД TOC, т.к. section breaks влияют на структуру страниц
-  const afterLandscape = await applyLandscapeForWideTables(afterAiCaptions);
+  const afterLandscape = await applyLandscapeForWideTables(afterTableCells);
 
   // TOC генерация — заменяет существующий TOC на field code или вставляет после title_page
   const { buffer: afterToc } = await applyTocGeneration(afterLandscape, enrichedParagraphs, rules);
 
-  return afterToc;
+  // Post-pass: финальная enforce инварианта (pageBreakBefore для heading_1,
+  // justify для body_text, схлопывание NBSP). ДОЛЖЕН быть последним — после TOC
+  // и landscape, иначе section restructuring может снести pPr-атрибуты.
+  const { buffer: afterPostPass } = await enforceStructuralFormatting(afterToc, enrichedParagraphs);
+
+  return afterPostPass;
 }
 
 /**

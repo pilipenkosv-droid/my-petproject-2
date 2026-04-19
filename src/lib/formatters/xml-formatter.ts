@@ -124,8 +124,11 @@ export class XmlDocumentFormatter {
 
     const p = this.paragraphPositions[index].node;
 
-    // Не трогаем пустые параграфы
-    if (blockType === "empty") return;
+    // Пустые параграфы: не форматируем, но обязательно чистим цвет/выделение/подчёркивание
+    if (blockType === "empty") {
+      this.cleanProhibitedFormatting(p, true);
+      return;
+    }
 
     // Не трог��ем таблицы и рисунки — они могут со��ержать сложную разме��ку
     if (blockType === "table" || blockType === "figure") {
@@ -180,6 +183,11 @@ export class XmlDocumentFormatter {
     // Применяем выравнивание
     if (target.alignment) {
       setOrderedProp(pPr, "w:jc", { "w:val": alignmentToXml(target.alignment) });
+    }
+
+    // body_text/quote: форсим justify=both независимо от source
+    if (blockType === "body_text" || blockType === "quote") {
+      setOrderedProp(pPr, "w:jc", { "w:val": "both" });
     }
 
     // Применяем отступ первой строки
@@ -275,6 +283,17 @@ export class XmlDocumentFormatter {
       } else {
         removeChild(pPr, "w:pageBreakBefore");
       }
+
+      // heading_1: форсим center + bold независимо от target/source
+      if (level === 1) {
+        setOrderedProp(pPr, "w:jc", { "w:val": "center" });
+        const runsForBold = getRuns(p);
+        for (const run of runsForBold) {
+          const rPr = ensureRPr(run);
+          if (!findChild(rPr, "w:b")) children(rPr).push(createNode("w:b"));
+          if (!findChild(rPr, "w:bCs")) children(rPr).push(createNode("w:bCs"));
+        }
+      }
     }
 
     // bibliography_title: стиль Heading1 + outlineLvl 0 (для TOC) + pageBreakBefore
@@ -360,6 +379,37 @@ export class XmlDocumentFormatter {
   }
 
   /**
+   * Схлопывает множественные пробелы в w:t параграфа (кроме title_page).
+   * Применяется после всех остальных фиксов как safety net.
+   */
+  collapseSpacesInParagraph(index: number, blockType: BlockType): void {
+    if (index < 0 || index >= this.paragraphPositions.length) return;
+    if (blockType.startsWith("title_page")) return;
+    const p = this.paragraphPositions[index].node;
+    const runs = getRuns(p);
+    const textNodes: { tc: OrderedXmlNode }[] = [];
+    for (const run of runs) {
+      for (const ch of children(run)) {
+        if (!("w:t" in ch)) continue;
+        for (const tc of children(ch)) {
+          if ("#text" in tc && typeof tc["#text"] === "string") {
+            tc["#text"] = tc["#text"].replace(/[ \u00A0]{2,}/g, " ");
+            textNodes.push({ tc });
+          }
+        }
+      }
+    }
+    // Cross-run boundary: if prev text ends with space AND next starts with space, strip leading from next
+    for (let i = 1; i < textNodes.length; i++) {
+      const prev = textNodes[i - 1].tc["#text"] as string;
+      const curr = textNodes[i].tc["#text"] as string;
+      if (/[ \u00A0]$/.test(prev) && /^[ \u00A0]/.test(curr)) {
+        textNodes[i].tc["#text"] = curr.replace(/^[ \u00A0]+/, "");
+      }
+    }
+  }
+
+  /**
    * Удаляет запрещённое форматирование (underline, highlight, shd, color)
    * из paragraph-level rPr и всех runs.
    */
@@ -406,33 +456,36 @@ export class XmlDocumentFormatter {
    * Применяет поля страницы ко всему документу
    */
   applyPageMargins(rules: FormattingRules): void {
-    // Ищем sectPr в body
-    let sectPr = getSectPr(this.body);
-
-    if (!sectPr) {
-      // Ищем в последнем параграфе pPr
-      const lastP = this.paragraphPositions[this.paragraphPositions.length - 1]?.node;
-      if (lastP) {
-        const pPr = findChild(lastP, "w:pPr");
-        if (pPr) {
-          sectPr = findChild(pPr, "w:sectPr");
-        }
-      }
-    }
-
-    if (!sectPr) {
-      // Создаём sectPr в body
-      sectPr = createNode("w:sectPr");
-      children(this.body).push(sectPr);
-    }
-
     const margins = rules.document.margins;
-    setOrderedProp(sectPr, "w:pgMar", {
+    const pgMarAttrs = {
       "w:top": String(Math.round(margins.top * TWIPS_PER_MM)),
       "w:bottom": String(Math.round(margins.bottom * TWIPS_PER_MM)),
       "w:left": String(Math.round(margins.left * TWIPS_PER_MM)),
       "w:right": String(Math.round(margins.right * TWIPS_PER_MM)),
-    });
+    };
+
+    // Собираем все sectPr: body-level + внутри pPr каждого параграфа
+    const sectPrs: OrderedXmlNode[] = [];
+
+    const bodySectPr = getSectPr(this.body);
+    if (bodySectPr) sectPrs.push(bodySectPr);
+
+    for (const { node: p } of this.paragraphPositions) {
+      const pPr = findChild(p, "w:pPr");
+      if (!pPr) continue;
+      const inner = findChild(pPr, "w:sectPr");
+      if (inner) sectPrs.push(inner);
+    }
+
+    if (sectPrs.length === 0) {
+      const created = createNode("w:sectPr");
+      children(this.body).push(created);
+      sectPrs.push(created);
+    }
+
+    for (const sp of sectPrs) {
+      setOrderedProp(sp, "w:pgMar", pgMarAttrs);
+    }
   }
 
   /**

@@ -25,6 +25,7 @@ import {
 } from "./block-markup-rules";
 import { verifyMarkupStructure, reclassifyBlocks } from "./markup-verifier";
 import { parseDocumentSemantics, getSectionByType } from "./document-semantic-parser";
+import { fillUnknownBlocksRuleBased } from "./rule-based-block-classifier";
 
 /** Целевой размер чанка (параграфов). Структурный чанкинг может дать ±20%. */
 const TARGET_CHUNK_SIZE = 50;
@@ -192,11 +193,11 @@ function preClassifyParagraphs(
  */
 export async function parseDocumentBlocks(
   paragraphs: Array<{ index: number; text: string; style?: string }>
-): Promise<DocumentBlockMarkup & { modelId?: string; durationMs?: number; preClassifiedCount?: number }> {
+): Promise<DocumentBlockMarkup & { modelId?: string; durationMs?: number; preClassifiedCount?: number; ruleBasedFillCount?: number }> {
   const startTime = Date.now();
 
   if (paragraphs.length === 0) {
-    return { blocks: [], warnings: [], durationMs: 0, preClassifiedCount: 0 };
+    return { blocks: [], warnings: [], durationMs: 0, preClassifiedCount: 0, ruleBasedFillCount: 0 };
   }
 
   const allWarnings: string[] = [];
@@ -280,6 +281,12 @@ export async function parseDocumentBlocks(
     }
   }
 
+  // Финальный safety-net: rule-based fallback для оставшихся unknown блоков
+  const { filled: ruleBasedFillCount } = fillUnknownBlocksRuleBased(finalBlocks, paragraphs);
+  if (ruleBasedFillCount > 0) {
+    console.log(`[block-markup] Rule-based fallback filled ${ruleBasedFillCount} unknown blocks`);
+  }
+
   const durationMs = Date.now() - startTime;
   console.log(`[block-markup] Completed in ${(durationMs / 1000).toFixed(1)}s`);
 
@@ -289,6 +296,7 @@ export async function parseDocumentBlocks(
     modelId,
     durationMs,
     preClassifiedCount: preClassified.length,
+    ruleBasedFillCount,
   };
 }
 

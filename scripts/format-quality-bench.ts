@@ -34,6 +34,9 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const DEFAULT_CORPUS = [
   "prqZG08LGNO58ld0s_Ajk",  // Курсовая, 2 PNG/JPG
   "ndN3Vip2HhVo6cWoL89hv",  // Дипломный проект, 31 EMF
+  // CSAT golden negative tests (2026-04-19) — документы, за которые поставили 1★
+  "RIEU4mlQ0urdqG8pS5aBE",  // «Вельмякина — конкурс», 17 таблиц, 354 table-violations
+  "uoi7jdZW-nmVLH6WZZ32v",  // «RP_Praktika_Stomatologija», 8 таблиц, 364 table-violations
 ];
 
 // ── Helpers ──
@@ -111,7 +114,7 @@ async function benchDocument(docId: string): Promise<BenchResult> {
   // 3. AI Block Markup
   console.log("  [2/5] AI block markup...");
   // Сбрасываем rate-limiter перед каждым AI-шагом
-  await recordUsage("aitunnel-gemini-flash-lite");
+  await recordUsage("google-gemini-flash");
   const t2 = Date.now();
   const { paragraphs: enrichedParagraphs, modelId } = await enrichWithBlockMarkup(docxStructure.paragraphs);
   const blockMarkupTime = Date.now() - t2;
@@ -135,7 +138,7 @@ async function benchDocument(docId: string): Promise<BenchResult> {
   // 5. Format
   console.log("  [4/5] Full formatting pipeline...");
   // Сбрасываем rate-limiter перед форматированием (AI captions тоже вызывают AI)
-  await recordUsage("aitunnel-gemini-flash-lite");
+  await recordUsage("google-gemini-flash");
   const t4 = Date.now();
   const formattingResult = await formatDocument(buffer, rules, analysisResult.violations, enrichedParagraphs, "admin");
   const formattingTime = Date.now() - t4;
@@ -293,16 +296,15 @@ async function main() {
     process.exit(1);
   }
 
-  // Блокируем модели кроме AITUNNEL — Gemini free tier исчерпан, Cerebras за Cloudflare
-  // AITUNNEL разблокируем (recordUsage сбрасывает consecutiveErrors и blockedUntil)
-  console.log("Configuring models: blocking Gemini/Cerebras, ensuring AITUNNEL is available...");
-  await recordUsage("aitunnel-gemini-flash-lite"); // Разблокировать AITUNNEL
-  await markModelFailed("gemini-2.5-flash-lite");
-  await markModelFailed("gemini-2.5-flash-lite");
-  await markModelFailed("cerebras-qwen-3-235b");
-  await markModelFailed("cerebras-qwen-3-235b");
-  await markModelFailed("cerebras-llama-3.1-8b");
-  await markModelFailed("cerebras-llama-3.1-8b");
+  // AITUNNEL budget исчерпан → форсим Google Gemini native (free tier)
+  console.log("Configuring models: blocking AITUNNEL, ensuring Google Gemini is available...");
+  await recordUsage("google-gemini-flash"); // Разблокировать Google
+  await markModelFailed("aitunnel-gemini-flash");
+  await markModelFailed("aitunnel-gemini-flash");
+  await markModelFailed("aitunnel-gemini-flash-lite");
+  await markModelFailed("aitunnel-gemini-flash-lite");
+  await markModelFailed("vercel-gemini-flash");
+  await markModelFailed("vercel-gemini-flash");
 
   console.log("╔══════════════════════════════════════════════════════════╗");
   console.log("║        FORMAT QUALITY BENCH v1.1                        ║");

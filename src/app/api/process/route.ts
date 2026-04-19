@@ -174,10 +174,18 @@ export async function POST(request: NextRequest) {
 
     // Добавляем информацию об обрезке и таймингах в статистику
     const pipelineTimeMs = Date.now() - pipelineStart;
+    const unknownBlockCount = enrichedParagraphs.filter(
+      (p) => !p.blockType || p.blockType === "unknown",
+    ).length;
     const statistics = {
       ...analysisResult.statistics,
       pipelineTimeMs,
       markupTimeMs: blockMarkupResult.markupDurationMs,
+      fixesApplied: formattingResult.fixesApplied,
+      violationsDetected: analysisResult.violations.length,
+      unknownBlockCount,
+      unknownBlockRatio:
+        enrichedParagraphs.length > 0 ? unknownBlockCount / enrichedParagraphs.length : 0,
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,
