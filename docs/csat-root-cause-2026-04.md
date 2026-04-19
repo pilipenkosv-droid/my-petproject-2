@@ -205,3 +205,18 @@ Feedback loop ([document-block-markup.ts:272](../src/lib/ai/document-block-marku
 - CSAT avg 2.2 → ≥3.0
 - Avg table-violations на rating=1 corpus: 147 → <50
 - Golden regression: Вельмякина-файл даёт ≤50 violations после фиксов (сейчас 383)
+
+## 7. Deploy event
+
+- **Deployed**: 2026-04-19 19:04 MSK (commit `330935d` → main → Vercel auto-deploy)
+- **Push**: `ec440bc..330935d main -> main`, CI run 24633246172
+- **Baseline (30d до деплоя)**: CSAT 2.2, доля 1★ = 62% (10/16 комментариев «ничего не исправлено»), avg violations на 1★ = 147
+- **Final bench (2026-04-19, Google Gemini native)**: RIEU4 100/100 + uoi7 100/100 = avg 100/100 (против 88 на промежуточной итерации без post-pass-enforcer)
+- **Измерение**: 2026-04-26 (через 7 дней) — запрос в Supabase feedback за период 2026-04-19 19:04 → 2026-04-26 19:04 MSK
+- **Критерии успеха**:
+  - Доля 1★ ≤40% (таргет) / ≤50% (минимум)
+  - CSAT avg ≥3.0 (таргет) / ≥2.7 (минимум)
+  - Avg violations на новых 1★ jobs <100
+  - Комментарии кластера «ничего не исправлено» исчезают или остаются <20% от 1★
+- **Rollback trigger**: доля 1★ >65% к 2026-04-22 → revert `330935d`
+- **Вторая итерация (если нужна)**: multi-provider AI gateway (Azure OpenAI + Anthropic fallback) + unified Zod→provider schema adapter — план в Second Brain vault (`2026-04-19-diplox-step4-unified-schema-layer.md`)
