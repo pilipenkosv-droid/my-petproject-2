@@ -70,24 +70,25 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     },
   },
 
-  // ── AITUNNEL — Gemini 2.5 Flash (fallback, баланс ~1150₽) ──
-  {
-    id: "aitunnel-gemini-flash",
-    displayName: "AITUNNEL Gemini 2.5 Flash",
-    protocol: "openai-compatible",
-    apiKeyEnv: "AITUNNEL_API_KEY",
-    modelId: "gemini-2.5-flash",
-    baseUrl: "https://api.aitunnel.ru/v1",
-    limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
-    supportsJsonMode: true,
-    priority: 2,
-    extraParams: {
-      providerOptions: {
-        google: { thinkingBudget: 1024 },
-        vertex: { thinkingBudget: 1024 },
-      },
-    },
-  },
+  // ── AITUNNEL отключён 2026-04-20: баланс исчерпан, не используем ──
+  // Конфиг сохранён закомментированным для возможного возврата в будущем.
+  // {
+  //   id: "aitunnel-gemini-flash",
+  //   displayName: "AITUNNEL Gemini 2.5 Flash",
+  //   protocol: "openai-compatible",
+  //   apiKeyEnv: "AITUNNEL_API_KEY",
+  //   modelId: "gemini-2.5-flash",
+  //   baseUrl: "https://api.aitunnel.ru/v1",
+  //   limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
+  //   supportsJsonMode: true,
+  //   priority: 2,
+  //   extraParams: {
+  //     providerOptions: {
+  //       google: { thinkingBudget: 1024 },
+  //       vertex: { thinkingBudget: 1024 },
+  //     },
+  //   },
+  // },
 
   // ── Google AI — Gemini 2.5 Flash (native, бесплатный лимит) ──
   {
