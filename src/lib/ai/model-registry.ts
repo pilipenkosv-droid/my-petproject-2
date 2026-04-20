@@ -60,9 +60,13 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     supportsJsonMode: true,
     priority: 1,
     extraParams: {
-      // Gemini 2.5 Flash тратит все токены на thinking при тривиальных промптах,
-      // возвращая пустой content. Ограничиваем бюджет thinking.
-      thinking: { type: "enabled", budget_tokens: 1024 },
+      // Корректный синтаксис для AI Gateway (подтверждён поддержкой Vercel 2026-04-20).
+      // Раньше был thinking.budget_tokens — не уважался, reasoning достигал 7865 токенов
+      // и latency p50 росла до 13с, обрубаясь нашим timeout.
+      providerOptions: {
+        google: { thinkingBudget: 1024 },
+        vertex: { thinkingBudget: 1024 },
+      },
     },
   },
 
@@ -78,7 +82,10 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     supportsJsonMode: true,
     priority: 2,
     extraParams: {
-      thinking: { type: "enabled", budget_tokens: 1024 },
+      providerOptions: {
+        google: { thinkingBudget: 1024 },
+        vertex: { thinkingBudget: 1024 },
+      },
     },
   },
 

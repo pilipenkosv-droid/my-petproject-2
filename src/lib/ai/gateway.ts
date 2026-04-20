@@ -10,12 +10,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig, getAvailableModels } from "./model-registry";
 import { canUseModel, recordUsage, markModelFailed, logDailySuccess, logDailyFailure } from "./rate-limiter";
 
-// Таймаут для AI вызовов: агрессивный — Vercel maxDuration=60s,
-// нужно успеть попробовать 3-4 модели
-const AI_CALL_TIMEOUT_PAID_MS = 15000;
-const AI_CALL_TIMEOUT_FREE_MS = 12000;
-/** Таймаут для native Gemini (thinking модели нужно больше времени) */
-const AI_CALL_TIMEOUT_GEMINI_MS = 30000;
+// Таймаут для AI вызовов. Реальная latency p50 на Vercel AI Gateway = 13с,
+// p95 = 39с (CSV 2026-04-20), даже с thinkingBudget=1024 хвосты могут быть 20-30с.
+// Vercel Pro maxDuration=300s — поднимаем таймаут чтобы не резать запросы.
+const AI_CALL_TIMEOUT_PAID_MS = 50000;
+const AI_CALL_TIMEOUT_FREE_MS = 50000;
+const AI_CALL_TIMEOUT_GEMINI_MS = 50000;
 
 /** Максимум моделей для попыток (Vercel 60s / 12s timeout = 5 попыток с запасом) */
 const MAX_MODEL_ATTEMPTS = 4;
