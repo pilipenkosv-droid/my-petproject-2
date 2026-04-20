@@ -131,8 +131,9 @@ export interface SubStep {
   delayMs: number;
 }
 
-export function buildSubSteps(stepId: string, pageCount: number): SubStep[] {
-  const pages = Math.max(pageCount, 10);
+export function buildSubSteps(stepId: string, pageCount?: number): SubStep[] {
+  const hasRealPages = typeof pageCount === "number" && pageCount > 0;
+  const pages = hasRealPages ? pageCount! : 30;
   const rand = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1));
 
   switch (stepId) {
@@ -143,7 +144,7 @@ export function buildSubSteps(stepId: string, pageCount: number): SubStep[] {
       ];
     case "extracting_text":
       return [
-        { id: "e1", text: `Извлечено ${pages} страниц`, delayMs: 400 },
+        { id: "e1", text: hasRealPages ? `Извлечено ${pages} страниц` : "Извлекаем страницы документа", delayMs: 400 },
         { id: "e2", text: `Найдено ${rand(pages * 3, pages * 6)} абзацев`, delayMs: 1200 },
         { id: "e3", text: `Распознано ~${rand(pages * 220, pages * 320)} слов`, delayMs: 2200 },
       ];
@@ -177,7 +178,7 @@ export function buildSubSteps(stepId: string, pageCount: number): SubStep[] {
       ];
     case "analyzing":
       return [
-        { id: "a1", text: `Просканировано ${pages} страниц`, delayMs: 600 },
+        { id: "a1", text: hasRealPages ? `Просканировано ${pages} страниц` : "Сканируем страницы документа", delayMs: 600 },
         { id: "a2", text: `Обнаружено ${rand(pages * 2, pages * 5)} нарушений`, delayMs: 1700 },
         { id: "a3", text: "AI-разметка блоков завершена", delayMs: 3200 },
       ];

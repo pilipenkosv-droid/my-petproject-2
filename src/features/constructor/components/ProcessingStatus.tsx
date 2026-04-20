@@ -44,7 +44,7 @@ export function ProcessingStatus({
   error,
   steps,
   elapsedMs,
-  pageCount = 30,
+  pageCount,
 }: ProcessingStatusProps) {
   const activeSteps = steps || DEFAULT_STEPS;
 

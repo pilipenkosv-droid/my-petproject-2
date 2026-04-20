@@ -104,17 +104,7 @@ function ConstructorPageContent() {
     totalJitter: 30000,
   });
 
-  const [sourcePageEstimate, setSourcePageEstimate] = useState<number>(30);
-  useEffect(() => {
-    const file = sourceDoc.uploadedFile?.file;
-    if (!file) {
-      setSourcePageEstimate(30);
-      return;
-    }
-    // Rough estimate: ~3KB per page for docx, clamp to [10, 200]
-    const est = Math.max(10, Math.min(200, Math.round(file.size / 3072)));
-    setSourcePageEstimate(est);
-  }, [sourceDoc.uploadedFile]);
+  const [sourcePageEstimate, setSourcePageEstimate] = useState<number | undefined>(undefined);
 
   const stepDefs = activeSteps.map(s => ({ id: s.id, label: s.label }));
 
@@ -181,6 +171,11 @@ function ConstructorPageContent() {
       }
 
       const data = await response.json();
+
+      const realPageCount = data?.statistics?.pageCount;
+      if (typeof realPageCount === "number" && realPageCount > 0) {
+        setSourcePageEstimate(realPageCount);
+      }
 
       const redirectUrl = requirementsMode === "gost"
         ? `/result/${data.jobId}`
