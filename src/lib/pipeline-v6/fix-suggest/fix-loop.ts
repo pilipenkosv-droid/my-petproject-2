@@ -28,21 +28,46 @@ export interface FixPlan {
 
 const AUTO_FIX_CHECKS: Record<string, { description: string; apply: (xml: string) => string }> = {
   "text.multipleSpaces": {
-    description: "Заменить ≥2 подряд идущих пробелов на один (в т.ч. через границы runs)",
+    description: "Заменить ≥2 подряд идущих пробелов на один (включая пробелы, разбитые через runs/tab/hyperlink)",
     apply: (xml: string) => {
-      // Pass 1: collapse spaces within a single <w:t> run.
+      // Pass 1: collapse spaces within a single <w:t>.
       let out = xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (_m, attrs, text) => {
         return `<w:t${attrs}>${(text as string).replace(/ {2,}/g, " ")}</w:t>`;
       });
-      // Pass 2: collapse spaces that span run boundaries —
-      // "... </w:t></w:r><w:r>...<w:t> ..." → strip leading space from the next run.
-      // Run multiple times in case of >2 consecutive padded runs.
-      const BOUNDARY = / <\/w:t>(\s*<\/w:r>\s*<w:r\b[^>]*>(?:\s*<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>) +/g;
-      for (let i = 0; i < 3; i++) {
-        const next = out.replace(BOUNDARY, " </w:t>$1");
-        if (next === out) break;
-        out = next;
-      }
+      // Pass 2 (paragraph-scoped): for each <w:p>, inspect its w:t contents in
+      // order. If the concatenation has runs of 2+ spaces, walk through the
+      // w:t nodes and trim leading space on a w:t whose predecessor ended with
+      // a space. This handles every cross-run case — tab, hyperlink, bookmark,
+      // symbol, etc. — without having to enumerate OOXML sibling patterns.
+      out = out.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g, (pXml) => {
+        const tRegex = /<w:t([^>]*)>([^<]*)<\/w:t>/g;
+        const matches: { fullMatch: string; attrs: string; text: string; start: number }[] = [];
+        let m: RegExpExecArray | null;
+        while ((m = tRegex.exec(pXml))) {
+          matches.push({ fullMatch: m[0], attrs: m[1], text: m[2], start: m.index });
+        }
+        if (matches.length < 2) return pXml;
+        let prevEndsWithSpace = false;
+        let anyChange = false;
+        const patched = matches.map((mt) => {
+          let t = mt.text;
+          if (prevEndsWithSpace && t.startsWith(" ")) {
+            t = t.replace(/^ +/, "");
+            anyChange = true;
+          }
+          prevEndsWithSpace = t.length > 0 && t.endsWith(" ");
+          return { ...mt, text: t };
+        });
+        if (!anyChange) return pXml;
+        // Splice back in reverse order to preserve offsets.
+        let res = pXml;
+        for (let i = patched.length - 1; i >= 0; i--) {
+          const mt = patched[i];
+          const replacement = `<w:t${mt.attrs}>${mt.text}</w:t>`;
+          res = res.slice(0, mt.start) + replacement + res.slice(mt.start + mt.fullMatch.length);
+        }
+        return res;
+      });
       return out;
     },
   },
