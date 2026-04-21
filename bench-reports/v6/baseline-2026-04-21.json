@@ -1,0 +1,1147 @@
+{
+  "generated_at": "2026-04-21T17:29:56.168Z",
+  "target": "data/golden/manifest.json",
+  "total": 15,
+  "avg_score": 74,
+  "top_failed_checks": [
+    {
+      "id": "structure.tocFieldCode",
+      "name": "TOC — field code присутствует",
+      "severity": "critical",
+      "docs": 15
+    },
+    {
+      "id": "structure.titlePage",
+      "name": "Титульная страница",
+      "severity": "critical",
+      "docs": 15
+    },
+    {
+      "id": "page.margins.right",
+      "name": "Правое поле",
+      "severity": "critical",
+      "docs": 14
+    },
+    {
+      "id": "text.multipleSpaces",
+      "name": "Множественные пробелы",
+      "severity": "major",
+      "docs": 12
+    },
+    {
+      "id": "text.noColoredText",
+      "name": "Запрет цветного текста и выделения",
+      "severity": "major",
+      "docs": 7
+    },
+    {
+      "id": "structure.tocHeading",
+      "name": "TOC — заголовок СОДЕРЖАНИЕ",
+      "severity": "major",
+      "docs": 7
+    },
+    {
+      "id": "tables.headerRepeat",
+      "name": "Повтор заголовка таблицы при переносе",
+      "severity": "major",
+      "docs": 6
+    },
+    {
+      "id": "text.noUnderline",
+      "name": "Запрет подчёркивания",
+      "severity": "major",
+      "docs": 5
+    },
+    {
+      "id": "page.margins.bottom",
+      "name": "Нижнее поле",
+      "severity": "critical",
+      "docs": 5
+    },
+    {
+      "id": "page.margins.left",
+      "name": "Левое поле",
+      "severity": "critical",
+      "docs": 4
+    },
+    {
+      "id": "tables.width",
+      "name": "Таблицы в пределах ширины страницы",
+      "severity": "critical",
+      "docs": 4
+    },
+    {
+      "id": "images.noOverflow",
+      "name": "Рисунки в пределах ширины страницы",
+      "severity": "major",
+      "docs": 3
+    },
+    {
+      "id": "page.margins.top",
+      "name": "Верхнее поле",
+      "severity": "critical",
+      "docs": 3
+    },
+    {
+      "id": "text.doubleDots",
+      "name": "Двойные точки",
+      "severity": "minor",
+      "docs": 2
+    }
+  ],
+  "reports": [
+    {
+      "id": "KCPoDWyNVnnLQ7MS9Qwup",
+      "score": 71,
+      "categories": {
+        "page": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "text": {
+          "passed": 6,
+          "total": 9,
+          "score": 67
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.left",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "1fQQWL9EHe5XDnM4jjniD",
+      "score": 62,
+      "categories": {
+        "page": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "text": {
+          "passed": 6,
+          "total": 9,
+          "score": 67
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "images": {
+          "passed": 0,
+          "total": 1,
+          "score": 0
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.bottom",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.width",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        },
+        {
+          "id": "images.noOverflow",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "SYC4QTTFEWjdfRreM20Zl",
+      "score": 62,
+      "categories": {
+        "page": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "text": {
+          "passed": 6,
+          "total": 9,
+          "score": 67
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "images": {
+          "passed": 0,
+          "total": 1,
+          "score": 0
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.bottom",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.width",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        },
+        {
+          "id": "images.noOverflow",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "NdeHx6uICD8TE0M5D2BYr",
+      "score": 74,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 7,
+          "total": 9,
+          "score": 78
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.width",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "wPmyiPK7tUix1ltZ4EqA9",
+      "score": 71,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 8,
+          "total": 9,
+          "score": 89
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "images": {
+          "passed": 0,
+          "total": 1,
+          "score": 0
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.width",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        },
+        {
+          "id": "images.noOverflow",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "O5KKF4M-YQ65Qp9UoOsig",
+      "score": 78,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 8,
+          "total": 9,
+          "score": 89
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "Mo9fnywPNMq0nbjE8g2SA",
+      "score": 81,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 7,
+          "total": 9,
+          "score": 78
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "mthN7QKUH6YuCVD6-nfh9",
+      "score": 71,
+      "categories": {
+        "page": {
+          "passed": 1,
+          "total": 4,
+          "score": 25
+        },
+        "text": {
+          "passed": 8,
+          "total": 9,
+          "score": 89
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.top",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.bottom",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "DYfMJYvlawgs6rQLVDwW6",
+      "score": 78,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 6,
+          "total": 9,
+          "score": 67
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "TZcIHmzsbGS0a451emIzQ",
+      "score": 82,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 7,
+          "total": 9,
+          "score": 78
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.doubleDots",
+          "severity": "minor"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "Kf3RRcLrkV4mjTO6EGLZg",
+      "score": 82,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 7,
+          "total": 9,
+          "score": 78
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.left",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.doubleDots",
+          "severity": "minor"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "_o0mi2TsBTSKaLwUTYJTA",
+      "score": 71,
+      "categories": {
+        "page": {
+          "passed": 0,
+          "total": 4,
+          "score": 0
+        },
+        "text": {
+          "passed": 9,
+          "total": 9,
+          "score": 100
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.top",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.bottom",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.left",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "Ca7M6umpOYtrI45iZbsxB",
+      "score": 69,
+      "categories": {
+        "page": {
+          "passed": 0,
+          "total": 4,
+          "score": 0
+        },
+        "text": {
+          "passed": 8,
+          "total": 9,
+          "score": 89
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.top",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.bottom",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.left",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "47ywR-8Gk7AwTNSTM5g2M",
+      "score": 83,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 9,
+          "total": 9,
+          "score": 100
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "NOw16lzhNS8Vn-W0g6Gys",
+      "score": 78,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 7,
+          "total": 9,
+          "score": 78
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    }
+  ]
+}
