@@ -71,6 +71,14 @@ const AUTO_FIX_CHECKS: Record<string, { description: string; apply: (xml: string
       return out;
     },
   },
+  "text.doubleDots": {
+    description: "Заменить двойные точки (..) на одинарные, не трогая многоточия (...)",
+    apply: (xml: string) =>
+      xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (_m, attrs, text) => {
+        const fixed = (text as string).replace(/(?<!\.)\.\.(?!\.)/g, ".");
+        return `<w:t${attrs}>${fixed}</w:t>`;
+      }),
+  },
   "text.noUnderline": {
     description: "Удалить подчёркивание из всех runs",
     apply: (xml: string) => xml.replace(/<w:u\b[^/]*\/>|<w:u\b[^>]*><\/w:u>/g, ""),
