@@ -22,9 +22,11 @@ export interface PandocOptions {
   tocDepth?: number;
   /** Additional pandoc CLI args. */
   extraArgs?: string[];
-  /** Timeout in ms (default 30s). */
+  /** Timeout in ms (default 90s — large diplomas routinely need >30s). */
   timeoutMs?: number;
 }
+
+const DEFAULT_PANDOC_TIMEOUT_MS = 90_000;
 
 export interface PandocResult {
   buffer: Buffer;
@@ -81,11 +83,12 @@ export async function assembleWithPandoc(opts: PandocOptions): Promise<PandocRes
     proc.stderr.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
+    const timeoutMs = opts.timeoutMs ?? DEFAULT_PANDOC_TIMEOUT_MS;
     const timer = setTimeout(() => {
       proc.kill("SIGKILL");
       cleanup();
-      reject(new PandocError(`pandoc timeout (${opts.timeoutMs ?? 30000}ms)`, stderr, null));
-    }, opts.timeoutMs ?? 30000);
+      reject(new PandocError(`pandoc timeout (${timeoutMs}ms)`, stderr, null));
+    }, timeoutMs);
 
     const cleanup = () => {
       clearTimeout(timer);

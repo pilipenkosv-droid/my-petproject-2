@@ -18,12 +18,29 @@ import JSZip from "jszip";
 
 // mammoth types lag runtime: convertToMarkdown exists at runtime but is absent
 // from @types/mammoth. Narrow the shape here to keep the rest of the file typed.
+// mammoth.images.imgElement lets us replace inline base64 images with a lightweight
+// markdown placeholder. Without this, a 600 KB docx with embedded images can balloon
+// to 50+ MB of markdown (base64 data URIs), making downstream slotting+LLM unusable.
+interface MammothImageElement {
+  read(encoding: string): Promise<string>;
+  contentType: string;
+}
+interface MammothImages {
+  imgElement(handler: (img: MammothImageElement) => Promise<{ src: string; alt?: string }>): unknown;
+}
 const mammoth = mammothDefault as unknown as {
-  convertToMarkdown(input: { buffer: Buffer }): Promise<{
+  convertToMarkdown(input: { buffer: Buffer }, options?: { convertImage?: unknown }): Promise<{
     value: string;
     messages: { type: string; message: string }[];
   }>;
+  images: MammothImages;
 };
+
+let imageIdx = 0;
+const imagePlaceholder = mammoth.images.imgElement(async () => {
+  imageIdx += 1;
+  return { src: `image-${imageIdx}.bin`, alt: "image" };
+});
 
 export interface ExtractedImage {
   filename: string;
@@ -132,7 +149,11 @@ function computeStatistics(markdown: string, formulaCount: number): ExtractionSt
 }
 
 export async function extractDocument(buffer: Buffer): Promise<ExtractedDocument> {
-  const mammothResult = await mammoth.convertToMarkdown({ buffer });
+  imageIdx = 0;
+  const mammothResult = await mammoth.convertToMarkdown(
+    { buffer },
+    { convertImage: imagePlaceholder },
+  );
   const markdown = mammothResult.value;
   const warnings = mammothResult.messages.map((m) => `${m.type}: ${m.message}`);
 
