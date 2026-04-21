@@ -85,9 +85,38 @@ export async function extractTitlePageXml(sourceBuffer: Buffer): Promise<string 
   }
   if (titleBlocks.length === 0) return null;
 
-  // Добавляем page break чтобы следующий блок (TOC / Heading1) начался с новой страницы.
+  // Удаляем атрибуты с namespace prefixes, которые pandoc-output не
+  // декларирует (w14:paraId, w14:textId, w15:*, mc:*). Word отказывается
+  // открывать docx с undefined namespaces.
+  const cleaned = titleBlocks
+    .map((b) => b.replace(/\s+(w14|w15|w16|mc|w16cid|w16cex|w16se):[a-zA-Z]+="[^"]*"/g, ""))
+    .map((b) => b.replace(/<mc:AlternateContent>[\s\S]*?<\/mc:AlternateContent>/g, ""));
+
+  // Page break, чтобы Heading1 / TOC начинались с новой страницы.
   const pageBreakP = `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
-  return titleBlocks.join("") + pageBreakP;
+  return cleaned.join("") + pageBreakP;
+}
+
+const REQUIRED_NAMESPACES: Record<string, string> = {
+  w14: "http://schemas.microsoft.com/office/word/2010/wordml",
+  w15: "http://schemas.microsoft.com/office/word/2012/wordml",
+  w16: "http://schemas.microsoft.com/office/word/2018/wordml",
+  w16cid: "http://schemas.microsoft.com/office/word/2016/wordml/cid",
+  w16cex: "http://schemas.microsoft.com/office/word/2018/wordml/cex",
+  w16se: "http://schemas.microsoft.com/office/word/2015/wordml/symex",
+  mc: "http://schemas.openxmlformats.org/markup-compatibility/2006",
+};
+
+function ensureNamespaces(docXml: string): string {
+  return docXml.replace(/<w:document\b([^>]*)>/, (match, attrs: string) => {
+    let out = attrs;
+    for (const [prefix, uri] of Object.entries(REQUIRED_NAMESPACES)) {
+      if (!new RegExp(`xmlns:${prefix}=`).test(out)) {
+        out += ` xmlns:${prefix}="${uri}"`;
+      }
+    }
+    return `<w:document${out}>`;
+  });
 }
 
 /** Prepends `titleXml` into output-docx body, before the first element. */
@@ -96,7 +125,8 @@ export async function prependTitleToDocx(outputBuffer: Buffer, titleXml: string)
   const docFile = zip.file("word/document.xml");
   if (!docFile) return outputBuffer;
   const xml = await docFile.async("string");
-  const patched = xml.replace(/<w:body\b([^>]*)>/, `<w:body$1>${titleXml}`);
+  const withNs = ensureNamespaces(xml);
+  const patched = withNs.replace(/<w:body\b([^>]*)>/, `<w:body$1>${titleXml}`);
   zip.file("word/document.xml", patched);
   return await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
 }
