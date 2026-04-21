@@ -1,8 +1,8 @@
-// Pandoc assembler — wraps `pandoc` CLI via child_process.
-// Accepts Markdown + YAML metadata, returns Buffer of .docx.
-//
-// On Vercel: pandoc binary must be available in PATH (layer or bundled).
-// Locally: assumes `pandoc` on PATH (brew install pandoc).
+// Pandoc assembler. Two modes:
+//   1. Remote (env PANDOC_SERVICE_URL set) — POSTs JSON to the pandoc HTTP
+//      service, receives base64 docx. Used on Vercel где нет pandoc binary.
+//   2. Local spawn (default) — calls `pandoc` CLI via child_process. Used in
+//      tests / local dev / bench (brew install pandoc).
 
 import { spawn } from "child_process";
 import * as fs from "fs";
@@ -55,7 +55,65 @@ function buildYamlHeader(metadata: Record<string, string | number | boolean>): s
   return lines.join("\n");
 }
 
+async function assembleViaRemoteService(opts: PandocOptions, serviceUrl: string, token: string | undefined): Promise<PandocResult> {
+  if (!fs.existsSync(opts.referenceDoc)) {
+    throw new PandocError(`reference-doc missing: ${opts.referenceDoc}`, "", null);
+  }
+  const body = opts.metadata && Object.keys(opts.metadata).length > 0
+    ? buildYamlHeader(opts.metadata) + opts.markdown
+    : opts.markdown;
+  const referenceDocBase64 = fs.readFileSync(opts.referenceDoc).toString("base64");
+  const resources: { name: string; base64: string }[] = [];
+  if (opts.resourcePath) {
+    for (const dir of opts.resourcePath) {
+      if (!fs.existsSync(dir)) continue;
+      for (const name of fs.readdirSync(dir)) {
+        const full = path.join(dir, name);
+        if (fs.statSync(full).isFile()) {
+          resources.push({ name, base64: fs.readFileSync(full).toString("base64") });
+        }
+      }
+    }
+  }
+  const payload = {
+    markdown: body,
+    referenceDocBase64,
+    toc: opts.toc !== false,
+    tocDepth: opts.tocDepth ?? 2,
+    tocTitle: opts.tocTitle ?? "СОДЕРЖАНИЕ",
+    timeoutMs: opts.timeoutMs ?? DEFAULT_PANDOC_TIMEOUT_MS,
+    resources,
+  };
+  const t0 = Date.now();
+  const res = await fetch(serviceUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  const elapsedMs = Date.now() - t0;
+  const json = (await res.json().catch(() => ({}))) as { ok?: boolean; docxBase64?: string; error?: string; stderr?: string };
+  if (!res.ok || !json.ok || !json.docxBase64) {
+    throw new PandocError(
+      `pandoc service ${res.status}: ${json.error ?? "unknown"}`,
+      json.stderr ?? "",
+      res.status,
+    );
+  }
+  return {
+    buffer: Buffer.from(json.docxBase64, "base64"),
+    elapsedMs,
+    command: `POST ${serviceUrl}`,
+  };
+}
+
 export async function assembleWithPandoc(opts: PandocOptions): Promise<PandocResult> {
+  const serviceUrl = process.env.PANDOC_SERVICE_URL;
+  if (serviceUrl) {
+    return assembleViaRemoteService(opts, serviceUrl, process.env.PANDOC_SERVICE_TOKEN);
+  }
   if (!fs.existsSync(opts.referenceDoc)) {
     throw new PandocError(`reference-doc missing: ${opts.referenceDoc}`, "", null);
   }
