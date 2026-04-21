@@ -115,6 +115,70 @@ async function extractImages(zip: JSZip): Promise<ExtractedImage[]> {
   return images;
 }
 
+export interface TableAnchor {
+  table: ExtractedTable;
+  /** Текст последнего <w:p> перед <w:tbl> — якорь для inline-инжекта в markdown. */
+  precedingText: string;
+}
+
+function paragraphPlainText(pXml: string): string {
+  return [...pXml.matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g)]
+    .map((m) => m[1])
+    .join("")
+    .trim();
+}
+
+export function extractTablesWithAnchors(xml: string): TableAnchor[] {
+  const bodyMatch = /<w:body\b[^>]*>([\s\S]*?)<\/w:body>/.exec(xml);
+  const body = bodyMatch ? bodyMatch[1] : xml;
+  const blockRegex = /<w:(p|tbl)\b[\s\S]*?<\/w:\1>/g;
+  const anchors: TableAnchor[] = [];
+  let lastParagraphText = "";
+  let tblIdx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = blockRegex.exec(body))) {
+    const kind = m[1];
+    const blockXml = m[0];
+    if (kind === "p") {
+      const t = paragraphPlainText(blockXml);
+      if (t) lastParagraphText = t;
+      continue;
+    }
+    // kind === "tbl"
+    const rows: string[][] = [];
+    let colCount = 0;
+    let merged = false;
+    const rowRegex = /<w:tr[\s\S]*?<\/w:tr>/g;
+    let rowMatch: RegExpExecArray | null;
+    while ((rowMatch = rowRegex.exec(blockXml))) {
+      const trXml = rowMatch[0];
+      if (/<w:vMerge\b/.test(trXml)) merged = true;
+      const cellRegex = /<w:tc[\s\S]*?<\/w:tc>/g;
+      const cells: string[] = [];
+      let cellMatch: RegExpExecArray | null;
+      while ((cellMatch = cellRegex.exec(trXml))) {
+        const tcXml = cellMatch[0];
+        if (/<w:gridSpan\b/.test(tcXml)) merged = true;
+        const text = paragraphPlainText(tcXml);
+        cells.push(text);
+      }
+      colCount = Math.max(colCount, cells.length);
+      rows.push(cells);
+    }
+    anchors.push({
+      table: {
+        id: `table-${tblIdx++}`,
+        rows,
+        hasMergedCells: merged,
+        columnCount: colCount,
+      },
+      precedingText: lastParagraphText,
+    });
+    lastParagraphText = "";
+  }
+  return anchors;
+}
+
 function extractTablesFromXml(xml: string): ExtractedTable[] {
   const tables: ExtractedTable[] = [];
   const tblRegex = /<w:tbl[\s\S]*?<\/w:tbl>/g;

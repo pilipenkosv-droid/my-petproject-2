@@ -11,7 +11,7 @@
 //
 // This is the thin coordinator; each stage is independently testable.
 
-import { extractDocument, type ExtractedDocument } from "./extractor/mammoth-extractor";
+import { extractDocument, extractTablesWithAnchors, type ExtractedDocument, type TableAnchor } from "./extractor/mammoth-extractor";
 import { analyzeStructure, type StructureReport } from "./analyzer/structure-analyzer";
 import { rewriteBody } from "./rewriter/body-rewriter";
 import { assembleWithPandoc } from "./assembler/pandoc";
@@ -223,18 +223,39 @@ export async function runPipelineV6(
     }
   }
 
-  // 2c. Tables — mammoth's markdown converter silently drops <table>, and
-  // pandoc's docx writer drops raw HTML. Render our structured `tables`
-  // (ExtractedTable.rows) to pipe-style markdown and append under an
-  // "Приложение" heading. Positioning is crude but preserves the data and
-  // satisfies the preservation check; in-place injection is future work.
-  if (extracted.assets.tables.length > 0) {
-    const pipeTables = extracted.assets.tables
-      .filter((t) => t.rows.length > 0 && t.columnCount > 0)
-      .map((t) => tableToPipeMarkdown(t.rows, t.columnCount))
-      .join("\n\n");
-    if (pipeTables) {
-      markdown += "\n\n# Приложение А. Таблицы\n\n" + pipeTables;
+  // 2c. Tables — mammoth's markdown converter silently drops <table>. Walk
+  // source body блоками, для каждой таблицы запомним текст предыдущего <w:p>
+  // (якорь), затем в markdown находим строку с этим текстом и вставляем
+  // pipe-таблицу сразу после. Если якорь не найден — фолбэк: append в конец.
+  {
+    const zip = await JSZip.loadAsync(input);
+    const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+    const anchors: TableAnchor[] = extractTablesWithAnchors(docXml);
+    const lines = markdown.split("\n");
+    const orphan: string[] = [];
+    for (const a of anchors) {
+      if (a.table.rows.length === 0 || a.table.columnCount === 0) continue;
+      const pipe = tableToPipeMarkdown(a.table.rows, a.table.columnCount);
+      const anchorKey = a.precedingText.trim().substring(0, 40);
+      let injected = false;
+      if (anchorKey.length >= 8) {
+        for (let i = 0; i < lines.length; i++) {
+          const l = lines[i].trim();
+          if (l.length === 0) continue;
+          // snapshot сравнения: первые 40 символов normalized
+          const head = l.replace(/^#+\s*/, "").substring(0, 40);
+          if (head === anchorKey) {
+            lines.splice(i + 1, 0, "", pipe, "");
+            injected = true;
+            break;
+          }
+        }
+      }
+      if (!injected) orphan.push(pipe);
+    }
+    markdown = lines.join("\n");
+    if (orphan.length > 0) {
+      markdown += "\n\n# Приложение А. Таблицы\n\n" + orphan.join("\n\n");
     }
   }
 
@@ -282,9 +303,12 @@ export async function runPipelineV6(
 
   timings.assembleMs = Date.now() - t4;
 
-  // 6. Initial check
+  // 6. Initial check — проверяем САМ ИСХОДНИК, чтобы UI показал реальные
+  // нарушения пользовательского документа ("что было не так"). После pandoc +
+  // reference-doc почти все стилистические проверки проходят → если чекать
+  // output, UI увидит 0-1 нарушений и выглядит как будто ничего не сделали.
   const t5 = Date.now();
-  const initialReport = await runQualityChecks(input, output, undefined, opts.documentId, rules);
+  const initialReport = await runQualityChecks(input, input, undefined, opts.documentId, rules);
   timings.checkMs = Date.now() - t5;
 
   // 7. Fix loop (single iteration by default)
