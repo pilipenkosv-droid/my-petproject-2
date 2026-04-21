@@ -36,11 +36,29 @@ const mammoth = mammothDefault as unknown as {
   images: MammothImages;
 };
 
-let imageIdx = 0;
-const imagePlaceholder = mammoth.images.imgElement(async () => {
-  imageIdx += 1;
-  return { src: `image-${imageIdx}.bin`, alt: "image" };
-});
+/** Build a mammoth image handler that writes each image to `imageDir` (if provided)
+ * and captures a parallel metadata list. The returned `src` points to the written
+ * file so pandoc can embed it downstream. When `imageDir` is undefined, a
+ * lightweight placeholder src is used to keep markdown size bounded. */
+function buildImageHandler(imageDir: string | undefined, collected: ExtractedImage[]) {
+  let idx = 0;
+  return mammoth.images.imgElement(async (img: MammothImageElement) => {
+    idx += 1;
+    const base64 = await img.read("base64");
+    const contentType = img.contentType || "image/png";
+    const ext = contentType.split("/")[1]?.split("+")[0] || "png";
+    const filename = `image-${idx}.${ext}`;
+    collected.push({ filename, mimeType: contentType, base64 });
+    if (imageDir) {
+      const fs = await import("fs");
+      const path = await import("path");
+      fs.mkdirSync(imageDir, { recursive: true });
+      fs.writeFileSync(path.join(imageDir, filename), Buffer.from(base64, "base64"));
+      return { src: filename, alt: "image" };
+    }
+    return { src: filename, alt: "image" };
+  });
+}
 
 export interface ExtractedImage {
   filename: string;
@@ -148,17 +166,30 @@ function computeStatistics(markdown: string, formulaCount: number): ExtractionSt
   return { h1Count, h2Count, h3Count, paragraphs, words, formulas: formulaCount };
 }
 
-export async function extractDocument(buffer: Buffer): Promise<ExtractedDocument> {
-  imageIdx = 0;
+export interface ExtractOptions {
+  /** If set, mammoth writes each embedded image to this dir and the markdown
+   * references the file by name, so downstream pandoc --resource-path can embed it. */
+  imageDir?: string;
+}
+
+export async function extractDocument(
+  buffer: Buffer,
+  options: ExtractOptions = {},
+): Promise<ExtractedDocument> {
+  const collected: ExtractedImage[] = [];
+  const handler = buildImageHandler(options.imageDir, collected);
   const mammothResult = await mammoth.convertToMarkdown(
     { buffer },
-    { convertImage: imagePlaceholder },
+    { convertImage: handler },
   );
   const markdown = mammothResult.value;
   const warnings = mammothResult.messages.map((m) => `${m.type}: ${m.message}`);
 
   const zip = await JSZip.loadAsync(buffer);
-  const images = await extractImages(zip);
+  // When imageDir is set, `collected` already carries authoritative images
+  // in document-order (same order mammoth inserted them into markdown).
+  // Otherwise fall back to filesystem walk (alphabetical, no guaranteed order).
+  const images = collected.length > 0 ? collected : await extractImages(zip);
   const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
   const tables = extractTablesFromXml(docXml);
   const formulas = countFormulas(docXml);

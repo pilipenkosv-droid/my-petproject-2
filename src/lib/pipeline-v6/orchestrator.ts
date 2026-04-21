@@ -20,6 +20,9 @@ import { runQualityChecks, type QualityReport } from "./checker";
 import { planFixes, applyAutoFixesToXml, summariseSuggestions, type FixPlan, type FixSuggestion } from "./fix-suggest/fix-loop";
 import { DEFAULT_GOST_RULES } from "../../types/formatting-rules";
 import JSZip from "jszip";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 
 export interface OrchestratorOptions {
   documentId: string;
@@ -91,9 +94,10 @@ export async function runPipelineV6(
   };
   const t0 = Date.now();
 
-  // 1. Extract
+  // 1. Extract — write images to a tmp dir so pandoc can embed them by reference.
+  const imageDir = fs.mkdtempSync(path.join(os.tmpdir(), "v6-images-"));
   const t1 = Date.now();
-  const extracted = await extractDocument(input);
+  const extracted = await extractDocument(input, { imageDir });
   timings.extractMs = Date.now() - t1;
 
   // 2. Analyze structure
@@ -142,6 +146,7 @@ export async function runPipelineV6(
     metadata: opts.metadata,
     toc: true,
     tocDepth: 2,
+    resourcePath: [imageDir],
   });
   let output = pandocResult.buffer;
   timings.assembleMs = Date.now() - t4;
@@ -168,6 +173,13 @@ export async function runPipelineV6(
   const suggestions = summariseSuggestions(currentReport);
 
   timings.totalMs = Date.now() - t0;
+
+  // Cleanup extracted-images tmpdir.
+  try {
+    fs.rmSync(imageDir, { recursive: true, force: true });
+  } catch {
+    // ignore
+  }
 
   return {
     output,

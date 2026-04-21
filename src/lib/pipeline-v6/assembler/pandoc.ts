@@ -22,6 +22,8 @@ export interface PandocOptions {
   tocDepth?: number;
   /** Additional pandoc CLI args. */
   extraArgs?: string[];
+  /** Directory(s) pandoc should search for images referenced in markdown. */
+  resourcePath?: string[];
   /** Timeout in ms (default 90s — large diplomas routinely need >30s). */
   timeoutMs?: number;
 }
@@ -78,6 +80,9 @@ export async function assembleWithPandoc(opts: PandocOptions): Promise<PandocRes
       "--metadata",
       `toc-title=СОДЕРЖАНИЕ`,
     );
+  }
+  if (opts.resourcePath && opts.resourcePath.length > 0) {
+    args.push(`--resource-path=${opts.resourcePath.join(":")}`);
   }
   if (opts.extraArgs) args.push(...opts.extraArgs);
 
