@@ -794,12 +794,21 @@ export async function runQualityChecks(
     const titlePageExpected = !startsWithHeading;
 
     // Heuristic fallback — used when caller didn't supply enriched block markup.
-    // Look at the first 40 paragraphs of the formatted output and see if early
-    // lines match typical Russian diploma title-page markers (university,
-    // "КУРСОВАЯ" / "ДИПЛОМНАЯ" / "ВЫПУСКНАЯ", author patterns, city + year).
+    // Inspect the ORIGINAL document's first paragraphs (not the formatted
+    // output) because pandoc prepends a generated TOC title "СОДЕРЖАНИЕ"
+    // that would otherwise shadow the real opening line. Match on either
+    // institutional/work-type/author markers (classic diploma title page)
+    // or on content-first first-line patterns (doc legitimately has no
+    // title page — starts with TOC, bibliography, or numbered content).
     let heuristicTitlePage = false;
-    if (enrichedInput.length === 0) {
-      const early = paragraphs.slice(0, 40).map(({ node }) => getFullText(node).trim()).filter(Boolean);
+    if (enrichedInput.length === 0 && origXml) {
+      const origParsed = parseDocxXml(origXml);
+      const origBody = getBody(origParsed);
+      const origParas = origBody ? getParagraphsWithPositions(origBody) : [];
+      const early = origParas
+        .slice(0, 40)
+        .map(({ node }) => getFullText(node).trim())
+        .filter(Boolean);
       const joined = early.join("\n").toUpperCase();
       const markers = [
         // Institution / organisation
