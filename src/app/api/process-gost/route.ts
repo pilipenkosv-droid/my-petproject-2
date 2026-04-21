@@ -3,18 +3,17 @@ import { nanoid } from "nanoid";
 import { saveFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, completeJob, failJob } from "@/lib/storage/job-store";
 import { isValidSourceDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
-import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
-import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { DEFAULT_GOST_RULES } from "@/types/formatting-rules";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
+import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
+import { adaptPipelineV6ToLegacy, type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 
 export const maxDuration = 300;
 
 /**
- * Обработка документа по стандартному ГОСТу (без методички).
- * Объединяет extract-rules + confirm-rules в один шаг.
+ * Обработка документа по стандартному ГОСТу (pipeline-v6, template-first).
  */
 export async function POST(request: NextRequest) {
   const auth = await checkProcessingAccess();
@@ -76,11 +75,10 @@ export async function POST(request: NextRequest) {
       rules: DEFAULT_GOST_RULES,
     });
 
-    // Определяем тип доступа
     let userAccessType: AccessType = "trial";
     if (userId) {
       const access = await getUserAccess(userId);
-      userAccessType = access.accessType;
+      userAccessType = access.accessType as AccessType;
       if (!access.hasAccess) {
         await failJob(jobId, "Лимит обработок исчерпан");
         return NextResponse.json(
@@ -88,7 +86,6 @@ export async function POST(request: NextRequest) {
           { status: 402 }
         );
       }
-      // Списываем использование (для разовых/триала/подписки), кроме админа
       if (access.accessType !== "admin") {
         const consumed = await consumeUse(userId);
         if (!consumed) {
@@ -102,69 +99,58 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const rules = DEFAULT_GOST_RULES;
-    const pipelineStart = Date.now();
-
-    // Парсим структуру и размечаем блоки через AI
     await updateJobProgress(jobId, "analyzing", 20, "AI-разметка блоков документа");
-    const docxStructure = await parseDocxStructure(sourceBuffer);
-    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
-    const enrichedParagraphs = blockMarkupResult.paragraphs;
 
-    if (blockMarkupResult.modelId) {
-      updateJob(jobId, { modelId: blockMarkupResult.modelId }).catch(() => {});
+    // v6 не эмитит stage-события — шлём опорные тики, чтобы фронт последовательно
+    // зажигал analyzing → formatting так же, как у старого pipeline.
+    const tick50 = setTimeout(() => {
+      updateJobProgress(jobId, "analyzing", 50, "Проверка документа на соответствие ГОСТ").catch(() => {});
+    }, 1500);
+    const tick70 = setTimeout(() => {
+      updateJobProgress(jobId, "formatting", 70, "Применение форматирования по ГОСТ").catch(() => {});
+    }, 4000);
+
+    let pipelineResult;
+    try {
+      pipelineResult = await runPipelineV6(sourceBuffer, {
+        documentId: jobId,
+        templateSlug: "gost-7.32",
+        rewrite: false,
+        fixIterations: 1,
+      });
+    } finally {
+      clearTimeout(tick50);
+      clearTimeout(tick70);
     }
 
-    // Анализируем документ
-    await updateJobProgress(jobId, "analyzing", 50, "Проверка документа на соответствие ГОСТ");
-    const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
-
-    // Форматируем
-    await updateJobProgress(jobId, "formatting", 70, "Применение форматирования по ГОСТ");
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs, userAccessType);
+    const adapted = await adaptPipelineV6ToLegacy(sourceBuffer, pipelineResult, userAccessType);
 
     await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
-    // Сохраняем результаты
-    await saveResultFile(jobId, "original", formattingResult.markedOriginal);
-    await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
+    await saveResultFile(jobId, "original", adapted.markedOriginal);
+    await saveResultFile(jobId, "formatted", adapted.formattedDocument);
 
-    // Полные версии (для trial)
     let hasFullVersion = false;
-    if (formattingResult.fullMarkedOriginal && formattingResult.fullFormattedDocument) {
+    if (adapted.fullMarkedOriginal && adapted.fullFormattedDocument) {
       await Promise.all([
-        saveFullVersionFile(jobId, "original", formattingResult.fullMarkedOriginal),
-        saveFullVersionFile(jobId, "formatted", formattingResult.fullFormattedDocument),
+        saveFullVersionFile(jobId, "original", adapted.fullMarkedOriginal),
+        saveFullVersionFile(jobId, "formatted", adapted.fullFormattedDocument),
       ]);
       hasFullVersion = true;
     }
 
-    const pipelineTimeMs = Date.now() - pipelineStart;
-    const unknownBlockCount = enrichedParagraphs.filter(
-      (p) => !p.blockType || p.blockType === "unknown",
-    ).length;
     const statistics = {
-      ...analysisResult.statistics,
-      pipelineTimeMs,
-      markupTimeMs: blockMarkupResult.markupDurationMs,
-      fixesApplied: formattingResult.fixesApplied,
-      violationsDetected: analysisResult.violations.length,
-      unknownBlockCount,
-      unknownBlockRatio:
-        enrichedParagraphs.length > 0 ? unknownBlockCount / enrichedParagraphs.length : 0,
-      ...(formattingResult.wasTruncated && {
-        wasTruncated: true,
-        originalPageCount: formattingResult.originalPageCount,
-        pageLimitApplied: formattingResult.pageLimitApplied,
-      }),
+      ...adapted.statistics,
+      fixesApplied: adapted.fixesApplied,
+      violationsDetected: adapted.violations.length,
     };
 
     await completeJob(jobId, {
       markedOriginalId: `${jobId}_original`,
       formattedDocumentId: `${jobId}_formatted`,
-      violations: analysisResult.violations,
+      violations: adapted.violations,
       statistics,
-      rules,
+      rules: DEFAULT_GOST_RULES,
       ...(hasFullVersion && { hasFullVersion: true }),
     });
 
@@ -172,7 +158,7 @@ export async function POST(request: NextRequest) {
       jobId,
       status: "completed",
       statistics,
-      violationsCount: analysisResult.violations.length,
+      violationsCount: adapted.violations.length,
     });
 
     if (isAnonymous) {
@@ -182,7 +168,7 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error("Process GOST error:", error);
+    console.error("Process GOST (v6) error:", error);
 
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
 
