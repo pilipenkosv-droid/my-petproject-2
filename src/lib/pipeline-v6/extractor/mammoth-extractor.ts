@@ -46,7 +46,10 @@ function buildImageHandler(imageDir: string | undefined, collected: ExtractedIma
     idx += 1;
     const base64 = await img.read("base64");
     const contentType = img.contentType || "image/png";
-    const ext = contentType.split("/")[1]?.split("+")[0] || "png";
+    // Map MIME subtype → file extension. Microsoft types arrive as "image/x-wmf"
+    // / "image/x-emf" — drop the "x-" so pandoc sees a standard .wmf/.emf file.
+    const sub = contentType.split("/")[1]?.split("+")[0] || "png";
+    const ext = sub.startsWith("x-") ? sub.slice(2) : sub;
     const filename = `image-${idx}.${ext}`;
     collected.push({ filename, mimeType: contentType, base64 });
     if (imageDir) {
