@@ -85,14 +85,28 @@ function getAttrNum(node: OrderedXmlNode | undefined, attr: string): number | un
 }
 
 function getFullText(paragraphNode: OrderedXmlNode): string {
-  const runs = getRuns(paragraphNode);
+  // Walk paragraph children in document order, descending into wrappers
+  // (w:hyperlink, w:ins, w:del, w:smartTag) so text from hyperlink runs is
+  // interleaved correctly with surrounding runs. getRuns() returns direct
+  // runs then wrapped runs appended, which misorders the text whenever a
+  // hyperlink sits between two plain runs (common for bibliography URLs
+  // and cross-references) and produces spurious adjacent-space artefacts.
+  const wrappers = new Set(["w:hyperlink", "w:ins", "w:del", "w:smartTag"]);
   let text = "";
-  for (const run of runs) {
-    const tNodes = findChildren(run, "w:t");
-    for (const t of tNodes) {
-      text += getText(t);
+  const walk = (node: OrderedXmlNode): void => {
+    for (const child of children(node)) {
+      const tagKey = Object.keys(child).find((k) => k !== ":@");
+      if (!tagKey) continue;
+      if (tagKey === "w:r") {
+        for (const t of findChildren(child, "w:t")) {
+          text += getText(t);
+        }
+      } else if (wrappers.has(tagKey)) {
+        walk(child);
+      }
     }
-  }
+  };
+  walk(paragraphNode);
   return text;
 }
 
