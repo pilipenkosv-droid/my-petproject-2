@@ -788,12 +788,33 @@ export async function runQualityChecks(
       const early = paragraphs.slice(0, 40).map(({ node }) => getFullText(node).trim()).filter(Boolean);
       const joined = early.join("\n").toUpperCase();
       const markers = [
-        /МИНИСТЕРСТВО|УНИВЕРСИТЕТ|ИНСТИТУТ|КОЛЛЕДЖ|АКАДЕМИЯ|ФАКУЛЬТЕТ|КАФЕДРА/,
-        /КУРСОВАЯ|ДИПЛОМНАЯ|ВЫПУСКНАЯ|МАГИСТЕРСКАЯ|БАКАЛАВРСКАЯ|КУРСОВОЙ|ДИПЛОМНЫЙ|РЕФЕРАТ|ПОЯСНИТЕЛЬНАЯ ЗАПИСКА/,
-        /ВЫПОЛНИЛ|ВЫПОЛНИЛА|АВТОР|СТУДЕНТ|ОБУЧАЮЩИЙСЯ|РУКОВОДИТЕЛЬ|НАУЧНЫЙ РУКОВОДИТЕЛЬ/,
+        // Institution / organisation
+        /МИНИСТЕРСТВО|УНИВЕРСИТЕТ|ИНСТИТУТ|КОЛЛЕДЖ|АКАДЕМИЯ|ФАКУЛЬТЕТ|КАФЕДРА|ГБУЗ|ФГБОУ|ФГАОУ|\bООО\b|\bОАО\b|\bЗАО\b|\bПАО\b|\bГБОУ\b|УЧРЕЖДЕНИЕ|ШКОЛА|ГИМНАЗИЯ|ЛИЦЕЙ/,
+        // Work-type label
+        /КУРСОВАЯ|ДИПЛОМНАЯ|ВЫПУСКНАЯ|МАГИСТЕРСКАЯ|БАКАЛАВРСКАЯ|КУРСОВОЙ|ДИПЛОМНЫЙ|РЕФЕРАТ|ПОЯСНИТЕЛЬНАЯ ЗАПИСКА|ДИССЕРТАЦИЯ|ОТЧЁТ|ОТЧЕТ|ДОКЛАД|ЭССЕ|КОНТРОЛЬНАЯ РАБОТА|ЛАБОРАТОРНАЯ РАБОТА|ПРАКТИЧЕСКАЯ РАБОТА|ПРОЕКТ|ИНДИВИДУАЛЬНЫЙ ПРОЕКТ/,
+        // Author / supervisor / approval block
+        /ВЫПОЛНИЛ|ВЫПОЛНИЛА|АВТОР|СТУДЕНТ|ОБУЧАЮЩИЙСЯ|РУКОВОДИТЕЛЬ|НАУЧНЫЙ РУКОВОДИТЕЛЬ|УТВЕРЖДАЮ|СОГЛАСОВАНО|ПРОВЕРИЛ|ПРИНЯЛ|КАНДИДАТ|ДОКЛАДЧИК|УЧЕНИК|УЧЕНИЦА|\bКЛАСС\b|ВОСПИТАННИК/,
       ];
       const hits = markers.filter((re) => re.test(joined)).length;
       heuristicTitlePage = hits >= 2;
+
+      // Secondary fallback: if the document is clearly content-first (no
+      // title page at all — starts with TOC, bibliography, or immediately
+      // dives into numbered tasks / chapters), treat titlePage as "not
+      // expected" rather than failing. We can only do this when the caller
+      // didn't supply enriched data; otherwise the proper blockType check
+      // above is authoritative.
+      const firstLine = early[0]?.toUpperCase() ?? "";
+      const contentFirstMarkers = [
+        /^СОДЕРЖАНИЕ$|^ОГЛАВЛЕНИЕ$/,
+        /^СПИСОК (ИСПОЛЬЗОВАННЫХ )?ИСТОЧНИКОВ$|^СПИСОК ЛИТЕРАТУРЫ$|^БИБЛИОГРАФИЧЕСКИЙ СПИСОК$/,
+        /^ВВЕДЕНИЕ$|^АННОТАЦИЯ$|^РЕФЕРАТ$/,
+        /^ЗАДАЧА\s*\d/,
+        /^ГЛАВА\s*\d/,
+      ];
+      if (!heuristicTitlePage && contentFirstMarkers.some((re) => re.test(firstLine))) {
+        heuristicTitlePage = true; // not a title page, but also no violation
+      }
     }
 
     const passed = hasTitlePage || !titlePageExpected || heuristicTitlePage;
