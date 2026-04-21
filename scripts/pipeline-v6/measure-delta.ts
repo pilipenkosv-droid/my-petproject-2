@@ -12,7 +12,6 @@ import { runPipelineV6 } from "../../src/lib/pipeline-v6/orchestrator";
 
 const GOLDEN_DIR = path.join(process.cwd(), "data/golden/raw");
 const BASELINE = path.join(process.cwd(), "bench-reports/v6/baseline-2026-04-21.json");
-const REFERENCE_DOC = path.join(process.cwd(), "scripts/pipeline-v6/spike-pandoc/reference-gost.docx");
 
 async function main() {
   const args = process.argv.slice(2);
@@ -20,7 +19,8 @@ async function main() {
   const save = args.includes("--save");
   const baseline = JSON.parse(fs.readFileSync(BASELINE, "utf8"));
   const byId = new Map<string, number>();
-  for (const d of baseline.documents ?? []) {
+  // run-checker writes per-doc scores under `reports`, not `documents`.
+  for (const d of baseline.reports ?? baseline.documents ?? []) {
     byId.set(d.id, d.score);
   }
 
@@ -33,7 +33,6 @@ async function main() {
     try {
       const res = await runPipelineV6(buf, {
         documentId: id,
-        referenceDoc: REFERENCE_DOC,
         rewrite: false,
         metadata: { title: id, lang: "ru" },
         fixIterations: 1,
@@ -55,7 +54,7 @@ async function main() {
 
   if (results.length) {
     const avgV6 = results.reduce((a, r) => a + r.v6Score, 0) / results.length;
-    const baselineAvg = baseline.summary?.avgScore ?? 76;
+    const baselineAvg = baseline.avg_score ?? baseline.summary?.avgScore ?? 76;
     console.log(`\n=== Summary (${results.length} docs) ===`);
     console.log(`baseline avg: ${baselineAvg}`);
     console.log(`v6 avg: ${avgV6.toFixed(1)}`);
