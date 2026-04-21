@@ -13,8 +13,17 @@
 //
 // Body Rewriter and Assembler consume markdown; Assembler also uses assets.
 
-import mammoth from "mammoth";
+import mammothDefault from "mammoth";
 import JSZip from "jszip";
+
+// mammoth types lag runtime: convertToMarkdown exists at runtime but is absent
+// from @types/mammoth. Narrow the shape here to keep the rest of the file typed.
+const mammoth = mammothDefault as unknown as {
+  convertToMarkdown(input: { buffer: Buffer }): Promise<{
+    value: string;
+    messages: { type: string; message: string }[];
+  }>;
+};
 
 export interface ExtractedImage {
   filename: string;
