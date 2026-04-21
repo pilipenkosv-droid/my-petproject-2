@@ -28,11 +28,23 @@ export interface FixPlan {
 
 const AUTO_FIX_CHECKS: Record<string, { description: string; apply: (xml: string) => string }> = {
   "text.multipleSpaces": {
-    description: "Заменить ≥2 подряд идущих пробелов на один",
-    apply: (xml: string) => xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (match, attrs, text) => {
-      const fixed = (text as string).replace(/ {2,}/g, " ");
-      return `<w:t${attrs}>${fixed}</w:t>`;
-    }),
+    description: "Заменить ≥2 подряд идущих пробелов на один (в т.ч. через границы runs)",
+    apply: (xml: string) => {
+      // Pass 1: collapse spaces within a single <w:t> run.
+      let out = xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (_m, attrs, text) => {
+        return `<w:t${attrs}>${(text as string).replace(/ {2,}/g, " ")}</w:t>`;
+      });
+      // Pass 2: collapse spaces that span run boundaries —
+      // "... </w:t></w:r><w:r>...<w:t> ..." → strip leading space from the next run.
+      // Run multiple times in case of >2 consecutive padded runs.
+      const BOUNDARY = / <\/w:t>(\s*<\/w:r>\s*<w:r\b[^>]*>(?:\s*<w:rPr>[\s\S]*?<\/w:rPr>)?\s*<w:t[^>]*>) +/g;
+      for (let i = 0; i < 3; i++) {
+        const next = out.replace(BOUNDARY, " </w:t>$1");
+        if (next === out) break;
+        out = next;
+      }
+      return out;
+    },
   },
   "text.noUnderline": {
     description: "Удалить подчёркивание из всех runs",

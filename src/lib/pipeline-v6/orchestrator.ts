@@ -101,8 +101,23 @@ export async function runPipelineV6(
   const structure = analyzeStructure(extracted);
   timings.analyzeMs = Date.now() - t2;
 
-  // 3. Optional rewrite
+  // 2b. Heading normalization — mammoth maps Russian diploma headings to h3/h4
+  // whenever the source docx skipped h1/h2 styles (very common — authors apply
+  // direct formatting instead of Heading 1). Without h1/h2, pandoc `--toc`
+  // emits no TOC. Promote the deepest non-empty heading level to h1.
   let markdown = extracted.markdown;
+  const { h1Count, h2Count, h3Count } = extracted.statistics;
+  if (h1Count === 0 && h2Count === 0 && h3Count > 0) {
+    markdown = markdown
+      .replace(/^#### /gm, "## ")
+      .replace(/^### /gm, "# ");
+  } else if (h1Count === 0 && h2Count > 0) {
+    markdown = markdown
+      .replace(/^### /gm, "## ")
+      .replace(/^## /gm, "# ");
+  }
+
+  // 3. Optional rewrite
   let rewrittenSlots = 0;
   const t3 = Date.now();
   if (opts.rewrite) {

@@ -72,7 +72,12 @@ export async function assembleWithPandoc(opts: PandocOptions): Promise<PandocRes
     outputPath,
   ];
   if (opts.toc !== false) {
-    args.push("--toc", `--toc-depth=${opts.tocDepth ?? 2}`);
+    args.push(
+      "--toc",
+      `--toc-depth=${opts.tocDepth ?? 2}`,
+      "--metadata",
+      `toc-title=СОДЕРЖАНИЕ`,
+    );
   }
   if (opts.extraArgs) args.push(...opts.extraArgs);
 
