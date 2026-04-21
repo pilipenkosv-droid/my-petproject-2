@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-04-21T17:17:32.004Z",
+  "generated_at": "2026-04-21T17:33:55.311Z",
   "source": "bench-reports/1star/full-2026-04-19.json",
   "summary": {
-    "total": 16,
-    "downloaded": 15,
+    "total": 20,
+    "downloaded": 19,
     "missing": 1,
     "errors": 0,
-    "with_formulas": 1,
-    "with_figures": 9,
-    "with_merged_tables": 5,
-    "low_structure": 15
+    "with_formulas": 2,
+    "with_figures": 11,
+    "with_merged_tables": 6,
+    "low_structure": 17
   },
   "documents": [
     {
@@ -292,6 +292,78 @@
       },
       "download_status": "ok",
       "notes": ""
+    },
+    {
+      "id": "4eTAaQ3KVTkZChg2iSKVu",
+      "source_document_id": "U_hA97IsHV4uP2mYhY5b5",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/4eTAaQ3KVTkZChg2iSKVu.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 8,
+        "figures": 17,
+        "formulas": 28,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 457,
+        "file_size_kb": 638
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:formulaRich"
+    },
+    {
+      "id": "X57FAFOkDesClzopjcEYe",
+      "source_document_id": "A3SwVGuDql-Ro23euElir",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/X57FAFOkDesClzopjcEYe.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 1,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1406,
+        "file_size_kb": 169
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:largeDoc"
+    },
+    {
+      "id": "HpYh62nVtT_ZcIrqz3hrA",
+      "source_document_id": "oCeY-9MOPYKGunZ6RIAQE",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/HpYh62nVtT_ZcIrqz3hrA.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 4,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 1,
+        "heading_count": 16,
+        "paragraph_count": 155,
+        "file_size_kb": 24
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:simpleStructure"
+    },
+    {
+      "id": "JoF1kTzJ_u-5ymVb7U6If",
+      "source_document_id": "3iedVAAIe1EHzSrwkDm25",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/JoF1kTzJ_u-5ymVb7U6If.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 4,
+        "figures": 20,
+        "formulas": 0,
+        "structure_confidence": 1,
+        "heading_count": 19,
+        "paragraph_count": 306,
+        "file_size_kb": 2793
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:figureHeavy"
     }
   ]
 }

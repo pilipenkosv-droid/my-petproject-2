@@ -1,56 +1,56 @@
 {
-  "generated_at": "2026-04-21T17:29:56.168Z",
+  "generated_at": "2026-04-21T17:35:09.171Z",
   "target": "data/golden/manifest.json",
-  "total": 15,
-  "avg_score": 74,
+  "total": 19,
+  "avg_score": 76,
   "top_failed_checks": [
-    {
-      "id": "structure.tocFieldCode",
-      "name": "TOC — field code присутствует",
-      "severity": "critical",
-      "docs": 15
-    },
     {
       "id": "structure.titlePage",
       "name": "Титульная страница",
       "severity": "critical",
-      "docs": 15
+      "docs": 19
+    },
+    {
+      "id": "structure.tocFieldCode",
+      "name": "TOC — field code присутствует",
+      "severity": "critical",
+      "docs": 18
     },
     {
       "id": "page.margins.right",
       "name": "Правое поле",
       "severity": "critical",
-      "docs": 14
+      "docs": 17
     },
     {
       "id": "text.multipleSpaces",
       "name": "Множественные пробелы",
       "severity": "major",
-      "docs": 12
-    },
-    {
-      "id": "text.noColoredText",
-      "name": "Запрет цветного текста и выделения",
-      "severity": "major",
-      "docs": 7
-    },
-    {
-      "id": "structure.tocHeading",
-      "name": "TOC — заголовок СОДЕРЖАНИЕ",
-      "severity": "major",
-      "docs": 7
+      "docs": 14
     },
     {
       "id": "tables.headerRepeat",
       "name": "Повтор заголовка таблицы при переносе",
       "severity": "major",
-      "docs": 6
+      "docs": 9
+    },
+    {
+      "id": "text.noColoredText",
+      "name": "Запрет цветного текста и выделения",
+      "severity": "major",
+      "docs": 8
+    },
+    {
+      "id": "structure.tocHeading",
+      "name": "TOC — заголовок СОДЕРЖАНИЕ",
+      "severity": "major",
+      "docs": 8
     },
     {
       "id": "text.noUnderline",
       "name": "Запрет подчёркивания",
       "severity": "major",
-      "docs": 5
+      "docs": 6
     },
     {
       "id": "page.margins.bottom",
@@ -71,22 +71,28 @@
       "docs": 4
     },
     {
+      "id": "page.margins.top",
+      "name": "Верхнее поле",
+      "severity": "critical",
+      "docs": 4
+    },
+    {
       "id": "images.noOverflow",
       "name": "Рисунки в пределах ширины страницы",
       "severity": "major",
       "docs": 3
     },
     {
-      "id": "page.margins.top",
-      "name": "Верхнее поле",
-      "severity": "critical",
-      "docs": 3
-    },
-    {
       "id": "text.doubleDots",
       "name": "Двойные точки",
       "severity": "minor",
-      "docs": 2
+      "docs": 3
+    },
+    {
+      "id": "tables.emptyCellParagraphs",
+      "name": "Лишние пустые параграфы в ячейках таблиц",
+      "severity": "minor",
+      "docs": 1
     }
   ],
   "reports": [
@@ -1140,6 +1146,262 @@
         {
           "id": "structure.titlePage",
           "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "4eTAaQ3KVTkZChg2iSKVu",
+      "score": 70,
+      "categories": {
+        "page": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "text": {
+          "passed": 5,
+          "total": 9,
+          "score": 56
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.top",
+          "severity": "critical"
+        },
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "text.noUnderline",
+          "severity": "major"
+        },
+        {
+          "id": "text.noColoredText",
+          "severity": "major"
+        },
+        {
+          "id": "text.doubleDots",
+          "severity": "minor"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "id": "X57FAFOkDesClzopjcEYe",
+      "score": 83,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 9,
+          "total": 9,
+          "score": 100
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 2,
+          "total": 5,
+          "score": 40
+        },
+        "tables": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.tocHeading",
+          "severity": "major"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "HpYh62nVtT_ZcIrqz3hrA",
+      "score": 92,
+      "categories": {
+        "page": {
+          "passed": 4,
+          "total": 4,
+          "score": 100
+        },
+        "text": {
+          "passed": 9,
+          "total": 9,
+          "score": 100
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 4,
+          "total": 5,
+          "score": 80
+        },
+        "tables": {
+          "passed": 2,
+          "total": 4,
+          "score": 50
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
+        },
+        {
+          "id": "tables.emptyCellParagraphs",
+          "severity": "minor"
+        }
+      ]
+    },
+    {
+      "id": "JoF1kTzJ_u-5ymVb7U6If",
+      "score": 81,
+      "categories": {
+        "page": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "text": {
+          "passed": 8,
+          "total": 9,
+          "score": 89
+        },
+        "headings": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        },
+        "structure": {
+          "passed": 3,
+          "total": 5,
+          "score": 60
+        },
+        "tables": {
+          "passed": 3,
+          "total": 4,
+          "score": 75
+        },
+        "images": {
+          "passed": 1,
+          "total": 1,
+          "score": 100
+        },
+        "preservation": {
+          "passed": 3,
+          "total": 3,
+          "score": 100
+        }
+      },
+      "failed": [
+        {
+          "id": "page.margins.right",
+          "severity": "critical"
+        },
+        {
+          "id": "text.multipleSpaces",
+          "severity": "major"
+        },
+        {
+          "id": "structure.tocFieldCode",
+          "severity": "critical"
+        },
+        {
+          "id": "structure.titlePage",
+          "severity": "critical"
+        },
+        {
+          "id": "tables.headerRepeat",
+          "severity": "major"
         }
       ]
     }
