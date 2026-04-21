@@ -231,21 +231,33 @@ export async function runPipelineV6(
     const zip = await JSZip.loadAsync(input);
     const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
     const anchors: TableAnchor[] = extractTablesWithAnchors(docXml);
+    // Mammoth оборачивает жирный/курсив в __...__ / **...**, заменяет табы — нормализуем,
+    // чтобы матч anchor → строка в markdown устоял к этим различиям.
+    const normalize = (s: string) =>
+      s
+        .replace(/[\t\u00A0]+/g, " ")
+        .replace(/[*_`]+/g, "")
+        .replace(/^#+\s*/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
     const lines = markdown.split("\n");
+    const usedLineIdx = new Set<number>();
     const orphan: string[] = [];
     for (const a of anchors) {
       if (a.table.rows.length === 0 || a.table.columnCount === 0) continue;
       const pipe = tableToPipeMarkdown(a.table.rows, a.table.columnCount);
-      const anchorKey = a.precedingText.trim().substring(0, 40);
+      const anchorKey = normalize(a.precedingText).substring(0, 50);
       let injected = false;
       if (anchorKey.length >= 8) {
         for (let i = 0; i < lines.length; i++) {
-          const l = lines[i].trim();
-          if (l.length === 0) continue;
-          // snapshot сравнения: первые 40 символов normalized
-          const head = l.replace(/^#+\s*/, "").substring(0, 40);
-          if (head === anchorKey) {
+          if (usedLineIdx.has(i)) continue;
+          const norm = normalize(lines[i]);
+          if (norm.length === 0) continue;
+          if (norm.substring(0, 50) === anchorKey || norm.includes(anchorKey)) {
+            // Insert pipe table after this line; account for index shift on later anchors.
             lines.splice(i + 1, 0, "", pipe, "");
+            usedLineIdx.add(i);
             injected = true;
             break;
           }

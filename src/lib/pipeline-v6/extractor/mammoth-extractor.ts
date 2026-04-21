@@ -15,6 +15,7 @@
 
 import mammothDefault from "mammoth";
 import JSZip from "jszip";
+import { parseDocxXml, getBody, getBodyChildren, tagName, findChild, findChildren, getText, children } from "../../xml/docx-xml";
 
 // mammoth types lag runtime: convertToMarkdown exists at runtime but is absent
 // from @types/mammoth. Narrow the shape here to keep the rest of the file typed.
@@ -121,60 +122,69 @@ export interface TableAnchor {
   precedingText: string;
 }
 
-function paragraphPlainText(pXml: string): string {
-  return [...pXml.matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g)]
-    .map((m) => m[1])
-    .join("")
-    .trim();
+function tableNodeToExtracted(tblNode: ReturnType<typeof getBodyChildren>[number], idx: number): ExtractedTable {
+  const rows: string[][] = [];
+  let colCount = 0;
+  let merged = false;
+  const trNodes = findChildren(tblNode, "w:tr");
+  for (const tr of trNodes) {
+    const cells: string[] = [];
+    const tcNodes = findChildren(tr, "w:tc");
+    for (const tc of tcNodes) {
+      // gridSpan / vMerge sit inside w:tcPr → w:gridSpan / w:vMerge
+      const tcPr = findChild(tc, "w:tcPr");
+      if (tcPr) {
+        if (findChild(tcPr, "w:gridSpan")) merged = true;
+        if (findChild(tcPr, "w:vMerge")) merged = true;
+      }
+      const text = findChildren(tc, "w:p")
+        .map((p) => getParagraphText(p))
+        .join(" ")
+        .trim();
+      cells.push(text);
+    }
+    colCount = Math.max(colCount, cells.length);
+    rows.push(cells);
+  }
+  return { id: `table-${idx}`, rows, hasMergedCells: merged, columnCount: colCount };
+}
+
+function getParagraphText(pNode: ReturnType<typeof getBodyChildren>[number]): string {
+  // Walk all w:r/w:t inside the paragraph, ignoring nested structures (sdt etc).
+  const out: string[] = [];
+  const stack = [pNode];
+  while (stack.length > 0) {
+    const node = stack.shift()!;
+    const tag = tagName(node);
+    if (tag === "w:t") {
+      out.push(getText(node));
+      continue;
+    }
+    for (const c of children(node)) stack.push(c);
+  }
+  return out.join("").trim();
 }
 
 export function extractTablesWithAnchors(xml: string): TableAnchor[] {
-  const bodyMatch = /<w:body\b[^>]*>([\s\S]*?)<\/w:body>/.exec(xml);
-  const body = bodyMatch ? bodyMatch[1] : xml;
-  const blockRegex = /<w:(p|tbl)\b[\s\S]*?<\/w:\1>/g;
+  const parsed = parseDocxXml(xml);
+  const body = getBody(parsed);
+  if (!body) return [];
+  const blocks = getBodyChildren(body);
   const anchors: TableAnchor[] = [];
   let lastParagraphText = "";
   let tblIdx = 0;
-  let m: RegExpExecArray | null;
-  while ((m = blockRegex.exec(body))) {
-    const kind = m[1];
-    const blockXml = m[0];
-    if (kind === "p") {
-      const t = paragraphPlainText(blockXml);
+  for (const block of blocks) {
+    const tag = tagName(block);
+    if (tag === "w:p") {
+      const t = getParagraphText(block);
       if (t) lastParagraphText = t;
       continue;
     }
-    // kind === "tbl"
-    const rows: string[][] = [];
-    let colCount = 0;
-    let merged = false;
-    const rowRegex = /<w:tr[\s\S]*?<\/w:tr>/g;
-    let rowMatch: RegExpExecArray | null;
-    while ((rowMatch = rowRegex.exec(blockXml))) {
-      const trXml = rowMatch[0];
-      if (/<w:vMerge\b/.test(trXml)) merged = true;
-      const cellRegex = /<w:tc[\s\S]*?<\/w:tc>/g;
-      const cells: string[] = [];
-      let cellMatch: RegExpExecArray | null;
-      while ((cellMatch = cellRegex.exec(trXml))) {
-        const tcXml = cellMatch[0];
-        if (/<w:gridSpan\b/.test(tcXml)) merged = true;
-        const text = paragraphPlainText(tcXml);
-        cells.push(text);
-      }
-      colCount = Math.max(colCount, cells.length);
-      rows.push(cells);
+    if (tag === "w:tbl") {
+      const table = tableNodeToExtracted(block, tblIdx++);
+      anchors.push({ table, precedingText: lastParagraphText });
+      lastParagraphText = "";
     }
-    anchors.push({
-      table: {
-        id: `table-${tblIdx++}`,
-        rows,
-        hasMergedCells: merged,
-        columnCount: colCount,
-      },
-      precedingText: lastParagraphText,
-    });
-    lastParagraphText = "";
   }
   return anchors;
 }
