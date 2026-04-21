@@ -778,14 +778,37 @@ export async function runQualityChecks(
     const firstNonEmpty = enrichedInput.find((p) => p.blockType !== "empty" && p.blockType !== "page_number");
     const startsWithHeading = firstNonEmpty?.blockType?.startsWith("heading_") ?? false;
     const titlePageExpected = !startsWithHeading;
+
+    // Heuristic fallback — used when caller didn't supply enriched block markup.
+    // Look at the first 40 paragraphs of the formatted output and see if early
+    // lines match typical Russian diploma title-page markers (university,
+    // "КУРСОВАЯ" / "ДИПЛОМНАЯ" / "ВЫПУСКНАЯ", author patterns, city + year).
+    let heuristicTitlePage = false;
+    if (enrichedInput.length === 0) {
+      const early = paragraphs.slice(0, 40).map(({ node }) => getFullText(node).trim()).filter(Boolean);
+      const joined = early.join("\n").toUpperCase();
+      const markers = [
+        /МИНИСТЕРСТВО|УНИВЕРСИТЕТ|ИНСТИТУТ|КОЛЛЕДЖ|АКАДЕМИЯ|ФАКУЛЬТЕТ|КАФЕДРА/,
+        /КУРСОВАЯ|ДИПЛОМНАЯ|ВЫПУСКНАЯ|МАГИСТЕРСКАЯ|БАКАЛАВРСКАЯ|КУРСОВОЙ|ДИПЛОМНЫЙ|РЕФЕРАТ|ПОЯСНИТЕЛЬНАЯ ЗАПИСКА/,
+        /ВЫПОЛНИЛ|ВЫПОЛНИЛА|АВТОР|СТУДЕНТ|ОБУЧАЮЩИЙСЯ|РУКОВОДИТЕЛЬ|НАУЧНЫЙ РУКОВОДИТЕЛЬ/,
+      ];
+      const hits = markers.filter((re) => re.test(joined)).length;
+      heuristicTitlePage = hits >= 2;
+    }
+
+    const passed = hasTitlePage || !titlePageExpected || heuristicTitlePage;
     checks.push({
       id: "structure.titlePage",
       category: "structure",
       name: "Титульная страница",
-      passed: hasTitlePage || !titlePageExpected,
+      passed,
       severity: "critical",
       expected: titlePageExpected ? "Есть параграфы с blockType=title_page" : "Title page не ожидается (документ начинается с heading)",
-      actual: hasTitlePage ? "есть" : "нет (документ начинается с heading)",
+      actual: hasTitlePage
+        ? "есть"
+        : heuristicTitlePage
+          ? "есть (эвристика по тексту)"
+          : "нет",
     });
   }
 
