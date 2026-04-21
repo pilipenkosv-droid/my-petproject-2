@@ -100,6 +100,7 @@ Beta изолирован от прод `/api/process-gost`:
 
 ## Что ещё не сделано (post-MVP)
 
+- **Template Registry + Rule Packs** — поддержка вузовских методичек (не только ГОСТ). Дизайн: [ADR-013](../../../docs/adr/013-pipeline-v6-template-registry-and-rule-packs.md)
 - docxtpl route для merged-cell таблиц (wrapper готов, orchestrator пока все таблицы отдаёт pandoc'у)
 - Bibliography integration в orchestrator (парсинг цитат, feed в gost-formatter)
 - Body rewriter integration-тест с живым LLM (сейчас только dry-run)
