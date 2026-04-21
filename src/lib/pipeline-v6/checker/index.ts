@@ -115,6 +115,100 @@ function hasSectionBreak(node: OrderedXmlNode): boolean {
   return pPr ? !!findChild(pPr, "w:sectPr") : false;
 }
 
+// ── Style cascade resolver ──
+// Font/size могут быть заданы на уровне run (w:r/w:rPr), paragraph style
+// (w:pStyle → styles.xml → w:rPr → w:rFonts/w:sz), или docDefaults. Без
+// cascade-resolver'а checker видит только run-level overrides и тривиально
+// проходит проверки для документов, где форматирование живёт в стилях.
+
+interface RPrDefaults {
+  font?: string;
+  size?: number; // half-points (w:val)
+}
+
+interface StyleResolver {
+  docDefaults: RPrDefaults;
+  byStyleId: Map<string, RPrDefaults>;
+  defaultParagraphStyleId?: string;
+}
+
+function extractRPrFontSize(rPr: OrderedXmlNode | undefined): RPrDefaults {
+  if (!rPr) return {};
+  const rFonts = findChild(rPr, "w:rFonts");
+  const font = getAttr(rFonts, "w:ascii") ?? getAttr(rFonts, "w:cs");
+  const sz = findChild(rPr, "w:sz");
+  const size = getAttrNum(sz, "w:val");
+  return { font, size };
+}
+
+async function buildStyleResolver(zip: JSZip): Promise<StyleResolver> {
+  const stylesXml = await zip.file("word/styles.xml")?.async("string");
+  if (!stylesXml) return { docDefaults: {}, byStyleId: new Map() };
+  const parsed = parseDocxXml(stylesXml);
+  const root = parsed.find((n) => "w:styles" in n);
+  if (!root) return { docDefaults: {}, byStyleId: new Map() };
+
+  const docDefaultsNode = findChild(root, "w:docDefaults");
+  const rPrDefault = docDefaultsNode ? findChild(docDefaultsNode, "w:rPrDefault") : undefined;
+  const docDefaults = extractRPrFontSize(rPrDefault ? findChild(rPrDefault, "w:rPr") : undefined);
+
+  interface RawStyle extends RPrDefaults { basedOn?: string }
+  const raw = new Map<string, RawStyle>();
+  let defaultParagraphStyleId: string | undefined;
+  for (const style of findChildren(root, "w:style")) {
+    const id = getAttr(style, "w:styleId");
+    if (!id) continue;
+    const type = getAttr(style, "w:type");
+    const isDefault = getAttr(style, "w:default") === "1";
+    if (isDefault && type === "paragraph" && !defaultParagraphStyleId) {
+      defaultParagraphStyleId = id;
+    }
+    const basedOn = getAttr(findChild(style, "w:basedOn"), "w:val");
+    const { font, size } = extractRPrFontSize(findChild(style, "w:rPr"));
+    raw.set(id, { font, size, basedOn });
+  }
+
+  const byStyleId = new Map<string, RPrDefaults>();
+  const resolve = (id: string, seen: Set<string> = new Set()): RPrDefaults => {
+    if (byStyleId.has(id)) return byStyleId.get(id)!;
+    if (seen.has(id)) return {};
+    seen.add(id);
+    const r = raw.get(id);
+    if (!r) return {};
+    const parent = r.basedOn ? resolve(r.basedOn, seen) : {};
+    const merged: RPrDefaults = {
+      font: r.font ?? parent.font,
+      size: r.size ?? parent.size,
+    };
+    byStyleId.set(id, merged);
+    return merged;
+  };
+  for (const id of raw.keys()) resolve(id);
+
+  return { docDefaults, byStyleId, defaultParagraphStyleId };
+}
+
+/** Эффективные font/size для run'а внутри данного параграфа с учётом
+ *  cascade (run rPr → pStyle → docDefaults). */
+function resolveEffectiveFont(
+  run: OrderedXmlNode,
+  paragraphNode: OrderedXmlNode,
+  resolver: StyleResolver,
+): RPrDefaults {
+  const runRPr = findChild(run, "w:rPr");
+  const { font: runFont, size: runSize } = extractRPrFontSize(runRPr);
+
+  const pPr = findChild(paragraphNode, "w:pPr");
+  const pStyleId = getAttr(pPr ? findChild(pPr, "w:pStyle") : undefined, "w:val")
+    ?? resolver.defaultParagraphStyleId;
+  const styleDefaults = pStyleId ? (resolver.byStyleId.get(pStyleId) ?? {}) : {};
+
+  return {
+    font: runFont ?? styleDefaults.font ?? resolver.docDefaults.font,
+    size: runSize ?? styleDefaults.size ?? resolver.docDefaults.size,
+  };
+}
+
 // ── Main Entry ──
 
 export async function runQualityChecks(
@@ -151,6 +245,7 @@ export async function runQualityChecks(
 
   const bodyChildren = children(body);
   const paragraphs = getParagraphsWithPositions(body);
+  const styleResolver = await buildStyleResolver(fmtZip);
   const enrichedMap = new Map(enrichedInput.map((p) => [p.index, p]));
 
   // Текстовый фолбэк: после TOC/caption вставки и heading numbering индексы сдвигаются,
@@ -322,13 +417,11 @@ export async function runQualityChecks(
     for (const { node, text } of sampleBodyText) {
       const runs = getRuns(node);
       for (const run of runs) {
-        const rPr = findChild(run, "w:rPr");
-        const rFonts = rPr ? findChild(rPr, "w:rFonts") : undefined;
-        const ascii = getAttr(rFonts, "w:ascii");
-        if (ascii && ascii !== rules.fontFamily) {
+        const { font } = resolveEffectiveFont(run, node, styleResolver);
+        if (font && font !== rules.fontFamily) {
           wrongFont++;
           if (examples.length < 5) {
-            examples.push(`[${text.substring(0, 40)}...] font="${ascii}"`);
+            examples.push(`[${text.substring(0, 40)}...] font="${font}"`);
           }
           break;
         }
@@ -354,13 +447,11 @@ export async function runQualityChecks(
     for (const { node, text } of sampleBodyText) {
       const runs = getRuns(node);
       for (const run of runs) {
-        const rPr = findChild(run, "w:rPr");
-        const sz = rPr ? findChild(rPr, "w:sz") : undefined;
-        const val = getAttrNum(sz, "w:val");
-        if (val !== undefined && val !== expectedFontSizeHalf) {
+        const { size } = resolveEffectiveFont(run, node, styleResolver);
+        if (size !== undefined && size !== expectedFontSizeHalf) {
           wrongSize++;
           if (examples.length < 5) {
-            examples.push(`[${text.substring(0, 40)}...] size=${val / 2}pt (expected ${rules.fontSize}pt)`);
+            examples.push(`[${text.substring(0, 40)}...] size=${size / 2}pt (expected ${rules.fontSize}pt)`);
           }
           break;
         }
