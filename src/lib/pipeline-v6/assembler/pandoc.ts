@@ -20,6 +20,8 @@ export interface PandocOptions {
   toc?: boolean;
   /** TOC depth (default 2). */
   tocDepth?: number;
+  /** TOC title injected via `--metadata toc-title=...`. Default "СОДЕРЖАНИЕ". */
+  tocTitle?: string;
   /** Additional pandoc CLI args. */
   extraArgs?: string[];
   /** Directory(s) pandoc should search for images referenced in markdown. */
@@ -78,7 +80,7 @@ export async function assembleWithPandoc(opts: PandocOptions): Promise<PandocRes
       "--toc",
       `--toc-depth=${opts.tocDepth ?? 2}`,
       "--metadata",
-      `toc-title=СОДЕРЖАНИЕ`,
+      `toc-title=${opts.tocTitle ?? "СОДЕРЖАНИЕ"}`,
     );
   }
   if (opts.resourcePath && opts.resourcePath.length > 0) {

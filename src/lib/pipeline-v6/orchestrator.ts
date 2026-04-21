@@ -18,7 +18,7 @@ import { assembleWithPandoc } from "./assembler/pandoc";
 import { detectTableComplexity } from "./assembler/docxtpl";
 import { runQualityChecks, type QualityReport } from "./checker";
 import { planFixes, applyAutoFixesToXml, summariseSuggestions, type FixPlan, type FixSuggestion } from "./fix-suggest/fix-loop";
-import { DEFAULT_GOST_RULES } from "../../types/formatting-rules";
+import { resolveRulePack, DEFAULT_RULE_PACK_SLUG, type RulePack } from "./rule-packs";
 import JSZip from "jszip";
 import * as fs from "fs";
 import * as os from "os";
@@ -27,6 +27,11 @@ import * as path from "path";
 export interface OrchestratorOptions {
   documentId: string;
   referenceDoc: string;
+  /** Rule pack slug (e.g. 'gost-7.32'). Resolved via rule-packs registry.
+   *  Default = `DEFAULT_RULE_PACK_SLUG`. Ignored if `rulePack` is passed. */
+  templateSlug?: string;
+  /** Explicit rule pack (bypasses registry — used for upload-based custom templates). */
+  rulePack?: RulePack;
   /** Apply LLM body rewrite. Default false (structure-only assembly). */
   rewrite?: boolean;
   /** Document metadata for Pandoc YAML header. */
@@ -56,13 +61,14 @@ export interface PipelineResult {
   };
 }
 
-function defaultRules() {
+function rulesFromPack(pack: RulePack) {
   return {
-    margins: DEFAULT_GOST_RULES.document.margins,
-    fontFamily: DEFAULT_GOST_RULES.text.fontFamily,
-    fontSize: DEFAULT_GOST_RULES.text.fontSize,
-    lineSpacing: DEFAULT_GOST_RULES.text.lineSpacing,
-    paragraphIndent: DEFAULT_GOST_RULES.text.paragraphIndent,
+    margins: pack.values.margins,
+    fontFamily: pack.values.fontFamily,
+    fontSize: pack.values.fontSize,
+    lineSpacing: pack.values.lineSpacing,
+    paragraphIndent: pack.values.paragraphIndent,
+    tocTitle: pack.values.tocTitle,
   };
 }
 
@@ -115,6 +121,9 @@ export async function runPipelineV6(
     totalMs: 0,
   };
   const t0 = Date.now();
+
+  const rulePack = opts.rulePack ?? resolveRulePack(opts.templateSlug ?? DEFAULT_RULE_PACK_SLUG);
+  const rules = rulesFromPack(rulePack);
 
   // 1. Extract — write images to a tmp dir so pandoc can embed them by reference.
   const imageDir = fs.mkdtempSync(path.join(os.tmpdir(), "v6-images-"));
@@ -214,6 +223,7 @@ export async function runPipelineV6(
     metadata: opts.metadata,
     toc: true,
     tocDepth: 2,
+    tocTitle: rulePack.values.tocTitle,
     resourcePath: [imageDir],
   });
   let output = pandocResult.buffer;
@@ -221,7 +231,6 @@ export async function runPipelineV6(
 
   // 6. Initial check
   const t5 = Date.now();
-  const rules = defaultRules();
   const initialReport = await runQualityChecks(input, output, undefined, opts.documentId, rules);
   timings.checkMs = Date.now() - t5;
 

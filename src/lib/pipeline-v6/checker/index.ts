@@ -128,6 +128,7 @@ export async function runQualityChecks(
     fontSize: number;
     lineSpacing: number;
     paragraphIndent: number;
+    tocTitle?: string;
   }
 ): Promise<QualityReport> {
   // enrichedParagraphs опционален: при отсутствии blockType-зависимые проверки
@@ -759,9 +760,12 @@ export async function runQualityChecks(
   // 4a. TOC presence (field code)
   {
     const hasTocField = fmtXml.includes("TOC \\o") || fmtXml.includes("TOC \\\\o");
+    const tocTitleUpper = (rules.tocTitle || "СОДЕРЖАНИЕ").toUpperCase();
+    // Принимаем "СОДЕРЖАНИЕ" и "ОГЛАВЛЕНИЕ" как синонимы в ГОСТ-контексте.
+    const tocSynonyms = new Set([tocTitleUpper, "СОДЕРЖАНИЕ", "ОГЛАВЛЕНИЕ"]);
     const hasTocHeading = paragraphs.some(({ node }) => {
       const text = getFullText(node).trim().toUpperCase();
-      return text === "СОДЕРЖАНИЕ" || text === "ОГЛАВЛЕНИЕ";
+      return tocSynonyms.has(text);
     });
 
     checks.push({
@@ -777,10 +781,10 @@ export async function runQualityChecks(
     checks.push({
       id: "structure.tocHeading",
       category: "structure",
-      name: "TOC — заголовок СОДЕРЖАНИЕ",
+      name: `TOC — заголовок ${tocTitleUpper}`,
       passed: hasTocHeading,
       severity: "major",
-      expected: "Параграф с текстом СОДЕРЖАНИЕ",
+      expected: `Параграф с текстом ${tocTitleUpper}`,
       actual: hasTocHeading ? "есть" : "нет",
     });
   }
