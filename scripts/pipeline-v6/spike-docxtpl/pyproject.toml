@@ -1,0 +1,9 @@
+[project]
+name = "diplox-docxtpl-spike"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "docxtpl>=0.20.2",
+    "python-docx>=1.2.0",
+]
