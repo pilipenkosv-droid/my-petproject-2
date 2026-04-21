@@ -6,7 +6,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { runPipelineV6 } from "../../../src/lib/pipeline-v6/orchestrator";
-import { GOST_7_32, resolveRulePack, DEFAULT_RULE_PACK_SLUG } from "../../../src/lib/pipeline-v6/rule-packs";
+import { GOST_7_32, DEMO_ALT, resolveRulePack, DEFAULT_RULE_PACK_SLUG } from "../../../src/lib/pipeline-v6/rule-packs";
 
 const hasPandoc = (() => {
   try {
@@ -40,6 +40,14 @@ describe("rule-packs registry", () => {
   it("throws on unknown slug", () => {
     expect(() => resolveRulePack("does-not-exist")).toThrow(/Unknown rule pack/);
   });
+
+  it("resolves demo-alt with non-GOST values", () => {
+    const pack = resolveRulePack("demo-alt");
+    expect(pack).toBe(DEMO_ALT);
+    expect(pack.values.fontFamily).toBe("Arial");
+    expect(pack.values.tocTitle).toBe("ОГЛАВЛЕНИЕ");
+    expect(pack.values.margins).toEqual({ top: 25, bottom: 25, left: 25, right: 15 });
+  });
 });
 
 describe.skipIf(!hasPandoc || !hasManifest)("rule pack — mismatch isolation", () => {
@@ -71,5 +79,33 @@ describe.skipIf(!hasPandoc || !hasManifest)("rule pack — mismatch isolation", 
       .filter((c) => c.passed && c.id !== "page.margins.top")
       .filter((c) => !mismatched.finalReport.checks.find((m) => m.id === c.id && m.passed));
     expect(regressed).toEqual([]);
+  }, 60_000);
+
+  it("runs pipeline end-to-end with demo-alt pack (non-GOST params)", async () => {
+    const rawPath = pickRawPath()!;
+    const buffer = fs.readFileSync(rawPath);
+    const demoRef = path.join(process.cwd(), "templates/reference-demo-alt.docx");
+    if (!fs.existsSync(demoRef)) {
+      throw new Error(
+        "templates/reference-demo-alt.docx missing — run `npx tsx scripts/pipeline-v6/tune-reference-doc.ts demo-alt`",
+      );
+    }
+
+    const result = await runPipelineV6(buffer, {
+      documentId: "test-demo-alt",
+      templateSlug: "demo-alt",
+      rewrite: false,
+      fixIterations: 0,
+    });
+
+    // Checker должен проверять поля по demo-alt (25/25/25/15), а не по ГОСТ (20/10/20/30).
+    const marginTop = result.finalReport.checks.find((c) => c.id === "page.margins.top");
+    const marginRight = result.finalReport.checks.find((c) => c.id === "page.margins.right");
+    expect(marginTop?.passed).toBe(true);
+    expect(marginRight?.passed).toBe(true);
+
+    // TOC-заголовок должен быть "ОГЛАВЛЕНИЕ" (а не "СОДЕРЖАНИЕ").
+    const tocHeading = result.finalReport.checks.find((c) => c.id === "structure.tocHeading");
+    expect(tocHeading?.passed).toBe(true);
   }, 60_000);
 });

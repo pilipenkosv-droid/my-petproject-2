@@ -3,12 +3,14 @@
 
 import type { RulePack } from "./types";
 import { GOST_7_32 } from "./gost-7-32";
+import { DEMO_ALT } from "./demo-alt";
 
 export * from "./types";
-export { GOST_7_32 };
+export { GOST_7_32, DEMO_ALT };
 
 const PACKS: Record<string, RulePack> = {
   [GOST_7_32.slug]: GOST_7_32,
+  [DEMO_ALT.slug]: DEMO_ALT,
 };
 
 export const DEFAULT_RULE_PACK_SLUG = GOST_7_32.slug;

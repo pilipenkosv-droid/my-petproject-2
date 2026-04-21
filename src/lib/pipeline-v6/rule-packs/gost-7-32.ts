@@ -8,6 +8,7 @@ export const GOST_7_32: RulePack = {
   id: "gost-7-32",
   slug: "gost-7.32",
   name: "ГОСТ 7.32",
+  referenceDocPath: "scripts/pipeline-v6/spike-pandoc/reference-gost.docx",
   values: {
     margins: { top: 20, bottom: 20, left: 30, right: 10 },
     fontFamily: "Times New Roman",

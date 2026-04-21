@@ -26,7 +26,8 @@ import * as path from "path";
 
 export interface OrchestratorOptions {
   documentId: string;
-  referenceDoc: string;
+  /** Path to pandoc reference-doc. If omitted, falls back to `rulePack.referenceDocPath`. */
+  referenceDoc?: string;
   /** Rule pack slug (e.g. 'gost-7.32'). Resolved via rule-packs registry.
    *  Default = `DEFAULT_RULE_PACK_SLUG`. Ignored if `rulePack` is passed. */
   templateSlug?: string;
@@ -124,6 +125,11 @@ export async function runPipelineV6(
 
   const rulePack = opts.rulePack ?? resolveRulePack(opts.templateSlug ?? DEFAULT_RULE_PACK_SLUG);
   const rules = rulesFromPack(rulePack);
+  const referenceDoc = opts.referenceDoc
+    ?? (rulePack.referenceDocPath ? path.join(process.cwd(), rulePack.referenceDocPath) : undefined);
+  if (!referenceDoc) {
+    throw new Error(`No referenceDoc provided and rulePack '${rulePack.slug}' has no referenceDocPath`);
+  }
 
   // 1. Extract — write images to a tmp dir so pandoc can embed them by reference.
   const imageDir = fs.mkdtempSync(path.join(os.tmpdir(), "v6-images-"));
@@ -219,7 +225,7 @@ export async function runPipelineV6(
   const t4 = Date.now();
   const pandocResult = await assembleWithPandoc({
     markdown,
-    referenceDoc: opts.referenceDoc,
+    referenceDoc,
     metadata: opts.metadata,
     toc: true,
     tocDepth: 2,

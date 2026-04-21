@@ -48,6 +48,9 @@ export interface RulePack {
   slug: string;
   name: string;
 
+  /** Путь к reference-docx для pandoc (относительно process.cwd()). */
+  referenceDocPath?: string;
+
   values: RulePackValues;
 
   /** Какие из 30 existing-правил активны. Пустой массив = все активны (по умолчанию). */
