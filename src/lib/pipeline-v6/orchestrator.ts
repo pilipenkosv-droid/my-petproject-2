@@ -15,6 +15,7 @@ import { extractDocument, type ExtractedDocument } from "./extractor/mammoth-ext
 import { analyzeStructure, type StructureReport } from "./analyzer/structure-analyzer";
 import { rewriteBody } from "./rewriter/body-rewriter";
 import { assembleWithPandoc } from "./assembler/pandoc";
+import { extractTitlePageXml, prependTitleToDocx } from "./assembler/titlepage";
 import { detectTableComplexity } from "./assembler/docxtpl";
 import { runQualityChecks, type QualityReport } from "./checker";
 import { planFixes, applyAutoFixesToXml, summariseSuggestions, type FixPlan, type FixSuggestion } from "./fix-suggest/fix-loop";
@@ -147,6 +148,39 @@ export async function runPipelineV6(
   // direct formatting instead of Heading 1). Without h1/h2, pandoc `--toc`
   // emits no TOC. Promote the deepest non-empty heading level to h1.
   let markdown = extracted.markdown;
+
+  // 2a. Strip source-embedded TOC — авторы часто вставляют ручной «Оглавление»
+  // со строками «Введение.........5». После такого массива идут заголовки, по
+  // которым pandoc --toc строит правильный TOC. Оставить оба = дублирование,
+  // как на скриншоте юзера. Убираем: заголовок-синоним + следующие строки, пока
+  // они похожи на пункты ручного TOC (dot-leader + число, или номер главы).
+  {
+    const lines = markdown.split("\n");
+    const out: string[] = [];
+    let i = 0;
+    const TOC_HEADING = /^(#{1,3}\s*)?\s*(Оглавление|Содержание|СОДЕРЖАНИЕ|ОГЛАВЛЕНИЕ)\s*$/;
+    const TOC_ENTRY = /(\.{3,}|…{1,}|\s{3,})\s*\d+\s*$/;
+    const TOC_NUMERIC_PREFIX = /^\s*(Глава\s+\d|\d+(\.\d+)*\s|Введение|Заключение|Приложение\s+[А-Я])/i;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (TOC_HEADING.test(line.trim())) {
+        i += 1; // пропускаем заголовок TOC
+        while (i < lines.length) {
+          const l = lines[i].trim();
+          if (l === "") { i += 1; continue; }
+          const looksLikeEntry = TOC_ENTRY.test(l) || (TOC_NUMERIC_PREFIX.test(l) && l.length < 200);
+          const isPageNumberOnly = /^\d{1,4}$/.test(l);
+          if (looksLikeEntry || isPageNumberOnly) { i += 1; continue; }
+          break;
+        }
+        continue;
+      }
+      out.push(line);
+      i += 1;
+    }
+    markdown = out.join("\n");
+  }
+
   const { h1Count, h2Count, h3Count } = extracted.statistics;
   if (h1Count === 0 && h2Count === 0 && h3Count > 0) {
     markdown = markdown
@@ -233,6 +267,19 @@ export async function runPipelineV6(
     resourcePath: [imageDir],
   });
   let output = pandocResult.buffer;
+
+  // 5b. Prepend original title page — pandoc сам не умеет титульники,
+  // mammoth выбрасывает direct-formatting титула. Берём первые параграфы
+  // исходника (до первого Heading/Введения) и вставляем в начало output.
+  try {
+    const titleXml = await extractTitlePageXml(input);
+    if (titleXml) {
+      output = await prependTitleToDocx(output, titleXml);
+    }
+  } catch (err) {
+    console.warn("[pipeline-v6] title-page extraction failed:", err);
+  }
+
   timings.assembleMs = Date.now() - t4;
 
   // 6. Initial check

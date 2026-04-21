@@ -95,6 +95,16 @@ function patchStylesXml(xml: string, pack: RulePack): string {
       out = out.replace("</w:styles>", `${styleXml}</w:styles>`);
     }
   }
+
+  // Table style с видимыми границами — pandoc использует styleId="Table" для
+  // pipe-markdown таблиц. Без явного <w:tblBorders> Word рендерит их без линий.
+  const tableStyleXml = `<w:style w:type="table" w:styleId="Table"><w:name w:val="Table"/><w:basedOn w:val="TableNormal"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>`;
+  const tableRe = /<w:style\b[^>]*w:styleId="Table"[^>]*>[\s\S]*?<\/w:style>/;
+  if (tableRe.test(out)) {
+    out = out.replace(tableRe, tableStyleXml);
+  } else {
+    out = out.replace("</w:styles>", `${tableStyleXml}</w:styles>`);
+  }
   const FONT = fontsTag(pack.values.fontFamily);
   const SZ = szTag(pack.values.fontSize);
   const LINE_VAL = Math.round(pack.values.lineSpacing * 240);

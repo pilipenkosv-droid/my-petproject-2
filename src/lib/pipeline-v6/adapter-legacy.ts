@@ -25,7 +25,7 @@ const RULE_PATH: Record<string, string> = {
   "text.firstLineIndent": "text.paragraphIndent",
 };
 
-function checkToViolation(c: CheckResult): FormattingViolation {
+function checkToViolation(c: CheckResult, wasFixed: boolean): FormattingViolation {
   return {
     ruleId: c.id,
     rulePath: RULE_PATH[c.id] ?? c.id,
@@ -33,7 +33,7 @@ function checkToViolation(c: CheckResult): FormattingViolation {
     expected: c.expected,
     actual: c.actual,
     location: { text: c.examples?.[0] },
-    autoFixable: c.severity !== "critical",
+    autoFixable: wasFixed,
   };
 }
 
@@ -62,9 +62,12 @@ export async function adaptPipelineV6ToLegacy(
   result: PipelineResult,
   accessType: AccessType,
 ): Promise<LegacyAdapterResult> {
-  const failed = result.finalReport.checks.filter((c) => !c.passed);
-  const violations = failed.map(checkToViolation);
-  const fixesApplied = result.finalReport.checks.filter((c) => c.passed && c.severity !== "critical").length;
+  // UI ожидает в violations все изначально обнаруженные нарушения; autoFixable=true
+  // означает «починили в fix-loop», false — «требует ручной правки».
+  const finalPassedIds = new Set(result.finalReport.checks.filter((c) => c.passed).map((c) => c.id));
+  const initialFailed = result.initialReport.checks.filter((c) => !c.passed);
+  const violations = initialFailed.map((c) => checkToViolation(c, finalPassedIds.has(c.id)));
+  const fixesApplied = violations.filter((v) => v.autoFixable).length;
 
   const text = result.extracted.markdown;
   const imageCount = result.extracted.assets.images.length;
