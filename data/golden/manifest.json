@@ -1,0 +1,369 @@
+{
+  "generated_at": "2026-04-21T17:33:55.311Z",
+  "source": "bench-reports/1star/full-2026-04-19.json",
+  "summary": {
+    "total": 20,
+    "downloaded": 19,
+    "missing": 1,
+    "errors": 0,
+    "with_formulas": 2,
+    "with_figures": 11,
+    "with_merged_tables": 6,
+    "low_structure": 17
+  },
+  "documents": [
+    {
+      "id": "KCPoDWyNVnnLQ7MS9Qwup",
+      "source_document_id": "uoi7jdZW-nmVLH6WZZ32v",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/KCPoDWyNVnnLQ7MS9Qwup.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 8,
+        "figures": 1,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 825,
+        "file_size_kb": 102
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "1fQQWL9EHe5XDnM4jjniD",
+      "source_document_id": "RIEU4mlQ0urdqG8pS5aBE",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/1fQQWL9EHe5XDnM4jjniD.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 17,
+        "figures": 5,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1489,
+        "file_size_kb": 544
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "SYC4QTTFEWjdfRreM20Zl",
+      "source_document_id": "65IPA1x-9EiaOOCdpRXX8",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/SYC4QTTFEWjdfRreM20Zl.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 17,
+        "figures": 5,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1489,
+        "file_size_kb": 544
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "NdeHx6uICD8TE0M5D2BYr",
+      "source_document_id": "6MAZrLtmoD7cqhqXRuiGX",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/NdeHx6uICD8TE0M5D2BYr.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 33,
+        "figures": 3,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1976,
+        "file_size_kb": 1003
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "wPmyiPK7tUix1ltZ4EqA9",
+      "source_document_id": "wAPEUSljAzbWmPK7GLRox",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/wPmyiPK7tUix1ltZ4EqA9.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 16,
+        "figures": 5,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1413,
+        "file_size_kb": 524
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "GZuI3EL2X3ihGzyz0WMNA",
+      "source_document_id": null,
+      "work_type": null,
+      "raw_path": "data/golden/raw/GZuI3EL2X3ihGzyz0WMNA.docx",
+      "ideal_path": null,
+      "complexity": null,
+      "download_status": "missing",
+      "notes": "",
+      "error": "no source_document_id in jobs table"
+    },
+    {
+      "id": "O5KKF4M-YQ65Qp9UoOsig",
+      "source_document_id": "f91y5pUbq_0DppxuYFvAI",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/O5KKF4M-YQ65Qp9UoOsig.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 4,
+        "figures": 9,
+        "formulas": 2,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 784,
+        "file_size_kb": 2367
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "Mo9fnywPNMq0nbjE8g2SA",
+      "source_document_id": "x_sxtI5MA3L8lNrMHn4Vj",
+      "work_type": "other",
+      "raw_path": "data/golden/raw/Mo9fnywPNMq0nbjE8g2SA.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 3,
+        "figures": 7,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 274,
+        "file_size_kb": 529
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "mthN7QKUH6YuCVD6-nfh9",
+      "source_document_id": "nU7YpwK5YUafdSlLu16tT",
+      "work_type": "referat",
+      "raw_path": "data/golden/raw/mthN7QKUH6YuCVD6-nfh9.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 1,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 106,
+        "file_size_kb": 26
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "DYfMJYvlawgs6rQLVDwW6",
+      "source_document_id": "1Q-0Jg82Wj8SGr9WqSo3r",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/DYfMJYvlawgs6rQLVDwW6.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 2,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 128,
+        "file_size_kb": 133
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "TZcIHmzsbGS0a451emIzQ",
+      "source_document_id": "uu4BDG4jCJywuhXg-hJwv",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/TZcIHmzsbGS0a451emIzQ.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 399,
+        "file_size_kb": 127
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "Kf3RRcLrkV4mjTO6EGLZg",
+      "source_document_id": "3qDBsL090cgxk5YF-fOka",
+      "work_type": "referat",
+      "raw_path": "data/golden/raw/Kf3RRcLrkV4mjTO6EGLZg.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 35,
+        "file_size_kb": 50
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "_o0mi2TsBTSKaLwUTYJTA",
+      "source_document_id": "AWsQbIuWFtcStsZRzBicp",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/_o0mi2TsBTSKaLwUTYJTA.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 284,
+        "file_size_kb": 29
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "Ca7M6umpOYtrI45iZbsxB",
+      "source_document_id": "N1VEmNuYgL8nlQqfaMXMP",
+      "work_type": "referat",
+      "raw_path": "data/golden/raw/Ca7M6umpOYtrI45iZbsxB.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 1,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 355,
+        "file_size_kb": 2186
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "47ywR-8Gk7AwTNSTM5g2M",
+      "source_document_id": "NwBVVHZc77ZrWPJv_YNXn",
+      "work_type": "magisterskaya",
+      "raw_path": "data/golden/raw/47ywR-8Gk7AwTNSTM5g2M.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 747,
+        "file_size_kb": 80
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "NOw16lzhNS8Vn-W0g6Gys",
+      "source_document_id": "-Yk5XCXO5g-h5_Eqk_RSN",
+      "work_type": "magisterskaya",
+      "raw_path": "data/golden/raw/NOw16lzhNS8Vn-W0g6Gys.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 0,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 135,
+        "file_size_kb": 30
+      },
+      "download_status": "ok",
+      "notes": ""
+    },
+    {
+      "id": "4eTAaQ3KVTkZChg2iSKVu",
+      "source_document_id": "U_hA97IsHV4uP2mYhY5b5",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/4eTAaQ3KVTkZChg2iSKVu.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 8,
+        "figures": 17,
+        "formulas": 28,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 457,
+        "file_size_kb": 638
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:formulaRich"
+    },
+    {
+      "id": "X57FAFOkDesClzopjcEYe",
+      "source_document_id": "A3SwVGuDql-Ro23euElir",
+      "work_type": "otchet-po-praktike",
+      "raw_path": "data/golden/raw/X57FAFOkDesClzopjcEYe.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 1,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 0.3,
+        "heading_count": 0,
+        "paragraph_count": 1406,
+        "file_size_kb": 169
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:largeDoc"
+    },
+    {
+      "id": "HpYh62nVtT_ZcIrqz3hrA",
+      "source_document_id": "oCeY-9MOPYKGunZ6RIAQE",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/HpYh62nVtT_ZcIrqz3hrA.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 4,
+        "figures": 0,
+        "formulas": 0,
+        "structure_confidence": 1,
+        "heading_count": 16,
+        "paragraph_count": 155,
+        "file_size_kb": 24
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:simpleStructure"
+    },
+    {
+      "id": "JoF1kTzJ_u-5ymVb7U6If",
+      "source_document_id": "3iedVAAIe1EHzSrwkDm25",
+      "work_type": "kursovaya",
+      "raw_path": "data/golden/raw/JoF1kTzJ_u-5ymVb7U6If.docx",
+      "ideal_path": null,
+      "complexity": {
+        "tables": 4,
+        "figures": 20,
+        "formulas": 0,
+        "structure_confidence": 1,
+        "heading_count": 19,
+        "paragraph_count": 306,
+        "file_size_kb": 2793
+      },
+      "download_status": "ok",
+      "notes": "added for bucket:figureHeavy"
+    }
+  ]
+}

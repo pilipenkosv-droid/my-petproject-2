@@ -277,15 +277,28 @@ export function getParagraphsWithPositions(body: OrderedXmlNode): {
   const result: { node: OrderedXmlNode; bodyIndex: number; paragraphIndex: number }[] = [];
   let pIdx = 0;
 
-  for (let i = 0; i < bodyChildren.length; i++) {
-    if ("w:p" in bodyChildren[i]) {
-      result.push({
-        node: bodyChildren[i],
-        bodyIndex: i,
-        paragraphIndex: pIdx,
-      });
+  const walk = (child: OrderedXmlNode, bodyIndex: number) => {
+    if ("w:p" in child) {
+      result.push({ node: child, bodyIndex, paragraphIndex: pIdx });
       pIdx++;
+      return;
     }
+    // Descend into Structured Document Tags (SDT) — pandoc wraps the TOC
+    // block in <w:sdt><w:sdtContent><w:p>...</w:p>...</w:sdtContent></w:sdt>,
+    // and direct-children-only walk would miss every TOC paragraph.
+    if ("w:sdt" in child) {
+      for (const sdtChild of children(child)) {
+        if ("w:sdtContent" in sdtChild) {
+          for (const contentChild of children(sdtChild)) {
+            walk(contentChild, bodyIndex);
+          }
+        }
+      }
+    }
+  };
+
+  for (let i = 0; i < bodyChildren.length; i++) {
+    walk(bodyChildren[i], i);
   }
 
   return result;
