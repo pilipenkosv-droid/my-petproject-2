@@ -73,11 +73,48 @@ const AUTO_FIX_CHECKS: Record<string, { description: string; apply: (xml: string
   },
   "text.doubleDots": {
     description: "Заменить двойные точки (..) на одинарные, не трогая многоточия (...)",
-    apply: (xml: string) =>
-      xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (_m, attrs, text) => {
+    apply: (xml: string) => {
+      // Pass 1: within a single <w:t>.
+      let out = xml.replace(/<w:t([^>]*)>([^<]*)<\/w:t>/g, (_m, attrs, text) => {
         const fixed = (text as string).replace(/(?<!\.)\.\.(?!\.)/g, ".");
         return `<w:t${attrs}>${fixed}</w:t>`;
-      }),
+      });
+      // Pass 2 (paragraph-scoped, cross-run): if a <w:t> ends with "." and
+      // the next <w:t> (in document order) starts with "." — and neither is
+      // part of a "..." ellipsis — collapse by stripping the leading "."
+      // from the successor. Skips cases where stripping would create a new
+      // "..." artefact.
+      out = out.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g, (pXml) => {
+        const tRegex = /<w:t([^>]*)>([^<]*)<\/w:t>/g;
+        const matches: { fullMatch: string; attrs: string; text: string; start: number }[] = [];
+        let m: RegExpExecArray | null;
+        while ((m = tRegex.exec(pXml))) {
+          matches.push({ fullMatch: m[0], attrs: m[1], text: m[2], start: m.index });
+        }
+        if (matches.length < 2) return pXml;
+        let anyChange = false;
+        const patched = matches.map((mt, i) => {
+          if (i === 0) return mt;
+          const prev = matches[i - 1].text;
+          const prevEndsSingleDot = /(?<!\.)\.$/.test(prev); // single "." at end
+          const curStartsSingleDot = /^\.(?!\.)/.test(mt.text); // "." not followed by "."
+          if (prevEndsSingleDot && curStartsSingleDot) {
+            anyChange = true;
+            return { ...mt, text: mt.text.replace(/^\./, "") };
+          }
+          return mt;
+        });
+        if (!anyChange) return pXml;
+        let res = pXml;
+        for (let i = patched.length - 1; i >= 0; i--) {
+          const mt = patched[i];
+          const replacement = `<w:t${mt.attrs}>${mt.text}</w:t>`;
+          res = res.slice(0, mt.start) + replacement + res.slice(mt.start + mt.fullMatch.length);
+        }
+        return res;
+      });
+      return out;
+    },
   },
   "text.noUnderline": {
     description: "Удалить подчёркивание из всех runs",

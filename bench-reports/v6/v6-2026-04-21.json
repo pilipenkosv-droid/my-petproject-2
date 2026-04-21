@@ -10,119 +10,119 @@
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 3282
+      "ms": 2736
     },
     {
       "id": "47ywR-8Gk7AwTNSTM5g2M",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 361
+      "ms": 339
     },
     {
       "id": "4eTAaQ3KVTkZChg2iSKVu",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 2172
+      "ms": 2013
     },
     {
       "id": "Ca7M6umpOYtrI45iZbsxB",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 341
+      "ms": 546
     },
     {
       "id": "DYfMJYvlawgs6rQLVDwW6",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 206
+      "ms": 237
     },
     {
       "id": "HpYh62nVtT_ZcIrqz3hrA",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 159
+      "ms": 191
     },
     {
       "id": "JoF1kTzJ_u-5ymVb7U6If",
       "baselineScore": null,
       "v6Score": 95,
       "delta": 0,
-      "ms": 464
+      "ms": 514
     },
     {
       "id": "KCPoDWyNVnnLQ7MS9Qwup",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 720
+      "ms": 793
     },
     {
       "id": "Kf3RRcLrkV4mjTO6EGLZg",
       "baselineScore": null,
-      "v6Score": 99,
+      "v6Score": 100,
       "delta": 0,
-      "ms": 248
+      "ms": 208
     },
     {
       "id": "Mo9fnywPNMq0nbjE8g2SA",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 361
+      "ms": 351
     },
     {
       "id": "NOw16lzhNS8Vn-W0g6Gys",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 198
+      "ms": 199
     },
     {
       "id": "NdeHx6uICD8TE0M5D2BYr",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 2408
+      "ms": 2185
     },
     {
       "id": "O5KKF4M-YQ65Qp9UoOsig",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 1345
+      "ms": 1280
     },
     {
       "id": "SYC4QTTFEWjdfRreM20Zl",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 2529
+      "ms": 2558
     },
     {
       "id": "TZcIHmzsbGS0a451emIzQ",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 254
+      "ms": 293
     },
     {
       "id": "X57FAFOkDesClzopjcEYe",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 691
+      "ms": 693
     },
     {
       "id": "_o0mi2TsBTSKaLwUTYJTA",
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 132
+      "ms": 123
     },
     {
       "id": "mthN7QKUH6YuCVD6-nfh9",
@@ -136,7 +136,7 @@
       "baselineScore": null,
       "v6Score": 100,
       "delta": 0,
-      "ms": 1525
+      "ms": 1591
     }
   ]
 }
