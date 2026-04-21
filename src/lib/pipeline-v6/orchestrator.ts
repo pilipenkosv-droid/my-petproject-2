@@ -66,6 +66,28 @@ function defaultRules() {
   };
 }
 
+function escapePipeCell(text: string): string {
+  return text.replace(/\|/g, "\\|").replace(/\n+/g, " ").trim() || " ";
+}
+
+function tableToPipeMarkdown(rows: string[][], columnCount: number): string {
+  if (rows.length === 0 || columnCount === 0) return "";
+  const pad = (r: string[]) => {
+    const copy = [...r];
+    while (copy.length < columnCount) copy.push("");
+    return copy.slice(0, columnCount).map(escapePipeCell);
+  };
+  const header = pad(rows[0]);
+  const sep = Array(columnCount).fill("---");
+  const body = rows.slice(1).map(pad);
+  const lines = [
+    `| ${header.join(" | ")} |`,
+    `| ${sep.join(" | ")} |`,
+    ...body.map((r) => `| ${r.join(" | ")} |`),
+  ];
+  return lines.join("\n");
+}
+
 async function applyAutoFixesToBuffer(buffer: Buffer, report: QualityReport): Promise<{ buffer: Buffer; applied: string[] }> {
   const zip = await JSZip.loadAsync(buffer);
   const docFile = zip.file("word/document.xml");
@@ -119,6 +141,21 @@ export async function runPipelineV6(
     markdown = markdown
       .replace(/^### /gm, "## ")
       .replace(/^## /gm, "# ");
+  }
+
+  // 2c. Tables — mammoth's markdown converter silently drops <table>, and
+  // pandoc's docx writer drops raw HTML. Render our structured `tables`
+  // (ExtractedTable.rows) to pipe-style markdown and append under an
+  // "Приложение" heading. Positioning is crude but preserves the data and
+  // satisfies the preservation check; in-place injection is future work.
+  if (extracted.assets.tables.length > 0) {
+    const pipeTables = extracted.assets.tables
+      .filter((t) => t.rows.length > 0 && t.columnCount > 0)
+      .map((t) => tableToPipeMarkdown(t.rows, t.columnCount))
+      .join("\n\n");
+    if (pipeTables) {
+      markdown += "\n\n# Приложение А. Таблицы\n\n" + pipeTables;
+    }
   }
 
   // 3. Optional rewrite
