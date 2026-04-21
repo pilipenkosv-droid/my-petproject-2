@@ -143,6 +143,37 @@ export async function runPipelineV6(
       .replace(/^## /gm, "# ");
   }
 
+  // 2b2. Unreferenced raw media — mammoth's markdown converter ignores
+  // images embedded inside headers/footers/VML/textboxes. Walk the raw zip,
+  // copy any still-missing media into imageDir under a dedicated prefix,
+  // and emit markdown image refs at the end so pandoc embeds them and the
+  // preservation.images check doesn't regress on such docs.
+  {
+    const zip = await JSZip.loadAsync(input);
+    const mediaFiles = Object.keys(zip.files).filter(
+      (f) => /^word\/media\/.+\.(png|jpg|jpeg|gif|bmp|emf|wmf)$/i.test(f),
+    );
+    const alreadyWritten = new Set(fs.readdirSync(imageDir));
+    const extraRefs: string[] = [];
+    let extraIdx = 0;
+    for (const f of mediaFiles) {
+      const base = path.basename(f);
+      if (alreadyWritten.has(base)) continue;
+      const file = zip.file(f);
+      if (!file) continue;
+      const buf = await file.async("nodebuffer");
+      extraIdx += 1;
+      const sub = (base.split(".").pop() ?? "png").toLowerCase();
+      const ext = sub.startsWith("x-") ? sub.slice(2) : sub;
+      const outName = `extra-${extraIdx}.${ext}`;
+      fs.writeFileSync(path.join(imageDir, outName), buf);
+      extraRefs.push(`![extra-image](${outName})`);
+    }
+    if (extraRefs.length > 0) {
+      markdown += "\n\n# Приложение Б. Дополнительные изображения\n\n" + extraRefs.join("\n\n");
+    }
+  }
+
   // 2c. Tables — mammoth's markdown converter silently drops <table>, and
   // pandoc's docx writer drops raw HTML. Render our structured `tables`
   // (ExtractedTable.rows) to pipe-style markdown and append under an
