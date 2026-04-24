@@ -848,9 +848,15 @@ export async function runQualityChecks(
   // Category 4: STRUCTURE
   // ═══════════════════════════════════════════
 
-  // 4a. TOC presence (field code)
+  // 4a. TOC presence (field code OR static TOC1 paragraphs)
   {
     const hasTocField = fmtXml.includes("TOC \\o") || fmtXml.includes("TOC \\\\o");
+    // Pipeline-v6 replaces the dynamic TOC field with a static block using
+    // TOC1/TOC2/TOC3 styles (LibreOffice headless doesn't regenerate the
+    // dynamic field — see assembler/toc-fixup.ts). Static TOC paragraphs
+    // satisfy the "TOC present" requirement equivalently.
+    const hasStaticToc = /<w:pStyle\s+w:val="TOC[123]"\s*\/?>/.test(fmtXml);
+    const tocPresent = hasTocField || hasStaticToc;
     const tocTitleUpper = (rules.tocTitle || "СОДЕРЖАНИЕ").toUpperCase();
     // Принимаем "СОДЕРЖАНИЕ" и "ОГЛАВЛЕНИЕ" как синонимы в ГОСТ-контексте.
     const tocSynonyms = new Set([tocTitleUpper, "СОДЕРЖАНИЕ", "ОГЛАВЛЕНИЕ"]);
@@ -862,11 +868,11 @@ export async function runQualityChecks(
     checks.push({
       id: "structure.tocFieldCode",
       category: "structure",
-      name: "TOC — field code присутствует",
-      passed: hasTocField,
+      name: "TOC — присутствует (field или статический)",
+      passed: tocPresent,
       severity: "critical",
-      expected: "TOC field code в документе",
-      actual: hasTocField ? "есть" : "нет",
+      expected: "TOC field code или статический TOC1/TOC2 блок",
+      actual: hasTocField ? "dynamic field" : hasStaticToc ? "static block" : "нет",
     });
 
     checks.push({

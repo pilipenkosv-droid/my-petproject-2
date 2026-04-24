@@ -201,6 +201,45 @@ async function callAnthropic(
 }
 
 /**
+ * Вызов Claude через локальный `claude` CLI (shell out).
+ * Политика проекта: Claude-модели НЕ через Anthropic API, только CLI/Agent.
+ */
+async function callClaudeCli(
+  config: ModelConfig,
+  request: GatewayRequest
+): Promise<string> {
+  const { spawn } = await import("child_process");
+  const prompt = `${request.systemPrompt}\n\n${request.userPrompt}`;
+  const env = { ...process.env };
+  delete env.CLAUDECODE;
+  delete env.CLAUDE_CODE_SSE_PORT;
+  delete env.CLAUDE_CODE_ENTRYPOINT;
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn(
+      "claude",
+      ["-p", prompt, "--model", config.modelId, "--output-format", "text"],
+      { env }
+    );
+    let stdout = "";
+    let stderr = "";
+    proc.stdout.on("data", (d) => (stdout += d.toString()));
+    proc.stderr.on("data", (d) => (stderr += d.toString()));
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`${config.displayName} exit ${code}: ${stderr.slice(0, 300)}`));
+        return;
+      }
+      let text = stdout.trim();
+      const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (fence) text = fence[1].trim();
+      resolve(text);
+    });
+  });
+}
+
+/**
  * Извлечь JSON из текстового ответа модели
  */
 function extractJson(text: string): unknown {
@@ -395,6 +434,12 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
         rawText = await withTimeout(
           callAnthropic(model, request),
           timeout,
+          model.displayName
+        );
+      } else if (model.protocol === "claude-cli") {
+        rawText = await withTimeout(
+          callClaudeCli(model, request),
+          120000,
           model.displayName
         );
       } else {

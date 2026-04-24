@@ -8,7 +8,7 @@
  * (5 vs 30 bibliography, 26 vs 40 captions, 17 ложных H4).
  */
 
-export type ModelProtocol = "gemini" | "openai-compatible" | "anthropic";
+export type ModelProtocol = "gemini" | "openai-compatible" | "anthropic" | "claude-cli";
 
 export interface ModelConfig {
   /** Уникальный ID в нашей системе */
@@ -90,6 +90,34 @@ export const MODEL_REGISTRY: ModelConfig[] = [
   //   },
   // },
 
+  // ── Claude Haiku 4.5 через локальный claude CLI (для bench, не для прода) ──
+  // Активируется env-флагом CLAUDE_CLI_ENABLED=1. Shells out к `claude -p` с unset CLAUDECODE.
+  // НЕ использовать через ANTHROPIC_API_KEY — политика проекта: Claude-модели только через CLI/Agent.
+  {
+    id: "claude-haiku-cli",
+    displayName: "Claude Haiku 4.5 (CLI)",
+    protocol: "claude-cli",
+    apiKeyEnv: "CLAUDE_CLI_ENABLED",
+    modelId: "haiku",
+    limits: { rpm: 30, rpd: 10_000, tpm: 1_000_000 },
+    supportsJsonMode: false,
+    priority: 100,
+  },
+
+  // ── Google AI — Gemini 2.5 Pro (native, только для bench/качественных прогонов) ──
+  // В прод НЕ попадает: priority 99 и жёсткие лимиты free tier (2 RPM / 50 RPD).
+  // Использовать через BENCH_FORCE_MODEL=google-gemini-2.5-pro.
+  {
+    id: "google-gemini-2.5-pro",
+    displayName: "Google Gemini 2.5 Pro",
+    protocol: "gemini",
+    apiKeyEnv: "GEMINI_API_KEY",
+    modelId: "gemini-2.5-pro",
+    limits: { rpm: 2, rpd: 50, tpm: 250_000 },
+    supportsJsonMode: true,
+    priority: 99,
+  },
+
   // ── Google AI — Gemini 2.5 Flash (native, бесплатный лимит) ──
   {
     id: "google-gemini-flash",
@@ -100,6 +128,21 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 15, rpd: 1_500, tpm: 250_000 },
     supportsJsonMode: true,
     priority: 3,
+  },
+
+  // ── Google AI — Gemini 2.5 Flash Lite (fallback когда Flash исчерпан) ──
+  // У Lite отдельная суточная квота. Для простых задач типа извлечения
+  // структурированных полей — справляется. Для body-rewrite в проде НЕ
+  // использовать (дала слабую разметку в bench: 5 vs 30 bibliography).
+  {
+    id: "google-gemini-flash-lite",
+    displayName: "Google Gemini 2.5 Flash Lite",
+    protocol: "gemini",
+    apiKeyEnv: "GEMINI_API_KEY",
+    modelId: "gemini-2.5-flash-lite",
+    limits: { rpm: 15, rpd: 1_500, tpm: 250_000 },
+    supportsJsonMode: true,
+    priority: 4,
   },
 ];
 

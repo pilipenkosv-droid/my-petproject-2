@@ -56,6 +56,11 @@ docs/*.docx
 docs/*.pdf
 scripts/test-output/
 
+# Golden corpus — raw user docs contain PII/copyright, keep local only.
+# Commit only sanitized copies (data/golden/sanitized/) + manifest.sanitized.json.
+data/golden/raw/
+data/golden/manifest.json
+
 # Supabase temp
 supabase/.temp/
 
