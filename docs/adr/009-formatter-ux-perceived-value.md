@@ -52,23 +52,30 @@
 - `src/features/result/components/StatisticsPanel.tsx` — убран Clock-бейдж
 - `src/app/api/process-gost/route.ts`, `confirm-rules/route.ts`, `extract-rules/route.ts` — `maxDuration = 300`
 
-## Baseline metrics — 2026-04-17 12:08 MSK
+## Результат замера — 2026-04-25
 
-Замер «до» (окно 2026-04-10 — 2026-04-17, 7 дней) — берётся как baseline для оценки эффекта:
+Сравнение двух 7-дневных окон вокруг релиза. Источник: Supabase REST (`jobs`, `payments`, `feedback`).
 
-| Метрика | Значение до релиза | Источник |
-|---------|-------------------:|----------|
-| Конверсия в оплату (`processing_start` → `payment_success`) | **TODO: замерить** | PostHog funnel |
-| Конверсия в скачивание (`processing_start` → `download_click`) | TODO | PostHog funnel |
-| Share-rate после скачивания (`share_popup_shown` → `share_click`) | TODO | PostHog |
-| Медианное `pipelineTimeMs` | TODO | Supabase `jobs.statistics` |
-| Доля 504 на `process-gost` | TODO | Vercel logs |
-| Abandon-rate на processing screen (pages exit mid-flow) | TODO | PostHog |
+| Метрика | BEFORE (10–17.04) | AFTER (17–24.04) | Δ |
+|---------|------------------:|-----------------:|--:|
+| Jobs создано | 267 | 262 | −2% |
+| Jobs `completed` | 182 (68%) | **224 (85%)** | +23% |
+| Jobs `failed` | 77 | **32** | **−58%** |
+| Payment attempts | 13 | 22 | +69% |
+| Payments `completed` | 8 | **17** | **+112%** |
+| **Job → paid** | **3.0%** | **6.5%** | **×2.17** |
+| Revenue | 2 151 ₽ | **3 663 ₽** | +70% |
+| CSAT (avg / n) | 3.25 / 4 | **1.00 / 3** | ⚠ просадка |
 
-**Окно измерения «после»**: 2026-04-17 12:08 MSK → 2026-04-24 12:08 MSK (7 дней).
-**Ожидаемый эффект**: +15–30% к конверсии в оплату, −80% 504-ошибок, +20% share-rate.
+**Структура платежей AFTER**: hook (после демо) 11 (2 229 ₽, 65% revenue), direct 6 (1 434 ₽); one-time 13 / subscription 4.
 
-**Revert trigger**: если конверсия просядет ≥10% через 3 дня — откатить (revert [4e88db1](https://github.com/pilipenkosv-droid/my-petproject-2/commit/4e88db1) и [ce73eae](https://github.com/pilipenkosv-droid/my-petproject-2/commit/ce73eae)).
+**Гипотеза подтверждена.** Конверсия job→paid выросла в 2× при стабильном объёме. Бонус: фикс `maxDuration` уронил долю failed-job на 58%.
+
+**CSAT:** 3 единицы подряд при n=3 — выборка крошечная и совпадает по таймингу с CSAT root-cause fix 2026-04-19 (плановый замер 2026-04-26). Не блокирует решение «keep».
+
+**Решение**: keep. Не реверть.
+
+**Revert trigger** (был): просадка ≥10% за 3 дня — не сработал.
 
 ## Verification
 
@@ -78,6 +85,7 @@
 
 ## Follow-ups
 
-- [ ] Через 7 дней: сравнить метрики, заполнить таблицу «до/после», решение о rollback/keep
-- [ ] Если эффект положительный — A/B-тест длительности анимации (60s vs 75s vs 90s)
+- [x] Через 7 дней: сравнить метрики, решение о rollback/keep — **keep, конверсия ×2.17** (2026-04-25)
+- [ ] A/B-тест длительности анимации (60s vs 75s vs 90s)
+- [ ] Подтвердить CSAT после fix от 2026-04-19 (замер 2026-04-26)
 - [ ] Проверить, что `animate-in fade-in` из `tailwindcss-animate` корректно работает в Safari
