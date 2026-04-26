@@ -395,8 +395,11 @@ export default function ResultPage({ params }: ResultPageProps) {
       <EmailGateModal
         isOpen={emailGateOpen}
         onClose={() => setEmailGateOpen(false)}
-        jobId={jobId}
-        downloadType={emailGateDownloadType}
+        source={{
+          kind: "job",
+          jobId,
+          downloadType: emailGateDownloadType,
+        }}
       />
     </main>
   );

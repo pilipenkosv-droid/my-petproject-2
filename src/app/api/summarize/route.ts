@@ -1,12 +1,22 @@
 /**
  * API: Суммаризация текста с помощью AI
  * POST { text, targetLength? }
- * Без авторизации — бесплатный инструмент
+ *
+ * Tier-логика (Stage 2A paywall): см. /api/rewrite/route.ts
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { callAI } from "@/lib/ai/gateway";
-import { SUMMARIZER_SYSTEM_PROMPT, createSummarizerPrompt } from "@/lib/ai/prompts";
+import {
+  SUMMARIZER_SYSTEM_PROMPT,
+  createSummarizerPrompt,
+} from "@/lib/ai/prompts";
+import {
+  createSupabaseServer,
+  getSupabaseAdmin,
+} from "@/lib/supabase/server";
+import { getToolAccess, consumeToolUse } from "@/lib/auth/tool-access";
+import { truncateText } from "@/lib/ai/truncate-output";
 
 export const maxDuration = 30;
 
@@ -21,7 +31,6 @@ export async function POST(request: NextRequest) {
       targetLength?: string;
     };
 
-    // Валидация текста
     if (!text?.trim()) {
       return NextResponse.json(
         { error: "Текст обязателен для суммаризации" },
@@ -43,12 +52,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Валидация длины
-    const validLength: TargetLength = VALID_LENGTHS.includes(targetLength as TargetLength)
+    const validLength: TargetLength = VALID_LENGTHS.includes(
+      targetLength as TargetLength
+    )
       ? (targetLength as TargetLength)
       : "medium";
 
-    // Генерация резюме
+    // Tier check
+    const supabaseAuth = await createSupabaseServer();
+    const {
+      data: { user },
+    } = await supabaseAuth.auth.getUser();
+    const userId = user?.id ?? null;
+    const access = await getToolAccess(userId);
+
+    if (access.tier === "pro" && access.toolUsesRemaining === 0) {
+      return NextResponse.json(
+        {
+          error: "tool_quota_exceeded",
+          message: "Лимит 50 использований в месяц исчерпан",
+        },
+        { status: 402 }
+      );
+    }
+
     const userPrompt = createSummarizerPrompt(text.trim(), validLength);
 
     const response = await callAI({
@@ -61,7 +88,39 @@ export async function POST(request: NextRequest) {
 
     const summary = response.json as string;
 
-    return NextResponse.json({ summary });
+    if (!access.shouldTruncate) {
+      if (access.tier === "pro" && userId) {
+        await consumeToolUse(userId, "summarize");
+      }
+      return NextResponse.json({ summary, truncated: false });
+    }
+
+    let outputId: string | null = null;
+    try {
+      const admin = getSupabaseAdmin();
+      const { data, error } = await admin
+        .from("tool_outputs")
+        .insert({ tool: "summarize", full_output: summary })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("[summarize] tool_outputs insert failed:", error.message);
+      } else {
+        outputId = (data as { id: string }).id;
+      }
+    } catch (err) {
+      console.error("[summarize] tool_outputs insert exception:", err);
+    }
+
+    const { truncated, hiddenChars } = truncateText(summary, 50);
+
+    return NextResponse.json({
+      summary: truncated,
+      truncated: true,
+      outputId,
+      hiddenChars,
+    });
   } catch (error) {
     console.error("Summarize error:", error);
     return NextResponse.json(

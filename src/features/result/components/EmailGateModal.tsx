@@ -1,26 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { trackEvent } from "@/lib/analytics/events";
+
+export type EmailGateSource =
+  | { kind: "job"; jobId: string; downloadType: "original" | "formatted" }
+  | {
+      kind: "tool";
+      outputId: string;
+      tool: "rewrite" | "summarize" | "outline" | "ask-guidelines";
+    };
 
 interface EmailGateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  jobId: string;
-  downloadType: "original" | "formatted";
+  source: EmailGateSource;
 }
 
 export function EmailGateModal({
   isOpen,
   onClose,
-  jobId,
-  downloadType,
+  source,
 }: EmailGateModalProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && source.kind === "tool") {
+      trackEvent("tool_email_gate_opened", {
+        tool: source.tool,
+        outputId: source.outputId,
+      });
+    }
+  }, [isOpen, source]);
 
   if (!isOpen) return null;
 
@@ -39,15 +54,34 @@ export function EmailGateModal({
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/send-download-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, jobId, downloadType }),
-      });
+      let res: Response;
+      if (source.kind === "job") {
+        res = await fetch("/api/send-download-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            jobId: source.jobId,
+            downloadType: source.downloadType,
+          }),
+        });
+      } else {
+        res = await fetch("/api/tool-output/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, outputId: source.outputId }),
+        });
+      }
 
       if (!res.ok) throw new Error("Ошибка сервера");
 
-      trackEvent("email_capture_submit", { download_type: downloadType });
+      if (source.kind === "job") {
+        trackEvent("email_capture_submit", {
+          download_type: source.downloadType,
+        });
+      } else {
+        trackEvent("tool_email_submitted", { tool: source.tool });
+      }
       setSuccessEmail(email);
     } catch {
       setError("Не удалось отправить ссылку. Попробуйте ещё раз.");
@@ -55,6 +89,13 @@ export function EmailGateModal({
       setIsLoading(false);
     }
   }
+
+  const heading =
+    source.kind === "job" ? "Файл скачан!" : "Отправить полную версию?";
+  const subheading =
+    source.kind === "job"
+      ? "Отправить копию на почту, чтобы не потерять?"
+      : "Пришлём ссылку на полный результат — он будет доступен 7 дней.";
 
   return (
     <div
@@ -79,12 +120,8 @@ export function EmailGateModal({
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-semibold text-foreground">
-              Файл скачан!
-            </h2>
-            <p className="mt-1 text-sm text-foreground/60">
-              Отправить копию на почту, чтобы не потерять?
-            </p>
+            <h2 className="text-xl font-semibold text-foreground">{heading}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{subheading}</p>
 
             <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
               <input
@@ -96,9 +133,7 @@ export function EmailGateModal({
                 className="w-full border border-surface-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:ring-2 focus:ring-ring"
               />
 
-              {error && (
-                <p className="text-sm text-red-500">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Отправляем…" : "Отправить ссылку"}

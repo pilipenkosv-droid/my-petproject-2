@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircleQuestion, Send, Loader2, Bot, User, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircleQuestion, Send, Loader2, Bot, User, ChevronDown, ChevronUp, Sparkles, ArrowRight } from "lucide-react";
 import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,13 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState<
+    null | { reason: "free_limit" | "tool_quota_exceeded" }
+  >(null);
+  const [questionsRemaining, setQuestionsRemaining] = useState<number | null>(
+    null
+  );
+  const upsellTracked = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -71,6 +79,35 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+        if (response.status === 402) {
+          // Откатываем оптимистичный пузырь — иначе вопрос «висит» без ответа.
+          setMessages((prev) => prev.slice(0, -1));
+          setInput(question.trim());
+          if (data.error === "ask_quota_exceeded") {
+            setQuotaExceeded({ reason: "free_limit" });
+            if (!upsellTracked.current) {
+              upsellTracked.current = true;
+              const questionsUsed = messages.filter(
+                (m) => m.role === "user"
+              ).length + 1;
+              trackEvent("ask_quota_exceeded_shown", {
+                jobId,
+                questions_used: questionsUsed,
+              });
+            }
+            return;
+          }
+          if (data.error === "tool_quota_exceeded") {
+            setQuotaExceeded({ reason: "tool_quota_exceeded" });
+            if (!upsellTracked.current) {
+              upsellTracked.current = true;
+              trackEvent("tool_quota_exceeded_shown", {
+                tool: "ask-guidelines",
+              });
+            }
+            return;
+          }
+        }
         throw new Error(data.error || "Ошибка при получении ответа");
       }
 
@@ -80,6 +117,11 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
         content: data.answer,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      if (typeof data.questionsRemaining === "number") {
+        setQuestionsRemaining(data.questionsRemaining);
+      } else {
+        setQuestionsRemaining(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
@@ -166,6 +208,34 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
                 </div>
               )}
 
+              {quotaExceeded && (
+                <div className="flex gap-2 justify-start">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/10 flex items-center justify-center mt-0.5">
+                    <Sparkles className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="border border-purple-500/30 bg-purple-500/5 px-4 py-3 max-w-[85%] space-y-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {quotaExceeded.reason === "free_limit"
+                        ? "Бесплатно доступно 2 вопроса"
+                        : "Месячный лимит вопросов исчерпан"}
+                    </p>
+                    <p className="text-xs text-foreground/70">
+                      Оформи Pro — задавай вопросы без ограничений и получи 50
+                      AI-операций в месяц.
+                    </p>
+                    <Link href="/pricing?ref=chat">
+                      <Button
+                        size="sm"
+                        className="group bg-purple-600 hover:bg-purple-700 mt-1"
+                      >
+                        Оформить Pro — 399 ₽/мес
+                        <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -193,6 +263,12 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
             <p className="text-sm text-red-500">{error}</p>
           )}
 
+          {questionsRemaining === 1 && !quotaExceeded && (
+            <p className="text-xs text-foreground/60 text-right">
+              Осталось 1 вопрос
+            </p>
+          )}
+
           {/* Input */}
           <form onSubmit={handleSubmit} className="flex gap-2">
             <textarea
@@ -203,13 +279,13 @@ export function GuidelinesChat({ jobId }: GuidelinesChatProps) {
               placeholder="Задайте вопрос о методичке..."
               rows={1}
               className="flex-1 resize-none border border-border/50 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-              disabled={isLoading}
+              disabled={isLoading || !!quotaExceeded}
             />
             <Button
               type="submit"
               size="icon"
               variant="ghost"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || !!quotaExceeded}
               className="shrink-0"
             >
               <Send className="w-4 h-4" />

@@ -26,6 +26,7 @@ import {
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
 import { CSATWidget } from "@/features/result/components/CSATWidget";
+import { TruncatedToolResult } from "@/features/result/components/TruncatedToolResult";
 
 type InputMode = "text" | "file";
 type TargetLength = "short" | "medium" | "detailed";
@@ -63,6 +64,10 @@ function SummarizePageContent() {
   const [text, setText] = useState("");
   const [targetLength, setTargetLength] = useState<TargetLength>("medium");
   const [summary, setSummary] = useState<string | null>(null);
+  const [truncatedInfo, setTruncatedInfo] = useState<{
+    outputId: string;
+    hiddenChars?: number;
+  } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedText, setExtractedText] = useState<string | null>(null);
@@ -127,6 +132,7 @@ function SummarizePageContent() {
     setIsGenerating(true);
     setError(null);
     setSummary(null);
+    setTruncatedInfo(null);
 
     trackEvent("summarize_generate", {
       targetLength,
@@ -146,11 +152,24 @@ function SummarizePageContent() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+        if (response.status === 402 && data.error === "tool_quota_exceeded") {
+          setError(
+            data.message ||
+              "Лимит исчерпан. Оформи Pro или дождись обнуления квоты."
+          );
+          return;
+        }
         throw new Error(data.error || "Ошибка при генерации резюме");
       }
 
       const data = await response.json();
       setSummary(data.summary);
+      if (data.truncated && data.outputId) {
+        setTruncatedInfo({
+          outputId: data.outputId,
+          hiddenChars: data.hiddenChars,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
@@ -195,12 +214,14 @@ function SummarizePageContent() {
   const handleReset = () => {
     setSummary(null);
     setError(null);
+    setTruncatedInfo(null);
   };
 
   const handleModeSwitch = (mode: InputMode) => {
     setInputMode(mode);
     setError(null);
     setSummary(null);
+    setTruncatedInfo(null);
     if (mode === "text") {
       setExtractedText(null);
       fileUpload.reset();
@@ -386,6 +407,14 @@ function SummarizePageContent() {
                   <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
                     {summary}
                   </pre>
+
+                  {truncatedInfo && (
+                    <TruncatedToolResult
+                      tool="summarize"
+                      outputId={truncatedInfo.outputId}
+                      hiddenChars={truncatedInfo.hiddenChars}
+                    />
+                  )}
 
                   <div className="flex flex-wrap gap-2 justify-center">
                     <Button
