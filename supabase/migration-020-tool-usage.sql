@@ -17,6 +17,10 @@ CREATE TABLE IF NOT EXISTS tool_outputs (
 
 CREATE INDEX IF NOT EXISTS idx_tool_outputs_expires ON tool_outputs(expires_at);
 
+-- RLS: таблица доступна только service_role (используется в API через getSupabaseAdmin).
+-- Без политик anon/authenticated ключи блокируются — защита от прямого чтения access_token и full_output.
+ALTER TABLE tool_outputs ENABLE ROW LEVEL SECURITY;
+
 -- 2. Колонки квоты в user_access
 ALTER TABLE user_access
   ADD COLUMN IF NOT EXISTS tool_uses_remaining INT NOT NULL DEFAULT 0;
