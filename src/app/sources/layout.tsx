@@ -5,6 +5,7 @@ import {
   getFAQPageSchema,
   getHowToSchema,
   getBreadcrumbSchema,
+  getToolApplicationSchema,
 } from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
@@ -94,6 +95,20 @@ export default function SourcesLayout({
     <>
       <MultiJsonLd
         schemas={[
+          getToolApplicationSchema({
+            name: "Diplox Подбор источников — научная литература по ГОСТ",
+            url: `${SITE_URL}/sources`,
+            description:
+              "AI-подбор научных источников через OpenAlex и CrossRef. Реальные публикации, проверка релевантности и доступности. Готовый список литературы по ГОСТ 7.1.",
+            features: [
+              "Поиск через OpenAlex и CrossRef",
+              "Проверка релевантности",
+              "Готовый список литературы по ГОСТ 7.1",
+              "Только реальные публикации",
+              "Сортировка по году издания",
+              "Бесплатное превью",
+            ],
+          }),
           getFAQPageSchema(sourcesFaqs),
           sourcesHowTo,
           getBreadcrumbSchema([

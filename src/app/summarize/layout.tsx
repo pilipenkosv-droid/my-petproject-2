@@ -5,6 +5,7 @@ import {
   getFAQPageSchema,
   getHowToSchema,
   getBreadcrumbSchema,
+  getToolApplicationSchema,
 } from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
@@ -94,6 +95,20 @@ export default function SummarizeLayout({
     <>
       <MultiJsonLd
         schemas={[
+          getToolApplicationSchema({
+            name: "Diplox Краткое содержание — AI-аннотация работы",
+            url: `${SITE_URL}/summarize`,
+            description:
+              "AI-инструмент для генерации краткого содержания, аннотации и пересказа работы. Три длины резюме (короткое, среднее, подробное). Поддержка .docx и .pdf, до 100 000 символов.",
+            features: [
+              "Три длины резюме",
+              "AI-генерация аннотации",
+              "Поддержка .docx и .pdf",
+              "Сохранение ключевых тезисов",
+              "До 100 000 символов",
+              "Бесплатное превью 50%",
+            ],
+          }),
           getFAQPageSchema(summarizeFaqs),
           summarizeHowTo,
           getBreadcrumbSchema([

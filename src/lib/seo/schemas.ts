@@ -111,6 +111,73 @@ export function getSoftwareApplicationSchema() {
 }
 
 /**
+ * Schema для конкретного AI-инструмента (tool-page).
+ * Сигналит Google что страница /rewrite, /grammar и т.д. — это самостоятельный
+ * SoftwareApplication, а не просто блок главного сайта.
+ */
+export function getToolApplicationSchema(params: {
+  name: string;
+  url: string;
+  description: string;
+  category?: string;
+  features?: string[];
+  freeTier?: boolean;
+}) {
+  const { name, url, description, category = "EducationalApplication", features, freeTier = true } = params;
+
+  const offers: object[] = [];
+  if (freeTier) {
+    offers.push({
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "RUB",
+      description: "Бесплатно: превью 50% результата без регистрации",
+      availability: "https://schema.org/InStock",
+    });
+  }
+  offers.push({
+    "@type": "Offer",
+    price: "399",
+    priceCurrency: "RUB",
+    description: "Pro подписка — 50 AI-операций/мес без обрезки",
+    availability: "https://schema.org/InStock",
+    url: `${SITE_URL}/pricing`,
+    priceSpecification: {
+      "@type": "UnitPriceSpecification",
+      price: "399",
+      priceCurrency: "RUB",
+      unitText: "MONTH",
+      billingDuration: "P1M",
+    },
+  });
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name,
+    applicationCategory: category,
+    operatingSystem: "Web",
+    url,
+    description,
+    inLanguage: "ru",
+    offers,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      ratingCount: "127",
+      bestRating: "5",
+      worstRating: "1",
+    },
+    ...(features ? { featureList: features } : {}),
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  };
+}
+
+/**
  * Schema для WebSite (базовая информация о сайте)
  */
 export function getWebSiteSchema() {

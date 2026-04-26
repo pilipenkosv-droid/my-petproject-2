@@ -5,6 +5,7 @@ import {
   getFAQPageSchema,
   getHowToSchema,
   getBreadcrumbSchema,
+  getToolApplicationSchema,
 } from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
@@ -99,6 +100,20 @@ export default function GrammarLayout({
     <>
       <MultiJsonLd
         schemas={[
+          getToolApplicationSchema({
+            name: "Diplox Грамматика — проверка орфографии и пунктуации",
+            url: `${SITE_URL}/grammar`,
+            description:
+              "AI-инструмент для проверки орфографии, пунктуации и грамматики в курсовых и дипломных. Подробный отчёт с объяснениями ошибок за 10 секунд.",
+            features: [
+              "Проверка орфографии",
+              "Проверка пунктуации",
+              "Стилистические подсказки",
+              "Поддержка .docx и .pdf",
+              "Объяснения каждой ошибки",
+              "До 100 000 символов",
+            ],
+          }),
           getFAQPageSchema(grammarFaqs),
           grammarHowTo,
           getBreadcrumbSchema([
