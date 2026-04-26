@@ -5,6 +5,7 @@ import {
   getFAQPageSchema,
   getHowToSchema,
   getBreadcrumbSchema,
+  getToolApplicationSchema,
 } from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
@@ -95,6 +96,20 @@ export default function OutlineLayout({
     <>
       <MultiJsonLd
         schemas={[
+          getToolApplicationSchema({
+            name: "Diplox Генератор плана — структура курсовой и диплома",
+            url: `${SITE_URL}/outline`,
+            description:
+              "AI-генератор плана курсовой, дипломной и магистерской работы. Структура с разделами, подразделами и рекомендуемым объёмом каждой части. Под предмет и тип работы.",
+            features: [
+              "Структура с разделами и подразделами",
+              "Рекомендуемый объём каждой части",
+              "Учёт типа работы (диплом, курсовая, реферат)",
+              "Учёт предмета и темы",
+              "Готовый план для копирования",
+              "Бесплатное превью",
+            ],
+          }),
           getFAQPageSchema(outlineFaqs),
           outlineHowTo,
           getBreadcrumbSchema([

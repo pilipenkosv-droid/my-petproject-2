@@ -5,6 +5,7 @@ import {
   getFAQPageSchema,
   getHowToSchema,
   getBreadcrumbSchema,
+  getToolApplicationSchema,
 } from "@/lib/seo/schemas";
 
 export const metadata: Metadata = {
@@ -99,6 +100,19 @@ export default function RewriteLayout({
     <>
       <MultiJsonLd
         schemas={[
+          getToolApplicationSchema({
+            name: "Diplox Рерайт — академическое перефразирование",
+            url: `${SITE_URL}/rewrite`,
+            description:
+              "AI-инструмент для рерайта и перефразирования текста с тремя режимами глубины. Сохраняет смысл и академический стиль, повышает уникальность для антиплагиата.",
+            features: [
+              "Три режима глубины (лёгкий, средний, глубокий)",
+              "Сохранение академического стиля",
+              "Поддержка .docx и .pdf",
+              "Указание защищённых терминов",
+              "Бесплатное превью 50% результата",
+            ],
+          }),
           getFAQPageSchema(rewriteFaqs),
           rewriteHowTo,
           getBreadcrumbSchema([
