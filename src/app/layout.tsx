@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { YandexMetrika } from "@/components/analytics/YandexMetrika";
 import { PageTracker } from "@/components/analytics/PageTracker";
 import { getSoftwareApplicationSchema, getWebSiteSchema, getOrganizationSchema, getFounderSchema } from "@/lib/seo/schemas";
 import { SITE_URL, SITE_NAME } from "@/lib/config/site";
@@ -96,6 +97,7 @@ export default function RootLayout({
         </ThemeProvider>
         <Analytics />
         <Suspense fallback={null}>
+          <YandexMetrika />
           <GoogleAnalytics />
           <PageTracker />
         </Suspense>

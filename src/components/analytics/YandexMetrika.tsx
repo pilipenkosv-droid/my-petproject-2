@@ -1,6 +1,5 @@
 "use client";
 
-import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,6 +10,27 @@ declare global {
     ym: (...args: unknown[]) => void;
   }
 }
+
+// Inline init code: рендерится в SSR HTML напрямую, выполняется браузером сразу
+// без ожидания гидратации (надёжнее для аналитики — не теряем первые pageviews).
+const INIT_SCRIPT = `
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+m[i].l=1*new Date();
+for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=${METRIKA_ID}", "ym");
+ym(${METRIKA_ID}, "init", {
+  ssr: true,
+  clickmap: true,
+  trackLinks: true,
+  accurateTrackBounce: true,
+  webvisor: true,
+  trackHash: true,
+  ecommerce: "dataLayer",
+  referrer: document.referrer,
+  url: location.href
+});
+`;
 
 export function YandexMetrika() {
   const pathname = usePathname();
@@ -26,31 +46,7 @@ export function YandexMetrika() {
 
   return (
     <>
-      <Script
-        id="yandex-metrika"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-            m[i].l=1*new Date();
-            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=${METRIKA_ID}", "ym");
-
-            ym(${METRIKA_ID}, "init", {
-              ssr: true,
-              clickmap: true,
-              trackLinks: true,
-              accurateTrackBounce: true,
-              webvisor: true,
-              trackHash: true,
-              ecommerce: "dataLayer",
-              referrer: document.referrer,
-              url: location.href
-            });
-          `,
-        }}
-      />
+      <script dangerouslySetInnerHTML={{ __html: INIT_SCRIPT }} />
       <noscript>
         <div>
           <img
