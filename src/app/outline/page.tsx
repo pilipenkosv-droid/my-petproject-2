@@ -31,6 +31,7 @@ import { WORK_TYPES } from "@/types/work-types";
 import { trackEvent } from "@/lib/analytics/events";
 import { RelatedTools } from "@/components/RelatedTools";
 import { CSATWidget } from "@/features/result/components/CSATWidget";
+import { TruncatedToolResult } from "@/features/result/components/TruncatedToolResult";
 
 const OUTLINE_WORK_TYPES = WORK_TYPES.filter((wt) => wt.slug !== "other");
 
@@ -64,6 +65,10 @@ function OutlinePageContent() {
   const [subject, setSubject] = useState("");
   const [additionalRequirements, setAdditionalRequirements] = useState("");
   const [outline, setOutline] = useState<string | null>(null);
+  const [truncatedInfo, setTruncatedInfo] = useState<{
+    outputId: string;
+    hiddenSections?: number;
+  } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -79,6 +84,7 @@ function OutlinePageContent() {
     setIsGenerating(true);
     setError(null);
     setOutline(null);
+    setTruncatedInfo(null);
 
     trackEvent("outline_generate", {
       workType,
@@ -99,11 +105,24 @@ function OutlinePageContent() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+        if (response.status === 402 && data.error === "tool_quota_exceeded") {
+          setError(
+            data.message ||
+              "Лимит исчерпан. Оформи Pro или дождись обнуления квоты."
+          );
+          return;
+        }
         throw new Error(data.error || "Ошибка при генерации плана");
       }
 
       const data = await response.json();
       setOutline(data.outline);
+      if (data.truncated && data.outputId) {
+        setTruncatedInfo({
+          outputId: data.outputId,
+          hiddenSections: data.hiddenSections,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Неизвестная ошибка");
     } finally {
@@ -125,6 +144,7 @@ function OutlinePageContent() {
   const handleReset = () => {
     setOutline(null);
     setError(null);
+    setTruncatedInfo(null);
   };
 
   return (
@@ -270,6 +290,14 @@ function OutlinePageContent() {
                   <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans text-foreground bg-muted/50 p-4 max-h-[500px] overflow-y-auto">
                     {outline}
                   </pre>
+
+                  {truncatedInfo && (
+                    <TruncatedToolResult
+                      tool="outline"
+                      outputId={truncatedInfo.outputId}
+                      hiddenSections={truncatedInfo.hiddenSections}
+                    />
+                  )}
 
                   <div className="flex flex-wrap gap-2 justify-center">
                     <Button

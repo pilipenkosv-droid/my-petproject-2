@@ -63,5 +63,6 @@ Disallow: /profile
 Disallow: /result/
 Disallow: /confirm-rules/
 Disallow: /payment/
+Disallow: /tool-output/
 
 Sitemap: https://diplox.online/sitemap.xml

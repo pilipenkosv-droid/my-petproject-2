@@ -46,3 +46,9 @@ export type PaymentStatus = "pending" | "completed" | "failed";
 
 /** Длительность trial для Diplox Bot (дней) */
 export const BOT_TRIAL_DAYS = 7;
+
+/** Месячная квота AI-инструментов (rewrite/summarize/outline/ask-guidelines) для Pro-подписок */
+export const TOOL_USES_PER_MONTH = 50;
+
+/** Сколько свободных вопросов в чате guidelines на одну сессию (jobId) до paywall'а */
+export const FREE_TOOL_QUESTIONS = 2;

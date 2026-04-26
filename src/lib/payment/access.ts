@@ -3,7 +3,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { LAVA_CONFIG, BOT_TRIAL_DAYS } from "./config";
+import { LAVA_CONFIG, BOT_TRIAL_DAYS, TOOL_USES_PER_MONTH } from "./config";
 
 /**
  * Whitelist админских email-адресов с бесконечным Pro доступом.
@@ -219,6 +219,10 @@ export async function activateAccess(
       ? LAVA_CONFIG.offers.subscriptionPlus.uses
       : LAVA_CONFIG.offers.subscription.uses;
 
+    // Месячная квота AI-инструментов (общий пул на 4 тулзы)
+    const toolResetAt = new Date();
+    toolResetAt.setDate(toolResetAt.getDate() + 30);
+
     await supabase.from("user_access").upsert(
       {
         user_id: userId,
@@ -226,6 +230,8 @@ export async function activateAccess(
         remaining_uses: uses,
         subscription_active_until: activeUntil.toISOString(),
         lava_subscription_id: lavaSubscriptionId || null,
+        tool_uses_remaining: TOOL_USES_PER_MONTH,
+        tool_uses_reset_at: toolResetAt.toISOString(),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
@@ -298,6 +304,10 @@ export async function extendSubscription(
   const newExpiry = new Date(baseDate);
   newExpiry.setDate(newExpiry.getDate() + daysToAdd);
 
+  // Tool-квота: продление = новый месяц, обнуляем счётчик до 50.
+  const toolResetAt = new Date();
+  toolResetAt.setDate(toolResetAt.getDate() + 30);
+
   await supabase.from("user_access").upsert(
     {
       user_id: userId,
@@ -307,6 +317,8 @@ export async function extendSubscription(
           ? Math.max(access.remainingUses, LAVA_CONFIG.offers.subscription.uses)
           : LAVA_CONFIG.offers.subscription.uses,
       subscription_active_until: newExpiry.toISOString(),
+      tool_uses_remaining: TOOL_USES_PER_MONTH,
+      tool_uses_reset_at: toolResetAt.toISOString(),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" }

@@ -35,7 +35,14 @@ export type FunnelEvent =
   | "referral_reward"           // Referral reward granted
   | "group_link_created"        // User created a group link
   | "group_link_joined"         // User joined via group link
-  | "group_link_copy";          // User copied group link
+  | "group_link_copy"            // User copied group link
+  | "tool_call_attempt"          // Tool API call initiated (server-side)
+  | "tool_truncated_shown"       // Truncated tool result rendered to anon/free user
+  | "tool_email_gate_opened"     // EmailGateModal opened for tool source
+  | "tool_email_submitted"       // Email submitted from tool gate
+  | "tool_upsell_clicked"        // CTA clicked in ProUpsellBanner with context=tool
+  | "ask_quota_exceeded_shown"   // Free user hit ask-guidelines question limit
+  | "tool_quota_exceeded_shown"; // Pro user hit monthly tool-uses cap
 
 /**
  * Track a conversion funnel event in both Yandex.Metrika and GA4.
