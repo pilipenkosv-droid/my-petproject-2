@@ -47,7 +47,7 @@ export default async function Image({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   const title = post?.title || "Diplox — Блог";
 
   const fontSize = title.length > 60 ? 40 : title.length > 40 ? 48 : 56;

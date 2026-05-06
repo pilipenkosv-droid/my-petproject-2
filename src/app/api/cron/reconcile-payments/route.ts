@@ -146,7 +146,7 @@ export async function GET(req: NextRequest) {
   // Дистрибуция новых статей блога на внешние площадки
   let distributionSummary = { distributed: 0, failed: 0, skipped: 0 };
   try {
-    const posts = getAllPosts();
+    const posts = await getAllPosts();
     const { results } = await distributeAll(posts);
     distributionSummary = {
       distributed: results.filter((r) => r.ok).length,

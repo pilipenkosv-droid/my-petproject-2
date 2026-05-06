@@ -1,45 +1,69 @@
 /**
- * Агрегатор блог-постов — объединяет посты из тематических файлов
+ * Агрегатор блог-постов.
+ *
+ * Источник Second Brain постов — Supabase (`blog_posts` table).
+ * Static TS-кластеры (gost / pain-clusters / seasonal-draft) остаются в коде,
+ * т.к. это SEO-ядро, меняется редко. Static cluster = 'gost'.
+ *
+ * Все экспортируемые функции async — Second Brain читается из БД с ISR-кешем
+ * (см. posts-db.ts, тег "blog-posts").
  */
 
 export type { BlogPost } from "./types";
 
 import type { BlogPost } from "./types";
 import { blogPostsGost } from "./posts-gost";
-import { blogPostsSecondBrain } from "./posts-second-brain";
 import { seasonalDraftPosts } from "./posts-seasonal-draft";
 import { blogPostsPainClusters } from "./posts-pain-clusters";
+import { blogPostsSecondBrain } from "./posts-second-brain";
+import { fetchSecondBrainPosts } from "./posts-db";
 
-const allBlogPosts: BlogPost[] = [
+const staticGostPosts: BlogPost[] = [
   ...blogPostsGost,
-  ...blogPostsSecondBrain,
   ...seasonalDraftPosts,
   ...blogPostsPainClusters,
 ];
 
-/** Обратная совместимость */
-export const blogPosts = allBlogPosts;
+/**
+ * @deprecated Snapshot всех постов из TS-модулей (включая Second Brain до миграции
+ * в БД). Используется только локальными SEO-скриптами (seo-content-audit,
+ * yandex-keyword-extend), которые работают синхронно. Runtime блог использует
+ * async getAllPosts() — там Second Brain читается из таблицы blog_posts.
+ */
+export const blogPosts: BlogPost[] = [
+  ...staticGostPosts,
+  ...blogPostsSecondBrain,
+];
 
-export function getPostBySlug(slug: string): BlogPost | undefined {
-  return allBlogPosts.find((post) => post.slug === slug);
-}
-
-export function getAllPosts(): BlogPost[] {
-  return [...allBlogPosts].sort(
+function sortByDateDesc(posts: BlogPost[]): BlogPost[] {
+  return [...posts].sort(
     (a, b) =>
-      new Date(b.datePublished).getTime() - new Date(a.datePublished).getTime()
+      new Date(b.datePublished).getTime() -
+      new Date(a.datePublished).getTime()
   );
 }
 
-/** Кластер поста: gost (инструменты/оформление) или second-brain (Diplox Bot) */
-function getPostCluster(slug: string): "gost" | "second-brain" {
-  const isSecondBrain = blogPostsSecondBrain.some((p) => p.slug === slug);
-  return isSecondBrain ? "second-brain" : "gost";
+export async function getAllPosts(): Promise<BlogPost[]> {
+  const dbPosts = await fetchSecondBrainPosts();
+  return sortByDateDesc([...staticGostPosts, ...dbPosts]);
+}
+
+export async function getPostBySlug(slug: string): Promise<BlogPost | undefined> {
+  const fromStatic = staticGostPosts.find((p) => p.slug === slug);
+  if (fromStatic) return fromStatic;
+  const dbPosts = await fetchSecondBrainPosts();
+  return dbPosts.find((p) => p.slug === slug);
+}
+
+/** Кластер поста: gost (статика) или second-brain (БД). */
+async function getPostCluster(slug: string): Promise<"gost" | "second-brain"> {
+  if (staticGostPosts.some((p) => p.slug === slug)) return "gost";
+  return "second-brain";
 }
 
 /**
  * Посты, релевантные лендингу (diplom/kursovaya/referat/…) по ключевому слову в title/keywords.
- * Используется для hub-пажей — улучшает внутреннюю перелинковку и распределение PageRank.
+ * Только из gost-кластера — статичный SEO-набор. Sync, без БД.
  */
 export function getPostsForWorkType(workType: string, limit = 6): BlogPost[] {
   const terms: Record<string, string[]> = {
@@ -65,18 +89,11 @@ export function getPostsForWorkType(workType: string, limit = 6): BlogPost[] {
     .slice(0, limit);
 }
 
-/** Похожие посты из того же кластера (исключая текущий) */
-export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
-  const cluster = getPostCluster(slug);
+/** Похожие посты из того же кластера (исключая текущий). */
+export async function getRelatedPosts(slug: string, limit = 3): Promise<BlogPost[]> {
+  const cluster = await getPostCluster(slug);
   const clusterPosts =
-    cluster === "second-brain" ? blogPostsSecondBrain : blogPostsGost;
+    cluster === "second-brain" ? await fetchSecondBrainPosts() : staticGostPosts;
 
-  return clusterPosts
-    .filter((p) => p.slug !== slug)
-    .sort(
-      (a, b) =>
-        new Date(b.datePublished).getTime() -
-        new Date(a.datePublished).getTime()
-    )
-    .slice(0, limit);
+  return sortByDateDesc(clusterPosts.filter((p) => p.slug !== slug)).slice(0, limit);
 }
