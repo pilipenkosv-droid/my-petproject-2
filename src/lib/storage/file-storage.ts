@@ -149,14 +149,56 @@ export async function deleteFile(fileId: string): Promise<boolean> {
 }
 
 /**
- * Очистить старые файлы — для Supabase Storage управляется через lifecycle policies
- * Оставляем stub для совместимости
+ * Удалить из bucket-ов "documents" и "results" объекты старше maxAgeMs.
+ * Supabase Storage lifecycle policies на Free tier недоступны, поэтому
+ * чистим вручную через ежедневный cron (см. vercel.json → /api/cleanup).
+ *
+ * Списки путей берём из storage.objects через service_role (read-only SELECT,
+ * безопасно — orphan-инг происходит только при прямом DELETE из этой таблицы).
+ * Удаление через Storage API (.remove()) корректно удаляет и метаданные, и
+ * физические объекты в S3.
+ *
+ * По умолчанию 48 часов — запас для активных джоб (рендер ≤ 5 минут, 48ч
+ * даёт буфер на support-кейсы и ретраи).
  */
 export async function cleanupOldFiles(
-  _maxAgeMs: number = 3600000
+  maxAgeMs: number = 48 * 60 * 60 * 1000
 ): Promise<number> {
-  // Supabase Storage lifecycle policies handle this
-  return 0;
+  const supabase = getSupabaseAdmin();
+  const cutoffISO = new Date(Date.now() - maxAgeMs).toISOString();
+  const buckets = ["documents", "results"] as const;
+  const removeChunkSize = 100;
+  let totalDeleted = 0;
+
+  for (const bucket of buckets) {
+    const { data, error } = await supabase
+      .schema("storage")
+      .from("objects")
+      .select("name")
+      .eq("bucket_id", bucket)
+      .lt("created_at", cutoffISO)
+      .limit(50_000);
+
+    if (error) {
+      console.error(`[file-storage] list ${bucket} error:`, error.message);
+      continue;
+    }
+    if (!data || data.length === 0) continue;
+
+    const paths = data.map((row) => row.name as string);
+
+    for (let i = 0; i < paths.length; i += removeChunkSize) {
+      const chunk = paths.slice(i, i + removeChunkSize);
+      const { error: delErr } = await supabase.storage.from(bucket).remove(chunk);
+      if (delErr) {
+        console.error(`[file-storage] remove ${bucket} error:`, delErr.message);
+        break;
+      }
+      totalDeleted += chunk.length;
+    }
+  }
+
+  return totalDeleted;
 }
 
 /**
