@@ -1,7 +1,9 @@
 import { ImageResponse } from "next/og";
 import { getPostBySlug } from "@/lib/blog/posts";
 
-export const runtime = "edge";
+// nodejs runtime: импорт @/lib/blog/posts тянет весь контент блога (~14k строк),
+// Edge-функция превышает лимит Hobby 1 MB. Node serverless: лимит 250 MB.
+export const runtime = "nodejs";
 export const alt = "Diplox — Блог";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
