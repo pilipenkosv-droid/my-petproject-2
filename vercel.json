@@ -28,6 +28,10 @@
     {
       "path": "/api/cron/email-payment-abandoned",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 */12 * * *"
     }
   ]
 }

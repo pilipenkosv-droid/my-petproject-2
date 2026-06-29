@@ -171,13 +171,14 @@ export async function cleanupOldFiles(
   let totalDeleted = 0;
 
   for (const bucket of buckets) {
-    const { data, error } = await supabase
-      .schema("storage")
-      .from("objects")
-      .select("name")
-      .eq("bucket_id", bucket)
-      .lt("created_at", cutoffISO)
-      .limit(50_000);
+    // Схема storage не открыта для PostgREST, поэтому имена старых объектов
+    // берём через SECURITY DEFINER RPC (см. migration-022). Прямой
+    // .schema("storage").from("objects") отдаёт "Invalid schema: storage"
+    // и молча ломает очистку — именно так бакеты и разрослись.
+    const { data, error } = await supabase.rpc("list_old_storage_objects", {
+      p_bucket: bucket,
+      p_cutoff: cutoffISO,
+    });
 
     if (error) {
       console.error(`[file-storage] list ${bucket} error:`, error.message);
@@ -185,7 +186,7 @@ export async function cleanupOldFiles(
     }
     if (!data || data.length === 0) continue;
 
-    const paths = data.map((row) => row.name as string);
+    const paths = (data as { name: string }[]).map((row) => row.name);
 
     for (let i = 0; i < paths.length; i += removeChunkSize) {
       const chunk = paths.slice(i, i + removeChunkSize);

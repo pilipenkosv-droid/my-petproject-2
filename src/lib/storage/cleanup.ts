@@ -8,6 +8,7 @@
 
 import { cleanupOldJobs, resetStuckJobs } from "./job-store";
 import { cleanupOldFiles } from "./file-storage";
+import { cleanupRetentionTables } from "./retention";
 
 const JOB_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const FILE_TTL_MS = 48 * 60 * 60 * 1000;
@@ -16,10 +17,12 @@ export async function runCleanup(ttlMs: number = JOB_TTL_MS): Promise<{
   jobsDeleted: number;
   stuckJobsReset: number;
   filesDeleted: number;
+  retention: Record<string, number>;
 }> {
   let jobsDeleted = 0;
   let stuckJobsReset = 0;
   let filesDeleted = 0;
+  let retention: Record<string, number> = {};
 
   try {
     jobsDeleted = await cleanupOldJobs(ttlMs);
@@ -42,5 +45,13 @@ export async function runCleanup(ttlMs: number = JOB_TTL_MS): Promise<{
     console.error("[Cleanup] files error:", error);
   }
 
-  return { jobsDeleted, stuckJobsReset, filesDeleted };
+  try {
+    retention = await cleanupRetentionTables();
+    const total = Object.values(retention).reduce((s, n) => s + n, 0);
+    if (total > 0) console.log(`[Cleanup] Retention deleted ${total} rows`, retention);
+  } catch (error) {
+    console.error("[Cleanup] retention error:", error);
+  }
+
+  return { jobsDeleted, stuckJobsReset, filesDeleted, retention };
 }
