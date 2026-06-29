@@ -12,7 +12,7 @@ import { getMimeTypeByExtension, isValidSourceDocument } from "@/lib/pipeline/te
 import { shouldUsePipelineV6 } from "@/lib/pipeline-v6/feature-flag";
 import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
 
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
 const REFERENCE_DOC = path.join(
   process.cwd(),

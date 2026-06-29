@@ -10,7 +10,7 @@ import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
 import { adaptPipelineV6ToLegacy, type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
 /**
  * Обработка документа по стандартному ГОСТу (pipeline-v6, template-first).
