@@ -3,7 +3,9 @@ import { getAllPosts } from '@/lib/blog/posts'
 
 import { SITE_URL } from '@/lib/config/site'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
 
   // Основные страницы
@@ -148,8 +150,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  // Статьи блога (автоматически из posts.ts)
-  const allPosts = getAllPosts()
+  // Статьи блога (автоматически из posts.ts — DB + static)
+  const allPosts = await getAllPosts()
   const blogPostPages: MetadataRoute.Sitemap = allPosts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
     lastModified: post.dateModified || post.datePublished,

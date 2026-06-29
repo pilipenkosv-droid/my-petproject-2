@@ -6,7 +6,7 @@ import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 import { getUserAccess } from "@/lib/payment/access";
 
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
 /**
  * Второй этап: подтверждение правил и обработка документа
