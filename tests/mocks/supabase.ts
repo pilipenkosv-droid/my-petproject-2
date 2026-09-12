@@ -83,3 +83,55 @@ export function createSupabaseMock(overrides: TableOverrides = {}) {
     },
   };
 }
+
+/**
+ * Мок Supabase с thenable-цепочкой: `await supabase.from(t).update().eq().select()`
+ * резолвится в очередной ответ из очереди таблицы.
+ * Нужен там, где код ждёт результат update/select без .single().
+ */
+export function createThenableSupabaseMock(
+  queues: Record<string, MockResponse[]> = {},
+  rpcResponse: MockResponse = { data: 1, error: null }
+) {
+  const calls: Record<string, ReturnType<typeof vi.fn>> = {};
+
+  const nextResponse = (table: string): MockResponse => {
+    const queue = queues[table];
+    if (queue && queue.length > 0) {
+      return queue.shift() as MockResponse;
+    }
+    return { data: [], error: null };
+  };
+
+  const from = vi.fn((table: string) => {
+    const chain: Record<string, unknown> = {};
+    const methods = [
+      "select", "insert", "update", "upsert", "delete",
+      "eq", "neq", "gt", "gte", "lt", "lte", "is", "not",
+      "in", "order", "limit", "match", "filter",
+    ];
+    for (const method of methods) {
+      const key = `${table}.${method}`;
+      calls[key] = calls[key] || vi.fn();
+      chain[method] = vi.fn((...args: unknown[]) => {
+        calls[key](...args);
+        return chain;
+      });
+    }
+    chain.single = vi.fn(() => Promise.resolve(nextResponse(table)));
+    chain.maybeSingle = vi.fn(() => Promise.resolve(nextResponse(table)));
+    chain.then = (resolve: (val: MockResponse) => unknown) =>
+      Promise.resolve(nextResponse(table)).then(resolve);
+    return chain;
+  });
+
+  return {
+    from,
+    calls,
+    rpc: vi.fn().mockResolvedValue(rpcResponse),
+    auth: {
+      admin: { getUserById: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) },
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+    },
+  };
+}

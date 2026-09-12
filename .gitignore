@@ -60,6 +60,8 @@ scripts/test-output/
 # Commit only sanitized copies (data/golden/sanitized/) + manifest.sanitized.json.
 data/golden/raw/
 data/golden/manifest.json
+# Тот же PII/копирайт-риск: реальные пользовательские docx для бенчей.
+data/corpus/
 
 # Supabase temp
 supabase/.temp/

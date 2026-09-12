@@ -1334,15 +1334,22 @@ function checkDashes(
  * Обогащает параграфы AI-разметкой блоков
  */
 export async function enrichWithBlockMarkup(
-  paragraphs: DocxParagraph[]
-): Promise<{ paragraphs: DocxParagraph[]; modelId?: string; markupDurationMs?: number }> {
+  paragraphs: DocxParagraph[],
+  options: { deadline?: number } = {}
+): Promise<{
+  paragraphs: DocxParagraph[];
+  modelId?: string;
+  markupDurationMs?: number;
+  markupDegraded: boolean;
+  markupDegradedChunks: number;
+}> {
   const input = paragraphs.map((p) => ({
     index: p.index,
     text: p.text,
     style: p.style,
   }));
 
-  const markup = await parseDocumentBlocks(input);
+  const markup = await parseDocumentBlocks(input, { deadline: options.deadline });
 
   // Создаём map для быстрого поиска
   const blockMap = new Map(
@@ -1366,7 +1373,13 @@ export async function enrichWithBlockMarkup(
     };
   });
 
-  return { paragraphs: enriched, modelId: markup.modelId, markupDurationMs: markup.durationMs };
+  return {
+    paragraphs: enriched,
+    modelId: markup.modelId,
+    markupDurationMs: markup.durationMs,
+    markupDegraded: markup.markupDegraded ?? false,
+    markupDegradedChunks: markup.markupDegradedChunks ?? 0,
+  };
 }
 
 /**

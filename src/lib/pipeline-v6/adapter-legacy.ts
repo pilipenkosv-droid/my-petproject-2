@@ -71,7 +71,11 @@ export async function adaptPipelineV6ToLegacy(
 
   const text = result.extracted.markdown;
   const imageCount = result.extracted.assets.images.length;
-  const tableCount = result.extracted.assets.tables.length;
+  // extracted.assets.tables is always 0 here: extractDocument runs on a
+  // mammoth-input buffer that already had every <w:tbl> regex-stripped
+  // (stripTablesForMammoth, orchestrator.ts). Use the orchestrator's count
+  // taken from the original, unstripped document instead.
+  const tableCount = result.originalTableCount;
   const pageCount = estimatePageCount(text, imageCount, tableCount);
   const wordCount = result.extracted.statistics.words;
   const totalCharacters = text.length;

@@ -6,6 +6,7 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { refundUse } from "@/lib/payment/refund";
 import {
   DocumentStatistics,
   FormattingRules,
@@ -329,14 +330,27 @@ export async function resetStuckJobs(
       "formatting",
     ])
     .lt("updated_at", cutoff)
-    .select("id");
+    .select("id, user_id");
 
   if (error) {
     console.error("[job-store] resetStuckJobs error:", error);
     return 0;
   }
 
-  return data?.length ?? 0;
+  const rows = (data ?? []) as Array<{ id: string; user_id: string | null }>;
+
+  // Возвращаем списанное использование: задача умерла по таймауту, не по вине пользователя.
+  // Анонимные задачи (user_id = null) пропускаем — с них использование не списывалось.
+  for (const row of rows) {
+    if (!row.user_id) continue;
+    try {
+      await refundUse(row.user_id, row.id, "Превышено время обработки");
+    } catch (refundError) {
+      console.error("[job-store] refund failed for job:", row.id, refundError);
+    }
+  }
+
+  return rows.length;
 }
 
 /**

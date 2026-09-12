@@ -32,6 +32,7 @@ import { runQualityChecks, type QualityReport } from "./checker";
 import { planFixes, applyAutoFixesToXml, summariseSuggestions, type FixPlan, type FixSuggestion } from "./fix-suggest/fix-loop";
 import { resolveRulePack, DEFAULT_RULE_PACK_SLUG, type RulePack } from "./rule-packs";
 import JSZip from "jszip";
+import { countTablesInDocumentXml } from "./table-count";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -64,6 +65,9 @@ export interface PipelineResult {
   structure: StructureReport;
   rewrittenSlots: number;
   tableAssemblyPlan: { pandoc: number; docxtpl: number };
+  /** Число таблиц (включая вложенные) в ИСХОДНОМ документе — extracted.assets.tables
+   *  всегда 0, т.к. mammoth-вход приходит с уже вырезанными <w:tbl> (см. stripTablesForMammoth). */
+  originalTableCount: number;
   initialReport: QualityReport;
   finalReport: QualityReport;
   fixPlan: FixPlan;
@@ -438,9 +442,13 @@ export async function runPipelineV6(
   // source body блоками, для каждой таблицы запомним текст предыдущего <w:p>
   // (якорь), затем в markdown находим строку с этим текстом и вставляем
   // pipe-таблицу сразу после. Если якорь не найден — фолбэк: append в конец.
+  let originalTableCount = 0;
   {
     const zip = await JSZip.loadAsync(input);
     const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+    // Считаем ВСЕ таблицы (включая вложенные) — тем же способом, что checker
+    // (checker/index.ts origTableCount). Подробности — в table-count.ts.
+    originalTableCount = countTablesInDocumentXml(docXml);
     const anchors: TableAnchor[] = extractTablesWithAnchors(docXml);
     // Mammoth оборачивает жирный/курсив в __...__ / **...**, заменяет табы — нормализуем,
     // чтобы матч anchor → строка в markdown устоял к этим различиям.
@@ -870,6 +878,7 @@ export async function runPipelineV6(
     structure,
     rewrittenSlots,
     tableAssemblyPlan,
+    originalTableCount,
     initialReport,
     finalReport: currentReport,
     fixPlan,

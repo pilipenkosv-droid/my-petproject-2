@@ -151,7 +151,9 @@ export async function deleteFile(fileId: string): Promise<boolean> {
 /**
  * Удалить из bucket-ов "documents" и "results" объекты старше maxAgeMs.
  * Supabase Storage lifecycle policies на Free tier недоступны, поэтому
- * чистим вручную через ежедневный cron (см. vercel.json → /api/cleanup).
+ * чистим вручную через cron: crontab на Timeweb (основной триггер) плюс
+ * ежедневный Vercel Cron из vercel.json — оба дёргают /api/cleanup.
+ * См. docs/DEPLOYMENT.md → «Cron-задачи».
  *
  * Списки путей берём из storage.objects через service_role (read-only SELECT,
  * безопасно — orphan-инг происходит только при прямом DELETE из этой таблицы).
@@ -161,8 +163,17 @@ export async function deleteFile(fileId: string): Promise<boolean> {
  * По умолчанию 48 часов — запас для активных джоб (рендер ≤ 5 минут, 48ч
  * даёт буфер на support-кейсы и ретраи).
  */
+export interface CleanupOldFilesOptions {
+  /** Только объекты, чьё имя матчит паттерн (напр. полные версии `_full.docx`). */
+  includePattern?: RegExp;
+  /** Исключить объекты, чьё имя матчит паттерн (напр. полные версии `_full.docx`,
+   *  у которых свой, более длинный TTL — см. FULL_VERSION_PATTERN в cleanup.ts). */
+  excludePattern?: RegExp;
+}
+
 export async function cleanupOldFiles(
-  maxAgeMs: number = 48 * 60 * 60 * 1000
+  maxAgeMs: number = 48 * 60 * 60 * 1000,
+  options: CleanupOldFilesOptions = {}
 ): Promise<number> {
   const supabase = getSupabaseAdmin();
   const cutoffISO = new Date(Date.now() - maxAgeMs).toISOString();
@@ -186,7 +197,10 @@ export async function cleanupOldFiles(
     }
     if (!data || data.length === 0) continue;
 
-    const paths = (data as { name: string }[]).map((row) => row.name);
+    let paths = (data as { name: string }[]).map((row) => row.name);
+    if (options.includePattern) paths = paths.filter((p) => options.includePattern!.test(p));
+    if (options.excludePattern) paths = paths.filter((p) => !options.excludePattern!.test(p));
+    if (paths.length === 0) continue;
 
     for (let i = 0; i < paths.length; i += removeChunkSize) {
       const chunk = paths.slice(i, i + removeChunkSize);
