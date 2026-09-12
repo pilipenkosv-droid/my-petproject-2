@@ -151,7 +151,9 @@ export async function deleteFile(fileId: string): Promise<boolean> {
 /**
  * Удалить из bucket-ов "documents" и "results" объекты старше maxAgeMs.
  * Supabase Storage lifecycle policies на Free tier недоступны, поэтому
- * чистим вручную через ежедневный cron (см. vercel.json → /api/cleanup).
+ * чистим вручную через cron: crontab на Timeweb (основной триггер) плюс
+ * ежедневный Vercel Cron из vercel.json — оба дёргают /api/cleanup.
+ * См. docs/DEPLOYMENT.md → «Cron-задачи».
  *
  * Списки путей берём из storage.objects через service_role (read-only SELECT,
  * безопасно — orphan-инг происходит только при прямом DELETE из этой таблицы).

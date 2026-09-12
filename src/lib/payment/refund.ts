@@ -4,10 +4,10 @@
  * consumeUse() списывает использование ДО запуска пайплайна. Если пайплайн упал
  * (исключение, таймаут Vercel, зависшая задача), использование должно вернуться.
  *
- * Идемпотентность обеспечивается двумя колонками в таблице jobs
- * (supabase/migration-023-jobs-use-refund.sql):
- *   use_consumed_at — за задачу списали использование;
- *   use_refunded_at — использование уже вернули, повтор не сработает.
+ * Идемпотентность и атомарность обеспечивает RPC refund_job_use()
+ * (supabase/migration-023-jobs-use-refund.sql): заявка на возврат в jobs
+ * (use_consumed_at → use_refunded_at) и инкремент remaining_uses идут одной
+ * транзакцией.
  */
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
@@ -16,8 +16,11 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
  * Отмечает, что за эту задачу списано использование.
  * Вызывается сразу после успешного consumeUse(). Без этой отметки refundUse()
  * ничего не вернёт — так падения ДО списания не превращаются в бесплатные использования.
+ *
+ * @returns true, если отметка проставлена. false — вызывающий обязан
+ *          компенсировать списание через compensateConsume() и провалить задачу.
  */
-export async function markUseConsumed(jobId: string): Promise<void> {
+export async function markUseConsumed(jobId: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
 
   const { error } = await supabase
@@ -27,50 +30,31 @@ export async function markUseConsumed(jobId: string): Promise<void> {
 
   if (error) {
     console.error("[markUseConsumed] failed for job:", jobId, error.message);
+    return false;
   }
+
+  return true;
 }
 
-/** Атомарный инкремент remaining_uses с фоллбэком на read+update */
-async function incrementRemainingUses(userId: string): Promise<boolean> {
+/**
+ * Компенсирует списание, которое не удалось привязать к задаче (markUseConsumed
+ * упал). Обычный refundUse() тут бесполезен: без use_consumed_at он не опознает
+ * списание. Не идемпотентна — вызывать ровно один раз, на провале markUseConsumed.
+ */
+export async function compensateConsume(userId: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
 
   const { data, error } = await supabase.rpc("increment_remaining_uses", {
     p_user_id: userId,
   });
 
-  if (!error) {
-    // RPC возвращает -1, если записи user_access нет (например, админ — с него не списывали)
-    return (data as number) >= 0;
-  }
-
-  console.error("[refundUse] RPC failed, using fallback:", error.message);
-
-  const { data: row, error: readError } = await supabase
-    .from("user_access")
-    .select("remaining_uses")
-    .eq("user_id", userId)
-    .single();
-
-  if (readError || !row) {
-    console.error("[refundUse] no user_access row for user:", userId);
+  if (error) {
+    console.error("[compensateConsume] RPC failed for user:", userId, error.message);
     return false;
   }
 
-  const current = (row as { remaining_uses: number }).remaining_uses ?? 0;
-  const { error: updateError } = await supabase
-    .from("user_access")
-    .update({
-      remaining_uses: current + 1,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId);
-
-  if (updateError) {
-    console.error("[refundUse] fallback update failed:", updateError.message);
-    return false;
-  }
-
-  return true;
+  // RPC возвращает -1, если записи user_access нет (например, админ — с него не списывали)
+  return (data as number) >= 0;
 }
 
 /**
@@ -93,32 +77,22 @@ export async function refundUse(
 
   const supabase = getSupabaseAdmin();
 
-  // Атомарная заявка: строка обновится, только если списание было и возврата ещё не было.
-  const { data: claimed, error: claimError } = await supabase
-    .from("jobs")
-    .update({ use_refunded_at: new Date().toISOString() })
-    .eq("id", jobId)
-    .not("use_consumed_at", "is", null)
-    .is("use_refunded_at", null)
-    .select("id");
+  const { data, error } = await supabase.rpc("refund_job_use", {
+    p_job_id: jobId,
+    p_user_id: userId,
+  });
 
-  if (claimError) {
-    console.error("[refundUse] claim failed for job:", jobId, claimError.message);
+  if (error) {
+    // Самая вероятная причина — migration-023 ещё не применена на этой базе.
+    console.error(
+      "[refundUse] RPC refund_job_use failed (миграция 023 применена?):",
+      jobId,
+      error.message
+    );
     return false;
   }
 
-  if (!claimed || (claimed as unknown[]).length === 0) {
-    return false;
-  }
-
-  const restored = await incrementRemainingUses(userId);
-
-  if (!restored) {
-    // Снимаем отметку, чтобы возврат можно было повторить
-    await supabase
-      .from("jobs")
-      .update({ use_refunded_at: null })
-      .eq("id", jobId);
+  if (data !== true) {
     return false;
   }
 

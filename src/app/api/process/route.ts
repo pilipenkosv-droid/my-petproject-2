@@ -7,7 +7,7 @@ import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
-import { markUseConsumed, refundUse } from "@/lib/payment/refund";
+import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/refund";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 
@@ -16,6 +16,9 @@ export const maxDuration = 60; // Максимальное время выпол
 
 export async function POST(request: NextRequest) {
   const jobId = nanoid();
+  // Дедлайн всего запроса: maxDuration = 60 с, 10 с оставляем на сохранение
+  // результатов и ответ. AI-разметка не должна выедать этот запас.
+  const deadline = Date.now() + 50_000;
   // Пользователь, с которого списали использование (для возврата в catch)
   let consumedUserId: string | undefined;
 
@@ -33,10 +36,18 @@ export async function POST(request: NextRequest) {
     const user = auth.type === "authenticated" ? auth.user : null;
     let userAccessType: "trial" | "one_time" | "subscription" | "subscription_plus" | "subscription_plus_trial" | "admin" | "none" = "trial";
 
+    // Создаём задачу ДО списания: без строки в jobs отметку use_consumed_at
+    // ставить некуда, и возврат при падении не сработает.
+    const ymUid = request.cookies.get("_ym_uid")?.value ?? undefined;
+    const sessionId = request.cookies.get("dlx_sid")?.value ?? undefined;
+    const referer = request.headers.get("referer") ?? undefined;
+    await createJob(jobId, { userId: user?.id, sessionId, yandexClientId: ymUid, referrer: referer });
+
     if (user?.id) {
       const access = await getUserAccess(user.id);
       userAccessType = access.accessType;
       if (!access.hasAccess) {
+        await failJob(jobId, "Лимит обработок исчерпан");
         return NextResponse.json(
           { error: "Лимит обработок исчерпан. Приобретите тариф.", redirectTo: "/pricing" },
           { status: 402 }
@@ -47,23 +58,28 @@ export async function POST(request: NextRequest) {
         const consumed = await consumeUse(user.id);
         if (!consumed) {
           console.error("[process] consumeUse failed for user:", user.id);
+          await failJob(jobId, "Не удалось списать использование");
           return NextResponse.json(
             { error: "Ошибка списания использования. Попробуйте снова." },
             { status: 500 }
           );
         }
         consumedUserId = user.id;
+        const marked = await markUseConsumed(jobId);
+        if (!marked) {
+          // Отметка не встала → refundUse() потом не опознает списание.
+          // Компенсируем сразу и валим задачу, иначе использование сгорит молча.
+          await compensateConsume(user.id);
+          consumedUserId = undefined;
+          await failJob(jobId, "Не удалось зафиксировать списание использования");
+          return NextResponse.json(
+            { error: "Ошибка списания использования. Попробуйте снова." },
+            { status: 500 }
+          );
+        }
       }
     }
 
-    // Создаём задачу
-    const ymUid = request.cookies.get("_ym_uid")?.value ?? undefined;
-    const sessionId = request.cookies.get("dlx_sid")?.value ?? undefined;
-    const referer = request.headers.get("referer") ?? undefined;
-    await createJob(jobId, { userId: user?.id, sessionId, yandexClientId: ymUid, referrer: referer });
-    if (consumedUserId) {
-      await markUseConsumed(jobId);
-    }
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     // Получаем файлы из FormData
@@ -143,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Парсим структуру и размечаем блоки через AI
     const docxStructure = await parseDocxStructure(sourceBuffer);
-    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs, { deadline });
     const enrichedParagraphs = blockMarkupResult.paragraphs;
 
     // Сохраняем model_id для корреляции с CSAT (fire-and-forget)
@@ -188,6 +204,8 @@ export async function POST(request: NextRequest) {
       ...analysisResult.statistics,
       pipelineTimeMs,
       markupTimeMs: blockMarkupResult.markupDurationMs,
+      markupDegraded: blockMarkupResult.markupDegraded,
+      markupDegradedChunks: blockMarkupResult.markupDegradedChunks,
       fixesApplied: formattingResult.fixesApplied,
       violationsDetected: analysisResult.violations.length,
       unknownBlockCount,

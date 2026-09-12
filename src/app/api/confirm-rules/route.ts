@@ -5,7 +5,6 @@ import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/li
 import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 import { getUserAccess } from "@/lib/payment/access";
-import { refundUse } from "@/lib/payment/refund";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -15,6 +14,9 @@ export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
  */
 export async function POST(request: NextRequest) {
   let jobId: string | undefined;
+  // Дедлайн всего запроса: maxDuration = 60 с, 10 с оставляем на сохранение
+  // результатов и ответ. AI-разметка не должна выедать этот запас.
+  const deadline = Date.now() + 50_000;
 
   try {
     const body = await request.json();
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
     await updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
     const pipelineStart = Date.now();
     const docxStructure = await parseDocxStructure(sourceBuffer);
-    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs);
+    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs, { deadline });
     const enrichedParagraphs = blockMarkupResult.paragraphs;
 
     if (blockMarkupResult.modelId) {
@@ -161,12 +163,9 @@ export async function POST(request: NextRequest) {
       } catch (failError) {
         console.error("Failed to mark job as failed:", failError);
       }
-      try {
-        const failedJob = await getJob(jobId);
-        await refundUse(failedJob?.userId, jobId, errorMessage);
-      } catch (refundError) {
-        console.error("Failed to refund use:", refundError);
-      }
+      // Возврата использования тут нет: этот роут ничего не списывает —
+      // задачу создаёт /api/extract-rules, а списывают только /api/process и
+      // /api/process-gost, каждый со своим возвратом.
     }
 
     return NextResponse.json(

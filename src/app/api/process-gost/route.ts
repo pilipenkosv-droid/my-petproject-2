@@ -7,7 +7,7 @@ import { DEFAULT_GOST_RULES } from "@/types/formatting-rules";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
-import { markUseConsumed, refundUse } from "@/lib/payment/refund";
+import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/refund";
 import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
 import { adaptPipelineV6ToLegacy, type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 
@@ -97,7 +97,17 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           );
         }
-        await markUseConsumed(jobId);
+        const marked = await markUseConsumed(jobId);
+        if (!marked) {
+          // Отметка не встала → refundUse() потом не опознает списание.
+          // Компенсируем сразу и валим задачу, иначе использование сгорит молча.
+          await compensateConsume(userId);
+          await failJob(jobId, "Не удалось зафиксировать списание использования");
+          return NextResponse.json(
+            { error: "Ошибка списания использования. Попробуйте снова." },
+            { status: 500 }
+          );
+        }
       }
     }
 
