@@ -24,6 +24,43 @@ export interface RulePackValues {
 
   bibliographyStyle: BibliographyStyle;
   headingNumbering: HeadingNumbering;
+
+  // --- Optional, additive: consumed by pipeline-v7's in-place restyler.
+  // v6 never reads them, so packs that omit them keep working unchanged.
+
+  /** Page size in mm. Default A4 210x297. */
+  pageSize?: { w: number; h: number };
+
+  /** Per-level heading look. Levels beyond 3 reuse level 3. */
+  headings?: { [level in HeadingLevel]: HeadingSpec };
+
+  /** Figure/table caption look. `align` is the figure caption alignment. */
+  caption?: {
+    align: "left" | "center";
+    sizePt: number;
+    italic: boolean;
+    /** Table caption alignment; defaults to "left" when omitted. */
+    tableAlign?: "left" | "center";
+  };
+
+  /** Paragraphs inside table cells. */
+  tableCell?: { sizePt: number; lineSpacing: number };
+
+  /** Bibliography entries. 0 mm = no hanging indent. */
+  bibliography?: { hangingIndentMm: number };
+}
+
+export type HeadingLevel = 1 | 2 | 3;
+
+export interface HeadingSpec {
+  bold: boolean;
+  caps: boolean;
+  align: "left" | "center";
+  sizePt: number;
+  spaceBeforePt: number;
+  spaceAfterPt: number;
+  pageBreakBefore: boolean;
+  firstLineIndentMm: number;
 }
 
 /** DSL для методичко-специфичных кастомных правил. Фаза 2-3. */
