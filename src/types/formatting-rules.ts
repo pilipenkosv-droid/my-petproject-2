@@ -921,4 +921,8 @@ export interface DocumentStatistics {
   pipelineTimeMs?: number;
   /** Время AI-разметки блоков, мс */
   markupTimeMs?: number;
+  /** Часть блоков размечена не AI, а правилами — бюджет разметки кончился */
+  markupDegraded?: boolean;
+  /** Сколько чанков ушло на rule-based разметку по бюджету */
+  markupDegradedChunks?: number;
 }

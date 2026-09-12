@@ -40,9 +40,13 @@ export function raceDeadline<T>(
   const remaining = deadlineMs - Date.now();
   if (remaining <= 0) return Promise.resolve(BUDGET_EXPIRED);
 
+  // setTimeout переполняется на задержке > 2^31-1 мс и срабатывает немедленно —
+  // абсурдный дедлайн (кривой MARKUP_BUDGET_MS) обрезаем до максимума.
+  const delay = Math.min(remaining, 2 ** 31 - 1);
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   const expiry = new Promise<typeof BUDGET_EXPIRED>((resolve) => {
-    timer = setTimeout(() => resolve(BUDGET_EXPIRED), remaining);
+    timer = setTimeout(() => resolve(BUDGET_EXPIRED), delay);
   });
 
   return Promise.race([settled, expiry]).then((result) => {

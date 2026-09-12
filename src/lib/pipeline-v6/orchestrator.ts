@@ -32,6 +32,7 @@ import { runQualityChecks, type QualityReport } from "./checker";
 import { planFixes, applyAutoFixesToXml, summariseSuggestions, type FixPlan, type FixSuggestion } from "./fix-suggest/fix-loop";
 import { resolveRulePack, DEFAULT_RULE_PACK_SLUG, type RulePack } from "./rule-packs";
 import JSZip from "jszip";
+import { countTablesInDocumentXml } from "./table-count";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -446,10 +447,8 @@ export async function runPipelineV6(
     const zip = await JSZip.loadAsync(input);
     const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
     // Считаем ВСЕ таблицы (включая вложенные) — тем же способом, что checker
-    // (checker/index.ts origTableCount), т.к. mammoth-input для extractDocument
-    // приходит с уже вырезанными <w:tbl> (stripTablesForMammoth) и
-    // extracted.assets.tables всегда 0.
-    originalTableCount = (docXml.match(/<w:tbl[ >]/g) || []).length;
+    // (checker/index.ts origTableCount). Подробности — в table-count.ts.
+    originalTableCount = countTablesInDocumentXml(docXml);
     const anchors: TableAnchor[] = extractTablesWithAnchors(docXml);
     // Mammoth оборачивает жирный/курсив в __...__ / **...**, заменяет табы — нормализуем,
     // чтобы матч anchor → строка в markdown устоял к этим различиям.

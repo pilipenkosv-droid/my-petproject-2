@@ -1334,7 +1334,8 @@ function checkDashes(
  * Обогащает параграфы AI-разметкой блоков
  */
 export async function enrichWithBlockMarkup(
-  paragraphs: DocxParagraph[]
+  paragraphs: DocxParagraph[],
+  options: { deadline?: number } = {}
 ): Promise<{
   paragraphs: DocxParagraph[];
   modelId?: string;
@@ -1348,7 +1349,7 @@ export async function enrichWithBlockMarkup(
     style: p.style,
   }));
 
-  const markup = await parseDocumentBlocks(input);
+  const markup = await parseDocumentBlocks(input, { deadline: options.deadline });
 
   // Создаём map для быстрого поиска
   const blockMap = new Map(

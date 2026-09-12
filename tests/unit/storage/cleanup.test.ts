@@ -8,10 +8,28 @@ vi.mock("@/lib/supabase/server", () => ({
   getSupabaseAdmin: vi.fn(),
 }));
 
+// cleanupOldFiles остаётся настоящей (тесты ниже проверяют её саму), но обёрнута
+// в spy — тест runCleanup подменяет реализацию, чтобы проверить именно проводку.
+vi.mock("@/lib/storage/file-storage", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/storage/file-storage")>();
+  return { ...actual, cleanupOldFiles: vi.fn(actual.cleanupOldFiles) };
+});
+
+// runCleanup дёргает ещё три источника — в этом файле они не интересны.
+vi.mock("@/lib/storage/job-store", () => ({
+  cleanupOldJobs: vi.fn().mockResolvedValue(0),
+  resetStuckJobs: vi.fn().mockResolvedValue(0),
+}));
+vi.mock("@/lib/storage/retention", () => ({
+  cleanupRetentionTables: vi.fn().mockResolvedValue({}),
+}));
+
 import { cleanupOldFiles } from "@/lib/storage/file-storage";
+import { runCleanup } from "@/lib/storage/cleanup";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 const mockGetSupabaseAdmin = vi.mocked(getSupabaseAdmin);
+const mockCleanupOldFiles = vi.mocked(cleanupOldFiles);
 
 const NOW = Date.now();
 const hoursAgo = (h: number) => new Date(NOW - h * 60 * 60 * 1000).toISOString();
@@ -72,5 +90,41 @@ describe("cleanupOldFiles — full-version exclusion", () => {
     expect(deleted).toBe(1);
     const resultsRemoves = removeCalls.filter((c) => c.bucket === "results").flatMap((c) => c.paths);
     expect(resultsRemoves).toEqual(["job2/formatted_full.docx"]);
+  });
+});
+
+// Ошибка, которую чинили: обе метлы шли с одним TTL и без паттернов, поэтому
+// купленные _full.docx сметались вместе с обычными результатами через 48 ч.
+describe("runCleanup — проводка двух метел по файлам", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("зовёт cleanupOldFiles дважды: 48 ч с excludePattern и 30 дней с includePattern", async () => {
+    mockCleanupOldFiles.mockResolvedValue(0);
+
+    await runCleanup();
+
+    expect(mockCleanupOldFiles).toHaveBeenCalledTimes(2);
+
+    const [plainTtl, plainOpts] = mockCleanupOldFiles.mock.calls[0];
+    expect(plainTtl).toBe(48 * 60 * 60 * 1000);
+    expect(plainOpts?.includePattern).toBeUndefined();
+    expect("job1/formatted_full.docx").toMatch(plainOpts!.excludePattern!);
+    expect("job1/formatted.docx").not.toMatch(plainOpts!.excludePattern!);
+
+    const [fullTtl, fullOpts] = mockCleanupOldFiles.mock.calls[1];
+    expect(fullTtl).toBe(30 * 24 * 60 * 60 * 1000);
+    expect(fullOpts?.excludePattern).toBeUndefined();
+    expect("job2/formatted_full.docx").toMatch(fullOpts!.includePattern!);
+    expect("job2/formatted.docx").not.toMatch(fullOpts!.includePattern!);
+  });
+
+  it("суммирует удалённое из обеих метел", async () => {
+    mockCleanupOldFiles.mockResolvedValueOnce(3).mockResolvedValueOnce(2);
+
+    const result = await runCleanup();
+
+    expect(result.filesDeleted).toBe(5);
   });
 });
