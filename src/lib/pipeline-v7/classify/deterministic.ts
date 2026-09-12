@@ -166,7 +166,7 @@ function applyTitlePage(list: ClassifiedParagraph[], from: number, to: number): 
 }
 
 /** A heading may deepen by at most one level relative to the previous heading. */
-function applyCoherence(list: ClassifiedParagraph[], warnings: string[]): void {
+export function applyCoherence(list: ClassifiedParagraph[], warnings: string[]): void {
   let prev = 0;
   for (const cp of list) {
     if (!isHeadingRole(cp.role)) continue;
@@ -183,7 +183,7 @@ function applyCoherence(list: ClassifiedParagraph[], warnings: string[]): void {
 }
 
 /** Too many headings means the heuristics misfired; drop the guessed ones. */
-function applySuspect(list: ClassifiedParagraph[], warnings: string[]): boolean {
+export function applySuspect(list: ClassifiedParagraph[], warnings: string[]): boolean {
   const scope = list.filter((cp) => cp.role !== "empty" && cp.role !== "table_cell");
   const headings = scope.filter((cp) => isHeadingRole(cp.role));
   if (scope.length === 0 || headings.length / scope.length <= HEADING_SHARE_LIMIT) return false;

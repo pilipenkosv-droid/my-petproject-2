@@ -64,6 +64,7 @@ export type ClassifySource =
   | "titlepage"
   | "omath"
   | "empty"
+  | "llm"
   | "none";
 
 /** Verdict for one w:p, keyed elsewhere by node identity. */
