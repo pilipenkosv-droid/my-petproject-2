@@ -25,7 +25,7 @@ const RULE_PATH: Record<string, string> = {
   "text.firstLineIndent": "text.paragraphIndent",
 };
 
-function checkToViolation(c: CheckResult, wasFixed: boolean): FormattingViolation {
+export function checkToViolation(c: CheckResult, wasFixed: boolean): FormattingViolation {
   return {
     ruleId: c.id,
     rulePath: RULE_PATH[c.id] ?? c.id,
@@ -37,7 +37,7 @@ function checkToViolation(c: CheckResult, wasFixed: boolean): FormattingViolatio
   };
 }
 
-function estimatePageCount(text: string, imageCount: number, tableCount: number): number {
+export function estimatePageCount(text: string, imageCount: number, tableCount: number): number {
   const CHARS_PER_PAGE = 2000;
   const chars = text.length;
   const extra = imageCount + tableCount;

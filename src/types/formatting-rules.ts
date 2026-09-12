@@ -925,4 +925,18 @@ export interface DocumentStatistics {
   markupDegraded?: boolean;
   /** Сколько чанков ушло на rule-based разметку по бюджету */
   markupDegradedChunks?: number;
+  /** Какой пайплайн сформировал документ. Ставится всегда, начиная с эксперимента v7. */
+  pipelineVersion?: "v6" | "v7";
+  /** Телеметрия v7 — заполняется только когда pipelineVersion === "v7" */
+  v7?: {
+    gatePass: boolean;
+    refused?: string;
+    classification: { suspect: boolean; histogram: Record<string, number> };
+    formatMs: number;
+    finalScoreUndef: number;
+    finalScoreRoles: number;
+    auxTocInserted: boolean;
+  };
+  /** Почему v7 был выбран, но не сработал: "gate" | "refused:..." | "timeout" | "error:..." */
+  v7Fallback?: string;
 }

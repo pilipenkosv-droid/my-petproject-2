@@ -83,7 +83,7 @@ export interface PipelineResult {
   };
 }
 
-function rulesFromPack(pack: RulePack) {
+export function rulesFromPack(pack: RulePack) {
   return {
     margins: pack.values.margins,
     fontFamily: pack.values.fontFamily,
