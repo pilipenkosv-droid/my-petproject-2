@@ -28,6 +28,7 @@ import {
   setOrderedProp,
   removeChild,
 } from "../xml/docx-xml";
+import { createXmlDeclNode } from "../xml/xml-declaration";
 import { DocxParagraph } from "../pipeline/document-analyzer";
 import { FormattingRules } from "@/types/formatting-rules";
 
@@ -499,11 +500,7 @@ async function ensureNumberingXmlWithGroups(
         "@_xmlns:r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
       },
     };
-    const xmlDecl: OrderedXmlNode = {
-      "?xml": [],
-      ":@": { "@_version": "1.0", "@_encoding": "UTF-8", "@_standalone": "yes" },
-    };
-    zip.file(numberingPath, buildDocxXml([xmlDecl, numberingNode]));
+    zip.file(numberingPath, buildDocxXml([createXmlDeclNode(), numberingNode]));
   }
 }
 
