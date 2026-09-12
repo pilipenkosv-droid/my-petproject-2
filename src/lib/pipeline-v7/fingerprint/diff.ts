@@ -17,7 +17,15 @@ export type FidelityEntry =
   | { kind: "block-removed"; part: string; index: number; block: BlockPrint }
   | { kind: "block-inserted"; part: string; index: number; block: BlockPrint }
   | { kind: "text-changed"; part: string; index: number; before: string; after: string; path: string }
-  | { kind: "table-shape"; part: string; index: number }
+  | {
+      kind: "table-shape";
+      part: string;
+      index: number;
+      /** Everything but the grid width total is identical (A5 candidate). */
+      onlyGridColSum: boolean;
+      /** Relative change of the grid width total, 0..1. */
+      gridColSumDelta: number;
+    }
   | { kind: "section"; part: string; index: number; field: string }
   | { kind: "field"; part: string; instr: string; before: number; after: number }
   | { kind: "bookmark-missing"; part: string; name: string }
@@ -67,7 +75,19 @@ function diffCounts(part: string, a: PartPrint, b: PartPrint, out: FidelityEntry
 
 function diffShapes(part: string, a: BlockPrint, b: BlockPrint, index: number, out: FidelityEntry[]): void {
   if (a.kind !== "tbl" || b.kind !== "tbl") return;
-  if (JSON.stringify(a.shape) !== JSON.stringify(b.shape)) out.push({ kind: "table-shape", part, index });
+  if (JSON.stringify(a.shape) === JSON.stringify(b.shape)) return;
+  const x = a.shape;
+  const y = b.shape;
+  const onlyGridColSum =
+    JSON.stringify({ ...x, gridColSum: 0 }) === JSON.stringify({ ...y, gridColSum: 0 });
+  const base = Math.max(x.gridColSum, y.gridColSum, 1);
+  out.push({
+    kind: "table-shape",
+    part,
+    index,
+    onlyGridColSum,
+    gridColSumDelta: Math.abs(x.gridColSum - y.gridColSum) / base,
+  });
 }
 
 /** Turns a delete-run + insert-run into text-changed pairs where recognisable. */
@@ -125,6 +145,7 @@ function diffBlocks(part: string, a: PartPrint, b: PartPrint, out: FidelityEntry
 }
 
 const SECTION_FIELDS = [
+  "pgSz",
   "orient",
   "colsNum",
   "colsEqualWidth",

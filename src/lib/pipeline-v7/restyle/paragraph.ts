@@ -11,7 +11,7 @@
  * numPr, sectPr, bidi and the paragraph mark's own rPr.
  */
 
-import { ensurePPr, type OrderedXmlNode } from "@/lib/xml/docx-xml";
+import { children, ensurePPr, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import type { RulePack } from "@/lib/pipeline-v6/rule-packs/types";
 import type { Role } from "../classify/types";
 import { W_PPR_ORDER, removeChildren, setPropInOrder } from "./ooxml-order";
@@ -20,6 +20,22 @@ import { applyParagraphVisual, roleVisual } from "./visual";
 
 export interface RestyleCtx {
   spec: PackSpec;
+  /**
+   * The previous paragraph ends a section. Its break already starts a new page,
+   * so a w:pageBreakBefore here would leave a blank one between the two.
+   */
+  prevHasSectPr?: boolean;
+  /**
+   * Filled with every paragraph that gained a w:pageBreakBefore it did not
+   * have. The aux step reads it to undo the break it makes redundant by
+   * inserting a section break in front of it.
+   */
+  addedPageBreak?: Set<OrderedXmlNode>;
+}
+
+/** True when the paragraph already carries a w:pageBreakBefore. */
+export function hasPageBreakBefore(pPr: OrderedXmlNode): boolean {
+  return children(pPr).some((c) => "w:pageBreakBefore" in c);
 }
 
 export function makeCtx(pack: RulePack): RestyleCtx {
@@ -35,8 +51,11 @@ export function styleIdFor(role: Role): string | undefined {
   switch (role) {
     case "body":
     case "unknown":
-    case "list_item":
       return STYLE_IDS.body;
+    // A list item carries its indents in w:numPr, so it needs a style with no
+    // w:ind of its own: DpxBody's first-line indent would fight the numbering.
+    case "list_item":
+      return STYLE_IDS.listItem;
     case "table_cell":
       return STYLE_IDS.tableCell;
     case "figure_caption":
@@ -65,8 +84,11 @@ export function restyleParagraph(
   if (!visual || !styleId) return false;
 
   const pPr = ensurePPr(pNode);
+  const had = hasPageBreakBefore(pPr);
+  const applied = ctx.prevHasSectPr ? { ...visual, pageBreakBefore: false } : visual;
   setPropInOrder(pPr, "w:pStyle", { "w:val": styleId }, W_PPR_ORDER);
-  applyParagraphVisual(pPr, visual);
+  applyParagraphVisual(pPr, applied);
+  if (!had && applied.pageBreakBefore === true) ctx.addedPageBreak?.add(pNode);
   for (const tag of CONFLICTING) removeChildren(pPr, tag);
   return true;
 }

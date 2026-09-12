@@ -61,7 +61,7 @@ describe("walkBlocks", () => {
 describe("paragraphText", () => {
   it("maps tabs, breaks, hyphens and symbols", () => {
     const [b] = [...walkBlocks(doc(`<w:p><w:r><w:t>a</w:t><w:tab/><w:t>b</w:t><w:br/><w:noBreakHyphen/><w:sym w:char="F0B7"/><w:t>c</w:t></w:r></w:p>`))];
-    expect(paragraphText(b.node)).toBe("a\tb\n‑c");
+    expect(paragraphText(b.node)).toBe("a\tb\n‑\ufffcc");
   });
 
   it("preserves xml:space text verbatim and concatenates runs in order", () => {

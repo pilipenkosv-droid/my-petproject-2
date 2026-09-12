@@ -25,12 +25,22 @@ const TEXT_CONTAINERS = new Set([
   "w:customXml",
 ]);
 
+/**
+ * Run-level elements that stand for a character.
+ *
+ * `w:sym` is a glyph from a symbol font with no Unicode equivalent in the file;
+ * it prints as U+FFFC (object replacement) so a paragraph that loses one reads
+ * as a text change instead of silently comparing equal. `w:ptab` is the
+ * absolute tab of a text box and behaves like `w:tab`.
+ */
 const RUN_CHARS: Record<string, string> = {
   "w:tab": "\t",
+  "w:ptab": "\t",
   "w:br": "\n",
   "w:cr": "\n",
   "w:noBreakHyphen": "‑",
-  "w:sym": "",
+  "w:softHyphen": "­",
+  "w:sym": "￼",
 };
 
 function* walkNode(

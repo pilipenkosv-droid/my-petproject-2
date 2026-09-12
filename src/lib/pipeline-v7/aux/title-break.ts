@@ -12,9 +12,9 @@
 
 import { children, createNode, setAttr, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import { enumerateSectPr, ensureSectPrChild } from "../docx/sectpr";
-import { W_PPR_ORDER, setChildInOrder } from "../restyle/ooxml-order";
+import { W_PPR_ORDER, removeChildren, setChildInOrder } from "../restyle/ooxml-order";
 import type { DocxPackage } from "../docx/package";
-import { lastTitlePageIndex, mainPart, type MainPart } from "./common";
+import { mainPart, titleRegionEnd, type MainPart } from "./common";
 
 /** How far past the title page the checker still accepts a section break. */
 const LOOKAHEAD = 5;
@@ -62,24 +62,48 @@ export interface TitleBreakResult {
   inserted: boolean;
   /** No title page, or a section break was already there. */
   skipped: "no-title" | "already" | "no-section" | null;
+  /** A w:pageBreakBefore the restyler had added was taken back off. */
+  redundantBreakRemoved: boolean;
+}
+
+/**
+ * The section break already starts a new page, so a w:pageBreakBefore on the
+ * block right after it would leave a blank one. Only breaks the restyler itself
+ * added are taken back off — one the student wrote stays.
+ */
+function dropRedundantBreak(part: MainPart, at: number, added: Set<OrderedXmlNode>): boolean {
+  const next = part.blocks.slice(at + 1).find((n) => "w:p" in n || "w:tbl" in n);
+  if (!next || !added.has(next)) return false;
+  const pPr = children(next).find((c) => "w:pPr" in c);
+  if (!pPr) return false;
+  removeChildren(pPr, "w:pageBreakBefore");
+  return true;
 }
 
 export async function insertTitleBreak(
   pkg: DocxPackage,
-  roles: Map<OrderedXmlNode, string>
+  roles: Map<OrderedXmlNode, string>,
+  addedPageBreak: Set<OrderedXmlNode> = new Set()
 ): Promise<TitleBreakResult> {
+  const miss = (skipped: TitleBreakResult["skipped"]): TitleBreakResult => ({
+    inserted: false,
+    skipped,
+    redundantBreakRemoved: false,
+  });
   const part = await mainPart(pkg);
-  if (!part) return { inserted: false, skipped: "no-title" };
-  const at = lastTitlePageIndex(part, roles);
-  if (at < 0) return { inserted: false, skipped: "no-title" };
-  if (alreadyBroken(part, at)) return { inserted: false, skipped: "already" };
+  if (!part) return miss("no-title");
+  const end = titleRegionEnd(part, roles);
+  if (typeof end !== "number") return miss("no-title");
+  const at = end;
+  if (alreadyBroken(part, at)) return miss("already");
 
   const governing = governingSectPr(part, at);
-  if (!governing) return { inserted: false, skipped: "no-section" };
+  if (!governing) return miss("no-section");
 
   const clone = structuredClone(governing) as OrderedXmlNode;
   setAttr(ensureSectPrChild(clone, "w:type"), "w:val", "nextPage");
   setChildInOrder(pPrOf(part.blocks[at]), "w:sectPr", clone, W_PPR_ORDER);
+  const redundantBreakRemoved = dropRedundantBreak(part, at, addedPageBreak);
   pkg.markDirty(part.name);
-  return { inserted: true, skipped: null };
+  return { inserted: true, skipped: null, redundantBreakRemoved };
 }

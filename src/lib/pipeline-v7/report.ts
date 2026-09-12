@@ -45,12 +45,17 @@ export function formatReportText(report: V7Report): string {
       `секций ${report.restyle.sectionsTouched}, стилей ${report.restyle.stylesUpserted}` +
       (report.restyle.stylesPartMissing ? " (нет styles.xml)" : "")
   );
+  if (report.refused) {
+    lines.push(`ОТКАЗ: ${report.refused} — документ возвращён без изменений`);
+  }
   const a = report.aux;
   lines.push(
     `дополнения: оглавление ${a.tocInserted ? "вставлено" : a.tocExisting ? "уже было" : "нет"}` +
       `${a.updateFields ? " (+updateFields)" : ""}, разрыв секции ${a.titleBreak ? "да" : "нет"}, ` +
       `шапок таблиц ${a.tblHeaderSet}, снято подчёркиваний ${a.underlineRemoved}, ` +
-      `схлопнуто пробелов ${a.spacesCollapsed}`
+      `схлопнуто пробелов ${a.spacesCollapsed}` +
+      (a.tocSkipped ? `, пропущено: ${a.tocSkipped}` : "") +
+      (a.redundantBreakRemoved ? ", снят лишний разрыв страницы" : "")
   );
   lines.push(
     `гейт: ${report.gate.pass ? "ПРОЙДЕН" : "ПРОВАЛЕН"}   ` +
@@ -58,14 +63,15 @@ export function formatReportText(report: V7Report): string {
   );
   for (const v of violationSummaries(report, 10)) lines.push(`  ✗ ${v}`);
   lines.push(
-    `чекер: было ${report.checker.sourceScore} → стало ${report.checker.finalScore}` +
+    `чекер: было ${report.checker.sourceScore} → стало ${report.checker.finalScoreUndef} ` +
+      `(без ролей, как в проде) / ${report.checker.finalScoreRoles} (с ролями v7)` +
       (report.checker.failed.length ? `   провалено: ${report.checker.failed.join(", ")}` : "")
   );
   lines.push(
     `время, мс: ${pad(`fp=${t.fingerprintBeforeMs}+${t.fingerprintAfterMs}`, 14)}` +
       `${pad(`classify=${t.classifyMs}`, 16)}${pad(`restyle=${t.restyleMs}`, 15)}` +
       `${pad(`aux=${t.auxMs}`, 11)}${pad(`save=${t.saveMs}`, 12)}${pad(`gate=${t.gateMs}`, 12)}` +
-      `${pad(`checker=${t.checkerMs}`, 15)}всего=${t.totalMs}`
+      `${pad(`checker=${t.checkerMs}`, 15)}${pad(`формат=${t.formatMs}`, 14)}всего=${t.totalMs}`
   );
   return lines.join("\n");
 }

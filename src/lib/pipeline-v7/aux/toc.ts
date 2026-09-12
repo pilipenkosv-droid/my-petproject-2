@@ -25,7 +25,7 @@ import type { BlockPrint } from "../fingerprint/types";
 import type { DocxPackage } from "../docx/package";
 import { STYLE_IDS, type PackSpec } from "../restyle/spec";
 import { W_SETTINGS_ORDER, setChildInOrder } from "../restyle/ooxml-order";
-import { dirOf, firstBlockIndex, lastTitlePageIndex, mainPart, markAux, nextBookmarkId } from "./common";
+import { dirOf, mainPart, markAux, nextBookmarkId, titleRegionEnd } from "./common";
 
 const TOC_INSTR = ' TOC \\o "1-3" \\h \\z \\u ';
 const TOC_STYLE = /^(TOC|toc|Оглавление|Содержание)\s?\d$/;
@@ -36,6 +36,8 @@ export interface TocResult {
   /** An existing TOC was found and left in place. */
   existing: boolean;
   updateFields: boolean;
+  /** Nothing was inserted because the title region could not be located. */
+  skipped?: "no-title-page";
 }
 
 function isTocHeading(block: BlockPrint | undefined): boolean {
@@ -117,23 +119,37 @@ async function setUpdateFields(pkg: DocxPackage, mainName: string): Promise<bool
   return true;
 }
 
+/**
+ * Whether the package already holds a table of contents, read before anything
+ * is restyled.
+ *
+ * It has to be read first: the evidence is partly the paragraphs' own styles,
+ * and a TOC style the classifier did not recognise gets overwritten by the
+ * restyler — after which the document would look as if it never had one.
+ */
+export async function detectExistingToc(pkg: DocxPackage): Promise<boolean> {
+  const part = await mainPart(pkg);
+  return part ? hasExistingToc(part.nodes) : false;
+}
+
 export async function insertToc(
   pkg: DocxPackage,
   spec: PackSpec,
-  roles: Map<OrderedXmlNode, string>
+  roles: Map<OrderedXmlNode, string>,
+  existing?: boolean
 ): Promise<TocResult> {
   const part = await mainPart(pkg);
   if (!part) return { inserted: false, existing: false, updateFields: false };
-  // The classifier's verdict counts too: restyle has already rewritten w:pStyle
-  // by the time this runs, so a TOC recognised only by its old style id would
-  // otherwise be invisible here.
-  const classified = [...roles.values()].includes("toc");
-  if (classified || hasExistingToc(part.nodes)) {
+  // Only the document decides this. The classifier's `toc` role fires on a bare
+  // "СОДЕРЖАНИЕ" heading too, and a heading with nothing under it is a promise
+  // of a table of contents, not one.
+  if (existing ?? hasExistingToc(part.nodes)) {
     return { inserted: false, existing: true, updateFields: false };
   }
 
-  const lastTitle = lastTitlePageIndex(part, roles);
-  const at = lastTitle >= 0 ? lastTitle + 1 : firstBlockIndex(part);
+  const end = titleRegionEnd(part, roles);
+  if (typeof end !== "number") return { inserted: false, existing: false, updateFields: false, skipped: end };
+  const at = end + 1;
   const id = nextBookmarkId(part.nodes);
 
   const heading = headingParagraph(spec);

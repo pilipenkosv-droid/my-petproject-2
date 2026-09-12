@@ -38,6 +38,13 @@ export interface VisualSpec {
   caps?: boolean;
   /** 0-based, as stored in w:outlineLvl. */
   outlineLvl?: number;
+  /**
+   * Leave an existing w:outlineLvl alone instead of stripping it. A body
+   * paragraph that carries one is usually a heading the classifier failed to
+   * recognise, and dropping the level would delete it from Word's navigation
+   * pane and from every field that resolves through the outline.
+   */
+  keepOutlineLvl?: boolean;
   pageBreakBefore?: boolean;
 }
 
@@ -62,7 +69,7 @@ export function roleVisual(role: Role, spec: PackSpec): VisualSpec | undefined {
   switch (role) {
     case "body":
     case "unknown":
-      return { ...base, firstLineTw: spec.firstLineTwips, jc: BODY_ALIGN };
+      return { ...base, firstLineTw: spec.firstLineTwips, jc: BODY_ALIGN, keepOutlineLvl: true };
     case "list_item":
       return { ...base, firstLineTw: 0, noInd: true, jc: BODY_ALIGN };
     case "table_cell":
@@ -103,10 +110,14 @@ export function applyParagraphVisual(pPr: OrderedXmlNode, v: VisualSpec): void {
     setPropInOrder(pPr, "w:ind", ind, W_PPR_ORDER);
   }
   setPropInOrder(pPr, "w:jc", { "w:val": v.jc }, W_PPR_ORDER);
-  if (v.outlineLvl === undefined) removeChildren(pPr, "w:outlineLvl");
-  else setPropInOrder(pPr, "w:outlineLvl", { "w:val": String(v.outlineLvl) }, W_PPR_ORDER);
+  if (v.outlineLvl !== undefined) {
+    setPropInOrder(pPr, "w:outlineLvl", { "w:val": String(v.outlineLvl) }, W_PPR_ORDER);
+  } else if (!v.keepOutlineLvl) {
+    removeChildren(pPr, "w:outlineLvl");
+  }
+  // A w:pageBreakBefore is only ever added, never taken away: the student put
+  // that break there on purpose, and removing it silently reflows the document.
   if (v.pageBreakBefore) setPropInOrder(pPr, "w:pageBreakBefore", {}, W_PPR_ORDER);
-  else removeChildren(pPr, "w:pageBreakBefore");
 }
 
 /** Writes the font, size and heading emphasis of a visual into a w:rPr. */

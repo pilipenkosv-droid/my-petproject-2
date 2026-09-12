@@ -43,6 +43,7 @@ interface CanonicalStyle {
 
 const CANONICAL: CanonicalStyle[] = [
   { id: STYLE_IDS.body, name: "Dpx Body", role: "body" },
+  { id: STYLE_IDS.listItem, name: "Dpx List Item", role: "list_item" },
   { id: STYLE_IDS.heading(1), name: "Dpx Heading 1", role: "heading_L1" },
   { id: STYLE_IDS.heading(2), name: "Dpx Heading 2", role: "heading_L2" },
   { id: STYLE_IDS.heading(3), name: "Dpx Heading 3", role: "heading_L3" },

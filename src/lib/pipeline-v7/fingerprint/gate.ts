@@ -24,6 +24,13 @@ export type AllowanceRule = "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "A7" | "ad
 export interface GateOptions {
   /** A4: accept text that differs only in quote shapes, dashes and spacing. */
   allowTextNormalization?: boolean;
+  /**
+   * A2/A3: accept the removal of an old table of contents and of empty
+   * paragraphs. Off by default, and the pipeline never turns it on — v7 removes
+   * nothing, so a removal it did not intend must read as a violation rather
+   * than land inside a standing permission.
+   */
+  allowRemovals?: boolean;
 }
 
 export interface GateViolation {
@@ -78,8 +85,15 @@ function judgeRemovals(
   part: string,
   before: Fingerprint,
   entries: Extract<FidelityEntry, { kind: "block-removed" }>[],
+  opts: GateOptions,
   v: Verdict
 ): BlockPrint[] {
+  if (opts.allowRemovals !== true) {
+    for (const entry of entries) {
+      v.deny("block-removed", `${part}: удалён блок ${where(entry.block)}`, entry);
+    }
+    return [];
+  }
   const beforePart = before.parts[part];
   const tocRun = findTocRun(beforePart, entries.map((e) => e.index));
   const cap = emptyRemovalCap(beforePart);
@@ -121,6 +135,9 @@ function judgeCount(
     v.deny("count", `${head}, разрешено не более ${cap}`, entry);
   }
 }
+
+/** A5: a table grid may drift by rounding, not by a rescale. */
+const A5_GRID_TOLERANCE = 0.02;
 
 /** A6: PAGE/NUMPAGES/TOC are presentation; every other instruction must match. */
 const FREE_FIELDS = new Set(["PAGE", "NUMPAGES", "TOC"]);
@@ -198,9 +215,18 @@ function judgeRest(entry: FidelityEntry, opts: GateOptions, v: Verdict): void {
       else v.deny("text-changed", head, entry);
       return;
     }
-    case "table-shape":
-      v.deny("table-shape", `${entry.part}: изменилась структура таблицы #${entry.index}`, entry);
+    case "table-shape": {
+      const head = `${entry.part}: таблица #${entry.index}`;
+      const pct = Math.round(entry.gridColSumDelta * 100);
+      if (entry.onlyGridColSum && entry.gridColSumDelta <= A5_GRID_TOLERANCE) {
+        v.permit("A5", `${head}: ширина сетки изменилась на ${pct} % — в пределах допуска`, entry);
+      } else if (entry.onlyGridColSum) {
+        v.deny("table-shape", `${head}: сетка пересчитана на ${pct} %, допуск 2 %`, entry);
+      } else {
+        v.deny("table-shape", `${head}: изменилась структура`, entry);
+      }
       return;
+    }
     case "section":
       v.deny("section", `${entry.part}: секция #${entry.index}, поле ${entry.field}`, entry);
       return;
@@ -232,7 +258,7 @@ export function evaluateGate(before: Fingerprint, after: Fingerprint, opts: Gate
   for (const part of parts) {
     const a = before.parts[part];
     const b = stripped.parts[part];
-    const removed = a ? judgeRemovals(part, before, removalsOf(diff.entries, part), v) : [];
+    const removed = a ? judgeRemovals(part, before, removalsOf(diff.entries, part), opts, v) : [];
     const inserted = insertBudget(marked[part] ?? []);
     budgets.set(part, { inserted, removed: budgetOf(removed) });
     const at = a && b ? sectionInsertIndex(a, b) : null;

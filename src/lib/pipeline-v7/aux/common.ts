@@ -11,8 +11,10 @@
 import {
   children,
   createNode,
+  findChild,
   getAttr,
   getBody,
+  tagName,
   type OrderedXmlNode,
 } from "@/lib/xml/docx-xml";
 import { walkAll } from "../fingerprint/scan";
@@ -64,10 +66,69 @@ export function lastTitlePageIndex(part: MainPart, roles: Map<OrderedXmlNode, st
   return last;
 }
 
-/** Index of the first paragraph or table among the body's children. */
-export function firstBlockIndex(part: MainPart): number {
-  const at = part.blocks.findIndex((n) => "w:p" in n || "w:tbl" in n);
-  return at < 0 ? 0 : at;
+/** How far into the body the page-break fallback is willing to look. */
+const BREAK_SCAN_LIMIT = 60;
+
+/**
+ * Where the page break of a paragraph sits relative to its own content:
+ * "before" starts a page in front of it, "inside" ends one after it.
+ */
+function pageBreakKind(node: OrderedXmlNode): "before" | "inside" | null {
+  if (!("w:p" in node)) return null;
+  const pPr = findChild(node, "w:pPr");
+  const props = pPr ? children(pPr) : [];
+  if (props.some((c) => "w:sectPr" in c)) return "inside";
+  if (props.some((c) => "w:pageBreakBefore" in c)) return "before";
+  let found = false;
+  walkAll(node, (n, tag) => {
+    if (tag === "w:br" && getAttr(n, "w:type") === "page") found = true;
+  });
+  return found ? "inside" : null;
+}
+
+/** Last block still on the title page, given the block that carries the break. */
+function endBefore(index: number, kind: "before" | "inside"): number {
+  return kind === "before" ? index - 1 : index;
+}
+
+/** Reason the title region could not be located. */
+export type TitleRegionMiss = "no-title-page";
+
+/**
+ * Index of the last block of the title region — insert after it.
+ *
+ * The classifier's `title_page` verdict comes first. When it found none, the
+ * title page is usually a layout the paragraph heuristics do not recognise: a
+ * single table filling the sheet, or plain paragraphs ended by a hard page
+ * break. Both are looked for in that order, and if neither is there the region
+ * is unknown and nothing may be inserted — putting a table of contents at
+ * block 0 would print it above the student's own title.
+ */
+export function titleRegionEnd(
+  part: MainPart,
+  roles: Map<OrderedXmlNode, string>
+): number | TitleRegionMiss {
+  const byRole = lastTitlePageIndex(part, roles);
+  if (byRole >= 0) return byRole;
+
+  for (let i = 0; i < part.blocks.length; i++) {
+    if (tagName(part.blocks[i]) !== "w:tbl") continue;
+    const next = part.blocks.slice(i + 1).findIndex((n) => "w:p" in n || "w:tbl" in n);
+    if (next < 0) break;
+    const at = i + 1 + next;
+    const kind = pageBreakKind(part.blocks[at]);
+    if (kind) return Math.max(endBefore(at, kind), i);
+    break;
+  }
+
+  const limit = Math.min(part.blocks.length, BREAK_SCAN_LIMIT);
+  for (let i = 0; i < limit; i++) {
+    const kind = pageBreakKind(part.blocks[i]);
+    if (!kind) continue;
+    const end = endBefore(i, kind);
+    return end >= 0 ? end : "no-title-page";
+  }
+  return "no-title-page";
 }
 
 /** Smallest w:id not used by any bookmark in the part. */

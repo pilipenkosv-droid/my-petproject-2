@@ -71,6 +71,7 @@ describe("runPipelineV7", () => {
         "classifyMs",
         "fingerprintAfterMs",
         "fingerprintBeforeMs",
+        "formatMs",
         "gateMs",
         "restyleMs",
         "saveMs",
@@ -90,5 +91,25 @@ describe("runPipelineV7", () => {
       expect(() => blockTypeSchema.parse(ROLE_TO_BLOCK_TYPE[role])).not.toThrow();
     }
     expect(Object.keys(ROLE_TO_BLOCK_TYPE).sort()).toEqual([...ROLES].sort());
+  });
+});
+
+describe("runPipelineV7 — отказ при подозрительной классификации", () => {
+  /** Almost every paragraph looks like a heading, so T0 marks the run suspect. */
+  const SUSPECT =
+    Array.from({ length: 8 }, (_, i) => p(`Раздел ${i + 1}`, `<w:outlineLvl w:val="0"/>`)).join("") +
+    p("Одно предложение основного текста.") +
+    `<w:p><w:pPr><w:sectPr><w:pgSz w:w="11906" w:h="16838"/></w:sectPr></w:pPr></w:p>`;
+
+  it("возвращает исходные байты и помечает отчёт", async () => {
+    const input = await buildMiniDocx({ body: SUSPECT, styles: "" });
+    const result = await runPipelineV7(input, { pack: GOST_7_32, documentId: "suspect" });
+    expect(result.report.classification.suspect).toBe(true);
+    expect(result.report.refused).toBe("classification_suspect");
+    expect(result.output!.equals(input)).toBe(true);
+    expect(result.report.gate.pass).toBe(true);
+    expect(result.report.restyle.paragraphsTouched).toBe(0);
+    expect(result.report.aux.tocInserted).toBe(false);
+    expect(formatReportText(result.report)).toContain("ОТКАЗ");
   });
 });

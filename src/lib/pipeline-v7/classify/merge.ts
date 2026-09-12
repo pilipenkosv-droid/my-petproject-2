@@ -9,7 +9,7 @@
  * shape the deterministic layer would have rejected.
  */
 
-import { applyCoherence, applySuspect } from "./deterministic";
+import { applyCoherence, applySuspect } from "./passes";
 import { classifyResidueWithLlm, type LlmResidueOptions, type LlmResidueResult } from "./llm";
 import {
   emptyHistogram,

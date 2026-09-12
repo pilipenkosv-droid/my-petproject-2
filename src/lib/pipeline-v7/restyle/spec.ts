@@ -22,6 +22,7 @@ export const spacingLine = (multiple: number): number => Math.round(multiple * 2
 
 export const STYLE_IDS = {
   body: "DpxBody",
+  listItem: "DpxListItem",
   heading: (level: HeadingLevel) => `DpxHeading${level}`,
   caption: "DpxCaption",
   tableCell: "DpxTableCell",

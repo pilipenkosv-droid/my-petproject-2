@@ -7,9 +7,21 @@
 
 const NBSP = / /g;
 
-/** NFC, NBSP → space, whitespace runs collapsed, trimmed. */
+/**
+ * NFC, NBSP → space, space and newline runs collapsed, trimmed.
+ *
+ * A tab stays a tab: `w:tab` is how a static table of contents holds its leader
+ * column apart, so collapsing it into a space would make "1 Введение 5" and
+ * "1 Введение\t5" the same paragraph and hide a real content change. Only
+ * spaces — every whitespace that is neither a tab nor a newline — collapse.
+ */
 export function normalizeText(raw: string): string {
-  return raw.normalize("NFC").replace(NBSP, " ").replace(/\s+/g, " ").trim();
+  return raw
+    .normalize("NFC")
+    .replace(NBSP, " ")
+    .replace(/[^\S\n\t]+/g, " ")
+    .replace(/\n+/g, "\n")
+    .trim();
 }
 
 /** A4 equivalence: quote shapes and digit-range dashes are considered equal. */

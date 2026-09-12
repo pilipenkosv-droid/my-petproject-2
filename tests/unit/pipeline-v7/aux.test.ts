@@ -21,12 +21,21 @@ const STYLES = style("Heading1", "heading 1") + style("Normal", "Normal");
 const SETTINGS = `<w:defaultTabStop w:val="708"/><w:compat/><w:rsids><w:rsidRoot w:val="00A1"/></w:rsids>`;
 const H1 = (t: string) => p(t, `<w:pStyle w:val="Heading1"/>`);
 
+/**
+ * Plain sentences. Without them the handful of headings in these fixtures is a
+ * large enough share of the document for the classifier to call it suspect,
+ * and a suspect classification is refused rather than restyled.
+ */
+const filler = (n = 12) =>
+  Array.from({ length: n }, (_, i) => p(`Обычное предложение номер ${i + 1} в основном тексте.`)).join("");
+
 /** Title page (2 paragraphs) → heading → body. No TOC, no section break. */
 const BODY =
   p("Министерство образования") +
   p("Курсовая работа") +
   H1("ВВЕДЕНИЕ") +
   p("Некоторый  текст работы с двойным пробелом.") +
+  filler() +
   H1("ЗАКЛЮЧЕНИЕ") +
   p("Итоги.") +
   SECT;
@@ -84,6 +93,7 @@ describe("aux — TOC insertion", () => {
       p("Введение\t3", `<w:pStyle w:val="TOC1"/>`) +
       H1("ВВЕДЕНИЕ") +
       p("Текст.") +
+      filler() +
       SECT;
     const r = await run(await docx(withToc));
     expect(r.report.aux.tocExisting).toBe(true);

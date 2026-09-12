@@ -30,7 +30,19 @@ interface ParagraphScan {
   events: Event[];
 }
 
-const ANCHORS = new Set(["w:bookmarkStart", "w:commentRangeStart", "w:commentReference"]);
+/**
+ * Elements that anchor something outside the paragraph to it. A paragraph that
+ * carries any of them is never "only its own emptiness": deleting it would
+ * orphan a bookmark range, a comment range or a note reference.
+ */
+const ANCHORS = new Set([
+  "w:bookmarkStart",
+  "w:bookmarkEnd",
+  "w:commentRangeStart",
+  "w:commentRangeEnd",
+  "w:commentReference",
+  "w:endnoteReference",
+]);
 
 function scanParagraph(node: OrderedXmlNode): ParagraphScan {
   const s: ParagraphScan = {
@@ -101,6 +113,19 @@ function cellShape(tc: OrderedXmlNode): { gridSpan: number; vMerge: "restart" | 
   };
 }
 
+/** Sum of the w:gridCol widths in twips, or 0 when the table has no grid. */
+export function gridColSumTwips(tbl: OrderedXmlNode): number {
+  const grid = children(tbl).find((c) => "w:tblGrid" in c);
+  if (!grid) return 0;
+  let sum = 0;
+  for (const col of children(grid)) {
+    if (!("w:gridCol" in col)) continue;
+    const w = Number(getAttr(col, "w:w"));
+    if (Number.isFinite(w)) sum += w;
+  }
+  return sum;
+}
+
 export function tableShape(tbl: OrderedXmlNode): TableShape {
   const grid = children(tbl).find((c) => "w:tblGrid" in c);
   const gridCols = grid ? children(grid).filter((c) => "w:gridCol" in c).length : 0;
@@ -109,7 +134,7 @@ export function tableShape(tbl: OrderedXmlNode): TableShape {
       .filter((c) => "w:tc" in c)
       .map(cellShape),
   }));
-  return { gridCols, rows };
+  return { gridCols, gridColSum: Math.round(gridColSumTwips(tbl) / 100) * 100, rows };
 }
 
 /** Tracks aux bookmark ranges and TOC field ranges across the block sequence. */

@@ -14,9 +14,11 @@ import {
   getCols,
   getHeaderFooterRefs,
   getOrient,
+  getPgSz,
   getType,
   hasTitlePg,
 } from "../docx/sectpr";
+import { printPgSz } from "../docx/paper";
 import { buildBlocks } from "./blocks";
 import { scanPart } from "./scan";
 import type { Fingerprint, PackagePrint, PartPrint, SectionPrint, TableShape } from "./types";
@@ -27,7 +29,11 @@ const EMBEDDINGS = /(^|\/)embeddings\//;
 function sectionPrint(sectPr: OrderedXmlNode): SectionPrint {
   const cols = getCols(sectPr);
   const refs = getHeaderFooterRefs(sectPr);
+  const size = getPgSz(sectPr);
+  const w = Number(size?.w);
+  const h = Number(size?.h);
   return {
+    pgSz: Number.isFinite(w) && Number.isFinite(h) ? printPgSz(w, h) : null,
     orient: getOrient(sectPr),
     colsNum: cols.num,
     colsEqualWidth: cols.equalWidth,

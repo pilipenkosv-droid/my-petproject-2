@@ -15,8 +15,9 @@ describe("normalizeText", () => {
   const cases: [string, string][] = [
     ["  \u0434\u0432\u043e\u0439\u043d\u044b\u0435   \u043f\u0440\u043e\u0431\u0435\u043b\u044b  ", "\u0434\u0432\u043e\u0439\u043d\u044b\u0435 \u043f\u0440\u043e\u0431\u0435\u043b\u044b"],
     ["\u043d\u0435\u0440\u0430\u0437\u00a0\u0440\u044b\u0432\u043d\u044b\u0439", "\u043d\u0435\u0440\u0430\u0437 \u0440\u044b\u0432\u043d\u044b\u0439"],
-    ["\u0441\u0442\u0440\u043e\u043a\u0430\n\u043f\u0435\u0440\u0435\u043d\u043e\u0441", "\u0441\u0442\u0440\u043e\u043a\u0430 \u043f\u0435\u0440\u0435\u043d\u043e\u0441"],
-    ["\u0442\u0430\u0431\t\u0443\u043b\u044f\u0446\u0438\u044f", "\u0442\u0430\u0431 \u0443\u043b\u044f\u0446\u0438\u044f"],
+    ["\u0441\u0442\u0440\u043e\u043a\u0430\n\n\u043f\u0435\u0440\u0435\u043d\u043e\u0441", "\u0441\u0442\u0440\u043e\u043a\u0430\n\u043f\u0435\u0440\u0435\u043d\u043e\u0441"],
+    ["\u0442\u0430\u0431\t\u0443\u043b\u044f\u0446\u0438\u044f", "\u0442\u0430\u0431\t\u0443\u043b\u044f\u0446\u0438\u044f"],
+    ["1  \u0412\u0432\u0435\u0434\u0435\u043d\u0438\u0435\t  5", "1 \u0412\u0432\u0435\u0434\u0435\u043d\u0438\u0435\t 5"],
     ["", ""],
     ["e\u0301", "e\u0301".normalize("NFC")],
   ];
@@ -119,6 +120,7 @@ describe("computeFingerprint", () => {
     expect(fp.parts[MAIN].tableShapes).toEqual([
       {
         gridCols: 2,
+        gridColSum: 200,
         rows: [
           { cells: [{ gridSpan: 2, vMerge: null }] },
           { cells: [{ gridSpan: 1, vMerge: null }, { gridSpan: 1, vMerge: "restart" }] },
@@ -138,6 +140,7 @@ describe("computeFingerprint", () => {
     const fp = await computeFingerprint(await sampleDocx());
     expect(fp.parts[MAIN].sections).toEqual([
       {
+        pgSz: { w: 11906, h: 16838 },
         orient: "portrait",
         colsNum: 2,
         colsEqualWidth: true,

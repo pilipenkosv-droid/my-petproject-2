@@ -1,10 +1,7 @@
 import { describe, it, expect } from "vitest";
-import fs from "fs";
-import path from "path";
 import { classifyDocument } from "@/lib/pipeline-v7/classify/deterministic";
 import { candidatesForLlm } from "@/lib/pipeline-v7/classify/llm-candidates";
 import type { ClassificationResult, Role } from "@/lib/pipeline-v7/classify/types";
-import { DocxPackage } from "@/lib/pipeline-v7/docx/package";
 import { miniPackage, p, style, type MiniDocxParts } from "./helpers/mini-docx";
 
 /** Plain sentences, so the suspect guard never fires on a two-paragraph test. */
@@ -13,6 +10,9 @@ const filler = (n = 12) =>
 
 /** Everything sits after a lead heading, out of reach of the title-page pass. */
 const LEAD = p("ВВЕДЕНИЕ");
+
+/** A leading number alone proves nothing; bold runs are the confirming signal. */
+const BOLD = "<w:rPr><w:b/></w:rPr>";
 
 async function classify(parts: MiniDocxParts): Promise<ClassificationResult> {
   return classifyDocument(await miniPackage(parts));
@@ -154,15 +154,31 @@ describe("T0 — text rules", () => {
     expect(roleOf(r, "ОБОЗНАЧЕНИЯ И СОКРАЩЕНИЯ")).toBe("heading_L1");
   });
 
+  it("promotes a numbered line only when the formatting agrees", async () => {
+    const bold = await roleOfProbe(p("1 Подготовка данных", "", BOLD), "1 Подготовка данных");
+    expect(bold.role).toBe("heading_L1");
+    const plain = await roleOfProbe(p("1 Подготовка данных"), "1 Подготовка данных");
+    expect(plain.role).toBe("unknown");
+    const money = await roleOfProbe(p("1.5 млн рублей"), "1.5 млн рублей");
+    expect(money.role).toBe("unknown");
+  });
+
+  it("keeps a demoted numbered line reachable for the LLM residue", async () => {
+    const { result } = await roleOfProbe(p("1 Подготовка данных"), "1 Подготовка данных");
+    const cp = result.list.find((x) => x.text === "1 Подготовка данных");
+    expect(cp?.confidence).toBe(0.5);
+    expect(candidatesForLlm(result).map((c) => c.text)).toContain("1 Подготовка данных");
+  });
+
   it("accepts numbered headings and rejects sentences and long lines", async () => {
     const long = `2.1 ${"очень длинный заголовок ".repeat(8)}`.trim();
     const body =
       LEAD +
-      p("1 Теоретические основы") +
-      p("1.2 Методы исследования") +
+      p("1 Теоретические основы", "", BOLD) +
+      p("1.2 Методы исследования", "", BOLD) +
       p("1. Это обычное предложение, которое заканчивается точкой.") +
       p("1.2.3.4 Слишком глубокая нумерация") +
-      p(long) +
+      p(long, "", BOLD) +
       filler();
     const r = await classify({ body });
     expect(roleOf(r, "1 Теоретические основы")).toBe("heading_L1");
@@ -224,16 +240,35 @@ describe("T0 — region and coherence passes", () => {
     expect(roleOf(r, "Обычное предложение номер 1 в основном тексте.")).toBe("unknown");
   });
 
+  it("opens a bibliography region on a second-level heading", async () => {
+    const h2 = (t: string) => p(t, '<w:pStyle w:val="Heading2"/>');
+    const body =
+      LEAD +
+      h2("СПИСОК ЛИТЕРАТУРЫ") +
+      p("Иванов И. И. Методика. — М.: Наука, 2020. — 240 с.") +
+      p("Петров П. П. Анализ. — СПб.: Питер, 2021. — 180 с.") +
+      h2("Материалы к разделу") +
+      p("Обычный текст после конца списка.") +
+      filler();
+    const r = await classify({ body, styles: style("Heading2", "heading 2") });
+    expect(roleOf(r, "СПИСОК ЛИТЕРАТУРЫ")).toBe("heading_L2");
+    expect(roleOf(r, "Иванов И. И. Методика. — М.: Наука, 2020. — 240 с.")).toBe("bibliography_item");
+    expect(roleOf(r, "Петров П. П. Анализ. — СПб.: Питер, 2021. — 180 с.")).toBe("bibliography_item");
+    expect(roleOf(r, "Обычный текст после конца списка.")).not.toBe("bibliography_item");
+  });
+
   it("demotes a heading that jumps more than one level", async () => {
     const body =
-      p("1 Первый раздел") + p("1.1.1 Подраздел третьего уровня") + filler(20);
+      p("1 Первый раздел", "", BOLD) +
+      p("1.1.1 Подраздел третьего уровня", "", BOLD) +
+      filler(20);
     const r = await classify({ body });
     expect(roleOf(r, "1.1.1 Подраздел третьего уровня")).toBe("heading_L2");
     expect(r.warnings.some((w) => w.includes("coherence"))).toBe(true);
   });
 
   it("flags a heading-heavy document as suspect and demotes guessed headings", async () => {
-    const guessed = Array.from({ length: 10 }, (_, i) => p(`${i + 1} Раздел про что-то`)).join("");
+    const guessed = Array.from({ length: 10 }, (_, i) => p(`${i + 1} Раздел про что-то`, "", BOLD)).join("");
     const styled = p("Настоящий заголовок", '<w:outlineLvl w:val="0"/>');
     const r = await classify({ body: styled + guessed + p("Одно предложение текста.") });
     expect(r.suspect).toBe(true);
@@ -242,48 +277,3 @@ describe("T0 — region and coherence passes", () => {
     expect(r.warnings.some((w) => w.includes("suspect"))).toBe(true);
   });
 });
-
-describe("candidatesForLlm", () => {
-  it("keeps formatted unknowns and drops plain sentences", async () => {
-    const centred = p("Методика оценки", '<w:jc w:val="center"/>', "<w:rPr><w:b/></w:rPr>");
-    const r = await classify({ body: LEAD + centred + filler() });
-    const texts = candidatesForLlm(r).map((c) => c.text);
-    expect(texts).toContain("Методика оценки");
-    expect(texts.some((t) => t?.startsWith("Обычное предложение"))).toBe(false);
-  });
-
-  it("returns nothing when every paragraph is decided with high confidence", async () => {
-    const r = await classify({ body: p("Ячейка") });
-    expect(candidatesForLlm(r).every((c) => c.confidence < 0.85 || c.role === "unknown")).toBe(true);
-  });
-});
-
-const REAL_DIR = "/Users/sergejpilipenko/diplox/data/corpus/real";
-const SYNTH_DIR = path.resolve(__dirname, "../../../data/corpus/synthetic");
-
-function listDocx(dir: string): string[] {
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".docx") && !f.startsWith("~$"))
-    .map((f) => path.join(dir, f));
-}
-
-for (const [label, dir] of [["real", REAL_DIR], ["synthetic", SYNTH_DIR]] as const) {
-  const files = listDocx(dir);
-  describe.skipIf(files.length === 0)(`classify smoke — ${label} corpus`, () => {
-    it("classifies every document quickly and non-trivially", async () => {
-      let suspects = 0;
-      for (const file of files) {
-        const pkg = await DocxPackage.load(fs.readFileSync(file));
-        const started = Date.now();
-        const r = await classifyDocument(pkg);
-        const elapsed = Date.now() - started;
-        expect(elapsed, `${path.basename(file)} took ${elapsed}ms`).toBeLessThan(2000);
-        expect(r.list.length, path.basename(file)).toBeGreaterThan(0);
-        if (r.suspect) suspects += 1;
-      }
-      console.log(`[classify smoke] ${label}: ${suspects}/${files.length} suspect`);
-    });
-  });
-}

@@ -17,30 +17,30 @@ import type { BlockRef, ContentPartRef } from "../types";
 import { buildStyleIndex, type StyleIndex } from "./styles";
 import { buildNumberingIndex, type NumberingIndex } from "./numbering";
 import { paragraphFeatures, type ParagraphFeatures } from "./features";
+import { matchCaption, matchNumberedHeading, matchSectionName, normalizeText } from "./patterns";
 import {
-  isBibliographyHeading,
-  matchCaption,
-  matchNumberedHeading,
-  matchSectionName,
-  normalizeText,
-} from "./patterns";
+  applyBibliographyRegion,
+  applyCoherence,
+  applyNumberedSignals,
+  applySuspect,
+  applyTitlePage,
+  modalSize,
+} from "./passes";
 import {
   emptyHistogram,
   headingRole,
-  isHeadingRole,
   type ClassificationResult,
   type ClassifiedParagraph,
   type ClassifySource,
   type Role,
 } from "./types";
 
-const TITLE_PAGE_CAP = 40;
-const HEADING_SHARE_LIMIT = 0.4;
-
 interface Verdict {
   role: Role;
   confidence: number;
   source: ClassifySource;
+  /** The leading number is the only evidence; a format signal has to confirm it. */
+  needsSignal?: boolean;
 }
 
 interface Ctx {
@@ -123,96 +123,6 @@ function classifyOne(ctx: Ctx): Verdict {
   return UNKNOWN;
 }
 
-/** Paragraphs after a bibliography heading and before the next L1 heading. */
-function applyBibliographyRegion(list: ClassifiedParagraph[], from: number, to: number): void {
-  const OVERRIDABLE: Role[] = ["unknown", "body", "list_item"];
-  let inRegion = false;
-  for (let i = from; i < to; i++) {
-    const cp = list[i];
-    if (cp.role === "heading_L1" || cp.role === "appendix_heading") {
-      inRegion = cp.role === "heading_L1" && isBibliographyHeading(cp.text ?? "");
-      continue;
-    }
-    if (!inRegion) continue;
-    if (cp.role === "table_cell" || cp.text === "") continue;
-    if (!OVERRIDABLE.includes(cp.role)) continue;
-    cp.role = "bibliography_item";
-    cp.confidence = 0.9;
-    cp.source = "region";
-  }
-}
-
-function titlePageEnd(list: ClassifiedParagraph[], from: number, to: number): number {
-  const limit = Math.min(to, from + TITLE_PAGE_CAP);
-  for (let i = from; i < limit; i++) {
-    const cp = list[i];
-    if (cp.role === "heading_L1" || cp.role === "toc" || cp.role === "appendix_heading") return i;
-    const f = cp.features;
-    if (f?.pageBreakBefore && i > from) return i;
-    if (f?.hasPageBreakRun) return i + 1;
-  }
-  return limit;
-}
-
-function applyTitlePage(list: ClassifiedParagraph[], from: number, to: number): void {
-  const end = titlePageEnd(list, from, to);
-  for (let i = from; i < end; i++) {
-    const cp = list[i];
-    if (cp.role !== "unknown" && cp.role !== "body") continue;
-    cp.role = "title_page";
-    cp.confidence = 0.8;
-    cp.source = "titlepage";
-  }
-}
-
-/** A heading may deepen by at most one level relative to the previous heading. */
-export function applyCoherence(list: ClassifiedParagraph[], warnings: string[]): void {
-  let prev = 0;
-  for (const cp of list) {
-    if (!isHeadingRole(cp.role)) continue;
-    const level = Number(cp.role.slice(-1));
-    if (level > prev + 1) {
-      const fixed = prev + 1;
-      warnings.push(`coherence: ${cp.path} demoted heading_L${level} → heading_L${fixed}`);
-      cp.role = headingRole(fixed);
-      prev = fixed;
-    } else {
-      prev = level;
-    }
-  }
-}
-
-/** Too many headings means the heuristics misfired; drop the guessed ones. */
-export function applySuspect(list: ClassifiedParagraph[], warnings: string[]): boolean {
-  const scope = list.filter((cp) => cp.role !== "empty" && cp.role !== "table_cell");
-  const headings = scope.filter((cp) => isHeadingRole(cp.role));
-  if (scope.length === 0 || headings.length / scope.length <= HEADING_SHARE_LIMIT) return false;
-  warnings.push(
-    `suspect: ${headings.length}/${scope.length} paragraphs classified as headings; ` +
-      "demoting every heading not backed by outlineLvl or a style"
-  );
-  for (const cp of headings) {
-    if (cp.source === "outlineLvl" || cp.source === "style") continue;
-    cp.role = "unknown";
-    cp.confidence = 0;
-    cp.source = "none";
-  }
-  return true;
-}
-
-function modalSize(list: ClassifiedParagraph[]): number | undefined {
-  const counts = new Map<number, number>();
-  for (const cp of list) {
-    if (isHeadingRole(cp.role) || cp.role === "empty") continue;
-    const sz = cp.features?.sz;
-    if (sz === undefined) continue;
-    counts.set(sz, (counts.get(sz) ?? 0) + 1);
-  }
-  let best: number | undefined;
-  for (const [sz, c] of counts) if (best === undefined || c > (counts.get(best) ?? 0)) best = sz;
-  return best;
-}
-
 export async function classifyDocument(pkg: DocxPackage): Promise<ClassificationResult> {
   const styles = await buildStyleIndex(pkg);
   const numbering = await buildNumberingIndex(pkg);
@@ -220,6 +130,7 @@ export async function classifyDocument(pkg: DocxPackage): Promise<Classification
   const byNode = new WeakMap<OrderedXmlNode, ClassifiedParagraph>();
   const warnings: string[] = [];
   const docRanges: [number, number][] = [];
+  const numberedOnly: number[] = [];
 
   for (const part of await pkg.contentParts()) {
     const nodes = await pkg.part(part.name);
@@ -244,12 +155,18 @@ export async function classifyDocument(pkg: DocxPackage): Promise<Classification
         features: f,
       };
       if (f.hasMath && verdict.role !== "formula") cp.hasInlineMath = true;
+      if (verdict.needsSignal) numberedOnly.push(list.length);
       list.push(cp);
       byNode.set(block.node, cp);
     }
     if (part.kind === "document") docRanges.push([start, list.length]);
   }
 
+  const modalBodySize = modalSize(list);
+  const demoted = applyNumberedSignals(list, numberedOnly, modalBodySize);
+  if (demoted > 0) {
+    warnings.push(`numbered-re: ${demoted} нумерованных абзаца без признаков заголовка → unknown`);
+  }
   for (const [from, to] of docRanges) {
     applyBibliographyRegion(list, from, to);
     applyTitlePage(list, from, to);
@@ -259,5 +176,5 @@ export async function classifyDocument(pkg: DocxPackage): Promise<Classification
 
   const histogram = emptyHistogram();
   for (const cp of list) histogram[cp.role] += 1;
-  return { byNode, list, histogram, warnings, suspect, modalBodySize: modalSize(list) };
+  return { byNode, list, histogram, warnings, suspect, modalBodySize };
 }

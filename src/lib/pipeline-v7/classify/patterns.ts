@@ -11,6 +11,12 @@ import { headingRole, type Role } from "./types";
 export interface TextVerdict {
   role: Role;
   confidence: number;
+  /**
+   * The verdict rests on a leading number and nothing else. "1.5 млн рублей"
+   * has the shape of a heading and is a sentence, so the caller must find a
+   * formatting signal before promoting it.
+   */
+  needsSignal?: boolean;
 }
 
 const SECTION_NAMES = [
@@ -85,5 +91,5 @@ export function matchNumberedHeading(text: string): TextVerdict | undefined {
   if (TOO_DEEP_RE.test(text)) return undefined;
   const m = NUMBERED_RE.exec(text);
   if (!m) return undefined;
-  return { role: headingRole(m[1].split(".").length), confidence: 0.85 };
+  return { role: headingRole(m[1].split(".").length), confidence: 0.85, needsSignal: true };
 }

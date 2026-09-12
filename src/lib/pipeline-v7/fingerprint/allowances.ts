@@ -132,6 +132,8 @@ export function isRemovableEmpty(block: BlockPrint): boolean {
   return (
     block.kind === "p" &&
     block.text === "" &&
+    !block.hasFootnoteRef &&
+    block.footnoteIds.length === 0 &&
     !block.hasDrawing &&
     !block.hasEmbed &&
     !block.hasSectPr &&
@@ -147,6 +149,7 @@ export function emptyRemovalCap(part: PartPrint): number {
 }
 
 const SECTION_EQ_FIELDS: (keyof SectionPrint)[] = [
+  "pgSz",
   "orient",
   "colsNum",
   "colsEqualWidth",

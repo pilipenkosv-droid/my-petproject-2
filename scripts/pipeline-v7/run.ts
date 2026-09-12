@@ -5,7 +5,9 @@
  *   npx tsx scripts/pipeline-v7/run.ts <in.docx> <out.docx> \
  *     [--pack gost-7.32] [--no-llm] [--json] [--allow-gate-fail] [--text-norm]
  *
- * Exit codes: 0 ok, 1 crash, 2 fidelity gate failed (writes <out>.diff.json).
+ * Exit codes: 0 ok, 1 crash, 2 fidelity gate failed (writes <out>.diff.json),
+ * 3 refused — the classification was suspect and the document came back as it
+ * went in (it is still written out, so the caller has a file either way).
  *
  * PRIVACY: prints paths, roles, counts and rule codes — never document text.
  */
@@ -57,6 +59,7 @@ async function main() {
   }
   fs.writeFileSync(outPath, result.output!);
   console.log(`записано: ${outPath} (${result.output!.length} байт)`);
+  if (result.report.refused) process.exit(3);
 }
 
 main().catch((err) => {

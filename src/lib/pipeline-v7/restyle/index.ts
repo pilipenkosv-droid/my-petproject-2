@@ -53,10 +53,27 @@ async function fontCharStyleIds(pkg: DocxPackage): Promise<Set<string>> {
   return out;
 }
 
+/** Carries node-level facts the aux step needs and the report must not hold. */
+export interface RestyleSink {
+  /** Paragraphs that gained a w:pageBreakBefore they did not have. */
+  addedPageBreak: Set<OrderedXmlNode>;
+}
+
+export function emptySink(): RestyleSink {
+  return { addedPageBreak: new Set() };
+}
+
+/** True when the paragraph's own w:pPr carries a w:sectPr. */
+function endsSection(node: OrderedXmlNode): boolean {
+  const pPr = findChild(node, "w:pPr");
+  return pPr !== undefined && children(pPr).some((c) => "w:sectPr" in c);
+}
+
 export async function restyleDocument(
   pkg: DocxPackage,
   pack: RulePack,
-  classification: ClassificationResult
+  classification: ClassificationResult,
+  sink: RestyleSink = emptySink()
 ): Promise<RestyleStats> {
   const spec = buildPackSpec(pack);
   const fontStyleIds = await fontCharStyleIds(pkg);
@@ -68,13 +85,17 @@ export async function restyleDocument(
   let runsTouched = 0;
   const dirty = new Set<string>();
   const counters = { underlineRemoved: 0 };
-  const ctx = { spec };
+  const ctx = { spec, prevHasSectPr: false, addedPageBreak: sink.addedPageBreak };
+  let prevPart = "";
   for (const cp of classification.list) {
     const node: OrderedXmlNode = cp.node;
+    ctx.prevHasSectPr = cp.part === prevPart && ctx.prevHasSectPr;
     if (restyleParagraph(node, cp.role, pack, ctx)) paragraphsTouched += 1;
     runsTouched += restyleRuns(node, cp.role, pack, { spec, fontStyleIds, counters });
     byRole[cp.role] += 1;
     dirty.add(cp.part);
+    ctx.prevHasSectPr = endsSection(node);
+    prevPart = cp.part;
   }
   for (const part of dirty) pkg.markDirty(part);
   const tables = await restyleTables(pkg, pack, classification);

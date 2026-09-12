@@ -7,7 +7,8 @@
 import type { RulePack } from "@/lib/pipeline-v6/rule-packs/types";
 import type { OrderedXmlNode } from "@/lib/xml/docx-xml";
 import type { DocxPackage } from "../docx/package";
-import { enumerateSectPr, getOrient, setPgMar, setPgSz } from "../docx/sectpr";
+import { enumerateSectPr, getOrient, getPgSz, setPgMar, setPgSz } from "../docx/sectpr";
+import { isNearA4 } from "../docx/paper";
 import type { PgMar } from "../types";
 import { buildPackSpec, mmToTwips, type PackSpec } from "./spec";
 
@@ -32,9 +33,27 @@ export function marginsFor(spec: PackSpec, orient: "portrait" | "landscape"): Pg
   };
 }
 
+/**
+ * True when the section's page is A4 give or take a millimetre — the only case
+ * where writing the pack's page size is a normalisation rather than a reflow.
+ *
+ * A section printed on A3, A5 or Letter was set that way on purpose (a foldout
+ * table, an American template); forcing it to A4 repaginates the document and
+ * is not a formatting fix. A section with no w:pgSz at all inherits the
+ * application default and is left alone for the same reason.
+ */
+function normalisablePage(sectPr: OrderedXmlNode): boolean {
+  const size = getPgSz(sectPr);
+  const w = Number(size?.w);
+  const h = Number(size?.h);
+  return Number.isFinite(w) && Number.isFinite(h) && isNearA4(w, h);
+}
+
 export function restyleSectPr(sectPr: OrderedXmlNode, spec: PackSpec): void {
   const orient = getOrient(sectPr);
+  // Margins apply to every section: they are the pack's, whatever the sheet.
   setPgMar(sectPr, marginsFor(spec, orient));
+  if (!normalisablePage(sectPr)) return;
   const { w, h } = spec.pageMm;
   const [pw, ph] = orient === "landscape" ? [h, w] : [w, h];
   // orient is deliberately not passed: an absent w:orient means portrait and

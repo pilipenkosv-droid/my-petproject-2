@@ -63,7 +63,7 @@ describe("gate — allowances", () => {
       `<w:p><w:pPr><w:pStyle w:val="TOC2"/></w:pPr><w:r><w:t>Глава 1</w:t></w:r></w:p>`;
     const before = [p("СОДЕРЖАНИЕ"), toc, ANCHOR, p("Текст"), sectPr()].join("");
     const after = [p("СОДЕРЖАНИЕ"), ANCHOR, p("Текст"), sectPr()].join("");
-    const result = await gate(before, after);
+    const result = await gate(before, after, { allowRemovals: true });
     expect(result.violations.map((v) => v.message)).toEqual([]);
     expect(rules(result)).toContain("A2");
   });
@@ -72,23 +72,41 @@ describe("gate — allowances", () => {
     const toc = `<w:p><w:pPr><w:pStyle w:val="TOC1"/></w:pPr><w:r><w:t>Введение</w:t></w:r></w:p>`;
     const before = [p("Титул"), toc, p("Текст"), sectPr()].join("");
     const after = [p("Титул"), p("Текст"), sectPr()].join("");
-    expect(kinds(await gate(before, after))).toEqual(["block-removed"]);
+    expect(kinds(await gate(before, after, { allowRemovals: true }))).toEqual(["block-removed"]);
   });
 
   it("A3: accepts empty-paragraph removal up to the cap", async () => {
     const filler = Array.from({ length: 20 }, (_, i) => p(`строка ${i}`)).join("");
     const before = [p("Титул"), "<w:p/>", "<w:p/>", filler, sectPr()].join("");
     const after = [p("Титул"), "<w:p/>", filler, sectPr()].join("");
-    const result = await gate(before, after);
+    const result = await gate(before, after, { allowRemovals: true });
     expect(result.violations.map((v) => v.message)).toEqual([]);
     expect(rules(result)).toEqual(["A3"]);
+  });
+
+  it("A1: removals are a violation unless allowRemovals is on", async () => {
+    const filler = Array.from({ length: 20 }, (_, i) => p(`строка ${i}`)).join("");
+    const before = [p("Титул"), "<w:p/>", "<w:p/>", filler, sectPr()].join("");
+    const after = [p("Титул"), "<w:p/>", filler, sectPr()].join("");
+    expect(kinds(await gate(before, after))).toEqual(["block-removed"]);
+    expect(rules(await gate(before, after))).not.toContain("A3");
+  });
+
+  it("A3: a paragraph carrying only a footnote reference is never removable", async () => {
+    const noteP = `<w:p><w:r><w:footnoteReference w:id="2"/></w:r></w:p>`;
+    const filler = Array.from({ length: 20 }, (_, i) => p(`строка ${i}`)).join("");
+    const before = [p("Титул"), noteP, filler, sectPr()].join("");
+    const after = [p("Титул"), filler, sectPr()].join("");
+    const result = await gate(before, after, { allowRemovals: true });
+    expect(result.violations.some((v) => v.kind === "block-removed")).toBe(true);
+    expect(rules(result)).not.toContain("A3");
   });
 
   it("A3: rejects empty-paragraph removal over the cap", async () => {
     const filler = Array.from({ length: 20 }, (_, i) => p(`строка ${i}`)).join("");
     const before = [p("Титул"), "<w:p/>", "<w:p/>", filler, sectPr()].join("");
     const after = [p("Титул"), filler, sectPr()].join("");
-    expect(kinds(await gate(before, after))).toEqual(["empty-removal-cap"]);
+    expect(kinds(await gate(before, after, { allowRemovals: true }))).toEqual(["empty-removal-cap"]);
   });
 
   it("A4: accepts pure normalisation only when the option is on", async () => {
@@ -172,7 +190,8 @@ describe("gate — hard failures", () => {
   it("changed orientation", async () => {
     const before = [p("Титул"), `<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/></w:sectPr>`].join("");
     const after = [p("Титул"), `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/></w:sectPr>`].join("");
-    expect((await gate(before, after)).violations[0].message).toContain("orient");
+    const messages = (await gate(before, after)).violations.map((v) => v.message);
+    expect(messages.some((m) => m.includes("orient"))).toBe(true);
   });
 
   it("deleted non-empty paragraph", async () => {

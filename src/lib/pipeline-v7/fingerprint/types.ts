@@ -39,10 +39,23 @@ export type MarkerCounts = Record<Marker, number>;
 export interface TableShape {
   /** Number of w:gridCol in w:tblGrid — count only, widths are not fidelity. */
   gridCols: number;
+  /**
+   * Sum of the w:gridCol widths, twips, quantised to 100 (≈1 % of a full-width
+   * table). Individual column widths are not fidelity, but the total is: a
+   * pipeline that rescales the grid changes how wide the table prints, and that
+   * is a layout change the gate has to see. A5 tolerates ±2 %.
+   */
+  gridColSum: number;
   rows: { cells: { gridSpan: number; vMerge: "restart" | "continue" | null }[] }[];
 }
 
 export interface SectionPrint {
+  /**
+   * Page size, twips, rounded to 10 — and snapped to exact A4 when it is within
+   * 1 mm of it, which is the window restyle/sections.ts is allowed to normalise
+   * in. Everything further from A4 (A3, A5, Letter) is compared as found.
+   */
+  pgSz: { w: number; h: number } | null;
   orient: "portrait" | "landscape";
   colsNum: number;
   colsEqualWidth: boolean;
