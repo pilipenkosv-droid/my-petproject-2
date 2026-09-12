@@ -226,21 +226,34 @@ describe("aux — underline", () => {
 });
 
 describe("aux — space collapsing", () => {
-  it("collapses only inside a w:t, and only in body-like roles", async () => {
+  const cell = (t: string) => `<w:tc>${p(t)}</w:tc>`;
+  const tbl = (rows: string) =>
+    `<w:tbl><w:tblGrid><w:gridCol w:w="100"/><w:gridCol w:w="100"/></w:tblGrid>${rows}</w:tbl>`;
+
+  it("collapses inside a w:t in every role except toc and formula", async () => {
     const body =
       p("Титул   с   пробелами") +
-      H1("ВВЕДЕНИЕ") +
+      H1("ВВЕДЕНИЕ  ПЕРВАЯ") +
       p("Текст  с  двойными  пробелами.") +
+      tbl(
+        `<w:tr>${cell("Ячейка   таблицы")}${cell("данные")}</w:tr>` +
+          `<w:tr>${cell("вторая")}${cell("строка")}</w:tr>`
+      ) +
       SECT;
     const off = await run(await docx(body), false);
     expect(off.report.aux.spacesCollapsed).toBe(0);
-    expect(await documentXml(off.output!)).toContain("Текст  с");
+    const offXml = await documentXml(off.output!);
+    expect(offXml).toContain("Текст  с");
+    expect(offXml).toContain("Ячейка   таблицы");
 
     const on = await run(await docx(body), true);
-    expect(on.report.aux.spacesCollapsed).toBe(3);
     const xml = await documentXml(on.output!);
     expect(xml).toContain("Текст с двойными пробелами.");
-    expect(xml).toContain("Титул   с   пробелами"); // title_page is left alone
+    expect(xml).toContain("Титул с пробелами"); // title_page is normalized too
+    expect(xml).toContain("ВВЕДЕНИЕ ПЕРВАЯ"); // heading is normalized too
+    expect(xml).toContain("Ячейка таблицы"); // table_cell is normalized too
+    expect(on.report.aux.spacesCollapsed).toBe(7);
+    expect(on.report.gate.pass).toBe(true);
   });
 
   it("never touches a field instruction", () => {

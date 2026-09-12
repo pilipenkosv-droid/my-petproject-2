@@ -2,11 +2,13 @@
  * Collapsing runs of spaces — the one step that touches text, and therefore
  * opt-in.
  *
- * The rule is deliberately narrow: only `w:t` nodes of body, list and
- * bibliography paragraphs, and only *within* one text node. Collapsing across
- * runs would join words whose separating space lives in a neighbouring run, and
- * `w:instrText` is a field instruction, not text, so it is never a candidate —
- * it is a different tag and the walk simply does not reach it.
+ * The rule applies to `w:t` nodes of every role except `toc` and `formula`,
+ * and only *within* one text node. Collapsing across runs would join words
+ * whose separating space lives in a neighbouring run, and `w:instrText` /
+ * `w:delText` are never candidates — they are different tags and the walk
+ * simply does not reach them. `toc` is excluded because its cached run is
+ * replaced by Word on open anyway, and `formula` because spacing there can be
+ * meaningful (e.g. omml fallback text).
  *
  * The fingerprint already collapses whitespace runs (normalizeText), so this
  * mutation is invisible to the gate; `allowTextNormalization` is passed anyway
@@ -17,11 +19,7 @@ import { children, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import { walkAll } from "../fingerprint/scan";
 import type { ClassificationResult, Role } from "../classify/types";
 
-const NORMALIZED_ROLES: ReadonlySet<Role> = new Set<Role>([
-  "body",
-  "list_item",
-  "bibliography_item",
-]);
+const EXCLUDED_ROLES: ReadonlySet<Role> = new Set<Role>(["toc", "formula"]);
 
 const RUNS_OF_SPACES = / {2,}/g;
 
@@ -46,7 +44,7 @@ function collapseTextNode(t: OrderedXmlNode): number {
 export function normalizeSpaces(classification: ClassificationResult): number {
   let collapsed = 0;
   for (const cp of classification.list) {
-    if (!NORMALIZED_ROLES.has(cp.role)) continue;
+    if (EXCLUDED_ROLES.has(cp.role)) continue;
     walkAll(cp.node, (node, tag) => {
       if (tag === "w:t") collapsed += collapseTextNode(node);
     });

@@ -28,7 +28,6 @@ import { W_SETTINGS_ORDER, setChildInOrder } from "../restyle/ooxml-order";
 import { dirOf, firstBlockIndex, lastTitlePageIndex, mainPart, markAux, nextBookmarkId } from "./common";
 
 const TOC_INSTR = ' TOC \\o "1-3" \\h \\z \\u ';
-const PLACEHOLDER = "Обновите поле (F9)";
 const TOC_STYLE = /^(TOC|toc|Оглавление|Содержание)\s?\d$/;
 const TOC_HEADING = /^(СОДЕРЖАНИЕ|ОГЛАВЛЕНИЕ)$/i;
 
@@ -81,14 +80,21 @@ function headingParagraph(spec: PackSpec): OrderedXmlNode {
   ]);
 }
 
-/** fldChar begin (dirty) → instrText → separate → cached text → end. */
+/**
+ * fldChar begin (dirty) → instrText → separate → cached run → end.
+ *
+ * The cached run between `separate` and `end` is left empty: Word replaces it
+ * with the real entries on open (w:updateFields), and LibreOffice renders its
+ * own generated index next to the field rather than this cache, so a
+ * placeholder string here only adds a stray line to headless conversions.
+ */
 function fieldParagraph(spec: PackSpec): OrderedXmlNode {
   const run = (child: OrderedXmlNode) => createNode("w:r", undefined, [rPr(spec), child]);
   return createNode("w:p", undefined, [
     run(createNode("w:fldChar", { "w:fldCharType": "begin", "w:dirty": "true" })),
     run(createNode("w:instrText", { "xml:space": "preserve" }, [createTextNode(TOC_INSTR)])),
     run(createNode("w:fldChar", { "w:fldCharType": "separate" })),
-    run(createNode("w:t", { "xml:space": "preserve" }, [createTextNode(PLACEHOLDER)])),
+    run(createNode("w:t", { "xml:space": "preserve" })),
     run(createNode("w:fldChar", { "w:fldCharType": "end" })),
   ]);
 }
