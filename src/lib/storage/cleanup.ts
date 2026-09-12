@@ -12,6 +12,13 @@ import { cleanupRetentionTables } from "./retention";
 
 const JOB_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const FILE_TTL_MS = 48 * 60 * 60 * 1000;
+// Купленная полная версия (results/<jobId>/{original,formatted}_full.docx)
+// не должна попадать под 48ч зачистку — иначе платному пользователю после
+// платежа молча отдаётся урезанный trial-файл (/api/download/[fileId]
+// подставляет full-версию только если она ещё существует). Живёт вместе
+// с job (30 дней), а не с обычными результатами (48ч).
+const FULL_VERSION_PATTERN = /_full\.docx$/;
+const FULL_VERSION_TTL_MS = JOB_TTL_MS;
 
 export async function runCleanup(ttlMs: number = JOB_TTL_MS): Promise<{
   jobsDeleted: number;
@@ -39,10 +46,18 @@ export async function runCleanup(ttlMs: number = JOB_TTL_MS): Promise<{
   }
 
   try {
-    filesDeleted = await cleanupOldFiles(FILE_TTL_MS);
+    filesDeleted = await cleanupOldFiles(FILE_TTL_MS, { excludePattern: FULL_VERSION_PATTERN });
     if (filesDeleted > 0) console.log(`[Cleanup] Deleted ${filesDeleted} old files`);
   } catch (error) {
     console.error("[Cleanup] files error:", error);
+  }
+
+  try {
+    const fullVersionsDeleted = await cleanupOldFiles(FULL_VERSION_TTL_MS, { includePattern: FULL_VERSION_PATTERN });
+    if (fullVersionsDeleted > 0) console.log(`[Cleanup] Deleted ${fullVersionsDeleted} old full-version files`);
+    filesDeleted += fullVersionsDeleted;
+  } catch (error) {
+    console.error("[Cleanup] full-version files error:", error);
   }
 
   try {
