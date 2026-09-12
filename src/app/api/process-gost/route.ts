@@ -9,7 +9,9 @@ import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/refund";
 import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
-import { adaptPipelineV6ToLegacy, type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
+import { adaptPipelineV6ToLegacy, type AccessType, type LegacyAdapterResult } from "@/lib/pipeline-v6/adapter-legacy";
+import { shouldUsePipelineV7 } from "@/lib/pipeline-v7/feature-flag";
+import { tryPipelineV7 } from "@/lib/pipeline-v7/try-v7";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -122,20 +124,34 @@ export async function POST(request: NextRequest) {
       updateJobProgress(jobId, "formatting", 70, "Применение форматирования по ГОСТ").catch(() => {});
     }, 4000);
 
-    let pipelineResult;
+    let adapted: LegacyAdapterResult | undefined;
+    let v7Fallback: string | undefined;
     try {
-      pipelineResult = await runPipelineV6(sourceBuffer, {
-        documentId: jobId,
-        templateSlug: "gost-7.32",
-        rewrite: false,
-        fixIterations: 1,
-      });
+      if (shouldUsePipelineV7(jobId)) {
+        const attempt = await tryPipelineV7(sourceBuffer, jobId, userAccessType);
+        if ("adapted" in attempt) {
+          adapted = attempt.adapted;
+        } else {
+          v7Fallback = attempt.fallback;
+          console.warn("[v7] fallback", v7Fallback);
+        }
+      }
+      if (!adapted) {
+        const pipelineResult = await runPipelineV6(sourceBuffer, {
+          documentId: jobId,
+          templateSlug: "gost-7.32",
+          rewrite: false,
+          fixIterations: 1,
+        });
+        adapted = await adaptPipelineV6ToLegacy(sourceBuffer, pipelineResult, userAccessType);
+        adapted.statistics.pipelineVersion = "v6";
+        if (v7Fallback) adapted.statistics.v7Fallback = v7Fallback;
+      }
     } finally {
       clearTimeout(tick50);
       clearTimeout(tick70);
     }
-
-    const adapted = await adaptPipelineV6ToLegacy(sourceBuffer, pipelineResult, userAccessType);
+    if (!adapted) throw new Error("Не удалось обработать документ");
 
     await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
 
