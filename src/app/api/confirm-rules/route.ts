@@ -5,6 +5,7 @@ import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/li
 import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 import { getUserAccess } from "@/lib/payment/access";
+import { refundUse } from "@/lib/payment/refund";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -122,6 +123,8 @@ export async function POST(request: NextRequest) {
       ...analysisResult.statistics,
       pipelineTimeMs,
       markupTimeMs: blockMarkupResult.markupDurationMs,
+      markupDegraded: blockMarkupResult.markupDegraded,
+      markupDegradedChunks: blockMarkupResult.markupDegradedChunks,
       ...(formattingResult.wasTruncated && {
         wasTruncated: true,
         originalPageCount: formattingResult.originalPageCount,
@@ -157,6 +160,12 @@ export async function POST(request: NextRequest) {
         await failJob(jobId, errorMessage);
       } catch (failError) {
         console.error("Failed to mark job as failed:", failError);
+      }
+      try {
+        const failedJob = await getJob(jobId);
+        await refundUse(failedJob?.userId, jobId, errorMessage);
+      } catch (refundError) {
+        console.error("Failed to refund use:", refundError);
       }
     }
 

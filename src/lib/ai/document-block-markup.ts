@@ -26,6 +26,12 @@ import {
 import { verifyMarkupStructure, reclassifyBlocks } from "./markup-verifier";
 import { parseDocumentSemantics, getSectionByType } from "./document-semantic-parser";
 import { fillUnknownBlocksRuleBased } from "./rule-based-block-classifier";
+import {
+  BUDGET_EXPIRED,
+  getMarkupBudgetMs,
+  raceDeadline,
+  ruleBasedMarkupFor,
+} from "./markup-budget";
 
 /** Целевой размер чанка (параграфов). Структурный чанкинг может дать ±20%. */
 const TARGET_CHUNK_SIZE = 50;
@@ -105,6 +111,9 @@ interface ChunkContext {
 }
 
 const MIN_RETRY_CHUNK = 10;
+
+/** Доля бюджета разметки, отдаваемая семантическому предпроходу. */
+const PRE_PASS_BUDGET_SHARE = 0.4;
 
 /** Размечает один чанк параграфов через AI с рекурсивным retry. */
 async function parseChunk(
@@ -193,30 +202,59 @@ function preClassifyParagraphs(
  */
 export async function parseDocumentBlocks(
   paragraphs: Array<{ index: number; text: string; style?: string }>
-): Promise<DocumentBlockMarkup & { modelId?: string; durationMs?: number; preClassifiedCount?: number; ruleBasedFillCount?: number }> {
+): Promise<DocumentBlockMarkup & {
+  modelId?: string;
+  durationMs?: number;
+  preClassifiedCount?: number;
+  ruleBasedFillCount?: number;
+  markupDegraded?: boolean;
+  markupDegradedChunks?: number;
+}> {
   const startTime = Date.now();
+  const budgetMs = getMarkupBudgetMs();
+  const deadline = startTime + budgetMs;
 
   if (paragraphs.length === 0) {
-    return { blocks: [], warnings: [], durationMs: 0, preClassifiedCount: 0, ruleBasedFillCount: 0 };
+    return {
+      blocks: [],
+      warnings: [],
+      durationMs: 0,
+      preClassifiedCount: 0,
+      ruleBasedFillCount: 0,
+      markupDegraded: false,
+      markupDegradedChunks: 0,
+    };
   }
 
   const allWarnings: string[] = [];
+  let degradedChunks = 0;
 
   // Шаг 0: Семантический предпроход (определяет секции документа)
   let semanticBibRange: { start: number; end: number } | null = null;
   if (paragraphs.length > 30) {
     try {
-      const semantics = await parseDocumentSemantics(
-        paragraphs.map((p) => ({ index: p.index, text: p.text.slice(0, 150) }))
+      // Пре-проход — отдельный последовательный round trip. Даём ему только часть
+      // бюджета, иначе он один способен съесть весь бюджет основной разметки.
+      const prePassDeadline = Math.min(deadline, startTime + Math.floor(budgetMs * PRE_PASS_BUDGET_SHARE));
+      const semantics = await raceDeadline(
+        parseDocumentSemantics(
+          paragraphs.map((p) => ({ index: p.index, text: p.text.slice(0, 150) }))
+        ),
+        prePassDeadline
       );
-      const bibSection = getSectionByType(semantics, "bibliography");
-      if (bibSection) {
-        semanticBibRange = { start: bibSection.startParagraph, end: bibSection.endParagraph };
-        console.log(
-          `[block-markup] Semantic pre-pass: bibliography at paragraphs ${semanticBibRange.start}-${semanticBibRange.end}`
-        );
+      if (semantics === BUDGET_EXPIRED) {
+        console.warn("[block-markup] Semantic pre-pass exceeded its budget share, continuing without it");
+        allWarnings.push("Семантический предпроход прерван по бюджету времени");
+      } else {
+        const bibSection = getSectionByType(semantics, "bibliography");
+        if (bibSection) {
+          semanticBibRange = { start: bibSection.startParagraph, end: bibSection.endParagraph };
+          console.log(
+            `[block-markup] Semantic pre-pass: bibliography at paragraphs ${semanticBibRange.start}-${semanticBibRange.end}`
+          );
+        }
+        if (semantics.warnings) allWarnings.push(...semantics.warnings);
       }
-      if (semantics.warnings) allWarnings.push(...semantics.warnings);
     } catch (error) {
       console.warn("[block-markup] Semantic pre-pass failed, continuing without:", error);
     }
@@ -234,9 +272,10 @@ export async function parseDocumentBlocks(
   let modelId: string | undefined;
 
   if (needsAI.length > 0) {
-    const aiResult = await classifyWithAI(needsAI, preClassified, paragraphs, semanticBibRange);
+    const aiResult = await classifyWithAI(needsAI, preClassified, paragraphs, semanticBibRange, deadline);
     aiBlocks = aiResult.blocks;
     modelId = aiResult.modelId;
+    degradedChunks += aiResult.degradedChunks;
     if (aiResult.warnings) allWarnings.push(...aiResult.warnings);
   }
 
@@ -271,12 +310,17 @@ export async function parseDocumentBlocks(
     // Feedback loop: переклассификация unknown блоков при unknownPct > 5%
     const unknownIssue = issues.find((i) => i.type === "high_unknown_rate");
     if (unknownIssue?.affectedIndices && unknownIssue.affectedIndices.length > 0) {
-      const { reclassified, count } = await reclassifyBlocks(
-        unknownIssue.affectedIndices, finalBlocks, paragraphs
+      // Ещё один последовательный round trip — только внутри бюджета.
+      const outcome = await raceDeadline(
+        reclassifyBlocks(unknownIssue.affectedIndices, finalBlocks, paragraphs),
+        deadline
       );
-      if (count > 0) {
-        finalBlocks = reclassified;
-        allWarnings.push(`Reclassified ${count} unknown blocks via feedback loop`);
+      if (outcome === BUDGET_EXPIRED) {
+        console.warn("[block-markup] Reclassification skipped: markup budget exhausted");
+        allWarnings.push("Переклассификация unknown-блоков пропущена по бюджету времени");
+      } else if (outcome.count > 0) {
+        finalBlocks = outcome.reclassified;
+        allWarnings.push(`Reclassified ${outcome.count} unknown blocks via feedback loop`);
       }
     }
   }
@@ -288,7 +332,10 @@ export async function parseDocumentBlocks(
   }
 
   const durationMs = Date.now() - startTime;
-  console.log(`[block-markup] Completed in ${(durationMs / 1000).toFixed(1)}s`);
+  console.log(
+    `[block-markup] Completed in ${(durationMs / 1000).toFixed(1)}s` +
+      (degradedChunks > 0 ? ` (degraded: ${degradedChunks} chunks by budget ${budgetMs}ms)` : "")
+  );
 
   return {
     blocks: finalBlocks,
@@ -297,6 +344,8 @@ export async function parseDocumentBlocks(
     durationMs,
     preClassifiedCount: preClassified.length,
     ruleBasedFillCount,
+    markupDegraded: degradedChunks > 0,
+    markupDegradedChunks: degradedChunks,
   };
 }
 
@@ -308,8 +357,9 @@ async function classifyWithAI(
   needsAI: Array<{ index: number; text: string; style?: string }>,
   preClassified: BlockMarkupItem[],
   allParagraphs: Array<{ index: number; text: string; style?: string }>,
-  semanticBibRange?: { start: number; end: number } | null
-): Promise<DocumentBlockMarkup & { modelId?: string }> {
+  semanticBibRange: { start: number; end: number } | null | undefined,
+  deadline: number
+): Promise<DocumentBlockMarkup & { modelId?: string; degradedChunks: number }> {
   const paraMap = new Map(allParagraphs.map(p => [p.index, p]));
   const preClassifiedMap = new Map(preClassified.map(b => [b.paragraphIndex, b]));
 
@@ -327,11 +377,21 @@ async function classifyWithAI(
             ` [СЕМАНТИКА: библиография в параграфах ${semanticBibRange.start}-${semanticBibRange.end}]`;
         }
       }
-      const result = await parseChunk(needsAI, context);
-      return result;
+      const result = await raceDeadline(parseChunk(needsAI, context), deadline);
+      if (result === BUDGET_EXPIRED) {
+        console.warn(
+          `[block-markup] Budget exhausted, ${needsAI.length} paragraphs classified rule-based`
+        );
+        return {
+          blocks: ruleBasedMarkupFor(needsAI),
+          warnings: [`Разметка прервана по бюджету времени, ${needsAI.length} параграфов размечены по правилам`],
+          degradedChunks: 1,
+        };
+      }
+      return { ...result, degradedChunks: 0 };
     } catch (error) {
       console.error("Error in AI block markup:", error);
-      return createFallbackMarkup(needsAI);
+      return { ...createFallbackMarkup(needsAI), degradedChunks: 0 };
     }
   }
 
@@ -385,7 +445,24 @@ async function classifyWithAI(
   const PARALLEL_BATCH = 3;
   const OVERLAP_SIZE = 5;
 
+  let degradedChunks = 0;
+
   for (let bi = 0; bi < chunks.length; bi += PARALLEL_BATCH) {
+    // Бюджет исчерпан — оставшиеся чанки не начинаем, размечаем по правилам.
+    if (Date.now() >= deadline) {
+      for (let ci = bi; ci < chunks.length; ci++) {
+        allBlocks.push(...ruleBasedMarkupFor(chunks[ci]));
+        degradedChunks++;
+      }
+      console.warn(
+        `[block-markup] Budget exhausted, ${degradedChunks} remaining chunks classified rule-based`
+      );
+      allWarnings.push(
+        `Разметка прервана по бюджету времени, ${degradedChunks} чанков размечены по правилам`
+      );
+      break;
+    }
+
     const batch = chunks.slice(bi, bi + PARALLEL_BATCH);
 
     // Overlap из уже обработанных блоков + pre-classified
@@ -428,20 +505,30 @@ async function classifyWithAI(
     const batchResults = await Promise.allSettled(
       batch.map((chunk, offset) => {
         const ci = bi + offset;
-        return parseChunk(chunk, chunkContexts[ci]).then(result => ({ ci, chunk, result }));
+        return raceDeadline(parseChunk(chunk, chunkContexts[ci]), deadline);
       })
     );
 
-    for (const settled of batchResults) {
-      if (settled.status === "fulfilled") {
-        const { result } = settled.value;
+    for (let offset = 0; offset < batchResults.length; offset++) {
+      const settled = batchResults[offset];
+      const ci = bi + offset;
+      const chunk = chunks[ci];
+
+      if (settled.status === "fulfilled" && settled.value !== BUDGET_EXPIRED) {
+        const result = settled.value;
         allBlocks.push(...result.blocks);
         if (!primaryModelId && result.modelId) primaryModelId = result.modelId;
         if (result.warnings) allWarnings.push(...result.warnings);
         if (result.modelId) await recordUsage(result.modelId);
+      } else if (settled.status === "fulfilled") {
+        // Бюджет истёк, пока чанк был в работе — ответ не ждём.
+        console.warn(`[block-markup] Chunk ${ci + 1}/${chunks.length} cut by budget, rule-based`);
+        allBlocks.push(...ruleBasedMarkupFor(chunk));
+        degradedChunks++;
+        allWarnings.push(
+          `Чанк ${ci + 1}/${chunks.length} прерван по бюджету времени — разметка по правилам`
+        );
       } else {
-        const ci = bi + batchResults.indexOf(settled);
-        const chunk = chunks[ci];
         const msg = settled.reason instanceof Error ? settled.reason.message : String(settled.reason);
         console.error(`[block-markup] Chunk ${ci + 1}/${chunks.length} failed: ${msg}`);
         failedChunks++;
@@ -464,6 +551,7 @@ async function classifyWithAI(
     blocks: allBlocks,
     warnings: allWarnings.length > 0 ? allWarnings : undefined,
     modelId: primaryModelId,
+    degradedChunks,
   };
 }
 

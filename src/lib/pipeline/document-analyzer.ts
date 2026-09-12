@@ -1335,7 +1335,13 @@ function checkDashes(
  */
 export async function enrichWithBlockMarkup(
   paragraphs: DocxParagraph[]
-): Promise<{ paragraphs: DocxParagraph[]; modelId?: string; markupDurationMs?: number }> {
+): Promise<{
+  paragraphs: DocxParagraph[];
+  modelId?: string;
+  markupDurationMs?: number;
+  markupDegraded: boolean;
+  markupDegradedChunks: number;
+}> {
   const input = paragraphs.map((p) => ({
     index: p.index,
     text: p.text,
@@ -1366,7 +1372,13 @@ export async function enrichWithBlockMarkup(
     };
   });
 
-  return { paragraphs: enriched, modelId: markup.modelId, markupDurationMs: markup.durationMs };
+  return {
+    paragraphs: enriched,
+    modelId: markup.modelId,
+    markupDurationMs: markup.durationMs,
+    markupDegraded: markup.markupDegraded ?? false,
+    markupDegradedChunks: markup.markupDegradedChunks ?? 0,
+  };
 }
 
 /**
