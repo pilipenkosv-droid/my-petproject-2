@@ -64,6 +64,9 @@ export interface PipelineResult {
   structure: StructureReport;
   rewrittenSlots: number;
   tableAssemblyPlan: { pandoc: number; docxtpl: number };
+  /** Число таблиц (включая вложенные) в ИСХОДНОМ документе — extracted.assets.tables
+   *  всегда 0, т.к. mammoth-вход приходит с уже вырезанными <w:tbl> (см. stripTablesForMammoth). */
+  originalTableCount: number;
   initialReport: QualityReport;
   finalReport: QualityReport;
   fixPlan: FixPlan;
@@ -438,9 +441,15 @@ export async function runPipelineV6(
   // source body блоками, для каждой таблицы запомним текст предыдущего <w:p>
   // (якорь), затем в markdown находим строку с этим текстом и вставляем
   // pipe-таблицу сразу после. Если якорь не найден — фолбэк: append в конец.
+  let originalTableCount = 0;
   {
     const zip = await JSZip.loadAsync(input);
     const docXml = (await zip.file("word/document.xml")?.async("string")) ?? "";
+    // Считаем ВСЕ таблицы (включая вложенные) — тем же способом, что checker
+    // (checker/index.ts origTableCount), т.к. mammoth-input для extractDocument
+    // приходит с уже вырезанными <w:tbl> (stripTablesForMammoth) и
+    // extracted.assets.tables всегда 0.
+    originalTableCount = (docXml.match(/<w:tbl[ >]/g) || []).length;
     const anchors: TableAnchor[] = extractTablesWithAnchors(docXml);
     // Mammoth оборачивает жирный/курсив в __...__ / **...**, заменяет табы — нормализуем,
     // чтобы матч anchor → строка в markdown устоял к этим различиям.
@@ -870,6 +879,7 @@ export async function runPipelineV6(
     structure,
     rewrittenSlots,
     tableAssemblyPlan,
+    originalTableCount,
     initialReport,
     finalReport: currentReport,
     fixPlan,
