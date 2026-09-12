@@ -45,6 +45,13 @@ export function formatReportText(report: V7Report): string {
       `секций ${report.restyle.sectionsTouched}, стилей ${report.restyle.stylesUpserted}` +
       (report.restyle.stylesPartMissing ? " (нет styles.xml)" : "")
   );
+  const a = report.aux;
+  lines.push(
+    `дополнения: оглавление ${a.tocInserted ? "вставлено" : a.tocExisting ? "уже было" : "нет"}` +
+      `${a.updateFields ? " (+updateFields)" : ""}, разрыв секции ${a.titleBreak ? "да" : "нет"}, ` +
+      `шапок таблиц ${a.tblHeaderSet}, снято подчёркиваний ${a.underlineRemoved}, ` +
+      `схлопнуто пробелов ${a.spacesCollapsed}`
+  );
   lines.push(
     `гейт: ${report.gate.pass ? "ПРОЙДЕН" : "ПРОВАЛЕН"}   ` +
       `нарушений ${report.gate.violations.length}, допущено ${report.gate.allowed.length}`
@@ -57,7 +64,7 @@ export function formatReportText(report: V7Report): string {
   lines.push(
     `время, мс: ${pad(`fp=${t.fingerprintBeforeMs}+${t.fingerprintAfterMs}`, 14)}` +
       `${pad(`classify=${t.classifyMs}`, 16)}${pad(`restyle=${t.restyleMs}`, 15)}` +
-      `${pad(`save=${t.saveMs}`, 12)}${pad(`gate=${t.gateMs}`, 12)}` +
+      `${pad(`aux=${t.auxMs}`, 11)}${pad(`save=${t.saveMs}`, 12)}${pad(`gate=${t.gateMs}`, 12)}` +
       `${pad(`checker=${t.checkerMs}`, 15)}всего=${t.totalMs}`
   );
   return lines.join("\n");

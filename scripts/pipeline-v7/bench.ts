@@ -5,7 +5,7 @@
  *
  * Usage:
  *   npx tsx scripts/pipeline-v7/bench.ts [--set=synthetic|real|all] [--id=<substr>]
- *     [--compare=v6,legacy] [--pdf] [--out=<dir>]
+ *     [--compare=v6,legacy] [--pdf] [--text-norm] [--out=<dir>]
  *
  * PRIVACY: ids, counts, timings and rule codes only — never document text.
  * Real documents are read as bytes from the sibling checkout; nothing is
@@ -34,6 +34,8 @@ interface Side {
   violations: string[];
   score: number | null;
   ms: number;
+  /** Checker rule ids still failing (v7 only). */
+  failed?: string[];
   error?: string;
 }
 
@@ -72,7 +74,15 @@ async function gateOutput(input: Buffer, output: Buffer | undefined) {
   };
 }
 
-async function benchDoc(doc: Doc, compare: string[], pdf: boolean, outDir: string): Promise<Row> {
+interface BenchOpts {
+  compare: string[];
+  pdf: boolean;
+  outDir: string;
+  textNormalization: boolean;
+}
+
+async function benchDoc(doc: Doc, o: BenchOpts): Promise<Row> {
+  const { compare, pdf, outDir } = o;
   const input = fs.readFileSync(doc.file);
   const row: Row = {
     id: doc.id,
@@ -87,12 +97,14 @@ async function benchDoc(doc: Doc, compare: string[], pdf: boolean, outDir: strin
       pack: GOST_7_32,
       documentId: doc.id,
       returnOnGateFail: true,
+      textNormalization: o.textNormalization,
     });
     row.v7 = {
       gate: r.report.gate.pass,
       violations: violationSummaries(r.report, 3),
       score: r.report.checker.finalScore,
       ms: Date.now() - t0,
+      failed: r.report.checker.failed,
     };
     if (pdf) {
       row.pages.src = renderPdf(input, outDir, `${doc.id}-src`);
@@ -197,6 +209,15 @@ function summary(rows: Row[]): string[] {
   return lines;
 }
 
+function topFailed(rows: Row[]): string[] {
+  const counts = new Map<string, number>();
+  for (const r of rows) for (const id of r.v7.failed ?? []) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([id, n]) => `${id} ×${n}`);
+}
+
 function topViolations(rows: Row[], pick: (r: Row) => Side | undefined): string[] {
   const counts = new Map<string, number>();
   for (const r of rows) {
@@ -215,16 +236,20 @@ async function main() {
   const idFilter = value("id");
   const compare = (value("compare") ?? "").split(",").filter(Boolean);
   const pdf = args.includes("--pdf");
+  const textNormalization = args.includes("--text-norm");
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
   const outDir = value("out") ?? `/tmp/v7-bench/${stamp}`;
   fs.mkdirSync(outDir, { recursive: true });
 
   const docs = listDocs(set, idFilter);
-  console.log(`[bench] документов: ${docs.length}, сравнение: ${compare.join(",") || "нет"}, вывод: ${outDir}`);
+  console.log(
+    `[bench] документов: ${docs.length}, сравнение: ${compare.join(",") || "нет"}, ` +
+      `нормализация пробелов: ${textNormalization ? "да" : "нет"}, вывод: ${outDir}`
+  );
 
   const rows: Row[] = [];
   for (let i = 0; i < docs.length; i++) {
-    const row = await benchDoc(docs[i], compare, pdf, outDir);
+    const row = await benchDoc(docs[i], { compare, pdf, outDir, textNormalization });
     rows.push(row);
     console.log(
       `[${i + 1}/${docs.length}] ${row.id.slice(0, 22)} v7=${mark(row.v7.gate)} score=${num(row.v7.score)} ${row.v7.ms}мс` +
@@ -244,6 +269,9 @@ async function main() {
     "",
     "## Критерии go/no-go",
     ...criteria(rows).map((l) => `- ${l}`),
+    "",
+    "## Частые провалы чекера (v7)",
+    ...topFailed(rows).map((l) => `- ${l}`),
     "",
     "## Частые нарушения гейта",
     `- v7: ${topViolations(rows, (r) => r.v7).join(", ") || "нет"}`,

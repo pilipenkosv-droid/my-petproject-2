@@ -9,12 +9,12 @@
  * alignment gets centred.
  */
 
-import { children, createNode, getAttr, type OrderedXmlNode } from "@/lib/xml/docx-xml";
+import { children, createNode, findChildren, getAttr, tagName, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import type { RulePack } from "@/lib/pipeline-v6/rule-packs/types";
 import { walkBlocks } from "../docx/walk";
 import type { DocxPackage } from "../docx/package";
 import type { ClassificationResult } from "../classify/types";
-import { W_TBLPR_ORDER, setPropInOrder } from "./ooxml-order";
+import { W_TBLPR_ORDER, W_TRPR_ORDER, setPropInOrder } from "./ooxml-order";
 
 function tblPrOf(tbl: OrderedXmlNode): OrderedXmlNode {
   const ch = children(tbl);
@@ -25,6 +25,41 @@ function tblPrOf(tbl: OrderedXmlNode): OrderedXmlNode {
   const node = createNode("w:tblPr");
   ch.unshift(node);
   return node;
+}
+
+/** w:trPr, created at its schema position (after w:tblPrEx, before the cells). */
+function trPrOf(tr: OrderedXmlNode): OrderedXmlNode {
+  const ch = children(tr);
+  const existing = ch.find((c) => "w:trPr" in c);
+  if (existing) return existing;
+  const node = createNode("w:trPr");
+  const at = ch.findIndex((c) => tagName(c) !== "w:tblPrEx");
+  ch.splice(at < 0 ? ch.length : at, 0, node);
+  return node;
+}
+
+/** A first row that continues a vertical merge is not a header row. */
+function continuesVMerge(tr: OrderedXmlNode): boolean {
+  return findChildren(tr, "w:tc").some((tc) => {
+    const tcPr = children(tc).find((c) => "w:tcPr" in c);
+    const merge = tcPr ? children(tcPr).find((c) => "w:vMerge" in c) : undefined;
+    return merge !== undefined && getAttr(merge, "w:val") !== "restart";
+  });
+}
+
+/**
+ * w:tblHeader on the first row, so a table that breaks across pages repeats its
+ * head. Single-row tables are skipped — they cannot break — and so is a first
+ * row that is the continuation of a vertical merge.
+ */
+export function setHeaderRow(tbl: OrderedXmlNode): boolean {
+  const rows = findChildren(tbl, "w:tr");
+  if (rows.length <= 1) return false;
+  if (continuesVMerge(rows[0])) return false;
+  const trPr = trPrOf(rows[0]);
+  if (children(trPr).some((c) => "w:tblHeader" in c)) return false;
+  setPropInOrder(trPr, "w:tblHeader", {}, W_TRPR_ORDER);
+  return true;
 }
 
 export function restyleTable(tbl: OrderedXmlNode): boolean {
@@ -46,12 +81,18 @@ export function restyleTable(tbl: OrderedXmlNode): boolean {
  * paragraphs are not handled here — they arrive through the classifier with
  * role `table_cell` like any other paragraph.
  */
+export interface TableStats {
+  tables: number;
+  /** First rows that gained a w:tblHeader. */
+  headerRows: number;
+}
+
 export async function restyleTables(
   pkg: DocxPackage,
   _pack: RulePack,
   _classification?: ClassificationResult
-): Promise<number> {
-  let count = 0;
+): Promise<TableStats> {
+  const out: TableStats = { tables: 0, headerRows: 0 };
   for (const ref of await pkg.contentParts()) {
     const nodes = await pkg.part(ref.name);
     if (!nodes) continue;
@@ -59,9 +100,12 @@ export async function restyleTables(
     for (const block of walkBlocks(nodes)) {
       if (block.kind !== "tbl") continue;
       if (restyleTable(block.node)) partTouched += 1;
+      // Only top-level tables are checked for header repeat; a nested table
+      // never breaks across pages on its own.
+      if (block.inTableDepth === 0 && setHeaderRow(block.node)) out.headerRows += 1;
     }
     if (partTouched > 0) pkg.markDirty(ref.name);
-    count += partTouched;
+    out.tables += partTouched;
   }
-  return count;
+  return out;
 }

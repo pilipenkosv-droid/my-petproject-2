@@ -5,11 +5,13 @@
  */
 
 import {
+  auxNamesOf,
   budgetOf,
   emptyRemovalCap,
   findTocRun,
   insertBudget,
   isRemovableEmpty,
+  sectionInsertIndex,
   stripAux,
   type Budget,
 } from "./allowances";
@@ -17,7 +19,7 @@ import { diffFingerprints, type FidelityDiff, type FidelityEntry } from "./diff"
 import { instrBookmark, instrKeyword, looseEqual } from "./normalize";
 import type { BlockPrint, Fingerprint } from "./types";
 
-export type AllowanceRule = "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "addition";
+export type AllowanceRule = "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "A7" | "addition";
 
 export interface GateOptions {
   /** A4: accept text that differs only in quote shapes, dashes and spacing. */
@@ -173,6 +175,17 @@ function judgePackage(entry: FidelityEntry, v: Verdict): void {
   }
 }
 
+/**
+ * A7: a section break inserted after the title page. The added w:sectPr is a
+ * copy of the section that follows it, so the layout is unchanged — only the
+ * page break is new. Permits the `section` entries of that part and one extra
+ * w:sectPr in the marker counts.
+ */
+function judgeSectionInsert(part: string, index: number, budget: Budget, v: Verdict): void {
+  budget.markers.set("w:sectPr", (budget.markers.get("w:sectPr") ?? 0) + 1);
+  v.permit("A7", `${part}: добавлен разрыв секции #${index} — копия следующей секции`);
+}
+
 function judgeRest(entry: FidelityEntry, opts: GateOptions, v: Verdict): void {
   switch (entry.kind) {
     case "block-inserted":
@@ -209,20 +222,30 @@ function removalsOf(entries: FidelityEntry[], part: string): Extract<FidelityEnt
 }
 
 export function evaluateGate(before: Fingerprint, after: Fingerprint, opts: GateOptions = {}): GateResult {
-  const { fingerprint: stripped, stripped: marked } = stripAux(after);
+  const { fingerprint: stripped, stripped: marked } = stripAux(after, auxNamesOf(before));
   const diff = diffFingerprints(before, stripped);
   const v = new Verdict();
   const parts = new Set(diff.entries.map((e) => ("part" in e ? e.part : "")).filter(Boolean));
 
   const budgets = new Map<string, { inserted: Budget; removed: Budget }>();
+  const sectionInserts = new Map<string, number>();
   for (const part of parts) {
-    const removed = before.parts[part] ? judgeRemovals(part, before, removalsOf(diff.entries, part), v) : [];
-    budgets.set(part, { inserted: insertBudget(marked[part] ?? []), removed: budgetOf(removed) });
+    const a = before.parts[part];
+    const b = stripped.parts[part];
+    const removed = a ? judgeRemovals(part, before, removalsOf(diff.entries, part), v) : [];
+    const inserted = insertBudget(marked[part] ?? []);
+    budgets.set(part, { inserted, removed: budgetOf(removed) });
+    const at = a && b ? sectionInsertIndex(a, b) : null;
+    if (at !== null) {
+      sectionInserts.set(part, at);
+      judgeSectionInsert(part, at, inserted, v);
+    }
   }
 
   for (const entry of diff.entries) {
     const budget = "part" in entry ? budgets.get(entry.part) : undefined;
     if (entry.kind === "block-removed") continue;
+    if (entry.kind === "section" && sectionInserts.has(entry.part)) continue;
     if (entry.kind === "count" && budget) judgeCount(entry, budget.inserted, budget.removed, v);
     else if (entry.kind === "field" && budget) judgeField(entry, budget.inserted, budget.removed, v);
     else if (entry.kind === "bookmark-missing") {

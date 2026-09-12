@@ -27,6 +27,8 @@ export interface MiniDocxParts {
   footnotes?: string;
   /** Inner XML of w:hdr. */
   header?: string;
+  /** Inner XML of w:settings. */
+  settings?: string;
 }
 
 function overrides(parts: MiniDocxParts): string {
@@ -44,6 +46,9 @@ function overrides(parts: MiniDocxParts): string {
   }
   if (parts.header !== undefined) {
     out.push(`<Override PartName="/word/header1.xml" ContentType="${CT}.header+xml"/>`);
+  }
+  if (parts.settings !== undefined) {
+    out.push(`<Override PartName="/word/settings.xml" ContentType="${CT}.settings+xml"/>`);
   }
   return out.join("");
 }
@@ -76,6 +81,9 @@ export async function buildMiniDocx(parts: MiniDocxParts): Promise<Buffer> {
   }
   if (parts.header !== undefined) {
     zip.file("word/header1.xml", `<w:hdr ${W_NS}>${parts.header}</w:hdr>`);
+  }
+  if (parts.settings !== undefined) {
+    zip.file("word/settings.xml", `<w:settings ${W_NS}>${parts.settings}</w:settings>`);
   }
   return zip.generateAsync({ type: "nodebuffer" });
 }

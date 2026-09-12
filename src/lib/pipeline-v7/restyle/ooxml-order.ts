@@ -50,6 +50,23 @@ export const W_TBLPR_ORDER = [
   "w:tblCaption", "w:tblDescription", "w:tblPrChange",
 ] as const;
 
+/** CT_TrPr sequence (the subset a restyler may write into). */
+export const W_TRPR_ORDER = [
+  "w:cnfStyle", "w:divId", "w:gridBefore", "w:gridAfter", "w:wBefore", "w:wAfter",
+  "w:cantSplit", "w:trHeight", "w:tblHeader", "w:tblCellSpacing", "w:jc", "w:hidden",
+  "w:ins", "w:del", "w:trPrChange",
+] as const;
+
+/** CT_Settings tail: everything that must follow w:updateFields. */
+export const W_SETTINGS_ORDER = [
+  "w:updateFields", "w:hdrShapeDefaults", "w:footnotePr", "w:endnotePr", "w:compat",
+  "w:docVars", "w:rsids", "m:mathPr", "w:attachedSchema", "w:themeFontLang",
+  "w:clrSchemeMapping", "w:doNotIncludeSubdocsInStats", "w:doNotAutoCompressPictures",
+  "w:forceUpgrade", "w:captions", "w:readModeInkLockDown", "w:smartTagType",
+  "sl:schemaLibrary", "w:shapeDefaults", "w:doNotEmbedSmartTags", "w:decimalSymbol",
+  "w:listSeparator",
+] as const;
+
 export type OrderTable = readonly string[];
 
 function rankOf(order: OrderTable, tag: string | undefined): number {

@@ -7,11 +7,13 @@
  */
 
 import { auxKind } from "./normalize";
-import type { BlockPrint, Fingerprint, Marker, PartPrint } from "./types";
+import type { BlockPrint, Fingerprint, Marker, PartPrint, SectionPrint } from "./types";
 
 /** Markers an aux-marked insertion may introduce, by marker kind. */
 const INSERT_MARKERS: Record<"toc" | "caption", Marker[]> = {
-  toc: ["w:bookmarkStart", "w:fldChar[begin]", "w:instrText", "w:fldSimple", "w:sdt"],
+  // w:hyperlink is listed for the cached entries a TOC field gains once Word or
+  // LibreOffice updates it; the inserted field itself brings none.
+  toc: ["w:bookmarkStart", "w:fldChar[begin]", "w:instrText", "w:fldSimple", "w:sdt", "w:hyperlink"],
   caption: ["w:bookmarkStart"],
 };
 
@@ -51,15 +53,34 @@ function allowedMarkersFor(block: BlockPrint): Marker[] {
   return [...out];
 }
 
+/** Aux bookmark names already present in a fingerprint, per part. */
+export function auxNamesOf(fp: Fingerprint): Record<string, Set<string>> {
+  const out: Record<string, Set<string>> = {};
+  for (const [name, part] of Object.entries(fp.parts)) {
+    out[name] = new Set(part.bookmarks.filter((b) => auxKind(b)));
+  }
+  return out;
+}
+
 /**
  * A1: removes every block sitting inside a `_dpx_aux_*` bookmark range from the
  * "after" fingerprint, and returns them as the insertion budget.
+ *
+ * Ranges the input already carried (`known`) are left alone: re-running v7 over
+ * its own output must compare aux blocks against aux blocks, not against
+ * nothing at all.
  */
-export function stripAux(after: Fingerprint): { fingerprint: Fingerprint; stripped: Record<string, BlockPrint[]> } {
+export function stripAux(
+  after: Fingerprint,
+  known: Record<string, Set<string>> = {}
+): { fingerprint: Fingerprint; stripped: Record<string, BlockPrint[]> } {
   const parts: Record<string, PartPrint> = {};
   const stripped: Record<string, BlockPrint[]> = {};
   for (const [name, part] of Object.entries(after.parts)) {
-    const marked = part.blocks.filter((b) => (b.auxRanges ?? []).length > 0);
+    const seen = known[name] ?? new Set<string>();
+    const marked = part.blocks.filter(
+      (b) => (b.auxRanges ?? []).length > 0 && !(b.auxRanges ?? []).every((r) => seen.has(r))
+    );
     stripped[name] = marked;
     parts[name] = marked.length ? { ...part, blocks: part.blocks.filter((b) => !marked.includes(b)) } : part;
   }
@@ -123,4 +144,36 @@ export function isRemovableEmpty(block: BlockPrint): boolean {
 export function emptyRemovalCap(part: PartPrint): number {
   const paragraphs = part.blocks.filter((b) => b.kind === "p").length;
   return Math.min(30, Math.floor(0.05 * paragraphs));
+}
+
+const SECTION_EQ_FIELDS: (keyof SectionPrint)[] = [
+  "orient",
+  "colsNum",
+  "colsEqualWidth",
+  "headerRefTypes",
+  "footerRefTypes",
+  "titlePg",
+];
+
+function sameSection(a: SectionPrint, b: SectionPrint, withType: boolean): boolean {
+  if (withType && JSON.stringify(a.type) !== JSON.stringify(b.type)) return false;
+  return SECTION_EQ_FIELDS.every((f) => JSON.stringify(a[f]) === JSON.stringify(b[f]));
+}
+
+/**
+ * A7: exactly one w:sectPr was added, its properties equal those of the section
+ * that follows it (bar w:type), and removing it restores the original list.
+ * Returns the index it was inserted at, or null if nothing of the sort happened.
+ */
+export function sectionInsertIndex(before: PartPrint, after: PartPrint): number | null {
+  const want = before.sections;
+  const got = after.sections;
+  if (got.length !== want.length + 1) return null;
+  for (let i = 0; i < got.length; i++) {
+    const next = got[i + 1];
+    if (!next || !sameSection(got[i], next, false)) continue;
+    const rest = got.filter((_, j) => j !== i);
+    if (rest.every((s, j) => sameSection(s, want[j], true))) return i;
+  }
+  return null;
 }

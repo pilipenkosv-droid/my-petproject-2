@@ -23,6 +23,10 @@ export interface RestyleStats {
   runsTouched: number;
   sectionsTouched: number;
   stylesUpserted: number;
+  /** First table rows that gained a w:tblHeader. */
+  tblHeaderSet: number;
+  /** Direct w:u properties dropped (every role but toc / title_page). */
+  underlineRemoved: number;
   byRole: Record<Role, number>;
   /** The package carries no word/styles.xml; canonical styles were skipped. */
   stylesPartMissing: boolean;
@@ -63,22 +67,25 @@ export async function restyleDocument(
   let paragraphsTouched = 0;
   let runsTouched = 0;
   const dirty = new Set<string>();
+  const counters = { underlineRemoved: 0 };
   const ctx = { spec };
   for (const cp of classification.list) {
     const node: OrderedXmlNode = cp.node;
     if (restyleParagraph(node, cp.role, pack, ctx)) paragraphsTouched += 1;
-    runsTouched += restyleRuns(node, cp.role, pack, { spec, fontStyleIds });
+    runsTouched += restyleRuns(node, cp.role, pack, { spec, fontStyleIds, counters });
     byRole[cp.role] += 1;
     dirty.add(cp.part);
   }
   for (const part of dirty) pkg.markDirty(part);
-  await restyleTables(pkg, pack, classification);
+  const tables = await restyleTables(pkg, pack, classification);
 
   return {
     paragraphsTouched,
     runsTouched,
     sectionsTouched,
     stylesUpserted: styles.upserted,
+    tblHeaderSet: tables.headerRows,
+    underlineRemoved: counters.underlineRemoved,
     byRole,
     stylesPartMissing: styles.missingPart,
   };
@@ -87,6 +94,6 @@ export async function restyleDocument(
 export { restyleParagraph } from "./paragraph";
 export { restyleRuns } from "./runs";
 export { restyleSections, restyleSectionsIn } from "./sections";
-export { restyleTables, restyleTable } from "./tables";
+export { restyleTables, restyleTable, setHeaderRow } from "./tables";
 export { upsertCanonicalStyles } from "./styles-writer";
 export { buildPackSpec, STYLE_IDS } from "./spec";

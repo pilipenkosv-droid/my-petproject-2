@@ -45,7 +45,16 @@ export interface RunOpts {
   spec?: PackSpec;
   /** Character styles that carry a font or size; their w:rStyle is dropped. */
   fontStyleIds?: ReadonlySet<string>;
+  /** Mutated in place: how many w:u were dropped. */
+  counters?: { underlineRemoved: number };
 }
+
+/**
+ * Roles whose underline is left alone. ГОСТ forbids underlining, but a TOC
+ * entry and a title page carry it as the document's own presentation — and a
+ * TOC's underline comes from its hyperlinks, which the restyler never touches.
+ */
+const KEEP_UNDERLINE: ReadonlySet<Role> = new Set<Role>(["toc", "title_page"]);
 
 interface RunRef {
   node: OrderedXmlNode;
@@ -107,8 +116,11 @@ export function restyleRuns(
     for (const tag of DROP) removeChildren(rPr, tag);
     if (!hyperlink) removeChildren(rPr, "w:color");
     stripRStyle(rPr, opts.fontStyleIds);
+    if (!KEEP_UNDERLINE.has(role)) {
+      const dropped = removeChildren(rPr, "w:u");
+      if (dropped && opts.counters) opts.counters.underlineRemoved += dropped;
+    }
     if (!heading) continue;
-    removeChildren(rPr, "w:u");
     if (heading.bold) setPropInOrder(rPr, "w:b", {}, W_RPR_ORDER);
     if (heading.caps) setPropInOrder(rPr, "w:caps", {}, W_RPR_ORDER);
   }

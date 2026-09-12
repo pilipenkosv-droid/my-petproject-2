@@ -66,6 +66,7 @@ describe("runPipelineV7", () => {
     const { report } = await runPipelineV7(await doc(), { pack: GOST_7_32, documentId: "mini" });
     expect(Object.keys(report.timings).sort()).toEqual(
       [
+        "auxMs",
         "checkerMs",
         "classifyMs",
         "fingerprintAfterMs",

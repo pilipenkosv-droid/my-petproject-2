@@ -19,6 +19,8 @@ import { classifyDocument } from "./classify/deterministic";
 import { candidatesForLlm } from "./classify/llm-candidates";
 import { ROLES, type ClassificationResult, type ClassifySource, type Role } from "./classify/types";
 import { restyleDocument, type RestyleStats } from "./restyle";
+import { buildPackSpec } from "./restyle/spec";
+import { runAux, type AuxStats } from "./aux";
 
 const DOCUMENT_PART = "word/document.xml";
 
@@ -54,6 +56,8 @@ export interface V7Options {
   returnOnGateFail?: boolean;
   /** Test seam: replace the restyle step. */
   restyleImpl?: typeof restyleDocument;
+  /** Collapse runs of spaces in body text (the only text mutation). Off by default. */
+  textNormalization?: boolean;
 }
 
 export interface V7Report {
@@ -67,12 +71,14 @@ export interface V7Report {
     lowConfidence: { path: string; part: string; role: Role; confidence: number }[];
   };
   restyle: RestyleStats;
+  aux: AuxStats & { tblHeaderSet: number; underlineRemoved: number };
   gate: GateResult;
   checker: { sourceScore: number; finalScore: number; failed: string[] };
   timings: {
     fingerprintBeforeMs: number;
     classifyMs: number;
     restyleMs: number;
+    auxMs: number;
     saveMs: number;
     fingerprintAfterMs: number;
     gateMs: number;
@@ -137,8 +143,15 @@ export async function runPipelineV7(input: Buffer, opts: V7Options = {}): Promis
   const classifyMs = Date.now() - t1;
 
   const t2 = Date.now();
-  const restyle = await restyleFn(pkg, pack, forRestyle(classification));
+  const styled = forRestyle(classification);
+  const restyle = await restyleFn(pkg, pack, styled);
   const restyleMs = Date.now() - t2;
+
+  const tAux = Date.now();
+  const aux = await runAux(pkg, buildPackSpec(pack), styled, {
+    textNormalization: opts.textNormalization,
+  });
+  const auxMs = Date.now() - tAux;
 
   const t3 = Date.now();
   const output = await pkg.save();
@@ -149,7 +162,9 @@ export async function runPipelineV7(input: Buffer, opts: V7Options = {}): Promis
   const fingerprintAfterMs = Date.now() - t4;
 
   const t5 = Date.now();
-  const gate = evaluateGate(before, after, { allowTextNormalization: false });
+  const gate = evaluateGate(before, after, {
+    allowTextNormalization: opts.textNormalization === true,
+  });
   const gateMs = Date.now() - t5;
 
   const t6 = Date.now();
@@ -175,6 +190,11 @@ export async function runPipelineV7(input: Buffer, opts: V7Options = {}): Promis
       })),
     },
     restyle,
+    aux: {
+      ...aux,
+      tblHeaderSet: restyle.tblHeaderSet,
+      underlineRemoved: restyle.underlineRemoved,
+    },
     gate,
     checker: {
       sourceScore: sourceReport.score,
@@ -185,6 +205,7 @@ export async function runPipelineV7(input: Buffer, opts: V7Options = {}): Promis
       fingerprintBeforeMs,
       classifyMs,
       restyleMs,
+      auxMs,
       saveMs,
       fingerprintAfterMs,
       gateMs,
