@@ -7,6 +7,7 @@ import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
 import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
 import { formatDocument } from "@/lib/pipeline/document-formatter";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
+import { markUseConsumed, refundUse } from "@/lib/payment/refund";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 
@@ -15,6 +16,8 @@ export const maxDuration = 60; // Максимальное время выпол
 
 export async function POST(request: NextRequest) {
   const jobId = nanoid();
+  // Пользователь, с которого списали использование (для возврата в catch)
+  let consumedUserId: string | undefined;
 
   try {
     // Проверяем доступ пользователя
@@ -49,6 +52,7 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           );
         }
+        consumedUserId = user.id;
       }
     }
 
@@ -57,6 +61,9 @@ export async function POST(request: NextRequest) {
     const sessionId = request.cookies.get("dlx_sid")?.value ?? undefined;
     const referer = request.headers.get("referer") ?? undefined;
     await createJob(jobId, { userId: user?.id, sessionId, yandexClientId: ymUid, referrer: referer });
+    if (consumedUserId) {
+      await markUseConsumed(jobId);
+    }
     await updateJobProgress(jobId, "uploading", 5, "Получение файлов");
 
     // Получаем файлы из FormData
@@ -223,6 +230,12 @@ export async function POST(request: NextRequest) {
 
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
     await failJob(jobId, errorMessage);
+
+    try {
+      await refundUse(consumedUserId, jobId, errorMessage);
+    } catch (refundError) {
+      console.error("Failed to refund use:", refundError);
+    }
 
     return NextResponse.json(
       { error: errorMessage, jobId },
