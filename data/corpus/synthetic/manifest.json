@@ -1,0 +1,105 @@
+[
+  {
+    "file": "01-merged-cells.docx",
+    "hazard": "merged-cells (gridSpan+vMerge)",
+    "mustSurvive": {
+      "w:tbl": 1,
+      "w:gridSpan": 3,
+      "w:vMerge": 4
+    }
+  },
+  {
+    "file": "02-nested-tables.docx",
+    "hazard": "nested-tables",
+    "mustSurvive": {
+      "w:tbl": 2
+    }
+  },
+  {
+    "file": "03-footnotes-endnotes.docx",
+    "hazard": "footnotes+endnotes",
+    "mustSurvive": {
+      "w:footnoteReference": 6,
+      "w:endnoteReference": 3
+    }
+  },
+  {
+    "file": "04-crossrefs.docx",
+    "hazard": "crossrefs (bookmarks+fields)",
+    "mustSurvive": {
+      "w:bookmarkStart": 4,
+      "fldSimple:REF": 1,
+      "fldSimple:PAGEREF": 1,
+      "fldSimple:SEQ": 1,
+      "fldSimple:NOTEREF": 1
+    }
+  },
+  {
+    "file": "05-multi-section.docx",
+    "hazard": "multi-section (orientation+columns)",
+    "mustSurvive": {
+      "w:sectPr": 3,
+      "w:orient=landscape": 1,
+      "w:cols[num=2]": 1
+    }
+  },
+  {
+    "file": "06-headers-footers.docx",
+    "hazard": "headers-footers (titlePg+evenOdd)",
+    "mustSurvive": {
+      "header-parts": 3,
+      "footer-parts": 3,
+      "w:titlePg": 1,
+      "w:evenAndOddHeaders": 1,
+      "instrText:PAGE": 3,
+      "instrText:NUMPAGES": 3
+    }
+  },
+  {
+    "file": "07-lists.docx",
+    "hazard": "lists (bullet+multilevel+restart)",
+    "mustSurvive": {
+      "w:numPr": 9,
+      "distinct-numId": 3
+    }
+  },
+  {
+    "file": "08-images-captions.docx",
+    "hazard": "images+captions (inline+floating)",
+    "mustSurvive": {
+      "w:drawing": 5,
+      "media-files": 5
+    }
+  },
+  {
+    "file": "09-formulas.docx",
+    "hazard": "formulas (OMML inline+display)",
+    "mustSurvive": {
+      "m:oMath": 6
+    }
+  },
+  {
+    "file": "10-existing-toc.docx",
+    "hazard": "existing-toc (cached field result)",
+    "mustSurvive": {
+      "instrText:TOC": 1,
+      "toc-cached-entries": 4
+    }
+  },
+  {
+    "file": "11-bibliography-15.docx",
+    "hazard": "bibliography (15 entries, 4 shapes)",
+    "mustSurvive": {
+      "bibliography-entries": 15
+    }
+  },
+  {
+    "file": "12-no-styles.docx",
+    "hazard": "no-styles (direct formatting only)",
+    "mustSurvive": {
+      "w:pStyle": 0,
+      "manual-numbered-markers": 5,
+      "manual-dash-markers": 3
+    }
+  }
+]
