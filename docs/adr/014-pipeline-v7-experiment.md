@@ -1,7 +1,7 @@
 # ADR-014 — pipeline-v7: эксперимент «Prettier для OOXML»
 
 - Дата: 2026-09-12
-- Статус: **experiment** — результаты получены, решение о внедрении не принято
+- Статус: **accepted (2026-09-14)** — весь ГОСТ-трафик через v7 по решению владельца; v6 остаётся как fallback при любом сбое v7 (`PIPELINE_V7_PERCENT=0` выключает без деплоя)
 - Связанные: [ADR-012 — post-MVP fixes](012-pipeline-v6-post-mvp-fixes.md), [ADR-013 — Template Registry](013-pipeline-v6-template-registry-and-rule-packs.md), план `~/.claude/plans/diplox-humming-honey.md`
 
 ## Контекст

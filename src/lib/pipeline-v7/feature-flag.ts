@@ -23,8 +23,12 @@ export function fnv1a(input: string): number {
   return hash >>> 0;
 }
 
+/** Решение владельца 2026-09-14: весь ГОСТ-трафик идёт через v7 (fallback на v6 остаётся). */
+const DEFAULT_PERCENT = 100;
+
 function percent(): number {
   const raw = (process.env.PIPELINE_V7_PERCENT ?? "").trim();
+  if (raw === "") return DEFAULT_PERCENT;
   if (!/^\d+$/.test(raw)) return 0;
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0 || n > 100) return 0;

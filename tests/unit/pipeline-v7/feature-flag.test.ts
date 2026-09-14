@@ -18,8 +18,8 @@ afterEach(() => {
 const ids = Array.from({ length: 2000 }, (_, i) => `job-${i}`);
 
 describe("shouldUsePipelineV7", () => {
-  it("по умолчанию выключен", () => {
-    expect(shouldUsePipelineV7("job-1")).toBe(false);
+  it("по умолчанию включён для всех (решение 2026-09-14)", () => {
+    expect(shouldUsePipelineV7("job-1")).toBe(true);
   });
 
   it("0 — никого, 100 — всех", () => {
@@ -29,8 +29,12 @@ describe("shouldUsePipelineV7", () => {
     expect(ids.every(shouldUsePipelineV7)).toBe(true);
   });
 
-  it("мусор в переменной = 0", () => {
-    for (const raw of ["", " ", "abc", "-5", "101", "10.5", "1e2", "NaN"]) {
+  it("не задано = 100 (дефолт), мусор в переменной = 0", () => {
+    for (const raw of ["", " "]) {
+      process.env.PIPELINE_V7_PERCENT = raw;
+      expect(ids.every(shouldUsePipelineV7), raw).toBe(true);
+    }
+    for (const raw of ["abc", "-5", "101", "10.5", "1e2", "NaN"]) {
       process.env.PIPELINE_V7_PERCENT = raw;
       expect(ids.some(shouldUsePipelineV7), raw).toBe(false);
     }
