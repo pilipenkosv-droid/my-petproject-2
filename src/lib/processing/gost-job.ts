@@ -12,6 +12,7 @@ import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
 import { adaptPipelineV6ToLegacy, type AccessType, type LegacyAdapterResult } from "@/lib/pipeline-v6/adapter-legacy";
 import { shouldUsePipelineV7 } from "@/lib/pipeline-v7/feature-flag";
 import { tryPipelineV7 } from "@/lib/pipeline-v7/try-v7";
+import { fillTocStatic } from "@/lib/pipeline-v7/aux/toc-static";
 
 /**
  * Результат не записан: задача уже failed (сборщик зависших успел раньше) или
@@ -69,6 +70,28 @@ async function runPipelines(
   return adapted;
 }
 
+/**
+ * Вписывает номера страниц в поле TOC у выхода v7 (ADR-016, фаза 2B).
+ *
+ * Работает только там, где есть soffice, то есть на воркере; на Vercel
+ * fillTocStatic возвращает буфер как есть. Шаг идёт после гейта верности и
+ * ничего не решает: любая осечка — лог внутри модуля и исходный документ.
+ */
+async function fillV7Toc(adapted: LegacyAdapterResult): Promise<void> {
+  const v7 = adapted.statistics.v7;
+  if (adapted.statistics.pipelineVersion !== "v7" || !v7?.auxTocInserted) return;
+  const started = Date.now();
+  const main = await fillTocStatic(adapted.formattedDocument);
+  adapted.formattedDocument = main.output;
+  // Усечённая триал-версия и полная — разные документы со своими страницами,
+  // поэтому рендерятся отдельно. В статистику идёт то, что скачает автор.
+  if (adapted.fullFormattedDocument) {
+    const full = await fillTocStatic(adapted.fullFormattedDocument);
+    adapted.fullFormattedDocument = full.output;
+  }
+  v7.tocStatic = { filled: main.filled, ...(main.skipped && { skipped: main.skipped }), ms: Date.now() - started };
+}
+
 export async function processGostJob(
   jobId: string,
   sourceBuffer: Buffer,
@@ -100,6 +123,8 @@ export async function processGostJob(
     clearTimeout(tick70);
   }
   if (!adapted) throw new Error("Не удалось обработать документ");
+
+  await fillV7Toc(adapted);
 
   await report("formatting", 90, "Сохранение результатов");
 

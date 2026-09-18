@@ -951,6 +951,8 @@ export interface DocumentStatistics {
     auxTocSkipped?: string;
     /** Почему разрыв секции после титула не вставлен. */
     auxTitleBreakSkipped?: string;
+    /** Статическое заполнение поля TOC на воркере (soffice); на Vercel skipped. */
+    tocStatic?: { filled: number; skipped?: string; ms: number };
   };
   /** Почему v7 был выбран, но не сработал: "gate" | "refused:..." | "timeout" | "error:..." */
   v7Fallback?: string;
