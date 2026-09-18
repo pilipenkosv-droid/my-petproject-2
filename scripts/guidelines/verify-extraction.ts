@@ -52,6 +52,8 @@ interface Row {
   provenanceSections?: number;
   /** Сколько отобранных единиц упомянуто хотя бы в одной секции. */
   provenanceUnits?: number;
+  /** Номеров, которых в контексте не было (модель их выдумала). */
+  provenanceBogus?: number;
   inputTokens?: number;
   outputTokens?: number;
   costUsd: number;
@@ -70,13 +72,23 @@ function parseLimit(argv: string[]): number {
   return positional ? Number(positional) : 15;
 }
 
+function parseMinChars(argv: string[]): number {
+  const flag = argv.indexOf("--min-chars");
+  return flag >= 0 && argv[flag + 1] ? Number(argv[flag + 1]) : 0;
+}
+
 /** Документы эталона — первыми, дальше остальные по возрастанию длины. */
-function pickDocs(limit: number): string[] {
+function pickDocs(limit: number, minChars: number): string[] {
   const all = fs.readdirSync(DOCS_DIR).filter((f) => f.endsWith(".txt")).map((f) => f.slice(0, -4));
   const goldFile = path.join(GOLD_DIR, "index.json");
   const gold = fs.existsSync(goldFile) ? Object.keys(readJson<Record<string, unknown>>(goldFile)) : [];
   const ordered = [...gold.filter((id) => all.includes(id)), ...all.filter((id) => !gold.includes(id))];
-  return ordered.slice(0, limit);
+  // --min-chars отсекает короткие методички: они идут полным текстом,
+  // и на проверке ретрива тратить на них деньги незачем.
+  const big = minChars
+    ? ordered.filter((id) => fs.statSync(path.join(DOCS_DIR, `${id}.txt`)).size >= minChars)
+    : ordered;
+  return big.slice(0, limit);
 }
 
 function changedSections(rules: FormattingRules): string[] {
@@ -92,7 +104,14 @@ async function runDoc(id: string, text: string): Promise<Row> {
       (res.usage?.inputTokens ?? 0) * PRICE_IN +
       (res.usage?.outputTokens ?? 0) * PRICE_OUT +
       (res.retrieval?.costUsd ?? 0);
-    const provenanceIds = new Set(Object.values(res.provenance ?? {}).flat());
+    // Провенанс засчитываем только по номерам, которые реально были в контексте.
+    const selected = new Set(res.retrievalUnitIds ?? []);
+    const entries = Object.entries(res.provenance ?? {}).map(
+      ([section, ids]) => [section, (ids ?? []).filter((n) => selected.has(n))] as const
+    );
+    const validSections = entries.filter(([, ids]) => ids.length > 0);
+    const provenanceIds = new Set(validSections.flatMap(([, ids]) => ids));
+    const bogus = Object.values(res.provenance ?? {}).flat().filter((n) => !selected.has(n)).length;
     return {
       ...base,
       retrievalMode: res.retrieval?.mode,
@@ -102,8 +121,9 @@ async function runDoc(id: string, text: string): Promise<Row> {
       retrievalMs: res.retrieval ? res.retrieval.embedMs + res.retrieval.rerankMs : undefined,
       retrievalCostUsd: res.retrieval?.costUsd,
       retrievalFallback: res.retrieval?.fallbackReason,
-      provenanceSections: Object.keys(res.provenance ?? {}).length,
+      provenanceSections: validSections.length,
       provenanceUnits: provenanceIds.size,
+      provenanceBogus: bogus,
       status: res.normalized ? "normalized" : "ok",
       differs: !isDeepStrictEqual(rules, DEFAULT_GOST_RULES),
       changedSections: changedSections(rules),
@@ -148,9 +168,12 @@ function reportRetrieval(rows: Row[]): void {
   // Покрытие провенансом: сколько секций правил модель связала с фрагментами.
   const withProvenance = withRetrieval.filter((r) => (r.provenanceSections ?? 0) > 0);
   const sections = withRetrieval.reduce((n, r) => n + (r.provenanceSections ?? 0), 0);
+  const bogus = withRetrieval.reduce((n, r) => n + (r.provenanceBogus ?? 0), 0);
   console.log(
     `  Провенанс вернули: ${withProvenance.length} из ${withRetrieval.length} · ` +
-      `секций в среднем ${(sections / withRetrieval.length).toFixed(1)} из ${SECTIONS.length}`
+      `секций в среднем ${(sections / withRetrieval.length).toFixed(1)} из ${SECTIONS.length} ` +
+      `(${((sections / (withRetrieval.length * SECTIONS.length)) * 100).toFixed(0)} % покрытия) · ` +
+      `выдуманных номеров: ${bogus}`
   );
 }
 
@@ -216,8 +239,12 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const limit = parseLimit(argv);
   const cap = parseCap(argv);
-  const docs = pickDocs(limit);
-  console.log(`Проверяем ${docs.length} методичек (лимит ${limit}), потолок $${cap.toFixed(2)}`);
+  const minChars = parseMinChars(argv);
+  const docs = pickDocs(limit, minChars);
+  console.log(
+    `Проверяем ${docs.length} методичек (лимит ${limit}` +
+      `${minChars ? `, от ${minChars} байт` : ""}), потолок $${cap.toFixed(2)}`
+  );
 
   const rows: Row[] = [];
   let spent = 0;
