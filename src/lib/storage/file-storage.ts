@@ -9,7 +9,7 @@
  * - results: результаты обработки (marked original + formatted)
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { nanoid } from "nanoid";
 
 export interface StoredFile {

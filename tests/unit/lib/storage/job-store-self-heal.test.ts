@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createThenableSupabaseMock } from "../../../mocks/supabase";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/lib/supabase/admin", () => ({
   getSupabaseAdmin: vi.fn(),
 }));
 vi.mock("@/lib/payment/refund", () => ({
@@ -16,7 +16,7 @@ vi.mock("@/lib/payment/refund", () => ({
 
 import { failIfStuck } from "@/lib/storage/job-store";
 import { refundUse } from "@/lib/payment/refund";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const mockGetSupabaseAdmin = vi.mocked(getSupabaseAdmin);
 const mockRefundUse = vi.mocked(refundUse);

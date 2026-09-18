@@ -9,12 +9,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createThenableSupabaseMock } from "../../mocks/supabase";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/lib/supabase/admin", () => ({
   getSupabaseAdmin: vi.fn(),
 }));
 
 import { refundUse, markUseConsumed, compensateConsume } from "@/lib/payment/refund";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const mockGetSupabaseAdmin = vi.mocked(getSupabaseAdmin);
 

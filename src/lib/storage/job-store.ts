@@ -5,7 +5,7 @@
  * Работает корректно на Vercel serverless (состояние не теряется).
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { refundUse } from "@/lib/payment/refund";
 import {
   DocumentStatistics,

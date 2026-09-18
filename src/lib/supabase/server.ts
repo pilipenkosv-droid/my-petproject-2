@@ -1,45 +1,15 @@
 /**
  * Supabase серверные клиенты
  *
- * getSupabaseAdmin() — service_role, обходит RLS. Для API routes и фоновых задач.
+ * getSupabaseAdmin() — service_role, обходит RLS. Живёт в ./admin (без next/*),
+ * здесь только реэкспорт для существующих импортёров.
  * createSupabaseServer() — auth-aware, читает сессию из cookies. Для проверки авторизации.
  */
 
-import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// === Admin client (service_role, bypasses RLS) ===
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseClient = ReturnType<typeof createClient<any>>;
-
-let _adminClient: SupabaseClient | null = null;
-
-export function getSupabaseAdmin(): SupabaseClient {
-  if (_adminClient) return _adminClient;
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY"
-    );
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _adminClient = createClient<any>(url, key, {
-    auth: { persistSession: false },
-  });
-
-  return _adminClient;
-}
-
-/** @deprecated Use getSupabaseAdmin() instead */
-export const getSupabase = getSupabaseAdmin;
+export { getSupabaseAdmin, getSupabase } from "./admin";
 
 // === Auth-aware server client (reads session from cookies) ===
 
