@@ -79,6 +79,9 @@ export async function GET(
       progress: job.progress,
       statusMessage: job.statusMessage,
       rules: job.rules,
+      // Уверенность разбора методички — единственное, что из ответа модели
+      // доезжает до строки задачи; предупреждений и пропусков там нет.
+      confidence: job.statistics?.rulesConfidence,
       hasGuidelinesText: !!job.guidelinesText,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,

@@ -31,8 +31,6 @@ interface ConfirmRulesPageProps {
 /** Поля, которые /api/status отдаёт только для статуса awaiting_confirmation. */
 interface ConfirmJobExtras {
   confidence?: number;
-  warnings?: string[];
-  missingRules?: string[];
   hasGuidelinesText?: boolean;
 }
 
@@ -219,8 +217,6 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
             <RulesEditor
               rules={rules}
               onChange={handleRulesChange}
-              warnings={job.warnings}
-              missingRules={job.missingRules}
               confidence={job.confidence}
             />
           </BlurFade>
