@@ -77,9 +77,12 @@ async function runPipelines(
  * fillTocStatic возвращает буфер как есть. Шаг идёт после гейта верности и
  * ничего не решает: любая осечка — лог внутри модуля и исходный документ.
  */
-async function fillV7Toc(adapted: LegacyAdapterResult): Promise<void> {
+async function fillV7Toc(adapted: LegacyAdapterResult, report: ProgressReporter): Promise<void> {
   const v7 = adapted.statistics.v7;
   if (adapted.statistics.pipelineVersion !== "v7" || !v7?.auxTocInserted) return;
+  // Рендер soffice занимает секунды, на больших документах — минуты; без тика
+  // фронт стоял бы на 70 % всё это время.
+  await report("formatting", 80, "Расставляем номера страниц в содержании");
   const started = Date.now();
   const main = await fillTocStatic(adapted.formattedDocument);
   adapted.formattedDocument = main.output;
@@ -124,7 +127,7 @@ export async function processGostJob(
   }
   if (!adapted) throw new Error("Не удалось обработать документ");
 
-  await fillV7Toc(adapted);
+  await fillV7Toc(adapted, report);
 
   await report("formatting", 90, "Сохранение результатов");
 
