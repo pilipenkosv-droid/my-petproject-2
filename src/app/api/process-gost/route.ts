@@ -10,6 +10,8 @@ import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/refund";
 import { type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 import { processGostJob } from "@/lib/processing/gost-job";
+import { getProcessingMode, shouldQueueForWorker } from "@/lib/processing/mode";
+import { createShadowJob } from "@/lib/processing/enqueue";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -111,11 +113,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Режим очереди: задачу забирает воркер на VDS, роут отвечает сразу.
+    // Списание уже произошло выше — иначе пользователь без остатка ставил бы
+    // в очередь сколько угодно документов.
+    if (await shouldQueueForWorker(jobId)) {
+      await updateJob(jobId, {
+        status: "pending",
+        progress: 15,
+        statusMessage: "В очереди на обработку",
+      });
+
+      const queued = NextResponse.json(
+        { jobId, status: "pending" },
+        { status: 202 }
+      );
+      if (isAnonymous) {
+        markTrialUsed(queued);
+      }
+      return queued;
+    }
+
     const { statistics, violationsCount } = await processGostJob(
       jobId,
       sourceBuffer,
       userAccessType
     );
+
+    // Теневой режим: пользователь получает результат инлайна, а воркер считает
+    // копию той же задачи — для сравнения перед раскаткой.
+    if (getProcessingMode() === "shadow") {
+      await createShadowJob({
+        jobId,
+        sourceDocumentId: savedSource.id,
+        sourceOriginalName: sourceFile.name,
+        workType: workType || undefined,
+        rules: DEFAULT_GOST_RULES,
+      });
+    }
 
     const response = NextResponse.json({
       jobId,
