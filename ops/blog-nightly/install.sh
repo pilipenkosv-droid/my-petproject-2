@@ -15,10 +15,11 @@ mkdir -p "$APP/prompts" "$APP/schemas"
 cp "$SRC"/prompts/* "$APP/prompts/"
 cp "$SRC"/schemas/* "$APP/schemas/"
 cp -r "$SRC/tests" "$APP/tests"
-# ручной импорт частотности Wordstat
+# ручной импорт частотности Wordstat: ищем рядом с исходниками или в репо
 mkdir -p "$APP/docs"
-[ -f "$SRC/../../docs/wordstat-raw-data.json" ] && \
-  cp "$SRC/../../docs/wordstat-raw-data.json" "$APP/docs/"
+for cand in "$SRC/docs/wordstat-raw-data.json" "$SRC/../../docs/wordstat-raw-data.json"; do
+  [ -f "$cand" ] && cp "$cand" "$APP/docs/" && break
+done
 chmod +x "$APP/run.py"
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -34,7 +35,8 @@ ENV
   echo "Создан $ENV_FILE — впиши ключи."
 fi
 
-CRON_LINE='0 2 * * * /usr/bin/python3 /opt/diplox-blog/run.py --stage all >> /var/log/diplox-blog/cron.log 2>&1'
+# крон не читает /etc/diplox-blog.env сам — подгружаем в строке
+CRON_LINE='0 2 * * * set -a; . /etc/diplox-blog.env; set +a; /usr/bin/python3 /opt/diplox-blog/run.py --stage all >> /var/log/diplox-blog/cron.log 2>&1'
 if ! crontab -l 2>/dev/null | grep -Fq '/opt/diplox-blog/run.py'; then
   (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab -
   echo "Крон-запись добавлена."

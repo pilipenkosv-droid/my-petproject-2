@@ -50,9 +50,9 @@ SITE_URL=https://diplox.online
 GSC_SERVICE_ACCOUNT_JSON=/root/.config/indexing-api/service-account.json
 ```
 
-Крон не читает `/etc/diplox-blog.env` сам — либо добавь в крон-строку
-`set -a; . /etc/diplox-blog.env; set +a;`, либо положи переменные в
-`/opt/diplox-cron.sh`, который уже подгружает окружение.
+Крон-строка сама подгружает `/etc/diplox-blog.env` (`set -a; . …; set +a`).
+Перед `scp` на сервер положи `docs/wordstat-raw-data.json` в `ops/blog-nightly/docs/`
+(или запускай `install.sh` из клона репо) — иначе частотность Wordstat не импортируется.
 
 ### Google Search Console (опционально)
 
