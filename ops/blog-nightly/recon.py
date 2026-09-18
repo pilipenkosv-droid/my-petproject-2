@@ -153,6 +153,9 @@ def competitor_titles(site: str, limit: int = 200) -> list[tuple[str, str]]:
 
 def wordstat_rows(path: str) -> list[dict]:
     p = Path(path)
+    if not p.is_absolute() and not p.exists():
+        # относительный путь из config.toml считаем от каталога конвейера, не от CWD крона
+        p = Path(__file__).resolve().parent / p
     if not p.exists():
         log.warning("wordstat file %s missing", path)
         return []
