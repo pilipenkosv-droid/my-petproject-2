@@ -1,0 +1,27 @@
+[Unit]
+Description=Diplox document worker (ADR-016)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# User=root: soffice запускается потомком и вместе с PrivateTmp пишет в приватный /tmp;
+# выделенный пользователь и права на /opt/diplox-worker — отдельная задача после раскатки.
+User=root
+WorkingDirectory=/opt/diplox-worker
+EnvironmentFile=/etc/diplox-worker.env
+ExecStart=/usr/bin/node --max-old-space-size=1024 /opt/diplox-worker/dist/main.mjs
+Restart=always
+RestartSec=5
+# 2G, а не 1,5G: soffice попадает в тот же cgroup (~400-500 МБ) поверх кучи Node в 1 ГБ
+MemoryMax=2G
+PrivateTmp=true
+# SIGTERM: воркер доделывает текущий документ; дальше systemd убивает и процесс, и потомков
+TimeoutStopSec=300
+KillMode=mixed
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=diplox-worker
+
+[Install]
+WantedBy=multi-user.target
