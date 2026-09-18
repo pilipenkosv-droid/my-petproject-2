@@ -21,6 +21,10 @@ interface V7Telemetry {
   classification?: { suspect: boolean };
   formatMs: number;
   finalScoreUndef: number;
+  auxTocInserted?: boolean;
+  auxHeadings?: number;
+  auxTocSkipped?: string;
+  auxTitleBreakSkipped?: string;
 }
 interface JobRow {
   id: string;
@@ -131,6 +135,23 @@ async function main(): Promise<void> {
   console.log(`  classification.suspect share: ${share(suspectFlags)}`);
   console.log(`  formatMs p50=${percentile(formatMsList, 0.5) ?? "n/a"} p95=${percentile(formatMsList, 0.95) ?? "n/a"}`);
   console.log(`  finalScoreUndef p50=${percentile(finalScoreUndefList, 0.5) ?? "n/a"}`);
+  const tocInsertedFlags = v7Jobs.map((j) => !!j.statistics!.v7!.auxTocInserted);
+  console.log(`  aux TOC inserted share: ${share(tocInsertedFlags)}`);
+  const tally = (pick: (t: V7Telemetry) => string | undefined, label: string): void => {
+    const counts = new Map<string, number>();
+    for (const j of v7Jobs) {
+      const reason = pick(j.statistics!.v7!);
+      if (!reason) continue;
+      counts.set(reason, (counts.get(reason) ?? 0) + 1);
+    }
+    console.log(`  ${label}:`);
+    if (counts.size === 0) console.log("    (none)");
+    for (const [reason, n] of [...counts.entries()].sort((a, b) => b[1] - a[1])) console.log(`    ${reason}: ${n}`);
+  };
+  tally((t) => t.auxTocSkipped, "aux TOC skipped by reason");
+  tally((t) => t.auxTitleBreakSkipped, "aux title break skipped by reason");
+  const headingsList = v7Jobs.map((j) => j.statistics!.v7!.auxHeadings).filter((n): n is number => typeof n === "number");
+  console.log(`  aux headings p50=${percentile(headingsList, 0.5) ?? "n/a"}`);
 
   console.log("\n=== 5. Comments for ratings <=2 (since since-date) ===");
   const lowSince = sinceFeedback.filter((f) => f.rating <= 2);

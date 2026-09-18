@@ -71,6 +71,9 @@ function v7Telemetry(result: V7Result): NonNullable<DocumentStatistics["v7"]> {
     finalScoreUndef: r.checker.finalScoreUndef,
     finalScoreRoles: r.checker.finalScoreRoles,
     auxTocInserted: r.aux.tocInserted,
+    auxHeadings: r.aux.headings,
+    ...(r.aux.tocSkipped && { auxTocSkipped: r.aux.tocSkipped }),
+    ...(r.aux.titleBreakSkipped && { auxTitleBreakSkipped: r.aux.titleBreakSkipped }),
   };
 }
 

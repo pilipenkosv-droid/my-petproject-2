@@ -29,13 +29,21 @@ const H1 = (t: string) => p(t, `<w:pStyle w:val="Heading1"/>`);
 const filler = (n = 12) =>
   Array.from({ length: n }, (_, i) => p(`Обычное предложение номер ${i + 1} в основном тексте.`)).join("");
 
-/** Title page (2 paragraphs) → heading → body. No TOC, no section break. */
+/**
+ * Title page (3 paragraphs) → three headings → 25 body paragraphs. No TOC, no
+ * section break. The sizes are the aux guards' thresholds: below them the aux
+ * layer refuses to insert anything, so a fixture under them tests the guard
+ * rather than the insertion.
+ */
 const BODY =
   p("Министерство образования") +
   p("Курсовая работа") +
+  p("Москва 2026") +
   H1("ВВЕДЕНИЕ") +
   p("Некоторый  текст работы с двойным пробелом.") +
-  filler() +
+  filler(22) +
+  H1("ОСНОВНАЯ ЧАСТЬ") +
+  p("Разбор темы.") +
   H1("ЗАКЛЮЧЕНИЕ") +
   p("Итоги.") +
   SECT;
@@ -108,8 +116,87 @@ describe("aux — TOC insertion", () => {
     const texts = children(body)
       .filter((n) => "w:p" in n)
       .map((n) => JSON.stringify(n).match(/"#text":"([^"]*)"/)?.[1] ?? "");
-    expect(texts[2]).toBe("СОДЕРЖАНИЕ");
-    expect(texts[4]).toBe("ВВЕДЕНИЕ");
+    expect(texts[3]).toBe("СОДЕРЖАНИЕ");
+    expect(texts[5]).toBe("ВВЕДЕНИЕ");
+  });
+});
+
+describe("aux — insertion guards", () => {
+  /** Body with headings and running text, but a title page of N paragraphs. */
+  const withTitle = (titleParagraphs: string[]) =>
+    titleParagraphs.join("") +
+    H1("ВВЕДЕНИЕ") +
+    p("Текст.") +
+    filler(22) +
+    H1("ОСНОВНАЯ ЧАСТЬ") +
+    p("Разбор.") +
+    H1("ЗАКЛЮЧЕНИЕ") +
+    p("Итоги.") +
+    SECT;
+
+  it("inserts nothing into a fragment with no headings", async () => {
+    const body = p("Титульный лист") + p("Курсовая работа") + p("Москва 2026") + filler(25) + SECT;
+    const r = await run(await docx(body));
+    expect(r.report.aux.headings).toBe(0);
+    expect(r.report.aux.tocInserted).toBe(false);
+    expect(r.report.aux.tocSkipped).toBe("too-few-headings");
+    expect(r.report.aux.titleBreak).toBe(false);
+    expect(r.report.aux.titleBreakSkipped).toBe("toc-guard");
+    expect(r.report.gate.pass).toBe(true);
+    const xml = await documentXml(r.output!);
+    expect(xml).not.toContain("СОДЕРЖАНИЕ");
+  });
+
+  it("inserts nothing into a title-page-only fragment of table cells", async () => {
+    const cell = (t: string) => `<w:tc>${p(t)}</w:tc>`;
+    const rows = Array.from(
+      { length: 6 },
+      (_, i) => `<w:tr>${cell(`Поле ${i + 1}`)}${cell(`Значение ${i + 1}`)}</w:tr>`
+    ).join("");
+    const body =
+      p("Министерство образования") +
+      `<w:tbl><w:tblGrid><w:gridCol w:w="100"/><w:gridCol w:w="100"/></w:tblGrid>${rows}</w:tbl>` +
+      p("Москва 2026") +
+      SECT;
+    const r = await run(await docx(body));
+    expect(r.report.aux.tocInserted).toBe(false);
+    expect(r.report.aux.titleBreak).toBe(false);
+    expect(r.report.gate.pass).toBe(true);
+  });
+
+  it("adds no second TOC when the student typed their own «СОДЕРЖАНИЕ»", async () => {
+    const body =
+      p("Министерство образования") +
+      p("Курсовая работа") +
+      p("Москва 2026") +
+      p("СОДЕРЖАНИЕ") +
+      H1("ВВЕДЕНИЕ") +
+      p("Текст.") +
+      filler(22) +
+      H1("ОСНОВНАЯ ЧАСТЬ") +
+      p("Разбор.") +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
+      SECT;
+    const r = await run(await docx(body));
+    expect(r.report.aux.tocInserted).toBe(false);
+    expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+    const xml = await documentXml(r.output!);
+    expect(xml.match(/СОДЕРЖАНИЕ/g)).toHaveLength(1);
+  });
+
+  it("inserts the TOC when there are three headings and enough body", async () => {
+    const r = await run(await docx(withTitle([p("Титул"), p("Курсовая"), p("Москва 2026")])));
+    expect(r.report.aux.headings).toBeGreaterThanOrEqual(3);
+    expect(r.report.aux.tocInserted).toBe(true);
+    expect(r.report.aux.tocSkipped).toBeUndefined();
+  });
+
+  it("does not break a one-paragraph title page", async () => {
+    const r = await run(await docx(withTitle([p("Титульный лист")])));
+    expect(r.report.aux.titleBreak).toBe(false);
+    expect(r.report.aux.titleBreakSkipped).toBe("title-too-short");
+    expect(r.report.gate.pass).toBe(true);
   });
 });
 

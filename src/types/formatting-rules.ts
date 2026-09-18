@@ -936,6 +936,12 @@ export interface DocumentStatistics {
     finalScoreUndef: number;
     finalScoreRoles: number;
     auxTocInserted: boolean;
+    /** Заголовки L1+L2+L3, найденные классификатором. */
+    auxHeadings?: number;
+    /** Почему оглавление не вставлено (см. aux/guards.ts). */
+    auxTocSkipped?: string;
+    /** Почему разрыв секции после титула не вставлен. */
+    auxTitleBreakSkipped?: string;
   };
   /** Почему v7 был выбран, но не сработал: "gate" | "refused:..." | "timeout" | "error:..." */
   v7Fallback?: string;
