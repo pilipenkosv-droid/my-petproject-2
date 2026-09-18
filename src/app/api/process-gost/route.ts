@@ -116,17 +116,18 @@ export async function POST(request: NextRequest) {
     // Режим очереди: задачу забирает воркер на VDS, роут отвечает сразу.
     // Списание уже произошло выше — иначе пользователь без остатка ставил бы
     // в очередь сколько угодно документов.
+    // Не встала в очередь — считаем инлайном, как при выключенном флаге.
     if (await shouldQueueForWorker(jobId)) {
-      await markJobQueued(jobId, "В очереди на обработку");
-
-      const queued = NextResponse.json(
-        { jobId, status: "pending" },
-        { status: 202 }
-      );
-      if (isAnonymous) {
-        markTrialUsed(queued);
+      if (await markJobQueued(jobId, "В очереди на обработку")) {
+        const queued = NextResponse.json(
+          { jobId, status: "pending" },
+          { status: 202 }
+        );
+        if (isAnonymous) {
+          markTrialUsed(queued);
+        }
+        return queued;
       }
-      return queued;
     }
 
     const { statistics, violationsCount } = await processGostJob(

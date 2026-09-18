@@ -91,6 +91,7 @@ describe("POST /api/confirm-rules", () => {
     vi.clearAllMocks();
     vi.mocked(getJob).mockResolvedValue(job as never);
     vi.mocked(shouldQueueForWorker).mockResolvedValue(false);
+    vi.mocked(markJobQueued).mockResolvedValue(true);
   });
 
   it("задача не в статусе awaiting_confirmation → 400", async () => {
@@ -126,6 +127,8 @@ describe("POST /api/confirm-rules", () => {
     expect(body.status).toBe("completed");
     expect(body.violationsCount).toBe(1);
     expect(markJobQueued).not.toHaveBeenCalled();
+    // В инлайне правила пишет только completeJob — отдельного UPDATE нет.
+    expect(updateJob).not.toHaveBeenCalled();
 
     // Правки пользователя ушли в форматтер, метаданные разбора не затёрты.
     expect(vi.mocked(formatDocument).mock.calls[0][1]).toEqual(editedRules);
@@ -135,5 +138,17 @@ describe("POST /api/confirm-rules", () => {
       rulesSource: "методичка",
       markupTimeMs: 12,
     });
+  });
+
+  it("постановка в очередь не удалась → обработка инлайном, а не 202", async () => {
+    vi.mocked(shouldQueueForWorker).mockResolvedValue(true);
+    vi.mocked(markJobQueued).mockResolvedValue(false);
+
+    const res = await POST(makeRequest({ jobId: "job-1", rules: editedRules }));
+
+    // Иначе задача осталась бы в awaiting_confirmation, которую никто не подберёт.
+    expect(res.status).toBe(200);
+    expect((await res.json()).status).toBe("completed");
+    expect(formatDocument).toHaveBeenCalled();
   });
 });

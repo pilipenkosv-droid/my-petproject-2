@@ -63,14 +63,14 @@ export async function POST(request: NextRequest) {
     if (!target.ok) return target.response;
     const { job, rules, sourceDocumentId } = target;
 
-    // Правки пользователя должны лежать в строке до захвата воркером:
-    // он читает правила из job, а не из тела запроса.
-    await updateJob(jobId, { rules });
-
     // Режим очереди: документ форматирует воркер на VDS, роут отвечает сразу.
+    // Правки пользователя должны лечь в строку до захвата: воркер читает
+    // правила из job, а не из тела запроса. Не встала в очередь — инлайн.
     if (await shouldQueueForWorker(jobId)) {
-      await markJobQueued(jobId, "В очереди на форматирование");
-      return NextResponse.json({ jobId, status: "pending" }, { status: 202 });
+      await updateJob(jobId, { rules });
+      if (await markJobQueued(jobId, "В очереди на форматирование")) {
+        return NextResponse.json({ jobId, status: "pending" }, { status: 202 });
+      }
     }
 
     // Определяем тип доступа пользователя для обрезки trial.
