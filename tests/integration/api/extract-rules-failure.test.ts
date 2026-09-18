@@ -31,6 +31,14 @@ vi.mock("@/lib/auth/api-auth", () => ({
 
 vi.mock("@/lib/auth/trial", () => ({ markTrialUsed: vi.fn() }));
 
+vi.mock("@/lib/processing/mode", () => ({
+  shouldQueueForWorker: vi.fn().mockResolvedValue(false),
+}));
+
+vi.mock("@/lib/processing/enqueue", () => ({
+  markJobQueued: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/lib/ai/gateway", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ai/gateway")>();
   return { ...actual, warmupModels: vi.fn().mockResolvedValue({ total: 0, alive: [], dead: [] }) };
@@ -44,6 +52,9 @@ vi.mock("@/lib/ai/provider", async (importOriginal) => {
 import { POST } from "@/app/api/extract-rules/route";
 import { failJob, updateJob } from "@/lib/storage/job-store";
 import { parseFormattingRules, RulesExtractionError } from "@/lib/ai/provider";
+import { shouldQueueForWorker } from "@/lib/processing/mode";
+import { markJobQueued } from "@/lib/processing/enqueue";
+import { markTrialUsed } from "@/lib/auth/trial";
 
 function makeRequest() {
   const form = new FormData();
@@ -56,7 +67,10 @@ function makeRequest() {
 }
 
 describe("POST /api/extract-rules", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(shouldQueueForWorker).mockResolvedValue(false);
+  });
 
   it("RulesExtractionError → 422, failJob с понятным текстом, правила не сохраняются", async () => {
     vi.mocked(parseFormattingRules).mockRejectedValue(
@@ -138,5 +152,22 @@ describe("POST /api/extract-rules", () => {
       rulesRetrieval: retrieval,
       rulesProvenance: { text: [12, 13], headings: [40] },
     });
+  });
+
+  it("режим воркера → 202, задача в очереди, методичка не разбирается", async () => {
+    vi.mocked(shouldQueueForWorker).mockResolvedValue(true);
+
+    const res = await POST(makeRequest());
+    const body = await res.json();
+
+    expect(res.status).toBe(202);
+    expect(body.status).toBe("pending");
+    expect(body.jobId).toEqual(expect.any(String));
+
+    expect(markJobQueued).toHaveBeenCalledWith(body.jobId, expect.stringContaining("очереди"));
+    // Разбор методички — работа воркера, роут к модели не ходит.
+    expect(parseFormattingRules).not.toHaveBeenCalled();
+    // Триал анонима списывается так же, как на синхронном успехе.
+    expect(markTrialUsed).toHaveBeenCalled();
   });
 });

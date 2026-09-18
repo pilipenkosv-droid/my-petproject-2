@@ -279,10 +279,29 @@ export async function invokeModel(
   return withTimeout(callOpenAICompatible(model, request, timeoutMs), timeoutMs, model.displayName);
 }
 
+/**
+ * Переопределение таймаута попытки из окружения.
+ *
+ * Константы в 50 с рассчитаны на функцию Vercel с потолком 60 с. У воркера
+ * потолка нет, а модель одна: обрывать её на 50-й секунде некуда — failover
+ * всё равно не спасёт. Мусор в переменной игнорируем.
+ */
+function timeoutOverrideMs(): number | undefined {
+  const raw = (process.env.AI_CALL_TIMEOUT_MS ?? "").trim();
+  if (!/^\d+$/.test(raw)) return undefined;
+  const parsed = Number(raw);
+  return parsed > 0 ? parsed : undefined;
+}
+
 /** Базовый таймаут попытки для модели (до обрезки по бюджету запроса). */
 export function baseTimeoutFor(model: ModelConfig): number {
-  if (model.protocol === "gemini") return AI_CALL_TIMEOUT_GEMINI_MS;
+  // claude-cli — локальный процесс, его таймаут к сетевым бюджетам отношения не имеет.
   if (model.protocol === "claude-cli") return 120_000;
+
+  const override = timeoutOverrideMs();
+  if (override !== undefined) return override;
+
+  if (model.protocol === "gemini") return AI_CALL_TIMEOUT_GEMINI_MS;
   return PAID_PROVIDERS.has(model.apiKeyEnv)
     ? AI_CALL_TIMEOUT_PAID_MS
     : AI_CALL_TIMEOUT_FREE_MS;

@@ -968,6 +968,8 @@ export interface DocumentStatistics {
   rulesRetrieval?: RulesRetrievalStatistics;
   /** Секция правил → номера фрагментов [uN], из которых она взята */
   rulesProvenance?: Partial<Record<string, number[]>>;
+  /** MIME методички, проверенный при загрузке: у файла без расширения его больше взять негде */
+  requirementsMimeType?: string;
 }
 
 /** Метрики ретрива по методичке (src/lib/ai/guidelines/retrieval.ts). */

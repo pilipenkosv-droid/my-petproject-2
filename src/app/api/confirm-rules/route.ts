@@ -1,12 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, updateJobProgress, updateJob, completeJob, failJob } from "@/lib/storage/job-store";
-import { getFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
-import { analyzeDocument, parseDocxStructure, enrichWithBlockMarkup } from "@/lib/pipeline/document-analyzer";
-import { formatDocument, AccessType } from "@/lib/pipeline/document-formatter";
+import { getJob, updateJob, updateJobProgress, failJob, type JobState } from "@/lib/storage/job-store";
+import { getFile } from "@/lib/storage/file-storage";
+import { AccessType } from "@/lib/pipeline/document-formatter";
 import { FormattingRules } from "@/types/formatting-rules";
 import { getUserAccess } from "@/lib/payment/access";
+import { processConfirmRulesJob } from "@/lib/processing/confirm-rules-job";
+import { shouldQueueForWorker } from "@/lib/processing/mode";
+import { markJobQueued } from "@/lib/processing/enqueue";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
+
+type ResolveResult =
+  | { ok: true; job: JobState; rules: FormattingRules; sourceDocumentId: string }
+  | { ok: false; response: NextResponse };
+
+/** Проверки входа: задача существует, ждёт подтверждения и знает свои файлы. */
+async function resolveTarget(
+  jobId: string,
+  updatedRules: FormattingRules | undefined
+): Promise<ResolveResult> {
+  const fail = (error: string, status: number): ResolveResult => ({
+    ok: false,
+    response: NextResponse.json({ error }, { status }),
+  });
+
+  const job = await getJob(jobId);
+  if (!job) return fail("Задача не найдена", 404);
+  if (job.status !== "awaiting_confirmation") {
+    return fail(`Задача в неверном статусе: ${job.status}`, 400);
+  }
+  if (!job.sourceDocumentId) {
+    return fail("Исходный документ не найден в задаче", 400);
+  }
+
+  // Используем обновлённые правила или сохранённые ранее
+  const rules = updatedRules || job.rules;
+  if (!rules) return fail("Правила форматирования не найдены", 400);
+
+  return { ok: true, job, rules, sourceDocumentId: job.sourceDocumentId };
+}
 
 /**
  * Второй этап: подтверждение правил и обработка документа
@@ -24,55 +56,34 @@ export async function POST(request: NextRequest) {
     const updatedRules = body.rules as FormattingRules | undefined;
 
     if (!jobId) {
-      return NextResponse.json(
-        { error: "jobId обязателен" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "jobId обязателен" }, { status: 400 });
     }
 
-    const job = await getJob(jobId);
-    if (!job) {
-      return NextResponse.json(
-        { error: "Задача не найдена" },
-        { status: 404 }
-      );
+    const target = await resolveTarget(jobId, updatedRules);
+    if (!target.ok) return target.response;
+    const { job, rules, sourceDocumentId } = target;
+
+    // Режим очереди: документ форматирует воркер на VDS, роут отвечает сразу.
+    // Правки пользователя должны лечь в строку до захвата: воркер читает
+    // правила из job, а не из тела запроса. Не встала в очередь — инлайн.
+    if (await shouldQueueForWorker(jobId)) {
+      await updateJob(jobId, { rules });
+      if (await markJobQueued(jobId, "В очереди на форматирование")) {
+        return NextResponse.json({ jobId, status: "pending" }, { status: 202 });
+      }
     }
 
-    if (job.status !== "awaiting_confirmation") {
-      return NextResponse.json(
-        { error: `Задача в неверном статусе: ${job.status}` },
-        { status: 400 }
-      );
-    }
-
-    if (!job.sourceDocumentId) {
-      return NextResponse.json(
-        { error: "Исходный документ не найден в задаче" },
-        { status: 400 }
-      );
-    }
-
-    // Определяем тип доступа пользователя для обрезки trial
+    // Определяем тип доступа пользователя для обрезки trial.
+    // Анонимные (userId === null) остаются "trial".
     let userAccessType: AccessType = "trial";
     if (job.userId) {
       const access = await getUserAccess(job.userId);
       userAccessType = access.accessType;
     }
-    // Анонимные (userId === null) остаются "trial"
-
-    // Используем обновлённые правила или сохранённые ранее
-    const rules = updatedRules || job.rules;
-    if (!rules) {
-      return NextResponse.json(
-        { error: "Правила форматирования не найдены" },
-        { status: 400 }
-      );
-    }
-
-    await updateJobProgress(jobId, "analyzing", 50, "Получение исходного документа");
 
     // Получаем исходный документ из хранилища
-    const sourceBuffer = await getFile(job.sourceDocumentId);
+    await updateJobProgress(jobId, "analyzing", 50, "Получение исходного документа");
+    const sourceBuffer = await getFile(sourceDocumentId);
     if (!sourceBuffer) {
       await failJob(jobId, "Не удалось получить исходный документ");
       return NextResponse.json(
@@ -81,80 +92,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Парсим структуру и размечаем блоки через AI
-    await updateJobProgress(jobId, "analyzing", 55, "AI-разметка блоков документа");
-    const pipelineStart = Date.now();
-    const docxStructure = await parseDocxStructure(sourceBuffer);
-    const blockMarkupResult = await enrichWithBlockMarkup(docxStructure.paragraphs, { deadline });
-    const enrichedParagraphs = blockMarkupResult.paragraphs;
-
-    if (blockMarkupResult.modelId) {
-      updateJob(jobId, { modelId: blockMarkupResult.modelId }).catch(() => {});
-    }
-
-    // Анализируем документ
-    await updateJobProgress(jobId, "analyzing", 65, "Проверка документа на соответствие требованиям");
-    const analysisResult = await analyzeDocument(sourceBuffer, rules, enrichedParagraphs);
-
-    await updateJobProgress(jobId, "formatting", 75, "Применение форматирования через XML");
-
-    // Форматируем документ через XML-модификацию (сохраняет картинки и таблицы)
-    // Для trial — обрезка до 50% документа происходит ПОСЛЕ форматирования
-    const formattingResult = await formatDocument(sourceBuffer, rules, analysisResult.violations, enrichedParagraphs, userAccessType);
-
-    await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
-
-    // Сохраняем результаты (обрезанные для trial)
-    await saveResultFile(jobId, "original", formattingResult.markedOriginal);
-    await saveResultFile(jobId, "formatted", formattingResult.formattedDocument);
-
-    // Если есть полные версии (trial с обрезкой) — сохраняем их для разблокировки после оплаты
-    let hasFullVersion = false;
-    if (formattingResult.fullMarkedOriginal && formattingResult.fullFormattedDocument) {
-      await Promise.all([
-        saveFullVersionFile(jobId, "original", formattingResult.fullMarkedOriginal),
-        saveFullVersionFile(jobId, "formatted", formattingResult.fullFormattedDocument),
-      ]);
-      hasFullVersion = true;
-      console.log(`[confirm-rules] Saved full versions for job ${jobId} (hook-offer)`);
-    }
-
-    // Добавляем информацию об обрезке и таймингах в статистику
-    const pipelineTimeMs = Date.now() - pipelineStart;
-    const statistics = {
-      ...analysisResult.statistics,
-      // Метаданные извлечения правил записал /extract-rules — не затираем их анализом.
-      rulesConfidence: job.statistics?.rulesConfidence,
-      rulesSource: job.statistics?.rulesSource,
-      rulesNormalized: job.statistics?.rulesNormalized,
-      rulesDroppedChars: job.statistics?.rulesDroppedChars,
-      rulesSchemaMode: job.statistics?.rulesSchemaMode,
-      pipelineTimeMs,
-      markupTimeMs: blockMarkupResult.markupDurationMs,
-      markupDegraded: blockMarkupResult.markupDegraded,
-      markupDegradedChunks: blockMarkupResult.markupDegradedChunks,
-      ...(formattingResult.wasTruncated && {
-        wasTruncated: true,
-        originalPageCount: formattingResult.originalPageCount,
-        pageLimitApplied: formattingResult.pageLimitApplied,
-      }),
-    };
-
-    // Завершаем задачу
-    await completeJob(jobId, {
-      markedOriginalId: `${jobId}_original`,
-      formattedDocumentId: `${jobId}_formatted`,
-      violations: analysisResult.violations,
-      statistics,
+    const { statistics, violationsCount } = await processConfirmRulesJob(
+      jobId,
+      sourceBuffer,
       rules,
-      ...(hasFullVersion && { hasFullVersion: true }),
-    });
+      userAccessType,
+      { deadline, priorStatistics: job.statistics }
+    );
 
     return NextResponse.json({
       jobId,
       status: "completed",
       statistics,
-      violationsCount: analysisResult.violations.length,
+      violationsCount,
     });
 
   } catch (error) {
@@ -174,9 +124,6 @@ export async function POST(request: NextRequest) {
       // /api/process-gost, каждый со своим возвратом.
     }
 
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
