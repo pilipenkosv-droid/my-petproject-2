@@ -40,6 +40,18 @@ class TestBannedProduct(unittest.TestCase):
         f = checks.check_banned_product(article(keywords=["Second Brain"]), _ctx.BANNED)
         self.assertIsNotNone(f)
 
+    def test_common_words_are_not_false_positives(self):
+        body = ("Дипломная работа, работать с оборотом, ботинки и субботник — "
+                "всё это не про несуществующий продукт. ") + "слово " * 700
+        self.assertIsNone(checks.check_banned_product(article(content_markdown=body),
+                                                      _ctx.BANNED))
+
+    def test_inflected_bot_is_caught(self):
+        for form in ("в боте", "ботами", "телеграмм", "Second Brain"):
+            with self.subTest(form=form):
+                self.assertIsNotNone(checks.check_banned_product(
+                    article(content_markdown=f"{form} " + "слово " * 700), _ctx.BANNED))
+
     def test_safety_stopword(self):
         f = checks.check_safety(article(description="см. vault заметки"), _ctx.SAFETY)
         self.assertIsNotNone(f)

@@ -16,6 +16,9 @@ def seed_db():
         {"phrase": "оформление таблиц по госту", "source": "manual", "volume": 500},
         {"phrase": "купить телеграм бота для диплома", "source": "suggest"},
         {"phrase": "погода в москве", "source": "suggest"},
+        {"phrase": "как оформить дипломатический паспорт", "source": "suggest"},
+        {"phrase": "как оформить курсовую разницу в 1с", "source": "suggest"},
+        {"phrase": "повысить уникальность текста", "source": "manual", "volume": 90000},
         {"phrase": "как оформить список литературы", "source": "gsc", "impressions": 9000},
     ]
     for r in rows:
@@ -47,6 +50,9 @@ class TestShortlist(unittest.TestCase):
                    score.shortlist(self.conn, _ctx.CFG, POSTS, _ctx.BANNED)]
         self.assertNotIn("купить телеграм бота для диплома", phrases)
         self.assertNotIn("погода в москве", phrases)
+        self.assertNotIn("как оформить дипломатический паспорт", phrases)
+        self.assertNotIn("как оформить курсовую разницу в 1с", phrases)
+        self.assertNotIn("повысить уникальность текста", phrases)
 
     def test_drops_covered_topic(self):
         phrases = [c["phrase"] for c in

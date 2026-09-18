@@ -104,16 +104,26 @@ def run(client: llm.LLMClient, cfg: dict, shortlist: list[dict], posts: list[dic
         instructions: str, banned_rx: re.Pattern[str]) -> dict:
     if not shortlist:
         raise BriefInvalid("empty shortlist — nothing to brief")
-    messages = build_prompt(shortlist, posts, gost_whitelist, internal_links, tone, instructions)
+    # Старые статьи про несуществующего бота не показываем редактору вовсе,
+    # иначе он предложит на них внутреннюю ссылку.
+    visible = [p for p in posts
+               if not banned_rx.search(p["slug"] + " " + p.get("title", ""))]
+    messages = build_prompt(shortlist, visible, gost_whitelist, internal_links,
+                            tone, instructions)
     raw = client.chat(cfg["editor"]["model"], messages,
                       max_tokens=cfg["editor"]["max_tokens"],
                       temperature=cfg["editor"]["temperature"])
     brief = llm.extract_json(raw)
-    brief = sanitize(brief, internal_links, gost_whitelist, {p["slug"] for p in posts})
+    brief = sanitize(brief, internal_links, gost_whitelist, {p["slug"] for p in visible})
     errors = validate(brief, load_schema())
     if errors:
         raise BriefInvalid("; ".join(errors[:6]))
-    blob = json.dumps(brief, ensure_ascii=False)
-    if banned_rx.search(blob):
+    # Only prose fields: `avoid` and `internal_links` legitimately carry slugs
+    # of old bot-cluster articles (…-diplox-bot), and those are not a mention.
+    prose = " ".join([
+        brief["topic"], brief["target_query"], brief["intent"], brief["tone"],
+        " ".join(brief.get("keywords", [])), " ".join(brief.get("must_cover", [])),
+    ])
+    if banned_rx.search(prose):
         raise BriefInvalid("banned_product_mention in brief")
     return brief

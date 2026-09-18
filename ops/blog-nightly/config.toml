@@ -15,6 +15,7 @@ gsc_site = "sc-domain:diplox.online"
 competitors = ["https://kampus.ai", "https://study24.ai", "https://studgen.ru"]
 competitor_interval_days = 7
 suggest_delay_s = 0.2
+suggest_share = 0.6   # доля дедлайна разведки на Google Suggest
 deadline_s = 60
 
 [score]
@@ -43,10 +44,12 @@ max_tokens = 6000
 temperature = 0.7
 
 [checks]
+# Регулярка ADR («бот|bot|телеграм|telegram|second brain|второй мозг») дана без
+# границ слова и ловит «раБОТа» — здесь тот же список, но со словоформами.
 min_words = 600
 min_keywords_present = 3
 title_similarity_max = 0.7
-banned_product_regex = "бот|bot|телеграм|telegram|second brain|второй мозг"
+banned_product_regex = '(?<![а-яёa-z])(бот(?:а|у|ом|е|ы|ов|ам|ами|ах)?|bot(?:s|a)?|телеграм{1,2}\w*|telegram\w*|second\s*brain|втор(?:ой|ого|ым)\s+мозг)(?![а-яёa-z])'
 safety_regex = "sergey|sergej|pilipenko|vault|second.brain|token|password|api.key"
 
 [publish]

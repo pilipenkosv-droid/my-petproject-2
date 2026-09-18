@@ -17,12 +17,20 @@ from datetime import date
 
 import similarity
 
-# Only formatting/GOST intent belongs to the `gost` cluster.
+# Only formatting/GOST intent belongs to the `gost` cluster: the phrase must
+# name a student work (or a formatting artefact) AND not be an off-domain
+# homonym ("дипломатический паспорт", "курсовая разница в 1С").
 GOST_HINTS = re.compile(
-    r"гост|оформл|титульн|список\s+литератур|библиограф|сноск|ссылк|шрифт|"
-    r"поля|интервал|нумерац|содержан|оглавлен|приложен|таблиц|рисун|аннотац|"
-    r"рецензи|антиплагиат|уникальн|структур|план|введен|заключен|"
-    r"диплом|курсов|реферат|вкр|магистерск|диссертац|практик|эссе|доклад|отчёт|отчет",
+    r"гост|нормоконтрол|титульн|список\s+литератур|библиограф|сноск|аннотац|"
+    r"диплом|курсов|реферат|вкр|магистерск|диссертац|практик|эссе|доклад|"
+    r"контрольн|научн\w*\s+работ|отчёт|отчет",
+    re.IGNORECASE,
+)
+
+OFF_DOMAIN = re.compile(
+    r"паспорт|виз[аыу]\b|1с|бухгалтер|налог|кредит|ипотек|полис|осаго|"
+    r"разниц|недвижим|гражданств|страхов|пенси|вакансі|зарплат|"
+    r"антиплагиат|уникальност|рерайт|перефраз",
     re.IGNORECASE,
 )
 
@@ -63,6 +71,8 @@ def candidates(conn, banned_rx: re.Pattern[str]) -> dict[str, dict]:
     for r in conn.execute("SELECT * FROM queries"):
         phrase = (r["phrase"] or "").strip().lower()
         if len(phrase) < 8 or not GOST_HINTS.search(phrase):
+            continue
+        if OFF_DOMAIN.search(phrase):
             continue
         if banned_rx.search(phrase):
             continue

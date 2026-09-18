@@ -212,8 +212,10 @@ def run(conn, cfg: dict, deadline_s: float = 60.0) -> dict:
 
     seeds = [r["seed_phrase"] for r in conn.execute(
         "SELECT seed_phrase FROM topics WHERE cluster='gost' AND status='new'")]
+    # Suggest gets only part of the budget, otherwise competitors never run.
+    suggest_deadline = deadline_s * cfg["recon"].get("suggest_share", 0.6)
     for phrase in seeds:
-        if time.monotonic() - started > deadline_s:
+        if time.monotonic() - started > suggest_deadline:
             log.warning("recon deadline hit, suggest stopped after %s seeds", stats["suggest"])
             break
         try:
