@@ -32,6 +32,8 @@ function supabaseWith(opts: {
   return createThenableSupabaseMock({
     workers: [{ data: opts.workers ?? [], error: null }],
     jobs: [
+      // порядок Promise.all: pendingCount (head), самая старая pending, failed за сутки
+      { data: null, error: null, count: (opts.pending ?? []).length },
       { data: opts.pending ?? [], error: null },
       { data: null, error: null, count: opts.failed24h ?? 0 },
     ],

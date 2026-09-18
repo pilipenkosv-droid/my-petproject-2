@@ -46,17 +46,18 @@ export async function GET(request: NextRequest) {
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   // Теневые задачи считаем наравне с обычными: для воркера это такая же работа.
-  const [workersRes, pendingRes, failedRes] = await Promise.all([
+  const [workersRes, pendingCountRes, oldestPendingRes, failedRes] = await Promise.all([
     admin.from("workers").select("id, hostname, git_sha, last_seen_at").order("last_seen_at", { ascending: false }),
-    admin.from("jobs").select("created_at").eq("status", "pending").order("created_at", { ascending: true }).limit(1000),
+    admin.from("jobs").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    admin.from("jobs").select("created_at").eq("status", "pending").order("created_at", { ascending: true }).limit(1),
     admin.from("jobs").select("id", { count: "exact", head: true }).eq("status", "failed").gte("created_at", dayAgo),
   ]);
 
   const workers = (workersRes.data ?? []) as WorkerRow[];
-  const pending = (pendingRes.data ?? []) as Array<{ created_at: string }>;
+  const oldestPending = (oldestPendingRes.data ?? []) as Array<{ created_at: string }>;
 
   const heartbeatAgeSec = ageSec(workers[0]?.last_seen_at);
-  const oldestPendingAgeSec = ageSec(pending[0]?.created_at);
+  const oldestPendingAgeSec = ageSec(oldestPending[0]?.created_at);
 
   const degraded =
     workers.length === 0 ||
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
     {
       status: degraded ? "degraded" : "ok",
       heartbeatAgeSec,
-      pendingCount: pending.length,
+      pendingCount: pendingCountRes.count ?? 0,
       oldestPendingAgeSec,
       failed24h: failedRes.count ?? 0,
       workers: workers.map((w) => ({
