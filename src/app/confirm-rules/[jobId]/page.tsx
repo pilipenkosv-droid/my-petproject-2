@@ -5,20 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormattingRules } from "@/types/formatting-rules";
 import { RulesEditor } from "@/features/confirm-rules/components/RulesEditor";
+import { ConfirmRulesWaiting } from "@/features/confirm-rules/components/ConfirmRulesWaiting";
 import { GuidelinesChat } from "@/features/confirm-rules/components/GuidelinesChat";
-import { ProcessingStatus } from "@/features/constructor/components/ProcessingStatus";
-import { useAnimatedProgress, type AnimatedStep } from "@/features/constructor/hooks/useAnimatedProgress";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BlurFade } from "@/components/ui/blur-fade";
+import { useAnimatedProgress } from "@/features/constructor/hooks/useAnimatedProgress";
+import { useJobStatus } from "@/features/result/hooks/useJobStatus";
 import {
-  ArrowLeft,
-  CheckCircle,
-  Sparkles,
-  Zap,
-  RefreshCw,
-  Loader2
-} from "lucide-react";
+  ErrorScreen,
+  LoadingScreen,
+  NoDataScreen,
+  ProcessingScreen,
+  Shell,
+  PHASE2_STEPS,
+} from "./screens";
+import { Button } from "@/components/ui/button";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { ArrowLeft, CheckCircle, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { FlowStepper } from "@/components/FlowStepper";
 import { trackEvent } from "@/lib/analytics/events";
@@ -27,33 +28,31 @@ interface ConfirmRulesPageProps {
   params: Promise<{ jobId: string }>;
 }
 
-interface JobData {
-  id: string;
-  status: string;
-  rules?: FormattingRules;
+/** Поля, которые /api/status отдаёт только для статуса awaiting_confirmation. */
+interface ConfirmJobExtras {
   confidence?: number;
   warnings?: string[];
   missingRules?: string[];
   hasGuidelinesText?: boolean;
 }
 
-const PHASE2_STEPS: AnimatedStep[] = [
-  { id: "validating_rules", label: "Подготовка правил к применению", rangeStart: 0, rangeEnd: 12 },
-  { id: "analyzing", label: "AI-разметка и поиск нарушений", rangeStart: 12, rangeEnd: 45 },
-  { id: "formatting", label: "Применение форматирования", rangeStart: 45, rangeEnd: 75 },
-  { id: "checking_compliance", label: "Проверка соответствия методичке", rangeStart: 75, rangeEnd: 92 },
-  { id: "finalizing", label: "Сборка итогового документа", rangeStart: 92, rangeEnd: 100 },
-];
-
-const PHASE2_STEP_DEFS = PHASE2_STEPS.map(s => ({ id: s.id, label: s.label }));
+/** Опрос идёт, пока методичку разбирает воркер; awaiting_confirmation — наша остановка. */
+const STOP_ON_STATUS = ["awaiting_confirmation", "completed", "failed"];
+/** Тот же потолок, что у страницы результата: у воркера нет лимита в 60 с. */
+const WAIT_TIMEOUT_MS = 10 * 60 * 1000;
 
 export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
   const { jobId } = use(params);
   const router = useRouter();
 
-  const [job, setJob] = useState<JobData | null>(null);
+  const { job: rawJob, isLoading, error: statusError } = useJobStatus({
+    jobId,
+    stopOnStatus: STOP_ON_STATUS,
+    timeout: WAIT_TIMEOUT_MS,
+  });
+  const job = rawJob as (typeof rawJob & ConfirmJobExtras) | null;
+
   const [rules, setRules] = useState<FormattingRules | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,47 +62,25 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     totalJitter: 30000,
   });
 
-  // Загружаем данные задачи
+  // Реакция на статус: готовые правила — в форму, терминальные статусы — дальше
   useEffect(() => {
-    async function fetchJob() {
-      try {
-        const response = await fetch(`/api/status/${jobId}`);
+    if (!job) return;
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("Задача не найдена");
-            return;
-          }
-          throw new Error("Ошибка при получении данных");
-        }
-
-        const data = await response.json();
-
-        if (data.status === "completed") {
-          router.replace(`/result/${jobId}`);
-          return;
-        }
-
-        if (data.status !== "awaiting_confirmation") {
-          if (data.status === "failed") {
-            setError(data.error || "Ошибка обработки");
-            return;
-          }
-          router.replace(`/result/${jobId}`);
-          return;
-        }
-
-        setJob(data);
-        setRules(data.rules);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Неизвестная ошибка");
-      } finally {
-        setIsLoading(false);
-      }
+    if (job.status === "completed") {
+      router.replace(`/result/${jobId}`);
+      return;
     }
 
-    fetchJob();
-  }, [jobId, router]);
+    if (job.status === "failed") {
+      setError(job.error || "Ошибка обработки");
+      return;
+    }
+
+    if (job.status === "awaiting_confirmation" && job.rules) {
+      // Правки пользователя не затираем очередным ответом опроса.
+      setRules((prev) => prev ?? job.rules ?? null);
+    }
+  }, [job, jobId, router]);
 
   const handleConfirm = useCallback(async () => {
     if (!rules) return;
@@ -144,6 +121,13 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
 
       trackEvent("processing_complete");
 
+      // 202 — документ форматирует воркер. Ждать анимацию незачем: стадии
+      // обработки показывает страница результата, она сама опрашивает статус.
+      if (response.status === 202) {
+        router.push(`/result/${jobId}`);
+        return;
+      }
+
       // Let animation finish, then redirect
       animatedProgress.complete(() => {
         try {
@@ -156,7 +140,7 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Неизвестная ошибка";
       animatedProgress.fail(msg);
-      // НЕ сбрасываем isProcessing — ProcessingStatus покажет ошибку
+      // НЕ сбрасываем isProcessing — ProcessingScreen покажет ошибку
       // с кнопкой «Попробовать снова» (которая и вызовет setIsProcessing(false))
     }
   }, [rules, jobId, animatedProgress, router]);
@@ -165,121 +149,42 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     setRules(newRules);
   };
 
-  // Состояние загрузки
-  if (isLoading) {
-    return (
-      <main className="min-h-screen relative">
-        <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header showBack backHref="/create" />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-          <Card className="max-w-md mx-auto">
-            <CardContent className="py-12 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-on-surface-subtle mx-auto mb-4" />
-              <p className="text-on-surface-subtle">Загрузка...</p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    );
-  }
+  // Первая загрузка статуса
+  if (isLoading && !job) return <LoadingScreen />;
 
-  // Ошибка (только если не в режиме обработки — ошибки обработки показываются в ProcessingStatus)
-  if (error && !isProcessing) {
-    return (
-      <main className="min-h-screen relative">
-        <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header showBack backHref="/create" />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="text-red-400">Ошибка</CardTitle>
-              <CardDescription>{error}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/create">
-                <Button variant="outline" className="w-full">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Попробовать снова
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    );
-  }
-
-  // Нет данных
-  if (!job || !rules) {
-    return (
-      <main className="min-h-screen relative">
-        <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header showBack backHref="/create" />
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="text-on-surface-muted">Данные не найдены</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Link href="/create">
-                <Button variant="outline" className="w-full">
-                  Загрузить документы
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    );
-  }
+  // Ошибка (только если не в режиме обработки — ошибки обработки показывает
+  // ProcessingScreen). Обрыв опроса не фатален, пока задача уже загружена.
+  const fatalError = error ?? (job ? null : statusError);
+  if (fatalError && !isProcessing) return <ErrorScreen message={fatalError} />;
 
   // Processing state — full-screen progress view
   if (isProcessing) {
     return (
-      <main className="min-h-screen relative">
-        <div className="fixed inset-0 mesh-gradient pointer-events-none" />
-        <Header showBack backHref="/create" />
-        <div className="relative z-10 mx-auto max-w-2xl px-6 pt-6">
-          <FlowStepper currentStep={2} />
-        </div>
-        <div className="relative z-10 mx-auto max-w-4xl px-6 py-12">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-foreground flex items-center justify-center animate-pulse">
-                  <Sparkles className="w-5 h-5 text-background" />
-                </div>
-                Форматирование документа
-              </CardTitle>
-              <CardDescription>
-                Применяем правила к вашему документу...
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProcessingStatus
-                currentStep={animatedProgress.displayStep}
-                progress={animatedProgress.displayProgress}
-                error={animatedProgress.error}
-                steps={PHASE2_STEP_DEFS}
-                elapsedMs={animatedProgress.elapsedMs}
-                pageCount={30}
-              />
-              {animatedProgress.error && (
-                <div className="mt-6 flex justify-center">
-                  <Button variant="outline" onClick={() => {
-                    setIsProcessing(false);
-                    setError(null);
-                  }}>
-                    Попробовать снова
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+      <Shell step={2}>
+        <ProcessingScreen
+          currentStep={animatedProgress.displayStep}
+          progress={animatedProgress.displayProgress}
+          error={animatedProgress.error}
+          elapsedMs={animatedProgress.elapsedMs}
+          onRetry={() => {
+            setIsProcessing(false);
+            setError(null);
+          }}
+        />
+      </Shell>
     );
   }
+
+  // Задача ещё в работе: методичку разбирает воркер или инлайн-запрос
+  if (job && job.status !== "awaiting_confirmation") {
+    return (
+      <Shell>
+        <ConfirmRulesWaiting message={job.statusMessage || "Разбираем методичку"} />
+      </Shell>
+    );
+  }
+
+  if (!job || !rules) return <NoDataScreen />;
 
   return (
     <main className="min-h-screen relative">
@@ -350,4 +255,3 @@ export default function ConfirmRulesPage({ params }: ConfirmRulesPageProps) {
     </main>
   );
 }
-
