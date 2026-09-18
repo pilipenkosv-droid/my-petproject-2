@@ -1,9 +1,10 @@
 /**
  * Агрегатор блог-постов.
  *
- * Источник Second Brain постов — Supabase (`blog_posts` table).
- * Static TS-кластеры (gost / pain-clusters / seasonal-draft) остаются в коде,
- * т.к. это SEO-ядро, меняется редко. Static cluster = 'gost'.
+ * Источник обоих кластеров — Supabase (`blog_posts`). Статические TS-массивы
+ * ГОСТ-кластера остаются резервом: они отдаются, пока в БД нет ни одной строки
+ * с cluster='gost' (до бэкфилла, см. scripts/blog/backfill-gost-posts.ts) и при
+ * сбое БД.
  *
  * Все экспортируемые функции async — Second Brain читается из БД с ISR-кешем
  * (см. posts-db.ts, тег "blog-posts").
@@ -16,7 +17,7 @@ import { blogPostsGost } from "./posts-gost";
 import { seasonalDraftPosts } from "./posts-seasonal-draft";
 import { blogPostsPainClusters } from "./posts-pain-clusters";
 import { blogPostsSecondBrain } from "./posts-second-brain";
-import { fetchSecondBrainPosts } from "./posts-db";
+import { fetchGostPosts, fetchSecondBrainPosts } from "./posts-db";
 
 const staticGostPosts: BlogPost[] = [
   ...blogPostsGost,
@@ -43,21 +44,35 @@ function sortByDateDesc(posts: BlogPost[]): BlogPost[] {
   );
 }
 
+/**
+ * ГОСТ-кластер: из БД, если бэкфилл уже прошёл (есть хотя бы одна строка),
+ * иначе статика — чтобы блог не опустел до бэкфилла и при сбое БД.
+ */
+async function getGostPosts(): Promise<BlogPost[]> {
+  const dbGost = await fetchGostPosts();
+  return dbGost.length > 0 ? dbGost : staticGostPosts;
+}
+
 export async function getAllPosts(): Promise<BlogPost[]> {
-  const dbPosts = await fetchSecondBrainPosts();
-  return sortByDateDesc([...staticGostPosts, ...dbPosts]);
+  const [gostPosts, dbPosts] = await Promise.all([
+    getGostPosts(),
+    fetchSecondBrainPosts(),
+  ]);
+  return sortByDateDesc([...gostPosts, ...dbPosts]);
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  const fromStatic = staticGostPosts.find((p) => p.slug === slug);
-  if (fromStatic) return fromStatic;
+  const gostPosts = await getGostPosts();
+  const fromGost = gostPosts.find((p) => p.slug === slug);
+  if (fromGost) return fromGost;
   const dbPosts = await fetchSecondBrainPosts();
   return dbPosts.find((p) => p.slug === slug);
 }
 
-/** Кластер поста: gost (статика) или second-brain (БД). */
+/** Кластер поста: gost или second-brain. */
 async function getPostCluster(slug: string): Promise<"gost" | "second-brain"> {
-  if (staticGostPosts.some((p) => p.slug === slug)) return "gost";
+  const gostPosts = await getGostPosts();
+  if (gostPosts.some((p) => p.slug === slug)) return "gost";
   return "second-brain";
 }
 
@@ -93,7 +108,7 @@ export function getPostsForWorkType(workType: string, limit = 6): BlogPost[] {
 export async function getRelatedPosts(slug: string, limit = 3): Promise<BlogPost[]> {
   const cluster = await getPostCluster(slug);
   const clusterPosts =
-    cluster === "second-brain" ? await fetchSecondBrainPosts() : staticGostPosts;
+    cluster === "second-brain" ? await fetchSecondBrainPosts() : await getGostPosts();
 
   return sortByDateDesc(clusterPosts.filter((p) => p.slug !== slug)).slice(0, limit);
 }

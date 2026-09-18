@@ -19,8 +19,11 @@ interface BlogPostRow {
   cluster: "second-brain" | "gost";
 }
 
-function rowToPost(row: BlogPostRow): BlogPost {
+export type DbBlogPost = BlogPost & { cluster: "second-brain" | "gost" };
+
+function rowToPost(row: BlogPostRow): DbBlogPost {
   return {
+    cluster: row.cluster ?? "second-brain",
     slug: row.slug,
     title: row.title,
     description: row.description,
@@ -35,7 +38,7 @@ function rowToPost(row: BlogPostRow): BlogPost {
   };
 }
 
-async function fetchAllDbPostsRaw(): Promise<BlogPost[]> {
+async function fetchAllDbPostsRaw(): Promise<DbBlogPost[]> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("blog_posts")
@@ -57,6 +60,14 @@ export const fetchAllDbPosts = unstable_cache(
   { tags: [BLOG_POSTS_CACHE_TAG], revalidate: 3600 }
 );
 
+/** Посты кластера бота. */
 export async function fetchSecondBrainPosts(): Promise<BlogPost[]> {
-  return fetchAllDbPosts();
+  const posts = await fetchAllDbPosts();
+  return posts.filter((p) => p.cluster === "second-brain");
+}
+
+/** Посты ГОСТ-кластера — их пишет ночной конвейер (ops/blog-nightly). */
+export async function fetchGostPosts(): Promise<BlogPost[]> {
+  const posts = await fetchAllDbPosts();
+  return posts.filter((p) => p.cluster === "gost");
 }

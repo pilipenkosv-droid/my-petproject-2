@@ -1,0 +1,19 @@
+{
+  "title": "Editor brief",
+  "type": "object",
+  "required": ["topic", "cluster", "target_query", "keywords", "intent",
+               "must_cover", "internal_links", "gost_whitelist", "tone"],
+  "properties": {
+    "topic": {"type": "string", "minLength": 5, "maxLength": 300},
+    "cluster": {"type": "string", "enum": ["gost"]},
+    "target_query": {"type": "string", "minLength": 3, "maxLength": 200},
+    "keywords": {"type": "array", "minItems": 5, "maxItems": 7,
+                 "items": {"type": "string", "minLength": 2}},
+    "intent": {"type": "string", "minLength": 5},
+    "must_cover": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+    "internal_links": {"type": "array", "maxItems": 4, "items": {"type": "string"}},
+    "avoid": {"type": "array", "items": {"type": "string"}},
+    "gost_whitelist": {"type": "array", "items": {"type": "string"}},
+    "tone": {"type": "string", "minLength": 3}
+  }
+}
