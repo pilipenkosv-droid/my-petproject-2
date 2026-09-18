@@ -945,4 +945,12 @@ export interface DocumentStatistics {
   };
   /** Почему v7 был выбран, но не сработал: "gate" | "refused:..." | "timeout" | "error:..." */
   v7Fallback?: string;
+  /** Уверенность модели при извлечении правил из методички (0–1) */
+  rulesConfidence?: number;
+  /** Откуда взяты правила: из методички пользователя или дефолтный ГОСТ */
+  rulesSource?: "методичка" | "default";
+  /** Имена полей в ответе модели пришлось приводить к схеме */
+  rulesNormalized?: boolean;
+  /** Сколько символов методички снял предфильтр перед вызовом модели */
+  rulesDroppedChars?: number;
 }

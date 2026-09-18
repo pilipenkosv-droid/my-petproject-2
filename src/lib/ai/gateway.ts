@@ -61,6 +61,22 @@ export class AIBudgetExceededError extends Error {
 }
 
 /**
+ * Модель упёрлась в maxTokens: JSON оборван на полуслове.
+ * Failover бессмысленен — у следующей модели тот же потолок, — поэтому
+ * ошибка выбрасывается сразу, а решение (компактный повтор) принимает вызывающий.
+ */
+export class AIResponseTruncatedError extends Error {
+  constructor(
+    technicalDetails: string,
+    readonly modelId: string,
+    readonly usage?: { inputTokens?: number; outputTokens?: number }
+  ) {
+    super(technicalDetails);
+    this.name = "AIResponseTruncatedError";
+  }
+}
+
+/**
  * Главная функция: выбирает модель и отправляет запрос.
  * При ошибке пробует следующую модель.
  */
@@ -138,16 +154,34 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
     try {
       // Таймаут попытки не может быть длиннее остатка бюджета всего запроса.
       const timeout = Math.min(baseTimeoutFor(model), remaining);
-      const rawText = await invokeModel(model, request, timeout);
-      const json = request.textMode ? rawText : extractJson(rawText);
+      const result = await invokeModel(model, request, timeout);
+
+      // Обрыв по лимиту токенов: у следующей модели потолок тот же, failover не поможет.
+      if (result.finishReason === "length" && !request.textMode) {
+        await recordUsage(model.id);
+        throw new AIResponseTruncatedError(
+          `${model.displayName}: ответ обрезан по лимиту (finish_reason=length)`,
+          model.id,
+          result.usage
+        );
+      }
+
+      const json = request.textMode ? result.text : extractJson(result.text);
 
       // Регистрируем использование ПОСЛЕ успешного вызова
       await recordUsage(model.id);
       logDailySuccess(model.id).catch(() => {});
       console.log(`[ai-gateway] Success with ${model.displayName}`);
 
-      return { json, modelId: model.id, modelName: model.displayName };
+      return {
+        json,
+        modelId: model.id,
+        modelName: model.displayName,
+        finishReason: result.finishReason,
+        usage: result.usage,
+      };
     } catch (error) {
+      if (error instanceof AIResponseTruncatedError) throw error;
       const msg = error instanceof Error ? error.message : String(error);
       errors.push(`${model.displayName}: ${msg}`);
       // Быстрый отказ (нет модели / нет квоты) времени не стоил — попытку возвращаем.

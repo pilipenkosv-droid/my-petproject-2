@@ -123,6 +123,11 @@ export async function POST(request: NextRequest) {
     const pipelineTimeMs = Date.now() - pipelineStart;
     const statistics = {
       ...analysisResult.statistics,
+      // Метаданные извлечения правил записал /extract-rules — не затираем их анализом.
+      rulesConfidence: job.statistics?.rulesConfidence,
+      rulesSource: job.statistics?.rulesSource,
+      rulesNormalized: job.statistics?.rulesNormalized,
+      rulesDroppedChars: job.statistics?.rulesDroppedChars,
       pipelineTimeMs,
       markupTimeMs: blockMarkupResult.markupDurationMs,
       markupDegraded: blockMarkupResult.markupDegraded,

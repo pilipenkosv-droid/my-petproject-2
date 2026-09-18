@@ -149,12 +149,28 @@ export const formattingRulesSchema = z.object({
 // Тип для результата парсинга
 export type ParsedFormattingRules = z.infer<typeof formattingRulesSchema>;
 
-// Схема для ответа AI с метаинформацией
-export const aiParsingResponseSchema = z.object({
-  rules: formattingRulesSchema,
+/**
+ * Схема ответа для ЗАПРОСА к модели: полная, с обязательными полями.
+ * Из неё генерируется JSON Schema (structured output + текст промпта).
+ */
+export const aiParsingRequestSchema = z.object({
+  rules: formattingRulesSchema.describe("Правила форматирования, извлечённые из методички"),
   confidence: z.number().min(0).max(1).describe("Уверенность в корректности парсинга от 0 до 1"),
   warnings: z.array(z.string()).describe("Предупреждения о неопределённых или неоднозначных требованиях"),
   missingRules: z.array(z.string()).describe("Правила, которые не удалось определить из документа"),
+});
+
+/**
+ * Схема для РАЗБОРА ответа: те же имена полей, но всё необязательно.
+ * Методичка почти никогда не задаёт все правила разом, а промпт прямо требует
+ * не выдумывать незаданное — значит частичный ответ корректен, и пробелы
+ * закрывает mergeWithDefaults, а не отказ разбора.
+ */
+export const aiParsingResponseSchema = z.object({
+  rules: formattingRulesSchema.deepPartial().default({}),
+  confidence: z.number().min(0).max(1).default(0.5),
+  warnings: z.array(z.string()).default([]),
+  missingRules: z.array(z.string()).default([]),
 });
 
 export type AIParsingResponse = z.infer<typeof aiParsingResponseSchema>;
