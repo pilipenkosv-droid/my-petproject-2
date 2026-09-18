@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob } from "@/lib/storage/job-store";
+import { getJob, failIfStuck, STUCK_STATUSES } from "@/lib/storage/job-store";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { FormattingViolation } from "@/types/formatting-rules";
+
+// Функция обработки укладывается в maxDuration=60 у Vercel; прогресс обновляет
+// updated_at чаще. Если статус промежуточный дольше этого порога — функция,
+// скорее всего, убита таймаутом и job зависла. Самоисцеление на чтении статуса,
+// не дожидаясь суточного /api/cleanup (см. resetStuckJobs).
+const STUCK_AFTER_MS = 3 * 60 * 1000;
 
 interface ChangeSummaryItem {
   type: string;
@@ -46,13 +52,22 @@ export async function GET(
 ) {
   const { jobId } = await params;
 
-  const job = await getJob(jobId);
-  
+  let job = await getJob(jobId);
+
   if (!job) {
     return NextResponse.json(
       { error: "Задача не найдена" },
       { status: 404 }
     );
+  }
+
+  // Самоисцеление: убитая таймаутом Vercel задача не должна висеть в
+  // промежуточном статусе до ежедневного /api/cleanup.
+  if (STUCK_STATUSES.includes(job.status)) {
+    const healed = await failIfStuck(jobId, STUCK_AFTER_MS);
+    if (healed) {
+      job = healed;
+    }
   }
 
   // Для статуса awaiting_confirmation возвращаем правила

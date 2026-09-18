@@ -304,6 +304,69 @@ export async function deleteJob(id: string): Promise<boolean> {
   return true;
 }
 
+/** Промежуточные статусы — задача считается зависшей, если долго в одном из них */
+export const STUCK_STATUSES: JobStatus[] = [
+  "pending",
+  "uploading",
+  "extracting_text",
+  "parsing_rules",
+  "analyzing",
+  "formatting",
+];
+
+const STUCK_ERROR_MESSAGE = "Превышено время обработки";
+
+/** Возвращает списанное использование за зависшую задачу (не по вине пользователя). */
+async function refundStuckJob(
+  userId: string | null | undefined,
+  jobId: string
+): Promise<void> {
+  if (!userId) return; // анонимные задачи — с них использование не списывалось
+  try {
+    await refundUse(userId, jobId, STUCK_ERROR_MESSAGE);
+  } catch (refundError) {
+    console.error("[job-store] refund failed for job:", jobId, refundError);
+  }
+}
+
+/**
+ * Если задача jobId зависла в промежуточном статусе дольше stuckAfterMs —
+ * помечает её failed и возвращает списанное использование.
+ * Условие на статус в самом UPDATE делает функцию идемпотентной: повторный
+ * вызов для уже обработанной задачи ничего не меняет.
+ *
+ * Вызывается из GET /api/status/[jobId] (self-heal на чтении) и как строительный
+ * блок resetStuckJobs (пакетный предохранитель по cron).
+ */
+export async function failIfStuck(
+  jobId: string,
+  stuckAfterMs: number
+): Promise<JobState | null> {
+  const supabase = getSupabaseAdmin();
+  const cutoff = new Date(Date.now() - stuckAfterMs).toISOString();
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({
+      status: "failed",
+      error: STUCK_ERROR_MESSAGE,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", jobId)
+    .in("status", STUCK_STATUSES)
+    .lt("updated_at", cutoff)
+    .select()
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  const job = rowToJob(data as Record<string, unknown>);
+  await refundStuckJob(job.userId, job.id);
+  return job;
+}
+
 /**
  * Маркировать зависшие задачи как failed
  * (промежуточные статусы без обновления дольше stuckAfterMs)
@@ -318,17 +381,10 @@ export async function resetStuckJobs(
     .from("jobs")
     .update({
       status: "failed",
-      error: "Превышено время обработки",
+      error: STUCK_ERROR_MESSAGE,
       updated_at: new Date().toISOString(),
     })
-    .in("status", [
-      "pending",
-      "uploading",
-      "extracting_text",
-      "parsing_rules",
-      "analyzing",
-      "formatting",
-    ])
+    .in("status", STUCK_STATUSES)
     .lt("updated_at", cutoff)
     .select("id, user_id");
 
@@ -339,15 +395,8 @@ export async function resetStuckJobs(
 
   const rows = (data ?? []) as Array<{ id: string; user_id: string | null }>;
 
-  // Возвращаем списанное использование: задача умерла по таймауту, не по вине пользователя.
-  // Анонимные задачи (user_id = null) пропускаем — с них использование не списывалось.
   for (const row of rows) {
-    if (!row.user_id) continue;
-    try {
-      await refundUse(row.user_id, row.id, "Превышено время обработки");
-    } catch (refundError) {
-      console.error("[job-store] refund failed for job:", row.id, refundError);
-    }
+    await refundStuckJob(row.user_id, row.id);
   }
 
   return rows.length;
