@@ -43,6 +43,9 @@ export async function GET(request: NextRequest) {
     admin.from("download_events").select("*").gte("created_at", cutoff).order("created_at", { ascending: false }),
   ]);
 
+  // Нет колонки shadow_of (миграция 024 не применена) — аналитика молча опустеет.
+  if (jobsRes.error) console.error("[admin/analytics] jobs query failed:", jobsRes.error);
+
   const jobs = jobsRes.data ?? [];
   const payments = paymentsRes.data ?? [];
   const access = accessRes.data ?? [];

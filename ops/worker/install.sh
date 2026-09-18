@@ -31,9 +31,11 @@ fi
 # 2. Локальные бинарники пайплайна v6:
 #    libreoffice-writer — рендер PDF для номеров страниц в содержании (soffice),
 #    poppler-utils — pdftotext, fonts-liberation — метрически совместимы с Times New Roman
-#    (без них soffice подменяет шрифт и разбивка на страницы уезжает). pandoc уже стоит.
+#    (без них soffice подменяет шрифт и разбивка на страницы уезжает).
+#    pandoc на сервере есть, но ставим явно: без него воркер бесполезен, а
+#    apt-get install идемпотентен.
 apt-get update -qq
-apt-get install -y --no-install-recommends libreoffice-writer poppler-utils fonts-liberation
+apt-get install -y --no-install-recommends pandoc libreoffice-writer poppler-utils fonts-liberation
 
 # 3. Бандл и данные, которые пайплайн ищет по относительным путям от cwd
 mkdir -p "$APP"
