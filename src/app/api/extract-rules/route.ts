@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { saveFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
-import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
-import {
-  parseFormattingRules,
-  mergeWithDefaults,
-  RulesExtractionError,
-  rulesExtractionMessage,
-} from "@/lib/ai/provider";
+import { isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
+import { RulesExtractionError, rulesExtractionMessage } from "@/lib/ai/provider";
 import type { DocumentStatistics } from "@/types/formatting-rules";
-import { warmupModels, AIBudgetExceededError } from "@/lib/ai/gateway";
+import { AIBudgetExceededError } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
+import {
+  processExtractRulesJob,
+  RequirementsTooShortError,
+} from "@/lib/processing/extract-rules-job";
+import { shouldQueueForWorker } from "@/lib/processing/mode";
+import { markJobQueued } from "@/lib/processing/enqueue";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -106,68 +107,37 @@ export async function POST(request: NextRequest) {
       requirementsOriginalName: requirementsFile.name,
       workType: workType || undefined,
       requirementsMode: "upload",
+      // Воркер разбирает методичку из хранилища, где MIME уже не виден.
+      statistics: { requirementsMimeType } as Partial<DocumentStatistics> as DocumentStatistics,
     });
 
-    // Прогрев AI-моделей параллельно с извлечением текста
-    await updateJobProgress(jobId, "extracting_text", 20, "Извлечение текста из методички");
-
-    const [requirementsText, warmup] = await Promise.all([
-      extractText(requirementsBuffer, requirementsMimeType),
-      warmupModels().catch((err) => {
-        console.warn("[extract-rules] Warmup failed, proceeding anyway:", err);
-        return { total: 0, alive: [] as string[], dead: [] as string[] };
-      }),
-    ]);
-
-    // Warmup информационный — логируем, но НЕ блокируем
-    if (warmup.alive.length === 0 && warmup.total > 0) {
-      console.warn("[extract-rules] Warmup: no providers responded to ping, but will try AI call anyway");
+    // Режим очереди: методичку разбирает воркер на VDS, роут отвечает сразу.
+    // Если поставить в очередь не вышло — считаем сами, как раньше.
+    if (await shouldQueueForWorker(jobId)) {
+      if (await markJobQueued(jobId, "Методичка в очереди на разбор")) {
+        const queued = NextResponse.json({ jobId, status: "pending" }, { status: 202 });
+        if (isAnonymous) {
+          markTrialUsed(queued);
+        }
+        return queued;
+      }
     }
 
-    if (!requirementsText || requirementsText.trim().length < 50) {
-      await failJob(jobId, "Документ с требованиями слишком короткий или пустой");
-      return NextResponse.json(
-        { error: "Документ с требованиями слишком короткий или пустой" },
-        { status: 400 }
-      );
-    }
-
-    await updateJobProgress(jobId, "parsing_rules", 50, "Анализ требований форматирования с помощью AI");
-
-    const aiResponse = await parseFormattingRules(requirementsText, { deadline });
-    const rules = mergeWithDefaults(aiResponse.rules);
-
-    // Документ ещё не анализировался: в statistics пока только метаданные
-    // извлечения — по ним в БД видно, чьи правила применились. Полную
-    // статистику допишет /confirm-rules, сохранив эти поля.
-    const extractionStats = {
-      rulesConfidence: aiResponse.confidence,
-      rulesSource: "методичка",
-      rulesNormalized: aiResponse.normalized,
-      rulesDroppedChars: aiResponse.droppedChars,
-      rulesSchemaMode: aiResponse.schemaMode,
-      rulesRetrieval: aiResponse.retrieval,
-      rulesProvenance: aiResponse.provenance,
-    } as Partial<DocumentStatistics> as DocumentStatistics;
-
-    // Сохраняем правила, текст методички и переводим в статус ожидания подтверждения
-    await updateJob(jobId, {
-      status: "awaiting_confirmation",
-      progress: 100,
-      statusMessage: "Правила извлечены, ожидается подтверждение",
-      rules,
-      guidelinesText: requirementsText,
-      statistics: extractionStats,
-    });
+    const extracted = await processExtractRulesJob(
+      jobId,
+      requirementsBuffer,
+      requirementsMimeType,
+      { deadline }
+    );
 
     // Для анонимных — помечаем триал как использованный
     const response = NextResponse.json({
       jobId,
       status: "awaiting_confirmation",
-      rules,
-      confidence: aiResponse.confidence,
-      warnings: aiResponse.warnings,
-      missingRules: aiResponse.missingRules,
+      rules: extracted.rules,
+      confidence: extracted.confidence,
+      warnings: extracted.warnings,
+      missingRules: extracted.missingRules,
     });
 
     if (isAnonymous) {
@@ -178,6 +148,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Extract rules error:", error);
+
+    // Текст методички не набрал минимума — ответ 400, как и раньше.
+    if (error instanceof RequirementsTooShortError) {
+      await failJob(jobId, error.message);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 
     // Бюджет исчерпан: списаний в upload-режиме нет (consumeUse живёт в /process,
     // markTrialUsed — только на успешном ответе), возврат не нужен.
