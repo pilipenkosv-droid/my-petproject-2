@@ -40,6 +40,18 @@ interface Row {
   retriedCompact?: boolean;
   schemaMode?: string;
   finishReason?: string;
+  /** Режим отбора фрагментов; «—» = методичка ушла целиком. */
+  retrievalMode?: string;
+  unitsTotal?: number;
+  unitsSelected?: number;
+  retrievalCharsOut?: number;
+  retrievalMs?: number;
+  retrievalCostUsd?: number;
+  retrievalFallback?: string;
+  /** Сколько секций правил модель снабдила номерами фрагментов. */
+  provenanceSections?: number;
+  /** Сколько отобранных единиц упомянуто хотя бы в одной секции. */
+  provenanceUnits?: number;
   inputTokens?: number;
   outputTokens?: number;
   costUsd: number;
@@ -77,9 +89,21 @@ async function runDoc(id: string, text: string): Promise<Row> {
     const res = await parseFormattingRules(text);
     const rules = mergeWithDefaults(res.rules);
     const costUsd =
-      (res.usage?.inputTokens ?? 0) * PRICE_IN + (res.usage?.outputTokens ?? 0) * PRICE_OUT;
+      (res.usage?.inputTokens ?? 0) * PRICE_IN +
+      (res.usage?.outputTokens ?? 0) * PRICE_OUT +
+      (res.retrieval?.costUsd ?? 0);
+    const provenanceIds = new Set(Object.values(res.provenance ?? {}).flat());
     return {
       ...base,
+      retrievalMode: res.retrieval?.mode,
+      unitsTotal: res.retrieval?.unitsTotal,
+      unitsSelected: res.retrieval?.unitsSelected,
+      retrievalCharsOut: res.retrieval?.charsOut,
+      retrievalMs: res.retrieval ? res.retrieval.embedMs + res.retrieval.rerankMs : undefined,
+      retrievalCostUsd: res.retrieval?.costUsd,
+      retrievalFallback: res.retrieval?.fallbackReason,
+      provenanceSections: Object.keys(res.provenance ?? {}).length,
+      provenanceUnits: provenanceIds.size,
       status: res.normalized ? "normalized" : "ok",
       differs: !isDeepStrictEqual(rules, DEFAULT_GOST_RULES),
       changedSections: changedSections(rules),
@@ -97,6 +121,37 @@ async function runDoc(id: string, text: string): Promise<Row> {
     // Стоимость неудачного вызова шлюз здесь не отдаёт — считаем по входу.
     return { ...base, status: "error", reason, costUsd: (text.length / 4) * PRICE_IN };
   }
+}
+
+/** Отдельный блок отчёта: что сделал ретрив и насколько полон провенанс. */
+function reportRetrieval(rows: Row[]): void {
+  const withRetrieval = rows.filter((r) => r.retrievalMode);
+  console.log(`\nРетрив применялся: ${withRetrieval.length} из ${rows.length} документов`);
+  if (withRetrieval.length === 0) return;
+
+  const modes = new Map<string, number>();
+  for (const r of withRetrieval) modes.set(r.retrievalMode!, (modes.get(r.retrievalMode!) ?? 0) + 1);
+  console.log(`  Режимы: ${[...modes].map(([m, n]) => `${m}=${n}`).join(" · ")}`);
+  for (const r of withRetrieval.filter((x) => x.retrievalFallback)) {
+    console.log(`  ! ${r.id}: откат — ${r.retrievalFallback!.slice(0, 120)}`);
+  }
+
+  const totalIn = withRetrieval.reduce((n, r) => n + r.chars, 0);
+  const totalOut = withRetrieval.reduce((n, r) => n + (r.retrievalCharsOut ?? 0), 0);
+  const ms = withRetrieval.reduce((n, r) => n + (r.retrievalMs ?? 0), 0) / withRetrieval.length;
+  const cost = withRetrieval.reduce((n, r) => n + (r.retrievalCostUsd ?? 0), 0);
+  console.log(
+    `  Символов: ${totalIn} → ${totalOut} (${((totalOut / totalIn) * 100).toFixed(1)} %) · ` +
+      `среднее время ${Math.round(ms)} мс · $${cost.toFixed(5)} за ${withRetrieval.length} док.`
+  );
+
+  // Покрытие провенансом: сколько секций правил модель связала с фрагментами.
+  const withProvenance = withRetrieval.filter((r) => (r.provenanceSections ?? 0) > 0);
+  const sections = withRetrieval.reduce((n, r) => n + (r.provenanceSections ?? 0), 0);
+  console.log(
+    `  Провенанс вернули: ${withProvenance.length} из ${withRetrieval.length} · ` +
+      `секций в среднем ${(sections / withRetrieval.length).toFixed(1)} из ${SECTIONS.length}`
+  );
 }
 
 function report(rows: Row[], spent: number, cap: number): void {
@@ -122,6 +177,8 @@ function report(rows: Row[], spent: number, cap: number): void {
   console.log("Секции, где правила отличаются от дефолта:");
   for (const s of SECTIONS) console.log(`  ${String(s)}: ${sectionHits.get(String(s)) ?? 0}`);
 
+  reportRetrieval(rows);
+
   const retried = rows.filter((r) => r.retriedCompact).length;
   const prefiltered = rows.filter((r) => (r.droppedChars ?? 0) > 0).length;
   console.log(`Компактных повторов: ${retried} · с предфильтром: ${prefiltered}`);
@@ -134,12 +191,17 @@ function report(rows: Row[], spent: number, cap: number): void {
   console.log(`Потрачено: $${spent.toFixed(4)} из потолка $${cap.toFixed(2)}`);
 
   console.log("\nПо документам:");
-  console.log("id · симв · статус · ≠ГОСТ · секции · компакт · предфильтр · in/out · $");
+  console.log(
+    "id · симв · статус · ≠ГОСТ · секции · ретрив · единиц · провенанс · компакт · снято · in/out · $"
+  );
   for (const r of rows) {
     console.log(
       [
         r.id, r.chars, r.status + (r.reason ? `:${r.reason}` : ""),
         r.differs ? "да" : "нет", r.changedSections.join("+") || "—",
+        r.retrievalMode ?? "—",
+        r.retrievalMode ? `${r.unitsSelected}/${r.unitsTotal}` : "—",
+        r.retrievalMode ? `${r.provenanceSections ?? 0}/${SECTIONS.length}·${r.provenanceUnits ?? 0}` : "—",
         r.retriedCompact ? "да" : "нет", r.droppedChars ?? 0,
         `${r.inputTokens ?? 0}/${r.outputTokens ?? 0}`, `$${r.costUsd.toFixed(4)}`,
       ].join(" · ")
