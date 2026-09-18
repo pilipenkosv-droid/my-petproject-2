@@ -59,15 +59,11 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     limits: { rpm: 60, rpd: 10_000, tpm: 1_000_000 },
     supportsJsonMode: true,
     priority: 1,
-    extraParams: {
-      // Корректный синтаксис для AI Gateway (подтверждён поддержкой Vercel 2026-04-20).
-      // Раньше был thinking.budget_tokens — не уважался, reasoning достигал 7865 токенов
-      // и latency p50 росла до 13с, обрубаясь нашим timeout.
-      providerOptions: {
-        google: { thinkingBudget: 1024 },
-        vertex: { thinkingBudget: 1024 },
-      },
-    },
+    // extraParams.providerOptions удалён 2026-09-18: AI Gateway принимает в
+    // providerOptions только ключ `gateway` (роутинг), google/vertex он молча
+    // игнорирует. Экспорт Gateway за 17–18.09 это подтверждает: при
+    // «лимите» 1024 реальные reasoningTokens 2500–10500, durationMs 14–49с.
+    // Размышления теперь выключаются полем GatewayRequest.thinking.
   },
 
   // ── AITUNNEL отключён 2026-04-20: баланс исчерпан, не используем ──
@@ -104,19 +100,10 @@ export const MODEL_REGISTRY: ModelConfig[] = [
     priority: 100,
   },
 
-  // ── Google AI — Gemini 2.5 Pro (native, только для bench/качественных прогонов) ──
-  // В прод НЕ попадает: priority 99 и жёсткие лимиты free tier (2 RPM / 50 RPD).
-  // Использовать через BENCH_FORCE_MODEL=google-gemini-2.5-pro.
-  {
-    id: "google-gemini-2.5-pro",
-    displayName: "Google Gemini 2.5 Pro",
-    protocol: "gemini",
-    apiKeyEnv: "GEMINI_API_KEY",
-    modelId: "gemini-2.5-pro",
-    limits: { rpm: 2, rpd: 50, tpm: 250_000 },
-    supportsJsonMode: true,
-    priority: 99,
-  },
+  // ── Gemini 2.5 Pro (native) удалён 2026-09-18 ──
+  // Модель не отвечала ни разу: ai_usage_daily 10–18.09 — 66 запросов, 0 успехов,
+  // rate_limits.consecutive_errors = 2840. В цепочке она занимала 4-ю (последнюю)
+  // попытку MAX_MODEL_ATTEMPTS и съедала время функции впустую.
 
   // ── Google AI — Gemini 2.5 Flash (native, бесплатный лимит) ──
   {

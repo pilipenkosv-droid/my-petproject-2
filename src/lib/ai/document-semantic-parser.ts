@@ -28,6 +28,7 @@ export async function parseDocumentSemantics(
       systemPrompt: SEMANTIC_ANALYSIS_SYSTEM_PROMPT,
       userPrompt: createSemanticAnalysisPrompt(paragraphs),
       temperature: 0.1,
+      thinking: false,
     });
 
     const parsed = semanticStructureSchema.parse(response.json);

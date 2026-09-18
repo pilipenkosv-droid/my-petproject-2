@@ -147,6 +147,7 @@ export async function reclassifyBlocks(
       userPrompt: createBlockMarkupPrompt(toReclassify, context),
       temperature: 0.2, // чуть выше для reasoning
       maxTokens: 4096,
+      thinking: false, // переклассификация блоков — извлечение, не рассуждение
     });
 
     const normalized = normalizeAiResponse(response.json);

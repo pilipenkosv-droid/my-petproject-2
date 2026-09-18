@@ -2,22 +2,32 @@
  * Извлечение правил форматирования из методички через AI Gateway
  */
 
-import { callAI } from "./gateway";
+import { callAI, AIBudgetExceededError } from "./gateway";
 import { AIParsingResponse, aiParsingResponseSchema } from "./schemas";
 import { RULES_EXTRACTION_SYSTEM_PROMPT, createRulesExtractionPrompt } from "./prompts";
 import { DEFAULT_GOST_RULES, FormattingRules } from "@/types/formatting-rules";
+
+/** Потолок ответа: сериализованный DEFAULT_GOST_RULES ≈ 2500 токенов. */
+const RULES_MAX_OUTPUT_TOKENS = 6000;
 
 /**
  * Главная функция для парсинга правил форматирования
  */
 export async function parseFormattingRules(
-  requirementsText: string
+  requirementsText: string,
+  options: { deadline?: number } = {}
 ): Promise<AIParsingResponse> {
   try {
     const response = await callAI({
       systemPrompt: RULES_EXTRACTION_SYSTEM_PROMPT,
       userPrompt: createRulesExtractionPrompt(requirementsText),
       temperature: 0.1,
+      // Разбор методички — извлечение полей. Размышления здесь давали
+      // 2500–10500 reasoning-токенов и 14–49с на вызов (экспорт Gateway 17–18.09).
+      thinking: false,
+      // Полный JSON правил ≈ 2500 токенов; 6000 — потолок с запасом.
+      maxTokens: RULES_MAX_OUTPUT_TOKENS,
+      deadline: options.deadline,
     });
 
     const parsed = aiParsingResponseSchema.parse(response.json);
@@ -25,6 +35,12 @@ export async function parseFormattingRules(
     return parsed;
   } catch (error) {
     console.error("Error parsing formatting rules:", error);
+
+    // Бюджет исчерпан — молчаливая подмена на ГОСТ была бы обманом: пользователь
+    // загрузил методичку и получил бы чужие правила. Пусть решает роут.
+    if (error instanceof AIBudgetExceededError) {
+      throw error;
+    }
 
     return {
       rules: DEFAULT_GOST_RULES,
