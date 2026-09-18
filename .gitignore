@@ -62,6 +62,8 @@ data/golden/raw/
 data/golden/manifest.json
 # Тот же PII/копирайт-риск: реальные пользовательские docx для бенчей.
 data/corpus/
+# Выгрузка методичек из прода: тексты пользователей, в git не место.
+data/bench/
 
 # Supabase temp
 supabase/.temp/

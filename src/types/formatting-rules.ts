@@ -945,4 +945,14 @@ export interface DocumentStatistics {
   };
   /** Почему v7 был выбран, но не сработал: "gate" | "refused:..." | "timeout" | "error:..." */
   v7Fallback?: string;
+  /** Уверенность модели при извлечении правил из методички (0–1) */
+  rulesConfidence?: number;
+  /** Откуда взяты правила: из методички пользователя или дефолтный ГОСТ */
+  rulesSource?: "методичка" | "default";
+  /** Имена полей в ответе модели пришлось приводить к схеме */
+  rulesNormalized?: boolean;
+  /** Сколько символов методички снял предфильтр перед вызовом модели */
+  rulesDroppedChars?: number;
+  /** В каком режиме шлюз принял запрос: json_schema или откат на json_object */
+  rulesSchemaMode?: "json_schema" | "json_object" | "none";
 }

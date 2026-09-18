@@ -2,8 +2,7 @@
  * Промпты для AI-агентов
  */
 
-import { formattingRulesSchema } from "./schemas";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { getRulesPromptSchema, getRulesResponseJsonSchema } from "./rules-schema";
 
 /**
  * Системный промпт для извлечения правил форматирования
@@ -110,7 +109,10 @@ export const RULES_EXTRACTION_SYSTEM_PROMPT = `Ты — эксперт по оф
 /**
  * Генерирует пользовательский промпт для извлечения правил
  */
-export function createRulesExtractionPrompt(requirementsText: string): string {
+export function createRulesExtractionPrompt(
+  requirementsText: string,
+  options: { compact?: boolean } = {}
+): string {
   return `Проанализируй следующий текст с требованиями к оформлению документа и извлеки из него детальные структурированные правила форматирования.
 
 ТЕКСТ ТРЕБОВАНИЙ:
@@ -140,7 +142,24 @@ ${requirementsText}
 - Нумерация страниц: внизу, по центру, арабские цифры, с 2-й страницы
 - Запрет: подчеркивание, цветной текст, переносы
 - Кавычки: угловые «»
-- Тире: среднее –, запрет длинного —`;
+- Тире: среднее –, запрет длинного —
+
+СХЕМА ОТВЕТА (JSON Schema, обязательна к соблюдению):
+${getRulesPromptSchema()}
+
+Пример верхнего уровня ответа:
+{"rules":{"document":{...},"text":{...},"headings":{...},"lists":{...},"specialElements":{...},"additional":{...}},"confidence":0.8,"warnings":[],"missingRules":[]}
+
+ФОРМАТ ОТВЕТА:
+- Только JSON, без пояснений и без markdown-ограждений
+- Имена полей бери ТОЛЬКО из схемы (camelCase). Не придумывай своих имён
+- Значение, которого нет в тексте требований, ставь null${
+    options.compact
+      ? `
+- КОМПАКТНО: предыдущий ответ не поместился в лимит. Никакого текста вне JSON,
+  не более 10 элементов в warnings и missingRules, строки короткие`
+      : ""
+  }`;
 }
 
 /**
@@ -473,11 +492,10 @@ ${sourcesList}
 }
 
 /**
- * Получить JSON Schema для structured output
+ * JSON Schema одного поля `rules` — та же, что уходит в запрос.
+ * Источник правды один: getRulesResponseJsonSchema().
  */
 export function getFormattingRulesJsonSchema() {
-  return zodToJsonSchema(formattingRulesSchema, {
-    $refStrategy: "none",
-    target: "openApi3",
-  });
+  const props = getRulesResponseJsonSchema().properties as Record<string, unknown>;
+  return props.rules as Record<string, unknown>;
 }

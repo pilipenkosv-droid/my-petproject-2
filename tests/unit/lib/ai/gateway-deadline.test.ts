@@ -15,7 +15,7 @@ vi.mock("@/lib/ai/rate-limiter", () => ({
  * invokeModel, — поэтому по времени видно, обрезал ли callAI таймаут попытки
  * по остатку бюджета.
  */
-const perModel = new Map<string, () => Promise<string>>();
+const perModel = new Map<string, () => Promise<{ text: string }>>();
 vi.mock("@/lib/ai/gateway-providers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ai/gateway-providers")>();
   return {
@@ -24,7 +24,7 @@ vi.mock("@/lib/ai/gateway-providers", async (importOriginal) => {
       const impl = perModel.get(model.id) ?? (() => Promise.reject(new Error("no mock")));
       return Promise.race([
         impl(),
-        new Promise<string>((_, rej) =>
+        new Promise<{ text: string }>((_, rej) =>
           setTimeout(() => rej(new Error(`${model.displayName} timeout after ${timeoutMs}ms`)), timeoutMs)
         ),
       ]);
@@ -41,7 +41,7 @@ async function freshGateway() {
   };
 }
 
-const never = () => new Promise<string>(() => {});
+const never = () => new Promise<{ text: string }>(() => {});
 
 beforeEach(() => {
   perModel.clear();
@@ -81,7 +81,7 @@ describe("callAI: бюджет запроса", () => {
 
   it("без дедлайна поведение прежнее — успех первой модели", async () => {
     const { gateway } = await freshGateway();
-    perModel.set("vercel-gemini-flash", async () => '{"ok":true}');
+    perModel.set("vercel-gemini-flash", async () => ({ text: '{"ok":true}' }));
 
     const res = await gateway.callAI({ systemPrompt: "s", userPrompt: "u" });
 
@@ -97,7 +97,7 @@ describe("callAI: failover мимо мёртвой модели", () => {
       throw new Error("Vercel Gemini 2.5 Flash HTTP 404: model not found");
     });
     perModel.set("vercel-gemini-flash", dead);
-    perModel.set("google-gemini-flash", async () => '{"from":"gemini"}');
+    perModel.set("google-gemini-flash", async () => ({ text: '{"from":"gemini"}' }));
 
     const started = Date.now();
     const res = await gateway.callAI({ systemPrompt: "s", userPrompt: "u" });
@@ -113,7 +113,7 @@ describe("callAI: failover мимо мёртвой модели", () => {
       throw new Error("Vercel HTTP 404: model no longer available");
     });
     perModel.set("vercel-gemini-flash", dead);
-    perModel.set("google-gemini-flash", async () => '{"from":"gemini"}');
+    perModel.set("google-gemini-flash", async () => ({ text: '{"from":"gemini"}' }));
 
     await gateway.callAI({ systemPrompt: "s", userPrompt: "u" });
     await gateway.callAI({ systemPrompt: "s", userPrompt: "u" });
@@ -126,7 +126,7 @@ describe("callAI: failover мимо мёртвой модели", () => {
     perModel.set("vercel-gemini-flash", async () => {
       throw new Error("Vercel HTTP 429: quota exceeded");
     });
-    perModel.set("google-gemini-flash", async () => '{"from":"gemini"}');
+    perModel.set("google-gemini-flash", async () => ({ text: '{"from":"gemini"}' }));
 
     const started = Date.now();
     const res = await gateway.callAI({ systemPrompt: "s", userPrompt: "u" });
@@ -150,7 +150,7 @@ describe("parseFormattingRules", () => {
     expect(Date.now() - started).toBeLessThan(9_000);
   }, 15_000);
 
-  it("на обычной ошибке по-прежнему отдаёт правила по умолчанию", async () => {
+  it("на обычной ошибке бросает RulesExtractionError, а не подменяет на ГОСТ", async () => {
     const { provider } = await freshGateway();
     const boom = async () => {
       throw new Error("boom");
@@ -159,9 +159,9 @@ describe("parseFormattingRules", () => {
     perModel.set("google-gemini-flash", boom);
     perModel.set("google-gemini-flash-lite", boom);
 
-    const res = await provider.parseFormattingRules("текст методички");
+    const err = await provider.parseFormattingRules("текст методички").catch((e) => e);
 
-    expect(res.confidence).toBe(0);
-    expect(res.rules.document).toBeDefined();
+    expect(err).toBeInstanceOf(provider.RulesExtractionError);
+    expect(err.reason).toBe("provider");
   });
 });

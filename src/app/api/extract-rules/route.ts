@@ -3,7 +3,13 @@ import { nanoid } from "nanoid";
 import { saveFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
-import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
+import {
+  parseFormattingRules,
+  mergeWithDefaults,
+  RulesExtractionError,
+  rulesExtractionMessage,
+} from "@/lib/ai/provider";
+import type { DocumentStatistics } from "@/types/formatting-rules";
 import { warmupModels, AIBudgetExceededError } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
@@ -131,6 +137,17 @@ export async function POST(request: NextRequest) {
     const aiResponse = await parseFormattingRules(requirementsText, { deadline });
     const rules = mergeWithDefaults(aiResponse.rules);
 
+    // Документ ещё не анализировался: в statistics пока только метаданные
+    // извлечения — по ним в БД видно, чьи правила применились. Полную
+    // статистику допишет /confirm-rules, сохранив эти поля.
+    const extractionStats = {
+      rulesConfidence: aiResponse.confidence,
+      rulesSource: "методичка",
+      rulesNormalized: aiResponse.normalized,
+      rulesDroppedChars: aiResponse.droppedChars,
+      rulesSchemaMode: aiResponse.schemaMode,
+    } as Partial<DocumentStatistics> as DocumentStatistics;
+
     // Сохраняем правила, текст методички и переводим в статус ожидания подтверждения
     await updateJob(jobId, {
       status: "awaiting_confirmation",
@@ -138,6 +155,7 @@ export async function POST(request: NextRequest) {
       statusMessage: "Правила извлечены, ожидается подтверждение",
       rules,
       guidelinesText: requirementsText,
+      statistics: extractionStats,
     });
 
     // Для анонимных — помечаем триал как использованный
@@ -166,6 +184,15 @@ export async function POST(request: NextRequest) {
         "Не удалось разобрать методичку за отведённое время, попробуйте ещё раз или выберите ГОСТ";
       await failJob(jobId, message);
       return NextResponse.json({ error: message, jobId }, { status: 504 });
+    }
+
+    // Правила не извлеклись: молча подставить ГОСТ нельзя — пользователь
+    // загрузил свою методичку. Списаний в upload-режиме нет, возврат не нужен.
+    if (error instanceof RulesExtractionError) {
+      const message = rulesExtractionMessage(error);
+      console.error(`[extract-rules] ${error.reason}: ${error.message}`);
+      await failJob(jobId, message);
+      return NextResponse.json({ error: message, jobId, reason: error.reason }, { status: 422 });
     }
 
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";

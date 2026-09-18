@@ -26,7 +26,9 @@ function okResponse(json: unknown) {
   return {
     ok: true,
     status: 200,
-    json: async () => ({ choices: [{ message: { content: JSON.stringify(json) } }] }),
+    json: async () => ({
+      choices: [{ message: { content: JSON.stringify(json) }, finish_reason: "stop" }],
+    }),
     text: async () => "",
   };
 }
@@ -74,14 +76,19 @@ describe("тело запроса к AI Gateway: выключение размы
 describe("места вызова с извлечением", () => {
   it("parseFormattingRules выключает размышления и ограничивает ответ", async () => {
     fetchMock.mockResolvedValue(
-      okResponse({ rules: {}, confidence: 0.9, warnings: [], missingRules: [] })
+      okResponse({
+        rules: { text: { fontFamily: "Times New Roman", fontSize: 14 } },
+        confidence: 0.9,
+        warnings: [],
+        missingRules: [],
+      })
     );
 
     await parseFormattingRules("текст методички");
 
     const body = lastBody();
     expect(body.reasoning).toEqual({ enabled: false });
-    expect(body.max_tokens).toBe(6000);
+    expect(body.max_tokens).toBe(8000);
   });
 
   it("разметка блоков выключает размышления", async () => {

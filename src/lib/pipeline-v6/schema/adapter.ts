@@ -19,7 +19,7 @@ export interface AdaptedSchema {
   schema: Record<string, unknown>;
 }
 
-type JsonSchemaNode = Record<string, unknown>;
+export type JsonSchemaNode = Record<string, unknown>;
 
 function stripKeys(obj: unknown, keys: Set<string>): unknown {
   if (Array.isArray(obj)) return obj.map((v) => stripKeys(v, keys));
@@ -133,4 +133,67 @@ export function adaptSchemaForAll<T>(
     openai: adaptSchema(zodSchema, name, "openai"),
     anthropic: adaptSchema(zodSchema, name, "anthropic"),
   };
+}
+
+/** Ключи валидации, которых нет в strict-подмножестве OpenAI и в Gemini responseSchema. */
+const UNSUPPORTED_VALIDATION = new Set([
+  "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
+  "minLength", "maxLength", "minItems", "maxItems", "pattern", "default", "format",
+]);
+
+function makeNullable(node: JsonSchemaNode): JsonSchemaNode {
+  // Объект nullable не делаем: Gemini через шлюз отвергает запрос целиком
+  // («response_schema.properties[...]: only allowed for OBJECT type», 18.09.2026),
+  // потому что properties нельзя держать на типе ["object","null"]. Объект
+  // остаётся обязательным — модель вернёт его с null в листьях.
+  if (node.type === "object" || node.properties) return node;
+  if (Array.isArray(node.anyOf)) {
+    return { ...node, anyOf: [...(node.anyOf as JsonSchemaNode[]), { type: "null" }] };
+  }
+  // enum нельзя расширять "null" типом в поле type — заворачиваем в anyOf.
+  if (node.enum) return { anyOf: [node, { type: "null" }] };
+  if (typeof node.type === "string") return { ...node, type: [node.type, "null"] };
+  return node;
+}
+
+/**
+ * Strict-подмножество OpenAI: у каждого объекта additionalProperties:false и
+ * required со ВСЕМИ ключами; необязательные поля становятся nullable.
+ * Модель обязана вернуть все ключи — неизвестные как null (их снимают до Zod).
+ */
+export function toOpenAIStrictSchema(schema: JsonSchemaNode): JsonSchemaNode {
+  const walk = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(walk);
+    if (!node || typeof node !== "object") return node;
+
+    const obj = node as JsonSchemaNode;
+    const out: JsonSchemaNode = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (UNSUPPORTED_VALIDATION.has(k)) continue;
+      out[k] = walk(v);
+    }
+
+    if (out.type === "object" && out.properties) {
+      const props = out.properties as JsonSchemaNode;
+      const required = new Set((obj.required as string[] | undefined) ?? []);
+      const patched: JsonSchemaNode = {};
+      for (const [key, value] of Object.entries(props)) {
+        const child = value as JsonSchemaNode;
+        patched[key] = required.has(key) ? child : makeNullable(child);
+      }
+      out.properties = patched;
+      out.required = Object.keys(patched);
+      out.additionalProperties = false;
+    }
+    return out;
+  };
+  return walk(schema) as JsonSchemaNode;
+}
+
+/** Gemini responseSchema: подмножество OpenAPI 3 — без additionalProperties и anyOf. */
+export function toGeminiResponseSchema(schema: JsonSchemaNode): JsonSchemaNode {
+  const cleaned = stripKeys(schema, new Set([
+    "$schema", "$ref", "additionalProperties", "definitions", "$defs", ...UNSUPPORTED_VALIDATION,
+  ]));
+  return cleaned as JsonSchemaNode;
 }
