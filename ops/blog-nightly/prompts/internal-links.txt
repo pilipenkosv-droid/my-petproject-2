@@ -1,0 +1,11 @@
+# Разрешённые внутренние ссылки (кроме /blog/<slug> уже опубликованных статей).
+/create
+/pricing
+/normokontrol
+/diplom
+/kursovaya
+/referat
+/vkr
+/magisterskaya
+/otchet-po-praktike
+/esse

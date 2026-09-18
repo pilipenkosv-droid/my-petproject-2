@@ -1,0 +1,54 @@
+# Конфигурация ночного конвейера блога (ADR-015).
+# Секреты сюда не кладём — только /etc/diplox-blog.env.
+
+[site]
+url = "https://diplox.online"          # переопределяется переменной SITE_URL
+
+[paths]
+db = "/var/lib/diplox-blog/blog.db"
+log_dir = "/var/log/diplox-blog"
+lock = "/var/lib/diplox-blog/run.lock"
+
+[recon]
+wordstat_file = "docs/wordstat-raw-data.json"
+gsc_site = "sc-domain:diplox.online"
+competitors = ["https://kampus.ai", "https://study24.ai", "https://studgen.ru"]
+competitor_interval_days = 7
+suggest_delay_s = 0.2
+deadline_s = 60
+
+[score]
+shortlist_size = 10
+similarity_drop = 0.62      # кандидат ближе этого к живой статье — выбрасываем
+w_volume = 0.5
+w_impressions = 0.3
+w_suggest = 0.2
+
+[llm]
+base_url_env = "CROMINM_BASE_URL"
+api_key_env = "CROMINM_API_KEY"
+max_llm_calls_per_run = 3
+price_per_mtok = 1.0
+timeout_s = 180
+max_retries = 3
+
+[editor]
+model = "gemini-3.7-flash-medium"
+max_tokens = 1500
+temperature = 0.4
+
+[writer]
+model = "gemini-3.7-flash-medium"   # альтернатива: deepseek-v4-flash
+max_tokens = 6000
+temperature = 0.7
+
+[checks]
+min_words = 600
+min_keywords_present = 3
+title_similarity_max = 0.7
+banned_product_regex = "бот|bot|телеграм|telegram|second brain|второй мозг"
+safety_regex = "sergey|sergej|pilipenko|vault|second.brain|token|password|api.key"
+
+[publish]
+endpoint = "/api/blog/publish"
+token_env = "BLOG_PUBLISH_TOKEN"
