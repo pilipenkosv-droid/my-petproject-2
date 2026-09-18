@@ -102,15 +102,27 @@ def write_artifact(log_dir: Path, name: str, payload: dict) -> Path:
     return path
 
 
-def main(argv: list[str] | None = None) -> int:
+def parse_args(argv: list[str] | None):
     ap = argparse.ArgumentParser(description="Diplox nightly blog pipeline")
     ap.add_argument("--stage", choices=STAGES, default="all")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--db", default=None)
     ap.add_argument("--log-dir", default=None)
     ap.add_argument("--config", default=str(HERE / "config.toml"))
-    args = ap.parse_args(argv)
+    return ap.parse_args(argv)
 
+
+def open_db(db_path: str, run_id: str, dry_run: bool):
+    conn = db.connect(db_path)
+    db.migrate(conn)
+    db.ensure_topics(conn, data_file("seeds.txt"))
+    conn.commit()
+    db.start_run(conn, run_id, date.today().isoformat(), dry_run)
+    return conn
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     cfg = load_config(Path(args.config))
     dry_run = args.dry_run or os.environ.get("BLOG_DRY_RUN") == "1"
     log_dir = Path(args.log_dir or cfg["paths"]["log_dir"])
@@ -122,11 +134,7 @@ def main(argv: list[str] | None = None) -> int:
 
     run_id = f"{date.today().isoformat()}-{uuid.uuid4().hex[:8]}"
     timings: dict[str, float] = {}
-    conn = db.connect(db_path)
-    db.migrate(conn)
-    db.ensure_topics(conn, data_file("seeds.txt"))
-    conn.commit()
-    db.start_run(conn, run_id, date.today().isoformat(), dry_run)
+    conn = open_db(db_path, run_id, dry_run)
     log.info("run %s stage=%s dry_run=%s db=%s", run_id, args.stage, dry_run, db_path)
 
     lock_path = Path(args.log_dir or cfg["paths"]["log_dir"]) / "run.lock" \
@@ -157,11 +165,48 @@ def main(argv: list[str] | None = None) -> int:
         conn.close()
 
 
+def build_shortlist(conn, cfg: dict, banned_rx, run_id: str,
+                    log_dir: Path) -> tuple[list[dict], list[dict]]:
+    shortlist, posts = compute_shortlist(conn, cfg, banned_rx)
+    log.info("shortlist (%d):\n%s", len(shortlist),
+             "\n".join(f"  {i + 1:2d}. {c['score']:.3f}  {c['phrase']}  "
+                       f"(спрос {c['demand']:.2f}, непокрытость {c['uncovered']:.2f}, "
+                       f"сезон {c['seasonality']:.2f}, ближайшая {c['nearest_slug']})"
+                       for i, c in enumerate(shortlist)))
+    write_artifact(log_dir, f"shortlist-{run_id}.json", {"shortlist": shortlist})
+    return shortlist, posts
+
+
+def make_brief(client, conn, cfg: dict, shortlist: list[dict], posts: list[dict],
+               tone: str, banned_rx, run_id: str, log_dir: Path) -> tuple[dict, int | None]:
+    brief = editor.run(client, cfg, shortlist, posts,
+                       data_file("prompts/gost-whitelist.txt"),
+                       data_file("prompts/internal-links.txt"), tone,
+                       (HERE / "prompts" / "editor.md").read_text("utf-8"), banned_rx)
+    topic_id = score_mod.topic_id_for(conn, brief["target_query"].strip().lower())
+    db.save_brief(conn, run_id, topic_id, brief, cfg["editor"]["model"])
+    write_artifact(log_dir, f"brief-{run_id}.json", brief)
+    log.info("brief: %s", json.dumps(brief, ensure_ascii=False))
+    return brief, topic_id
+
+
+def write_and_check(client, cfg: dict, brief: dict, posts: list[dict], tone: str,
+                    banned_rx, safety_rx) -> tuple[dict, list]:
+    """One writer call, and exactly one rewrite when a non-fatal check fails."""
+    instructions = (HERE / "prompts" / "writer.md").read_text("utf-8")
+    article = writer.run(client, cfg, brief, tone, instructions)
+    failures = checks.run_all(article, brief, posts, cfg, banned_rx, safety_rx)
+    if failures and not any(f.fatal for f in failures):
+        log.warning("checks failed, one rewrite: %s", [f.code for f in failures])
+        article = writer.run(client, cfg, brief, tone, instructions,
+                             feedback=[f.message for f in failures])
+        failures = checks.run_all(article, brief, posts, cfg, banned_rx, safety_rx)
+    return article, failures
+
+
 def run_stages(stage: str, conn, cfg: dict, run_id: str, dry_run: bool, log_dir: Path,
                banned_rx, safety_rx, timings: dict) -> dict:
     tone = (HERE / "prompts" / "tone.md").read_text("utf-8")
-    gost_whitelist = data_file("prompts/gost-whitelist.txt")
-    internal_links = data_file("prompts/internal-links.txt")
     out: dict = {"result": "stage_done"}
 
     if stage in ("recon", "all"):
@@ -173,48 +218,28 @@ def run_stages(stage: str, conn, cfg: dict, run_id: str, dry_run: bool, log_dir:
             return out
 
     t = time.monotonic()
-    shortlist, posts = compute_shortlist(conn, cfg, banned_rx)
+    shortlist, posts = build_shortlist(conn, cfg, banned_rx, run_id, log_dir)
     timings["score"] = round(time.monotonic() - t, 2)
-    log.info("shortlist (%d):\n%s", len(shortlist),
-             "\n".join(f"  {i + 1:2d}. {c['score']:.3f}  {c['phrase']}  "
-                       f"(спрос {c['demand']:.2f}, непокрытость {c['uncovered']:.2f}, "
-                       f"сезон {c['seasonality']:.2f}, ближайшая {c['nearest_slug']})"
-                       for i, c in enumerate(shortlist)))
-    write_artifact(log_dir, f"shortlist-{run_id}.json", {"shortlist": shortlist})
     if stage == "score":
         return out
 
     client = make_client(cfg)
     out["client"] = client
     t = time.monotonic()
-    brief = editor.run(client, cfg, shortlist, posts, gost_whitelist, internal_links,
-                       tone, (HERE / "prompts" / "editor.md").read_text("utf-8"), banned_rx)
+    brief, topic_id = make_brief(client, conn, cfg, shortlist, posts, tone,
+                                 banned_rx, run_id, log_dir)
     timings["editor"] = round(time.monotonic() - t, 2)
-    topic_id = score_mod.topic_id_for(conn, brief["target_query"].strip().lower())
-    db.save_brief(conn, run_id, topic_id, brief, cfg["editor"]["model"])
-    write_artifact(log_dir, f"brief-{run_id}.json", brief)
-    log.info("brief: %s", json.dumps(brief, ensure_ascii=False))
     if stage == "editor":
         return out
 
     t = time.monotonic()
-    instructions = (HERE / "prompts" / "writer.md").read_text("utf-8")
-    article = writer.run(client, cfg, brief, tone, instructions)
-    failures = checks.run_all(article, brief, posts, cfg, banned_rx, safety_rx)
-    if failures and not any(f.fatal for f in failures):
-        log.warning("checks failed, one rewrite: %s", [f.code for f in failures])
-        article = writer.run(client, cfg, brief, tone, instructions,
-                             feedback=[f.message for f in failures])
-        failures = checks.run_all(article, brief, posts, cfg, banned_rx, safety_rx)
+    article, failures = write_and_check(client, cfg, brief, posts, tone,
+                                        banned_rx, safety_rx)
     timings["writer"] = round(time.monotonic() - t, 2)
     write_artifact(log_dir, f"article-{run_id}.json",
                    {**article, "checks": [f.code for f in failures]})
     if failures:
-        codes = ",".join(f.code for f in failures)
-        log.error("rejected: %s", "; ".join(f"{f.code}: {f.message}" for f in failures))
-        out.update(result=failures[0].code if failures[0].fatal else "checks_failed",
-                   error=codes)
-        return out
+        return report_failures(failures, out)
     log.info("checks passed: %s (%s)", article["slug"], article["reading_time"])
     if stage == "writer":
         return out
@@ -225,6 +250,13 @@ def run_stages(stage: str, conn, cfg: dict, run_id: str, dry_run: bool, log_dir:
     if topic_id and not dry_run:
         db.mark_topic_covered(conn, topic_id, article["slug"])
     out.update(result="dry_run_ok" if dry_run else "ok", slug=res.get("slug"))
+    return out
+
+
+def report_failures(failures: list, out: dict) -> dict:
+    log.error("rejected: %s", "; ".join(f"{f.code}: {f.message}" for f in failures))
+    out.update(result=failures[0].code if failures[0].fatal else "checks_failed",
+               error=",".join(f.code for f in failures))
     return out
 
 

@@ -199,6 +199,64 @@ def gsc_rows(site_property: str, days: int = 28) -> list[dict]:
 
 # --- orchestration --------------------------------------------------------
 
+def _harvest_suggest(conn, cfg: dict, started: float, deadline_s: float) -> int:
+    """Google Suggest by seed phrases. Gets only a share of the recon budget,
+    otherwise the weekly competitor pass never gets its turn."""
+    seeds = [r["seed_phrase"] for r in conn.execute(
+        "SELECT seed_phrase FROM topics WHERE cluster='gost' AND status='new'")]
+    suggest_deadline = deadline_s * cfg["recon"].get("suggest_share", 0.6)
+    found = 0
+    for phrase in seeds:
+        if time.monotonic() - started > suggest_deadline:
+            log.warning("recon deadline hit, suggest stopped after %s phrases", found)
+            break
+        try:
+            for s in suggest(phrase):
+                db.upsert_query(conn, {"phrase": s, "source": "suggest"})
+                found += 1
+        except Exception as e:  # noqa: BLE001
+            log.warning("suggest failed for %r: %s", phrase, e)
+        time.sleep(cfg["recon"].get("suggest_delay_s", 0.2))
+    conn.commit()
+    return found
+
+
+def _harvest_competitors(conn, cfg: dict, started: float, deadline_s: float) -> int:
+    age = db.competitor_age_days(conn)
+    if age is not None and age < cfg["recon"].get("competitor_interval_days", 7):
+        log.info("competitors fresh (%.1f days), skipping", age)
+        return 0
+    found = 0
+    for site_url in cfg["recon"]["competitors"]:
+        if time.monotonic() - started > deadline_s:
+            log.warning("recon deadline hit, competitors incomplete")
+            break
+        try:
+            for url, title in competitor_titles(site_url):
+                db.upsert_competitor_post(conn, site_url, url, title)
+                found += 1
+        except Exception as e:  # noqa: BLE001
+            log.warning("competitor %s failed: %s", site_url, e)
+    conn.commit()
+    return found
+
+
+def _harvest_volumes(conn, cfg: dict) -> tuple[int, int]:
+    wordstat = 0
+    for row in wordstat_rows(cfg["recon"]["wordstat_file"]):
+        db.upsert_query(conn, row)
+        wordstat += 1
+    gsc = 0
+    try:
+        for row in gsc_rows(cfg["recon"].get("gsc_site", "sc-domain:diplox.online")):
+            db.upsert_query(conn, row)
+            gsc += 1
+    except Exception as e:  # noqa: BLE001
+        log.warning("gsc failed: %s", e)
+    conn.commit()
+    return wordstat, gsc
+
+
 def run(conn, cfg: dict, deadline_s: float = 60.0) -> dict:
     site = cfg["site"]["url"].rstrip("/")
     started = time.monotonic()
@@ -210,49 +268,7 @@ def run(conn, cfg: dict, deadline_s: float = 60.0) -> dict:
         stats["posts"] += 1
     conn.commit()
 
-    seeds = [r["seed_phrase"] for r in conn.execute(
-        "SELECT seed_phrase FROM topics WHERE cluster='gost' AND status='new'")]
-    # Suggest gets only part of the budget, otherwise competitors never run.
-    suggest_deadline = deadline_s * cfg["recon"].get("suggest_share", 0.6)
-    for phrase in seeds:
-        if time.monotonic() - started > suggest_deadline:
-            log.warning("recon deadline hit, suggest stopped after %s seeds", stats["suggest"])
-            break
-        try:
-            for s in suggest(phrase):
-                db.upsert_query(conn, {"phrase": s, "source": "suggest"})
-                stats["suggest"] += 1
-        except Exception as e:  # noqa: BLE001
-            log.warning("suggest failed for %r: %s", phrase, e)
-        time.sleep(cfg["recon"].get("suggest_delay_s", 0.2))
-    conn.commit()
-
-    for row in wordstat_rows(cfg["recon"]["wordstat_file"]):
-        db.upsert_query(conn, row)
-        stats["wordstat"] += 1
-    conn.commit()
-
-    try:
-        for row in gsc_rows(cfg["recon"].get("gsc_site", "sc-domain:diplox.online")):
-            db.upsert_query(conn, row)
-            stats["gsc"] += 1
-    except Exception as e:  # noqa: BLE001
-        log.warning("gsc failed: %s", e)
-    conn.commit()
-
-    age = db.competitor_age_days(conn)
-    if age is None or age >= cfg["recon"].get("competitor_interval_days", 7):
-        for site_url in cfg["recon"]["competitors"]:
-            if time.monotonic() - started > deadline_s:
-                log.warning("recon deadline hit, competitors incomplete")
-                break
-            try:
-                for url, title in competitor_titles(site_url):
-                    db.upsert_competitor_post(conn, site_url, url, title)
-                    stats["competitors"] += 1
-            except Exception as e:  # noqa: BLE001
-                log.warning("competitor %s failed: %s", site_url, e)
-        conn.commit()
-    else:
-        log.info("competitors fresh (%.1f days), skipping", age)
+    stats["suggest"] = _harvest_suggest(conn, cfg, started, deadline_s)
+    stats["wordstat"], stats["gsc"] = _harvest_volumes(conn, cfg)
+    stats["competitors"] = _harvest_competitors(conn, cfg, started, deadline_s)
     return stats
