@@ -172,7 +172,12 @@ export async function callOpenAICompatible(
   // перечисляет). Это не сбой модели: повторяем ТОТ ЖЕ вызов в режиме
   // json_object — схема остаётся в тексте промпта. Попытку failover не тратим.
   if (!resp.ok && schemaMode === "json_schema" && isSchemaRejection(resp.status, errorText)) {
-    console.warn(`[gateway] ${config.displayName} отверг json_schema, повтор с json_object`);
+    // Причину печатаем: без неё откат на json_object выглядит как норма шлюза,
+    // а это может быть наша сломанная схема (живая проверка 18.09.2026).
+    console.warn(
+      `[gateway] ${config.displayName} отверг json_schema, повтор с json_object: ` +
+        errorText.slice(0, 300)
+    );
     body.response_format = { type: "json_object" };
     schemaMode = "json_object";
     resp = await post();

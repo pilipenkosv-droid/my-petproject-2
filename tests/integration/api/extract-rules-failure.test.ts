@@ -105,4 +105,38 @@ describe("POST /api/extract-rules", () => {
       rulesDroppedChars: 1200,
     });
   });
+
+  it("статистика ретрива и provenance доезжают до job", async () => {
+    const retrieval = {
+      mode: "rerank" as const,
+      unitsTotal: 640,
+      unitsSelected: 58,
+      charsIn: 43_977,
+      charsOut: 6_104,
+      embedMs: 1_820,
+      rerankMs: 410,
+      costUsd: 0.00057,
+    };
+    vi.mocked(parseFormattingRules).mockResolvedValue({
+      rules: { text: { fontSize: 13 } },
+      confidence: 0.8,
+      warnings: [],
+      missingRules: [],
+      normalized: false,
+      retriedCompact: false,
+      droppedChars: 37_873,
+      retrieval,
+      provenance: { text: [12, 13], headings: [40] },
+    } as never);
+
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(200);
+
+    const saved = vi.mocked(updateJob).mock.calls.find((c) => c[1].status === "awaiting_confirmation");
+    expect(saved?.[1].statistics).toMatchObject({
+      rulesDroppedChars: 37_873,
+      rulesRetrieval: retrieval,
+      rulesProvenance: { text: [12, 13], headings: [40] },
+    });
+  });
 });

@@ -10,16 +10,18 @@
 
 import { callAI, AIBudgetExceededError, AIResponseTruncatedError } from "./gateway";
 import type { SchemaMode } from "./gateway-types";
-import { AIParsingResponse, aiParsingResponseSchema } from "./schemas";
+import { AIParsingResponse, aiParsingResponseSchema, type RulesProvenance } from "./schemas";
 import { RULES_EXTRACTION_SYSTEM_PROMPT, createRulesExtractionPrompt } from "./prompts";
 import { getRulesResponseJsonSchema, RULES_SCHEMA_NAME } from "./rules-schema";
 import {
   countRuleLeaves,
+  flattenProvenance,
   dropIssuePaths,
   normalizeResponseKeys,
   stripNulls,
 } from "./rules-normalize";
-import { prefilterGuidelines } from "./rules-prefilter";
+import { buildExtractionContext } from "./rules-context";
+import type { RetrievalStats } from "./guidelines/retrieval";
 import { DEFAULT_GOST_RULES, FormattingRules } from "@/types/formatting-rules";
 
 /** Потолок ответа. 6000 не хватало на длинных методичках (бенч 18.09: 2 из 15). */
@@ -57,17 +59,31 @@ export interface RulesExtractionResult extends AIParsingResponse {
   normalized: boolean;
   /** Понадобился компактный повтор после обрыва по лимиту токенов. */
   retriedCompact: boolean;
-  /** Сколько символов методички снял предфильтр. */
+  /** Сколько символов методички снято отбором (ретрив или предфильтр). */
   droppedChars: number;
+  /** Статистика ретрива; отсутствует, если методичка ушла целиком. */
+  retrieval?: RetrievalStats;
+  /** Секция правил → номера фрагментов [uN], из которых она взята. */
+  provenance?: RulesProvenance;
+  /** Номера отобранных ретривом единиц. В БД не пишется — только для проверок. */
+  retrievalUnitIds?: number[];
   modelId?: string;
   usage?: { inputTokens?: number; outputTokens?: number };
   /** json_object при заданной схеме = шлюз отверг json_schema, сработал промпт. */
   schemaMode?: SchemaMode;
 }
 
+/** Провенанс приводим к {секция: [номера]} до Zod — модель любит вкладывать. */
+function withFlatProvenance(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const obj = value as Record<string, unknown>;
+  if (!("provenance" in obj)) return value;
+  return { ...obj, provenance: flattenProvenance(obj.provenance) };
+}
+
 /** Разбор ответа: null-и прочь → Zod → нормализация имён → Zod. */
 export function parseRulesResponse(raw: unknown): { parsed: AIParsingResponse; normalized: boolean } {
-  const cleaned = stripNulls(raw);
+  const cleaned = withFlatProvenance(stripNulls(raw));
 
   const direct = aiParsingResponseSchema.safeParse(cleaned);
   if (direct.success && countRuleLeaves(direct.data.rules) > 0) {
@@ -107,11 +123,14 @@ export function parseRulesResponse(raw: unknown): { parsed: AIParsingResponse; n
 
 async function requestRules(
   text: string,
-  options: { deadline?: number; compact: boolean }
+  options: { deadline?: number; compact: boolean; provenance: boolean }
 ): Promise<RulesExtractionResult> {
   const response = await callAI({
     systemPrompt: RULES_EXTRACTION_SYSTEM_PROMPT,
-    userPrompt: createRulesExtractionPrompt(text, { compact: options.compact }),
+    userPrompt: createRulesExtractionPrompt(text, {
+      compact: options.compact,
+      provenance: options.provenance,
+    }),
     temperature: 0.1,
     // Разбор методички — извлечение полей. Размышления здесь давали
     // 2500–10500 reasoning-токенов и 14–49с на вызов (экспорт Gateway 17–18.09).
@@ -131,6 +150,7 @@ async function requestRules(
     normalized,
     retriedCompact: options.compact,
     droppedChars: 0,
+    provenance: parsed.provenance,
     modelId: response.modelId,
     usage: response.usage,
     schemaMode: response.schemaMode,
@@ -159,20 +179,24 @@ export async function parseFormattingRules(
   requirementsText: string,
   options: { deadline?: number } = {}
 ): Promise<RulesExtractionResult> {
-  const prefiltered = prefilterGuidelines(requirementsText);
-  if (prefiltered.applied) {
-    console.log(
-      `[provider] Предфильтр: ${requirementsText.length} → ${prefiltered.text.length} символов ` +
-        `(снято ${prefiltered.droppedChars})`
-    );
-  }
+  const context = await buildExtractionContext(requirementsText, options.deadline);
 
   const run = (compact: boolean) =>
-    requestRules(prefiltered.text, { deadline: options.deadline, compact });
+    requestRules(context.text, {
+      deadline: options.deadline,
+      compact,
+      provenance: context.provenance,
+    });
+
+  const finish = (result: RulesExtractionResult): RulesExtractionResult => ({
+    ...result,
+    droppedChars: context.droppedChars,
+    retrieval: context.retrieval,
+    retrievalUnitIds: context.unitIds,
+  });
 
   try {
-    const result = await run(false);
-    return { ...result, droppedChars: prefiltered.droppedChars };
+    return finish(await run(false));
   } catch (error) {
     if (error instanceof AIBudgetExceededError) throw error;
 
@@ -181,8 +205,7 @@ export async function parseFormattingRules(
     if (error instanceof AIResponseTruncatedError) {
       console.warn("[provider] Ответ обрезан по лимиту, повтор в компактном режиме");
       try {
-        const result = await run(true);
-        return { ...result, droppedChars: prefiltered.droppedChars };
+        return finish(await run(true));
       } catch (retryError) {
         if (retryError instanceof AIBudgetExceededError) throw retryError;
         console.error("Rules extraction failed after compact retry:", retryError);

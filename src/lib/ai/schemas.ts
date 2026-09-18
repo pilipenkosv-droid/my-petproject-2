@@ -150,6 +150,33 @@ export const formattingRulesSchema = z.object({
 export type ParsedFormattingRules = z.infer<typeof formattingRulesSchema>;
 
 /**
+ * Провенанс: какие фрагменты методички породили каждую секцию правил.
+ *
+ * Ключи фиксированы (не z.record) — strict-схема OpenAI требует
+ * additionalProperties:false, а свободный словарь под это не приводится.
+ * В ЗАПРОСЕ все шесть секций обязательны и необязательных полей внутри нет:
+ * иначе adapter делает их nullable (`type: ["array","null"]`), а Gemini через
+ * шлюз такой запрос отвергает целиком — «items: field predicate failed:
+ * $type == Type.ARRAY» (живая проверка 18.09.2026). Секция без фрагментов —
+ * пустой массив.
+ */
+const unitIdList = z.array(z.number().int().min(0));
+
+export const provenanceRequestSchema = z.object({
+  document: unitIdList,
+  text: unitIdList,
+  headings: unitIdList,
+  lists: unitIdList,
+  specialElements: unitIdList,
+  additional: unitIdList,
+});
+
+/** В ОТВЕТЕ всё необязательно: короткая методичка провенанса не даёт вовсе. */
+export const provenanceSchema = provenanceRequestSchema.partial().optional();
+
+export type RulesProvenance = NonNullable<z.infer<typeof provenanceSchema>>;
+
+/**
  * Схема ответа для ЗАПРОСА к модели: полная, с обязательными полями.
  * Из неё генерируется JSON Schema (structured output + текст промпта).
  */
@@ -158,6 +185,10 @@ export const aiParsingRequestSchema = z.object({
   confidence: z.number().min(0).max(1).describe("Уверенность в корректности парсинга от 0 до 1"),
   warnings: z.array(z.string()).describe("Предупреждения о неопределённых или неоднозначных требованиях"),
   missingRules: z.array(z.string()).describe("Правила, которые не удалось определить из документа"),
+  provenance: provenanceRequestSchema.describe(
+    "Номера фрагментов [uN] контекста, из которых взята каждая секция правил. " +
+    "Если меток [uN] во входном тексте нет или секция ни на чём не основана — пустой массив"
+  ),
 });
 
 /**
@@ -171,6 +202,7 @@ export const aiParsingResponseSchema = z.object({
   confidence: z.number().min(0).max(1).default(0.5),
   warnings: z.array(z.string()).default([]),
   missingRules: z.array(z.string()).default([]),
+  provenance: provenanceSchema,
 });
 
 export type AIParsingResponse = z.infer<typeof aiParsingResponseSchema>;

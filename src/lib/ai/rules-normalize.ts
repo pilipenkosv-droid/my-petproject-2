@@ -160,3 +160,30 @@ export function dropIssuePaths(
 
   return { value: clone, dropped };
 }
+
+/**
+ * Провенанс: схема просит {секция: [номера]}, но модель для составных секций
+ * (specialElements, additional) охотно возвращает вложенный объект вида
+ * {"specialElements": {"tables": [3], "figures": [7]}}. Живая проверка 18.09:
+ * так отвечали 5 методичек из 6, и Zod выбрасывал эти секции целиком.
+ * Собираем из любой вложенности целые неотрицательные номера.
+ */
+export function flattenProvenance(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+
+  const collect = (node: unknown, out: Set<number>): void => {
+    if (typeof node === "number" && Number.isInteger(node) && node >= 0) out.add(node);
+    else if (Array.isArray(node)) for (const child of node) collect(child, out);
+    else if (node && typeof node === "object") for (const child of Object.values(node)) collect(child, out);
+  };
+
+  const result: Json = {};
+  for (const [section, value] of Object.entries(raw as Json)) {
+    const ids = new Set<number>();
+    collect(value, ids);
+    if (ids.size > 0) result[section] = [...ids].sort((a, b) => a - b);
+  }
+  // Схема требует все шесть секций, и на полном тексте модель шлёт пустые
+  // массивы. Хранить {} в statistics незачем.
+  return Object.keys(result).length > 0 ? result : undefined;
+}
