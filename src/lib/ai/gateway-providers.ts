@@ -7,9 +7,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
 import { ModelConfig } from "./model-registry";
 import { toGeminiResponseSchema, toOpenAIStrictSchema } from "@/lib/pipeline-v6/schema/adapter";
-import type { GatewayRequest, GatewayResponse, ProviderResult } from "./gateway-types";
+import type { GatewayRequest, GatewayResponse, ProviderResult, SchemaMode } from "./gateway-types";
+import { callClaudeCli } from "./gateway-claude-cli";
 
-export type { GatewayRequest, GatewayResponse, ProviderResult };
+export { callClaudeCli };
+
+export type { GatewayRequest, GatewayResponse, ProviderResult, SchemaMode };
 
 // Таймаут для AI вызовов. Реальная latency p50 на Vercel AI Gateway = 13с,
 // p95 = 39с (CSV 2026-04-20), даже с thinkingBudget=1024 хвосты могут быть 20-30с.
@@ -65,11 +68,18 @@ export async function callGemini(
   return {
     text: result.response.text(),
     finishReason: candidate?.finishReason === "MAX_TOKENS" ? "length" : candidate?.finishReason,
+    schemaMode: request.jsonSchema && !request.textMode ? "json_schema" : "none",
     usage: {
       inputTokens: usage?.promptTokenCount,
       outputTokens: usage?.candidatesTokenCount,
     },
   };
+}
+
+/** 400 именно про структурированный вывод, а не про что-то ещё в запросе. */
+export function isSchemaRejection(status: number, errorText: string): boolean {
+  if (status !== 400) return false;
+  return /response_format|json[_ ]?schema|structured output|unsupported|not supported/i.test(errorText);
 }
 
 /**
@@ -112,6 +122,7 @@ export async function callOpenAICompatible(
     body.max_tokens = request.maxTokens;
   }
 
+  let schemaMode: SchemaMode = "none";
   if (request.jsonSchema && !request.textMode) {
     // strict требует, чтобы у каждого объекта были additionalProperties:false
     // и required со всеми ключами, — приводим схему к этому виду.
@@ -123,8 +134,10 @@ export async function callOpenAICompatible(
         strict: true,
       },
     };
+    schemaMode = "json_schema";
   } else if (config.supportsJsonMode && !request.textMode) {
     body.response_format = { type: "json_object" };
+    schemaMode = "json_object";
   }
 
   if (request.thinking === false) {
@@ -142,15 +155,29 @@ export async function callOpenAICompatible(
     }
   }
 
-  const resp = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(timeout),
-  });
+  const post = () =>
+    fetch(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeout),
+    });
+
+  let resp = await post();
+  let errorText = resp.ok ? "" : await resp.text().catch(() => "");
+
+  // Шлюз может не принять json_schema (каталог gemini-2.5-flash его не
+  // перечисляет). Это не сбой модели: повторяем ТОТ ЖЕ вызов в режиме
+  // json_object — схема остаётся в тексте промпта. Попытку failover не тратим.
+  if (!resp.ok && schemaMode === "json_schema" && isSchemaRejection(resp.status, errorText)) {
+    console.warn(`[gateway] ${config.displayName} отверг json_schema, повтор с json_object`);
+    body.response_format = { type: "json_object" };
+    schemaMode = "json_object";
+    resp = await post();
+    errorText = resp.ok ? "" : await resp.text().catch(() => "");
+  }
 
   if (!resp.ok) {
-    const errorText = await resp.text().catch(() => "");
     throw new Error(
       `${config.displayName} HTTP ${resp.status}: ${errorText.slice(0, 200)}`
     );
@@ -168,6 +195,7 @@ export async function callOpenAICompatible(
       inputTokens: data?.usage?.prompt_tokens,
       outputTokens: data?.usage?.completion_tokens,
     },
+    schemaMode,
   };
 }
 
@@ -204,45 +232,6 @@ export async function callAnthropic(
       outputTokens: message.usage?.output_tokens,
     },
   };
-}
-
-/**
- * Вызов Claude через локальный `claude` CLI (shell out).
- * Политика проекта: Claude-модели НЕ через Anthropic API, только CLI/Agent.
- */
-export async function callClaudeCli(
-  config: ModelConfig,
-  request: GatewayRequest
-): Promise<ProviderResult> {
-  const { spawn } = await import("child_process");
-  const prompt = `${request.systemPrompt}\n\n${request.userPrompt}`;
-  const env = { ...process.env };
-  delete env.CLAUDECODE;
-  delete env.CLAUDE_CODE_SSE_PORT;
-  delete env.CLAUDE_CODE_ENTRYPOINT;
-
-  return new Promise<ProviderResult>((resolve, reject) => {
-    const proc = spawn(
-      "claude",
-      ["-p", prompt, "--model", config.modelId, "--output-format", "text"],
-      { env }
-    );
-    let stdout = "";
-    let stderr = "";
-    proc.stdout.on("data", (d) => (stdout += d.toString()));
-    proc.stderr.on("data", (d) => (stderr += d.toString()));
-    proc.on("error", reject);
-    proc.on("close", (code) => {
-      if (code !== 0) {
-        reject(new Error(`${config.displayName} exit ${code}: ${stderr.slice(0, 300)}`));
-        return;
-      }
-      let text = stdout.trim();
-      const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (fence) text = fence[1].trim();
-      resolve({ text });
-    });
-  });
 }
 
 /** Извлечь JSON из текстового ответа модели */

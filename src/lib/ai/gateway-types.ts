@@ -43,12 +43,17 @@ export interface GatewayRequest {
   jsonSchema?: { name: string; schema: JsonSchemaNode };
 }
 
+/** В каком режиме структурированного вывода прошёл запрос. */
+export type SchemaMode = "json_schema" | "json_object" | "none";
+
 /** Что вернул транспорт, помимо текста: нужно, чтобы отличить обрыв от мусора. */
 export interface ProviderResult {
   text: string;
   /** "length" = ответ обрезан по лимиту токенов. */
   finishReason?: string;
   usage?: { inputTokens?: number; outputTokens?: number };
+  /** json_object здесь при заданной схеме = шлюз отверг json_schema. */
+  schemaMode?: SchemaMode;
 }
 
 export interface GatewayResponse {
@@ -61,4 +66,6 @@ export interface GatewayResponse {
   /** "length" = модель упёрлась в maxTokens и JSON оборван */
   finishReason?: string;
   usage?: { inputTokens?: number; outputTokens?: number };
+  /** json_object при заданной схеме = шлюз отверг json_schema, сработал промпт */
+  schemaMode?: SchemaMode;
 }

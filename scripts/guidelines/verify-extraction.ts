@@ -18,8 +18,8 @@ import { DOCS_DIR, GOLD_DIR, readJson } from "./common";
 import { parseFormattingRules, mergeWithDefaults, RulesExtractionError } from "../../src/lib/ai/provider";
 import { DEFAULT_GOST_RULES, type FormattingRules } from "../../src/types/formatting-rules";
 
-/** Жёсткий потолок расходов этого скрипта. */
-const HARD_CAP_USD = 1.0;
+/** Жёсткий потолок расходов; переопределяется аргументом --cap. */
+const DEFAULT_CAP_USD = 0.5;
 /** Прайс google/gemini-2.5-flash, $/млн токенов (fallback, если шлюз не вернул usage). */
 const PRICE_IN = 0.3 / 1_000_000;
 const PRICE_OUT = 2.5 / 1_000_000;
@@ -38,13 +38,23 @@ interface Row {
   confidence?: number;
   droppedChars?: number;
   retriedCompact?: boolean;
+  schemaMode?: string;
+  finishReason?: string;
+  inputTokens?: number;
+  outputTokens?: number;
   costUsd: number;
+}
+
+function parseCap(argv: string[]): number {
+  const flag = argv.indexOf("--cap");
+  return flag >= 0 && argv[flag + 1] ? Number(argv[flag + 1]) : DEFAULT_CAP_USD;
 }
 
 function parseLimit(argv: string[]): number {
   const flag = argv.indexOf("--limit");
   if (flag >= 0 && argv[flag + 1]) return Number(argv[flag + 1]);
-  const positional = argv.find((a) => /^\d+$/.test(a));
+  const capAt = argv.indexOf("--cap");
+  const positional = argv.find((a, i) => /^\d+$/.test(a) && i !== capAt + 1);
   return positional ? Number(positional) : 15;
 }
 
@@ -76,6 +86,9 @@ async function runDoc(id: string, text: string): Promise<Row> {
       confidence: res.confidence,
       droppedChars: res.droppedChars,
       retriedCompact: res.retriedCompact,
+      schemaMode: res.schemaMode,
+      inputTokens: res.usage?.inputTokens,
+      outputTokens: res.usage?.outputTokens,
       costUsd,
     };
   } catch (error) {
@@ -86,7 +99,7 @@ async function runDoc(id: string, text: string): Promise<Row> {
   }
 }
 
-function report(rows: Row[], spent: number): void {
+function report(rows: Row[], spent: number, cap: number): void {
   const ok = rows.filter((r) => r.status === "ok").length;
   const normalized = rows.filter((r) => r.status === "normalized").length;
   const errors = rows.filter((r) => r.status === "error");
@@ -112,22 +125,43 @@ function report(rows: Row[], spent: number): void {
   const retried = rows.filter((r) => r.retriedCompact).length;
   const prefiltered = rows.filter((r) => (r.droppedChars ?? 0) > 0).length;
   console.log(`Компактных повторов: ${retried} · с предфильтром: ${prefiltered}`);
-  console.log(`Потрачено: $${spent.toFixed(4)} из потолка $${HARD_CAP_USD.toFixed(2)}`);
+  const modes = new Map<string, number>();
+  for (const r of rows) if (r.schemaMode) modes.set(r.schemaMode, (modes.get(r.schemaMode) ?? 0) + 1);
+  console.log(`Режим схемы: ${[...modes].map(([m, n]) => `${m}=${n}`).join(" · ") || "—"}`);
+  const tokensIn = rows.reduce((n, r) => n + (r.inputTokens ?? 0), 0);
+  const tokensOut = rows.reduce((n, r) => n + (r.outputTokens ?? 0), 0);
+  console.log(`Токенов: вход ${tokensIn} · выход ${tokensOut}`);
+  console.log(`Потрачено: $${spent.toFixed(4)} из потолка $${cap.toFixed(2)}`);
+
+  console.log("\nПо документам:");
+  console.log("id · симв · статус · ≠ГОСТ · секции · компакт · предфильтр · in/out · $");
+  for (const r of rows) {
+    console.log(
+      [
+        r.id, r.chars, r.status + (r.reason ? `:${r.reason}` : ""),
+        r.differs ? "да" : "нет", r.changedSections.join("+") || "—",
+        r.retriedCompact ? "да" : "нет", r.droppedChars ?? 0,
+        `${r.inputTokens ?? 0}/${r.outputTokens ?? 0}`, `$${r.costUsd.toFixed(4)}`,
+      ].join(" · ")
+    );
+  }
 }
 
 async function main(): Promise<void> {
   if (!fs.existsSync(DOCS_DIR)) {
     throw new Error(`Нет корпуса ${DOCS_DIR} — сначала npx tsx scripts/guidelines/export-guidelines.ts`);
   }
-  const limit = parseLimit(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  const limit = parseLimit(argv);
+  const cap = parseCap(argv);
   const docs = pickDocs(limit);
-  console.log(`Проверяем ${docs.length} методичек (лимит ${limit}), потолок $${HARD_CAP_USD.toFixed(2)}`);
+  console.log(`Проверяем ${docs.length} методичек (лимит ${limit}), потолок $${cap.toFixed(2)}`);
 
   const rows: Row[] = [];
   let spent = 0;
   for (const [i, id] of docs.entries()) {
-    if (spent >= HARD_CAP_USD) {
-      console.warn(`Потолок $${HARD_CAP_USD} достигнут, остановка на ${i} из ${docs.length}`);
+    if (spent >= cap) {
+      console.warn(`Потолок $${cap} достигнут, остановка на ${i} из ${docs.length}`);
       break;
     }
     const text = fs.readFileSync(path.join(DOCS_DIR, `${id}.txt`), "utf8");
@@ -136,11 +170,13 @@ async function main(): Promise<void> {
     spent += row.costUsd;
     rows.push(row);
     console.log(
-      `  ${row.status}${row.reason ? `:${row.reason}` : ""} · отличается от ГОСТ: ${row.differs ? "да" : "нет"} · $${spent.toFixed(4)}`
+      `  ${row.status}${row.reason ? `:${row.reason}` : ""} · схема: ${row.schemaMode ?? "—"}` +
+        ` · отличается от ГОСТ: ${row.differs ? "да" : "нет"}` +
+        ` · токены ${row.inputTokens ?? 0}/${row.outputTokens ?? 0} · потрачено $${spent.toFixed(4)}`
     );
   }
 
-  report(rows, spent);
+  report(rows, spent, cap);
 }
 
 main().catch((e) => {

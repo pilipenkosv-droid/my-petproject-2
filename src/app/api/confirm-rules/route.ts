@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
       rulesSource: job.statistics?.rulesSource,
       rulesNormalized: job.statistics?.rulesNormalized,
       rulesDroppedChars: job.statistics?.rulesDroppedChars,
+      rulesSchemaMode: job.statistics?.rulesSchemaMode,
       pipelineTimeMs,
       markupTimeMs: blockMarkupResult.markupDurationMs,
       markupDegraded: blockMarkupResult.markupDegraded,

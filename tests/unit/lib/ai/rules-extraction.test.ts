@@ -118,6 +118,53 @@ describe("схема в запросе", () => {
   });
 });
 
+describe("шлюз не принял json_schema", () => {
+  function rejection(message: string) {
+    return { ok: false, status: 400, text: async () => message, json: async () => ({}) };
+  }
+
+  it("400 про response_format → тот же вызов повторяется с json_object", async () => {
+    fetchMock
+      .mockResolvedValueOnce(rejection('{"error":{"message":"response_format json_schema is not supported"}}'))
+      .mockResolvedValueOnce(gatewayResponse(goodResponse));
+
+    const res = await parseFormattingRules("текст методички");
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Повтор ушёл к той же модели, не к следующей в цепочке failover.
+    expect(fetchMock.mock.calls[0][0]).toBe(fetchMock.mock.calls[1][0]);
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string).response_format.type)
+      .toBe("json_schema");
+    expect(lastBody().response_format).toEqual({ type: "json_object" });
+    // Схема осталась в промпте — второй пояс работает.
+    expect(lastBody().messages[1].content as string).toContain("СХЕМА ОТВЕТА");
+    expect(res.schemaMode).toBe("json_object");
+    expect(res.rules.text?.fontFamily).toBe("Times New Roman");
+  });
+
+  it("успешный json_schema не откатывается", async () => {
+    fetchMock.mockResolvedValue(gatewayResponse(goodResponse));
+
+    const res = await parseFormattingRules("текст методички");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(res.schemaMode).toBe("json_schema");
+  });
+
+  it("400 не про схему откат не запускает", async () => {
+    fetchMock.mockResolvedValue(rejection('{"error":{"message":"invalid api key"}}'));
+
+    const err = await parseFormattingRules("текст методички").catch((e) => e);
+
+    // По одному вызову на каждую модель цепочки, без повторов с json_object.
+    for (const call of fetchMock.mock.calls) {
+      const body = JSON.parse((call[1] as RequestInit).body as string);
+      expect(body.response_format.type).toBe("json_schema");
+    }
+    expect(err).toBeInstanceOf(RulesExtractionError);
+  });
+});
+
 describe("разбор ответа", () => {
   it("валидный ответ разбирается без нормализации", async () => {
     fetchMock.mockResolvedValue(gatewayResponse(goodResponse));

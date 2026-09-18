@@ -953,4 +953,6 @@ export interface DocumentStatistics {
   rulesNormalized?: boolean;
   /** Сколько символов методички снял предфильтр перед вызовом модели */
   rulesDroppedChars?: number;
+  /** В каком режиме шлюз принял запрос: json_schema или откат на json_object */
+  rulesSchemaMode?: "json_schema" | "json_object" | "none";
 }

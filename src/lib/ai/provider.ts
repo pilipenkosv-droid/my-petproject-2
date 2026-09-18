@@ -9,6 +9,7 @@
  */
 
 import { callAI, AIBudgetExceededError, AIResponseTruncatedError } from "./gateway";
+import type { SchemaMode } from "./gateway-types";
 import { AIParsingResponse, aiParsingResponseSchema } from "./schemas";
 import { RULES_EXTRACTION_SYSTEM_PROMPT, createRulesExtractionPrompt } from "./prompts";
 import { getRulesResponseJsonSchema, RULES_SCHEMA_NAME } from "./rules-schema";
@@ -55,6 +56,8 @@ export interface RulesExtractionResult extends AIParsingResponse {
   droppedChars: number;
   modelId?: string;
   usage?: { inputTokens?: number; outputTokens?: number };
+  /** json_object при заданной схеме = шлюз отверг json_schema, сработал промпт. */
+  schemaMode?: SchemaMode;
 }
 
 /** Разбор ответа: null-и прочь → Zod → нормализация имён → Zod. */
@@ -106,6 +109,7 @@ async function requestRules(
     droppedChars: 0,
     modelId: response.modelId,
     usage: response.usage,
+    schemaMode: response.schemaMode,
   };
 }
 

@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
       rulesSource: "методичка",
       rulesNormalized: aiResponse.normalized,
       rulesDroppedChars: aiResponse.droppedChars,
+      rulesSchemaMode: aiResponse.schemaMode,
     } as Partial<DocumentStatistics> as DocumentStatistics;
 
     // Сохраняем правила, текст методички и переводим в статус ожидания подтверждения

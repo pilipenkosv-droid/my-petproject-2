@@ -179,6 +179,7 @@ export async function callAI(request: GatewayRequest): Promise<GatewayResponse> 
         modelName: model.displayName,
         finishReason: result.finishReason,
         usage: result.usage,
+        schemaMode: result.schemaMode,
       };
     } catch (error) {
       if (error instanceof AIResponseTruncatedError) throw error;
