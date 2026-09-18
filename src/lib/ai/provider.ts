@@ -13,7 +13,12 @@ import type { SchemaMode } from "./gateway-types";
 import { AIParsingResponse, aiParsingResponseSchema } from "./schemas";
 import { RULES_EXTRACTION_SYSTEM_PROMPT, createRulesExtractionPrompt } from "./prompts";
 import { getRulesResponseJsonSchema, RULES_SCHEMA_NAME } from "./rules-schema";
-import { countRuleLeaves, normalizeResponseKeys, stripNulls } from "./rules-normalize";
+import {
+  countRuleLeaves,
+  dropIssuePaths,
+  normalizeResponseKeys,
+  stripNulls,
+} from "./rules-normalize";
 import { prefilterGuidelines } from "./rules-prefilter";
 import { DEFAULT_GOST_RULES, FormattingRules } from "@/types/formatting-rules";
 
@@ -48,7 +53,7 @@ export function rulesExtractionMessage(error: RulesExtractionError): string {
 }
 
 export interface RulesExtractionResult extends AIParsingResponse {
-  /** Ответ пришлось приводить к именам схемы — значит structured output не сработал. */
+  /** Ответ пришлось доводить: имена полей и/или выброшенные битые поля. */
   normalized: boolean;
   /** Понадобился компактный повтор после обрыва по лимиту токенов. */
   retriedCompact: boolean;
@@ -73,6 +78,25 @@ export function parseRulesResponse(raw: unknown): { parsed: AIParsingResponse; n
   const second = aiParsingResponseSchema.safeParse(renamed);
   if (second.success && countRuleLeaves(second.data.rules) > 0) {
     return { parsed: second.data, normalized: true };
+  }
+
+  // Третий проход: выбрасываем именно те листья, на которые ругался Zod.
+  // Одно поле вне диапазона не должно стоить пользователю всей методички.
+  if (!second.success) {
+    let candidate: unknown = renamed;
+    const dropped: string[] = [];
+    for (let round = 0; round < 3; round++) {
+      const attempt = aiParsingResponseSchema.safeParse(candidate);
+      if (attempt.success) {
+        if (countRuleLeaves(attempt.data.rules) === 0) break;
+        console.warn(`[provider] Отброшены некорректные поля: ${dropped.join(", ")}`);
+        return { parsed: attempt.data, normalized: true };
+      }
+      const step = dropIssuePaths(candidate, attempt.error.issues.map((i) => [...i.path]));
+      if (step.dropped.length === 0) break;
+      candidate = step.value;
+      dropped.push(...step.dropped);
+    }
   }
 
   const issue = second.success
@@ -100,7 +124,7 @@ async function requestRules(
   const { parsed, normalized } = parseRulesResponse(response.json);
   console.log(
     `[provider] Rules extracted via ${response.modelName}` +
-      `${normalized ? " (имена полей нормализованы)" : ""}`
+      `${normalized ? " (ответ потребовал доводки: имена полей и/или битые поля)" : ""}`
   );
   return {
     ...parsed,

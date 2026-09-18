@@ -219,6 +219,29 @@ describe("разбор ответа", () => {
     expect(res.warnings).toEqual([]);
   });
 
+  it("одно поле вне диапазона выбрасывается, остальные правила сохраняются", async () => {
+    fetchMock.mockResolvedValue(
+      gatewayResponse({
+        rules: {
+          // fontSize 1.5 вне диапазона схемы (8–72): strict-схема провайдера
+          // minimum/maximum не переносит, такие ответы приходят с прода.
+          text: { fontFamily: "Times New Roman", fontSize: 1.5, lineSpacing: 1.5 },
+          document: { pageSize: "A4" },
+        },
+        confidence: 0.8,
+        warnings: [],
+        missingRules: [],
+      })
+    );
+
+    const res = await parseFormattingRules("текст методички");
+
+    expect(res.rules.text?.fontSize).toBeUndefined();
+    expect(res.rules.text?.fontFamily).toBe("Times New Roman");
+    expect(res.rules.text?.lineSpacing).toBe(1.5);
+    expect(res.rules.document?.pageSize).toBe("A4");
+  });
+
   it("мусор → RulesExtractionError(schema_mismatch), а не правила по ГОСТ", async () => {
     fetchMock.mockResolvedValue(gatewayResponse({ answer: "не знаю", items: [1, 2, 3] }));
 

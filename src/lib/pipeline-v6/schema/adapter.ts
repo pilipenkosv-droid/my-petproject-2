@@ -142,6 +142,11 @@ const UNSUPPORTED_VALIDATION = new Set([
 ]);
 
 function makeNullable(node: JsonSchemaNode): JsonSchemaNode {
+  // Объект nullable не делаем: Gemini через шлюз отвергает запрос целиком
+  // («response_schema.properties[...]: only allowed for OBJECT type», 18.09.2026),
+  // потому что properties нельзя держать на типе ["object","null"]. Объект
+  // остаётся обязательным — модель вернёт его с null в листьях.
+  if (node.type === "object" || node.properties) return node;
   if (Array.isArray(node.anyOf)) {
     return { ...node, anyOf: [...(node.anyOf as JsonSchemaNode[]), { type: "null" }] };
   }

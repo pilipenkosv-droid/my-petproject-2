@@ -79,7 +79,9 @@ export async function callGemini(
 /** 400 именно про структурированный вывод, а не про что-то ещё в запросе. */
 export function isSchemaRejection(status: number, errorText: string): boolean {
   if (status !== 400) return false;
-  return /response_format|json[_ ]?schema|structured output|unsupported|not supported/i.test(errorText);
+  return /response[_ ]?(format|schema)|json[_ ]?schema|structured output|unsupported|not supported|only allowed for/i.test(
+    errorText
+  );
 }
 
 /**

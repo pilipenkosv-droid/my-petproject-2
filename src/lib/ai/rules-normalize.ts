@@ -124,3 +124,39 @@ export function countRuleLeaves(value: unknown): number {
   }
   return 1;
 }
+
+/**
+ * Удаляет из ответа листья, на которые ругался Zod.
+ *
+ * Strict-схема провайдера не переносит minimum/maximum, поэтому модель может
+ * вернуть, например, fontSize: 1.5. Ронять из-за одного поля весь разбор нельзя:
+ * в ответе рядом лежат десятки корректных правил, и пользователь остался бы
+ * без своей методички. Битый лист выбрасываем, остальное сохраняем.
+ */
+export function dropIssuePaths(
+  value: unknown,
+  paths: Array<Array<string | number>>
+): { value: unknown; dropped: string[] } {
+  const clone = structuredClone(value) as Json;
+  const dropped: string[] = [];
+
+  for (const path of paths) {
+    if (path.length === 0) continue;
+    let node: unknown = clone;
+    for (const key of path.slice(0, -1)) {
+      if (!node || typeof node !== "object") { node = undefined; break; }
+      node = (node as Json)[String(key)];
+    }
+    if (!node || typeof node !== "object") continue;
+
+    const last = path[path.length - 1];
+    if (Array.isArray(node) && typeof last === "number") {
+      node.splice(last, 1);
+    } else {
+      delete (node as Json)[String(last)];
+    }
+    dropped.push(path.join("."));
+  }
+
+  return { value: clone, dropped };
+}
