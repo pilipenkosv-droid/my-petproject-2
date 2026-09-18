@@ -35,6 +35,7 @@ function candidate(id: string, userId: string | null) {
     worker_id: null,
     worker_heartbeat_at: null,
     shadow_of: null,
+    queued_at: null,
     created_at: LONG_AGO,
     updated_at: LONG_AGO,
   };
@@ -109,6 +110,23 @@ describe("resetStuckJobs", () => {
 
     expect(count).toBe(2);
     expect(mockRefundUse).toHaveBeenCalledTimes(2);
+  });
+
+  it("свежие строки отсеиваются фильтром по updated_at, а не построчно", async () => {
+    const supabase = createThenableSupabaseMock({
+      jobs: [{ data: [], error: null }],
+    });
+    mockGetSupabaseAdmin.mockReturnValue(supabase as unknown as Admin);
+
+    const count = await resetStuckJobs();
+
+    expect(count).toBe(0);
+    // Один запрос-выборка и ни одного UPDATE: построчной проверки не было.
+    expect(supabase.calls["jobs.select"]).toHaveBeenCalledTimes(1);
+    expect(supabase.calls["jobs.update"]).not.toHaveBeenCalled();
+    const cutoff = supabase.calls["jobs.lt"].mock.calls[0];
+    expect(cutoff[0]).toBe("updated_at");
+    expect(new Date(cutoff[1] as string).getTime()).toBeLessThan(Date.now());
   });
 
   it("ошибка БД → 0 задач и ни одного возврата", async () => {

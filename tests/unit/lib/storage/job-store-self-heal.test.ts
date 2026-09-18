@@ -35,6 +35,7 @@ function row(overrides: Record<string, unknown> = {}) {
     worker_id: null,
     worker_heartbeat_at: null,
     shadow_of: null,
+    queued_at: null,
     created_at: minutesAgo(10),
     updated_at: minutesAgo(10),
     ...overrides,
@@ -74,20 +75,36 @@ describe("stuckCutoffFor", () => {
     ).toBe(true);
   });
 
-  it("pending 5 минут → не зависла, порог очереди 20 минут", () => {
-    const candidate = row({ status: "pending", updated_at: minutesAgo(5) });
+  it("pending 5 минут в очереди → не зависла, порог очереди 20 минут", () => {
+    const candidate = row({
+      status: "pending",
+      queued_at: minutesAgo(5),
+      updated_at: minutesAgo(5),
+    });
     expect(isStuck(candidate)).toBe(false);
     expect(stuckCutoffFor(candidate as never, INLINE_MS, NOW).message).toBe(
       QUEUE_OVERLOADED_MESSAGE
     );
   });
 
-  it("pending 25 минут → зависла с сообщением про очередь", () => {
-    const candidate = row({ status: "pending", updated_at: minutesAgo(25) });
+  it("pending 25 минут в очереди → зависла с сообщением про очередь", () => {
+    const candidate = row({
+      status: "pending",
+      queued_at: minutesAgo(25),
+      updated_at: minutesAgo(25),
+    });
     expect(isStuck(candidate)).toBe(true);
     expect(stuckCutoffFor(candidate as never, INLINE_MS, NOW).message).toBe(
       QUEUE_OVERLOADED_MESSAGE
     );
+  });
+
+  it("pending без queued_at (роут не довёл до очереди) → инлайновый порог 3 минуты", () => {
+    const candidate = row({ status: "pending", queued_at: null, updated_at: minutesAgo(4) });
+    const decision = stuckCutoffFor(candidate as never, INLINE_MS, NOW);
+    expect(decision.message).not.toBe(QUEUE_OVERLOADED_MESSAGE);
+    expect(isStuck(candidate)).toBe(true);
+    expect(isStuck(row({ status: "pending", queued_at: null, updated_at: minutesAgo(2) }))).toBe(false);
   });
 });
 

@@ -33,7 +33,7 @@ const PENDING_STUCK_AFTER_MS = 20 * 60 * 1000;
 
 /** Колонки, по которым выбирается порог зависания. */
 const STUCK_COLUMNS =
-  "id, status, user_id, worker_id, worker_heartbeat_at, shadow_of, created_at, updated_at";
+  "id, status, user_id, worker_id, worker_heartbeat_at, shadow_of, queued_at, created_at, updated_at";
 
 /** Возвращает списанное использование за зависшую задачу (не по вине пользователя). */
 async function refundStuckJob(
@@ -56,6 +56,7 @@ interface StuckRow {
   worker_id: string | null;
   worker_heartbeat_at: string | null;
   shadow_of: string | null;
+  queued_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,17 +70,20 @@ interface StuckDecision {
 
 /**
  * Порог зависания зависит от того, кто держит задачу:
- *   pending — ждёт очереди, порог 20 минут (в инлайн-режиме очереди нет, и
- *             задача всё равно уходит из pending за секунды);
+ *   pending с queued_at — ждёт очереди воркера, порог 20 минут;
  *   worker_id — считает воркер, живость видна по heartbeat, порог 10 минут;
  *   иначе — инлайн внутри функции Vercel, порог передаётся вызывающим (3 минуты).
+ *
+ * pending без queued_at — это строка, которую createJob вставил, а роут не довёл
+ * до очереди (упал на загрузке файла или на списании). Очереди она не ждёт, и
+ * держать её 20 минут незачем — судится обычным инлайновым порогом.
  */
 export function stuckCutoffFor(
   row: StuckRow,
   inlineStuckAfterMs: number,
   now: number = Date.now()
 ): StuckDecision {
-  if (row.status === "pending") {
+  if (row.status === "pending" && row.queued_at) {
     return {
       column: "updated_at",
       cutoff: new Date(now - PENDING_STUCK_AFTER_MS).toISOString(),
@@ -175,10 +179,19 @@ export async function resetStuckJobs(
 ): Promise<number> {
   const supabase = getSupabaseAdmin();
 
+  // Предварительный отсев по самому мягкому из порогов: строка, которая двигалась
+  // позже него, не зависла ни по одному правилу. updated_at годится как общий
+  // фильтр, потому что его обновляют и updateJobProgress, и heartbeat_job.
+  const candidateCutoff = new Date(
+    Date.now() - Math.min(stuckAfterMs, WORKER_STUCK_AFTER_MS, PENDING_STUCK_AFTER_MS)
+  ).toISOString();
+
   const { data, error } = await supabase
     .from("jobs")
     .select(STUCK_COLUMNS)
     .in("status", STUCK_STATUSES)
+    .lt("updated_at", candidateCutoff)
+    .order("updated_at", { ascending: true })
     .limit(500);
 
   if (error) {
