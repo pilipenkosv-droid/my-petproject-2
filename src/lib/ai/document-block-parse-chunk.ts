@@ -18,7 +18,8 @@ const MIN_RETRY_CHUNK = 10;
 export async function parseChunk(
   paragraphs: Array<{ index: number; text: string; style?: string }>,
   context?: ChunkContext,
-  depth = 0
+  depth = 0,
+  deadline?: number
 ): Promise<DocumentBlockMarkup & { modelId?: string }> {
   try {
     const response = await callAI({
@@ -26,6 +27,8 @@ export async function parseChunk(
       userPrompt: createBlockMarkupPrompt(paragraphs, context),
       temperature: 0.1,
       maxTokens: 4096,
+      thinking: false, // разметка блоков — извлечение, не рассуждение
+      deadline,
     });
 
     const normalized = normalizeAiResponse(response.json);
@@ -37,7 +40,12 @@ export async function parseChunk(
   } catch (error) {
     // Rate limit / all models unavailable → не пытаемся split, сразу пробрасываем
     const errMsg = error instanceof Error ? error.message : String(error);
-    if (errMsg.includes("лимит исчерпан") || errMsg.includes("недоступны") || errMsg.includes("timeout")) {
+    if (
+      errMsg.includes("лимит исчерпан") ||
+      errMsg.includes("недоступны") ||
+      errMsg.includes("timeout") ||
+      errMsg.includes("Бюджет AI-запроса исчерпан")
+    ) {
       throw error;
     }
 
@@ -54,9 +62,9 @@ export async function parseChunk(
     const secondContext: ChunkContext = { sectionHeading: context?.sectionHeading };
 
     await new Promise((r) => setTimeout(r, 500 * (depth + 1)));
-    const result1 = await parseChunk(firstHalf, context, depth + 1);
+    const result1 = await parseChunk(firstHalf, context, depth + 1, deadline);
     await new Promise((r) => setTimeout(r, 300));
-    const result2 = await parseChunk(secondHalf, secondContext, depth + 1);
+    const result2 = await parseChunk(secondHalf, secondContext, depth + 1, deadline);
 
     return {
       blocks: [...result1.blocks, ...result2.blocks],

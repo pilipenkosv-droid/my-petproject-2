@@ -4,7 +4,7 @@ import { saveFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
 import { extractText, isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { parseFormattingRules, mergeWithDefaults } from "@/lib/ai/provider";
-import { warmupModels } from "@/lib/ai/gateway";
+import { warmupModels, AIBudgetExceededError } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 
@@ -14,7 +14,14 @@ export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
  * Первый этап: извлечение правил форматирования из методички
  * После этого пользователь может просмотреть и отредактировать правила
  */
+/** Запас на ответ и запись в БД после того, как AI отработал. */
+const REQUEST_BUDGET_MS = 50_000;
+
 export async function POST(request: NextRequest) {
+  // Дедлайн всего запроса: maxDuration = 60с, Vercel убивает функцию без шанса
+  // записать статус — job застревает на progress=50 до resetStuckJobs.
+  const deadline = Date.now() + REQUEST_BUDGET_MS;
+
   // Проверка авторизации / триала
   const auth = await checkProcessingAccess();
 
@@ -121,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     await updateJobProgress(jobId, "parsing_rules", 50, "Анализ требований форматирования с помощью AI");
 
-    const aiResponse = await parseFormattingRules(requirementsText);
+    const aiResponse = await parseFormattingRules(requirementsText, { deadline });
     const rules = mergeWithDefaults(aiResponse.rules);
 
     // Сохраняем правила, текст методички и переводим в статус ожидания подтверждения
@@ -151,6 +158,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Extract rules error:", error);
+
+    // Бюджет исчерпан: списаний в upload-режиме нет (consumeUse живёт в /process,
+    // markTrialUsed — только на успешном ответе), возврат не нужен.
+    if (error instanceof AIBudgetExceededError) {
+      const message =
+        "Не удалось разобрать методичку за отведённое время, попробуйте ещё раз или выберите ГОСТ";
+      await failJob(jobId, message);
+      return NextResponse.json({ error: message, jobId }, { status: 504 });
+    }
 
     const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
     await failJob(jobId, errorMessage);

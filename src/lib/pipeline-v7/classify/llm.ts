@@ -137,6 +137,7 @@ async function askBatch(views: CandidateView[], timeoutMs: number): Promise<Role
       userPrompt: buildUserPrompt(views),
       temperature: 0,
       maxTokens: 4096,
+      thinking: false, // классификация остатка — извлечение
     }),
     timeoutMs,
   );

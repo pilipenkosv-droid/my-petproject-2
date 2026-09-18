@@ -72,6 +72,7 @@ export async function extractTitlePageFields(
       userPrompt,
       temperature: 0,
       maxTokens: 4096,
+      thinking: false, // извлечение полей титульника
     });
     const fields = TitlePageFieldsSchema.parse(response.json);
     // If LLM returned fewer useful fields than regex — prefer regex.

@@ -49,7 +49,7 @@ export async function classifyWithAI(
             ` [СЕМАНТИКА: библиография в параграфах ${semanticBibRange.start}-${semanticBibRange.end}]`;
         }
       }
-      const result = await raceDeadline(parseChunk(needsAI, context), deadline);
+      const result = await raceDeadline(parseChunk(needsAI, context, 0, deadline), deadline);
       if (result === BUDGET_EXPIRED) {
         console.warn(
           `[block-markup] Budget exhausted, ${needsAI.length} paragraphs classified rule-based`
@@ -177,7 +177,7 @@ export async function classifyWithAI(
     const batchResults = await Promise.allSettled(
       batch.map((chunk, offset) => {
         const ci = bi + offset;
-        return raceDeadline(parseChunk(chunk, chunkContexts[ci]), deadline);
+        return raceDeadline(parseChunk(chunk, chunkContexts[ci], 0, deadline), deadline);
       })
     );
 
