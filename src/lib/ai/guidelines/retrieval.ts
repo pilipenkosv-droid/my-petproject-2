@@ -14,6 +14,7 @@
 import {
   embed,
   rerank,
+  GatewayEmbeddingsError,
   cosine,
   hasGatewayKey,
   EMBEDDING_MODEL,
@@ -208,9 +209,11 @@ export async function selectRelevantUnits(
     embedded = await embedAll(units, deadline);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
+    // Успевшие батчи уже оплачены — прячем это в ноль только если ошибка не наша.
+    const spent = error instanceof GatewayEmbeddingsError ? error.costUsd : 0;
     console.warn(`[retrieval] Эмбеддинги не удались, откат на регулярки: ${reason}`);
     return keywordFallback(units, charsIn, {
-      embedMs: Date.now() - embedStarted, rerankMs: 0, costUsd: 0, reason,
+      embedMs: Date.now() - embedStarted, rerankMs: 0, costUsd: spent, reason,
     });
   }
   const embedMs = Date.now() - embedStarted;

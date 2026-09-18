@@ -16,6 +16,12 @@ export const RERANK_MODEL = "voyage/rerank-2.5-lite";
 
 /** Шлюз принимает больше, но на 64 входах бенч не ловил обрывов соединения. */
 export const EMBED_BATCH_SIZE = 64;
+/**
+ * Параллельных батчей. Один батч из 64 единиц идёт ~1,9 с (замер 18.09 с Mac
+ * через прокси), методичка на 45k символов даёт 13 батчей: последовательно это
+ * 25 с против бюджета в 8 с. Пять потоков укладывают их в три волны.
+ */
+export const EMBED_CONCURRENCY = 5;
 
 /** $/токен, прайс-лист шлюза от 18.09.2026 (в ответе стоимость не приходит). */
 export const EMBEDDING_PRICE_PER_TOKEN = 0.00000002;
@@ -25,7 +31,11 @@ export const RERANK_CHARS_PER_TOKEN = 2.5;
 
 /** Вызов не удался: ретраи исчерпаны, дедлайн вышел или шлюз ответил 4xx. */
 export class GatewayEmbeddingsError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    /** Сколько уже потрачено на успевшие батчи: деньги списаны и без результата. */
+    readonly costUsd = 0
+  ) {
     super(message);
     this.name = "GatewayEmbeddingsError";
   }
@@ -104,27 +114,59 @@ function chunk<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-/** Векторы для списка текстов; батчи идут последовательно, чтобы не ловить 429. */
+/** Один батч: векторы в порядке входов плюс израсходованные токены. */
+async function embedBatch(
+  model: string,
+  batch: string[],
+  options: PostOptions
+): Promise<{ vectors: number[][]; tokens: number }> {
+  const body = await post<EmbeddingsBody>("/embeddings", { model, input: batch }, options);
+  const sorted = [...body.data].sort((a, b) => a.index - b.index);
+  if (sorted.length !== batch.length) {
+    throw new GatewayEmbeddingsError(
+      `/embeddings: получено ${sorted.length} векторов на ${batch.length} входов`
+    );
+  }
+  return {
+    vectors: sorted.map((item) => normalize(item.embedding)),
+    tokens: body.usage?.prompt_tokens ?? body.usage?.total_tokens ?? 0,
+  };
+}
+
+/**
+ * Векторы для списка текстов. Батчи идут волнами по EMBED_CONCURRENCY:
+ * последовательный проход не укладывается в бюджет ретрива на длинных методичках.
+ * Если хоть один батч упал, потраченное на успевшие уезжает в ошибку —
+ * деньги списаны, и в отчёте это должно быть видно.
+ */
 export async function embed(
   texts: string[],
   options: PostOptions & { model?: string } = {}
 ): Promise<EmbedResult> {
   const model = options.model ?? EMBEDDING_MODEL;
-  const vectors: number[][] = [];
-  let tokens = 0;
+  const batches = chunk(texts, EMBED_BATCH_SIZE);
+  const done = new Array<{ vectors: number[][]; tokens: number } | undefined>(batches.length);
+  let cursor = 0;
 
-  for (const batch of chunk(texts, EMBED_BATCH_SIZE)) {
-    const body = await post<EmbeddingsBody>("/embeddings", { model, input: batch }, options);
-    const sorted = [...body.data].sort((a, b) => a.index - b.index);
-    if (sorted.length !== batch.length) {
-      throw new GatewayEmbeddingsError(
-        `/embeddings: получено ${sorted.length} векторов на ${batch.length} входов`
-      );
+  const worker = async () => {
+    while (cursor < batches.length) {
+      const index = cursor++;
+      done[index] = await embedBatch(model, batches[index], options);
     }
-    for (const item of sorted) vectors.push(normalize(item.embedding));
-    tokens += body.usage?.prompt_tokens ?? body.usage?.total_tokens ?? 0;
+  };
+
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(EMBED_CONCURRENCY, batches.length) }, worker)
+    );
+  } catch (error) {
+    const spent = done.reduce((s, r) => s + (r?.tokens ?? 0), 0) * EMBEDDING_PRICE_PER_TOKEN;
+    const message = error instanceof Error ? error.message : String(error);
+    throw new GatewayEmbeddingsError(message, spent);
   }
 
+  const vectors = done.flatMap((r) => r!.vectors);
+  const tokens = done.reduce((s, r) => s + r!.tokens, 0);
   return { vectors, tokens, costUsd: tokens * EMBEDDING_PRICE_PER_TOKEN };
 }
 

@@ -194,3 +194,48 @@ describe("buildRetrievalContext", () => {
     expect(context).toBe("[u3] Шрифт Times New Roman.\n\n[u40] Поля: левое 30 мм.");
   });
 });
+
+describe("параллельные батчи эмбеддингов", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    process.env.AI_GATEWAY_API_KEY = "test-key";
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("батчи уходят волнами, а не по одному", async () => {
+    let inFlight = 0;
+    let peak = 0;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      if (!String(url).endsWith("/embeddings")) return rerankOk(body.documents);
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      await new Promise((r) => setTimeout(r, 20));
+      inFlight--;
+      return embeddingsOk(body.input);
+    });
+
+    const units = segmentGuidelines(GUIDELINES);
+    expect(units.length).toBeGreaterThan(64 * 2);
+    await selectRelevantUnits(units, { budgetMs: 60_000 });
+
+    expect(peak).toBeGreaterThan(1);
+  });
+
+  it("стоимость успевших батчей не теряется при падении следующего", async () => {
+    let call = 0;
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      if (!String(url).endsWith("/embeddings")) return rerankOk(body.documents);
+      // Первая волна проходит, следующий батч валится намертво (400 без ретраев).
+      if (++call > 3) return { ok: false, status: 400, json: async () => ({}), text: async () => "bad" };
+      return embeddingsOk(body.input);
+    });
+
+    const result = await selectRelevantUnits(segmentGuidelines(GUIDELINES), { budgetMs: 60_000 });
+
+    expect(result.stats.mode).toBe("keyword");
+    expect(result.stats.costUsd).toBeGreaterThan(0);
+  });
+});
