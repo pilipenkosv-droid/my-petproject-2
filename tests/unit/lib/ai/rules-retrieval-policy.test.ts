@@ -162,3 +162,38 @@ describe("порог полного текста", () => {
     vi.resetModules();
   });
 });
+
+describe("провенанс с вложенными объектами", () => {
+  it("вложенный объект секции сплющивается в список номеров", async () => {
+    const nested = {
+      ...modelAnswer,
+      provenance: {
+        text: [12, 13],
+        specialElements: { tables: [40, 41], figures: [41, 7] },
+        additional: { pageNumbering: 3 },
+      },
+    };
+    fetchMock.mockImplementation(async (url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      if (String(url).endsWith("/embeddings")) return embeddingsResponse(body.input);
+      if (String(url).endsWith("/rerank")) return rerankResponse(body.documents);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify(nested) }, finish_reason: "stop" }],
+          usage: { prompt_tokens: 100, completion_tokens: 200 },
+        }),
+        text: async () => "",
+      };
+    });
+
+    const result = await parseFormattingRules(guidelines(RULES_FULLTEXT_MAX_CHARS + 5_000));
+
+    expect(result.provenance).toEqual({
+      text: [12, 13],
+      specialElements: [7, 40, 41],
+      additional: [3],
+    });
+  }, 20_000);
+});

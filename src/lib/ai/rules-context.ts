@@ -32,6 +32,8 @@ export interface ExtractionContext {
   provenance: boolean;
   droppedChars: number;
   retrieval?: RetrievalStats;
+  /** Номера отобранных единиц — чтобы можно было проверить provenance модели. */
+  unitIds?: number[];
 }
 
 /**
@@ -74,6 +76,7 @@ export async function buildExtractionContext(
   return {
     text,
     provenance: true,
+    unitIds: selection.units.map((u) => u.i),
     droppedChars: Math.max(0, requirementsText.length - selection.stats.charsOut),
     retrieval: selection.stats,
   };

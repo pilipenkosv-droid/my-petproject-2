@@ -15,6 +15,7 @@ import { RULES_EXTRACTION_SYSTEM_PROMPT, createRulesExtractionPrompt } from "./p
 import { getRulesResponseJsonSchema, RULES_SCHEMA_NAME } from "./rules-schema";
 import {
   countRuleLeaves,
+  flattenProvenance,
   dropIssuePaths,
   normalizeResponseKeys,
   stripNulls,
@@ -64,15 +65,25 @@ export interface RulesExtractionResult extends AIParsingResponse {
   retrieval?: RetrievalStats;
   /** Секция правил → номера фрагментов [uN], из которых она взята. */
   provenance?: RulesProvenance;
+  /** Номера отобранных ретривом единиц. В БД не пишется — только для проверок. */
+  retrievalUnitIds?: number[];
   modelId?: string;
   usage?: { inputTokens?: number; outputTokens?: number };
   /** json_object при заданной схеме = шлюз отверг json_schema, сработал промпт. */
   schemaMode?: SchemaMode;
 }
 
+/** Провенанс приводим к {секция: [номера]} до Zod — модель любит вкладывать. */
+function withFlatProvenance(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const obj = value as Record<string, unknown>;
+  if (!("provenance" in obj)) return value;
+  return { ...obj, provenance: flattenProvenance(obj.provenance) };
+}
+
 /** Разбор ответа: null-и прочь → Zod → нормализация имён → Zod. */
 export function parseRulesResponse(raw: unknown): { parsed: AIParsingResponse; normalized: boolean } {
-  const cleaned = stripNulls(raw);
+  const cleaned = withFlatProvenance(stripNulls(raw));
 
   const direct = aiParsingResponseSchema.safeParse(cleaned);
   if (direct.success && countRuleLeaves(direct.data.rules) > 0) {
@@ -181,6 +192,7 @@ export async function parseFormattingRules(
     ...result,
     droppedChars: context.droppedChars,
     retrieval: context.retrieval,
+    retrievalUnitIds: context.unitIds,
   });
 
   try {
