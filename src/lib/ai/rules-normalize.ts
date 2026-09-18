@@ -183,5 +183,7 @@ export function flattenProvenance(raw: unknown): unknown {
     collect(value, ids);
     if (ids.size > 0) result[section] = [...ids].sort((a, b) => a - b);
   }
-  return result;
+  // Схема требует все шесть секций, и на полном тексте модель шлёт пустые
+  // массивы. Хранить {} в statistics незачем.
+  return Object.keys(result).length > 0 ? result : undefined;
 }
