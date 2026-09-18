@@ -16,7 +16,7 @@ import { RulesExtractionError, rulesExtractionMessage } from "@/lib/ai/provider"
 import { processGostJob } from "@/lib/processing/gost-job";
 import { processExtractRulesJob } from "@/lib/processing/extract-rules-job";
 import { processConfirmRulesJob } from "@/lib/processing/confirm-rules-job";
-import { resolveJobStage } from "@/lib/processing/stage";
+import type { JobStage } from "@/lib/processing/stage";
 import type { DocumentStatistics } from "@/types/formatting-rules";
 import type { AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 
@@ -35,6 +35,7 @@ export interface WorkerColumns {
 export interface StageContext {
   jobId: string;
   job: JobState;
+  stage: JobStage;
   isShadow: boolean;
   log: (event: string, fields?: Record<string, unknown>) => void;
 }
@@ -55,13 +56,33 @@ export async function readWorkerColumns(jobId: string): Promise<WorkerColumns | 
  * Терминальные ошибки этапов методички: повтор даст то же самое.
  * Списаний на этих этапах не было — возвращать нечего.
  * undefined — ошибка не из этого класса, решает общая классификация.
+ *
+ * Бюджет AI исчерпан — терминально только на разборе методички: там это
+ * единственный вызов модели и её отказ виден пользователю дословно. На
+ * остальных этапах AIBudgetExceededError прилетает из любого вызова внутри
+ * пайплайна, и отнимать у задачи повтор нельзя (поведение фазы 1).
  */
-export function permanentStageMessage(error: unknown): string | undefined {
+export function permanentStageMessage(error: unknown, stage: JobStage): string | undefined {
   if (error instanceof RulesExtractionError) return rulesExtractionMessage(error);
-  if (error instanceof AIBudgetExceededError) {
+  if (error instanceof AIBudgetExceededError && stage === "extract-rules") {
     return "Не удалось разобрать методичку за отведённое время, попробуйте ещё раз или выберите ГОСТ";
   }
   return undefined;
+}
+
+/**
+ * Снимает признаки захвата после промежуточного этапа: задача остаётся в
+ * awaiting_confirmation и ждёт пользователя. Со старым worker_id и застывшим
+ * heartbeat сборщик зависших пометил бы её failed — в том числе посреди
+ * инлайн-обработки, если подтверждение уйдёт мимо воркера.
+ */
+export async function releaseWorkerClaim(jobId: string): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("jobs")
+    .update({ worker_id: null, worker_claimed_at: null, worker_heartbeat_at: null })
+    .eq("id", jobId);
+
+  if (error) console.error("[worker:stages] releaseWorkerClaim failed:", error);
 }
 
 async function resolveAccessType(
@@ -100,14 +121,21 @@ async function runExtractRules(ctx: StageContext): Promise<DocumentStatistics> {
   const requirementsBuffer = await getFile(job.requirementsDocumentId);
   if (!requirementsBuffer) throw new Error("Методичка недоступна в хранилище");
 
-  // MIME сохранённого файла в строке задачи нет — берём по расширению имени.
-  const mimeType = getMimeTypeByExtension(job.requirementsOriginalName ?? "") ?? "";
+  // MIME, который роут проверил при загрузке; у файла без расширения он
+  // единственный источник правды.
+  const mimeType =
+    job.statistics?.requirementsMimeType ??
+    getMimeTypeByExtension(job.requirementsOriginalName ?? "") ??
+    "";
   ctx.log("stage", { jobId, stage: "extract-rules", mimeType });
 
   await processExtractRulesJob(jobId, requirementsBuffer, mimeType, {
     deadline: Date.now() + EXTRACT_DEADLINE_MS,
     onProgress: reporter(jobId),
   });
+
+  // Задача ждёт пользователя, а не воркер: признаки захвата больше не нужны.
+  await releaseWorkerClaim(jobId);
 
   // Статистику этапа записал сам processExtractRulesJob — перечитываем её,
   // чтобы дописать блок worker и не потерять поля rules*.
@@ -142,7 +170,7 @@ async function runConfirmRules(ctx: StageContext): Promise<DocumentStatistics> {
 
 /** Выполняет этап задачи и возвращает статистику, в которую воркер допишет свой блок. */
 export async function runStage(ctx: StageContext): Promise<DocumentStatistics> {
-  switch (resolveJobStage(ctx.job)) {
+  switch (ctx.stage) {
     case "extract-rules":
       return runExtractRules(ctx);
     case "confirm-rules":

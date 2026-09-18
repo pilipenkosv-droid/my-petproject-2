@@ -10,6 +10,7 @@ import os from "os";
 import { getJob, updateJob, failJob } from "@/lib/storage/job-store";
 import { refundUse } from "@/lib/payment/refund";
 import { JobAlreadyTerminalError } from "@/lib/processing/gost-job";
+import { resolveJobStage, type JobStage } from "@/lib/processing/stage";
 import { EXIT_OK, EXIT_PERMANENT, EXIT_TRANSIENT, isTransientError } from "./errors";
 import {
   permanentStageMessage,
@@ -20,6 +21,9 @@ import {
 
 const WORKER_ID = process.env.WORKER_ID || os.hostname();
 const GIT_SHA = process.env.WORKER_GIT_SHA || "unknown";
+
+/** Этап задачи нужен и обработчику ошибок — он классифицирует их по-разному. */
+let currentStage: JobStage = "gost";
 
 function log(event: string, fields: Record<string, unknown> = {}): void {
   const tail = Object.entries(fields)
@@ -37,10 +41,11 @@ async function run(jobId: string): Promise<void> {
   const claimedAt = columns?.worker_claimed_at ?? new Date().toISOString();
   const waitMs = queueWaitMs(columns, claimedAt);
 
-  log("start", { jobId, shadow: isShadow, queueWaitMs: waitMs });
+  currentStage = resolveJobStage(job);
+  log("start", { jobId, stage: currentStage, shadow: isShadow, queueWaitMs: waitMs });
 
   const startedAt = Date.now();
-  const statistics = await runStage({ jobId, job, isShadow, log });
+  const statistics = await runStage({ jobId, job, stage: currentStage, isShadow, log });
   const processMs = Date.now() - startedAt;
 
   await updateJob(jobId, {
@@ -90,9 +95,9 @@ async function main(): Promise<void> {
       process.exit(EXIT_PERMANENT);
     }
 
-    // Отказ разбора методички и исчерпанный бюджет AI — терминальны, но их
-    // текст («не дождались ответа модели») попадает под шаблоны временных.
-    const stageMessage = permanentStageMessage(error);
+    // Отказ разбора методички терминален, но его текст («не дождались ответа
+    // модели») попадает под шаблоны временных ошибок.
+    const stageMessage = permanentStageMessage(error, currentStage);
     const humanMessage = stageMessage ?? message;
 
     if (!stageMessage && isTransientError(error)) {

@@ -4,6 +4,7 @@ import { saveFile } from "@/lib/storage/file-storage";
 import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
 import { isValidSourceDocument, isValidRequirementsDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { RulesExtractionError, rulesExtractionMessage } from "@/lib/ai/provider";
+import type { DocumentStatistics } from "@/types/formatting-rules";
 import { AIBudgetExceededError } from "@/lib/ai/gateway";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
@@ -106,17 +107,20 @@ export async function POST(request: NextRequest) {
       requirementsOriginalName: requirementsFile.name,
       workType: workType || undefined,
       requirementsMode: "upload",
+      // Воркер разбирает методичку из хранилища, где MIME уже не виден.
+      statistics: { requirementsMimeType } as Partial<DocumentStatistics> as DocumentStatistics,
     });
 
     // Режим очереди: методичку разбирает воркер на VDS, роут отвечает сразу.
+    // Если поставить в очередь не вышло — считаем сами, как раньше.
     if (await shouldQueueForWorker(jobId)) {
-      await markJobQueued(jobId, "Методичка в очереди на разбор");
-
-      const queued = NextResponse.json({ jobId, status: "pending" }, { status: 202 });
-      if (isAnonymous) {
-        markTrialUsed(queued);
+      if (await markJobQueued(jobId, "Методичка в очереди на разбор")) {
+        const queued = NextResponse.json({ jobId, status: "pending" }, { status: 202 });
+        if (isAnonymous) {
+          markTrialUsed(queued);
+        }
+        return queued;
       }
-      return queued;
     }
 
     const extracted = await processExtractRulesJob(
