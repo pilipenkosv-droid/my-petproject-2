@@ -159,16 +159,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  // Diplox Bot (отдельная воронка)
-  const secondBrainPage: MetadataRoute.Sitemap = [
-    {
-      url: `${SITE_URL}/second-brain`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-  ]
-
   // Нишевые лендинги (W5)
   const nichePages: MetadataRoute.Sitemap = [
     {
@@ -185,5 +175,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  return [...mainPages, ...workTypePages, ...toolPages, ...secondBrainPage, ...nichePages, ...blogPage, ...blogPostPages]
+  return [...mainPages, ...workTypePages, ...toolPages, ...nichePages, ...blogPage, ...blogPostPages]
 }

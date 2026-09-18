@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (offerType === "subscription_plus" && LAVA_CONFIG.offers.subscriptionPlus.hidden) {
+      return NextResponse.json(
+        { error: "Тариф больше не продаётся" },
+        { status: 410 }
+      );
+    }
+
     const offerMap = {
       one_time: LAVA_CONFIG.offers.oneTime,
       subscription: LAVA_CONFIG.offers.subscription,

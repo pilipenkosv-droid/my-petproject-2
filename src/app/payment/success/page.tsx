@@ -127,11 +127,9 @@ function PaymentSuccessContent() {
                 Оплата прошла успешно!
               </h1>
               <p className="text-on-surface-muted">
-                {offerType === "subscription_plus"
-                  ? "Подписка Pro Plus активирована! 10 обработок + AI-напарник."
-                  : offerType === "subscription"
-                    ? "Подписка Pro активирована. 10 обработок в месяц уже доступны."
-                    : "Обработка документа добавлена в ваш аккаунт."}
+                {offerType === "subscription" || offerType === "subscription_plus"
+                  ? "Подписка активирована. 10 обработок в месяц уже доступны."
+                  : "Обработка документа добавлена в ваш аккаунт."}
               </p>
 
               {botDeepLink && (

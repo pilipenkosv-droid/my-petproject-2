@@ -4,7 +4,7 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { FileText, Sparkles, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck, ShieldCheck, Bot } from "lucide-react";
+import { FileText, Sparkles, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck, ShieldCheck } from "lucide-react";
 
 import { HeroSubtitle } from "@/components/HeroSubtitle";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -32,18 +32,6 @@ export default async function LandingPage() {
   return (
     <main className="min-h-screen overflow-x-hidden">
       <Header />
-
-      {/* Bot announcement banner */}
-      <div className="bg-gradient-to-r from-purple-600/10 via-indigo-600/10 to-purple-600/10 border-b border-purple-500/20 px-4 py-3">
-        <div className="mx-auto max-w-5xl flex items-center justify-center gap-3 text-sm">
-          <Bot className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-foreground font-medium">Пишешь диплом и застрял?</span>
-          <span className="text-on-surface-muted hidden sm:inline">— ИИ-бот поможет прямо в Telegram</span>
-          <Link href="/second-brain" className="inline-flex items-center gap-1 text-primary font-semibold hover:text-primary/80 transition-colors shrink-0">
-            Узнать <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-      </div>
 
       {/* Hero Section */}
       <section className="relative flex items-center justify-center px-4 sm:px-6 py-16 sm:py-24">

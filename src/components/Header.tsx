@@ -52,7 +52,6 @@ import {
   Wand2,
   SpellCheck,
   BookMarked,
-  Bot,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -112,12 +111,6 @@ const toolGroups: NavGroup[] = [
       { href: "/rewrite", label: "Перефразирование", description: "Перескажи текст своими словами", icon: Wand2 },
       { href: "/grammar", label: "Грамматика", description: "Орфография и пунктуация", icon: SpellCheck },
       { href: "/sources", label: "Литература", description: "Поиск научных источников", icon: BookMarked },
-    ],
-  },
-  {
-    heading: "Новинка",
-    links: [
-      { href: "/second-brain", label: "ИИ-бот для учёбы", description: "Конспекты, поиск и инструменты в Telegram", icon: Bot },
     ],
   },
 ];
@@ -250,9 +243,9 @@ export function Header({ showBack = false, backHref = "/" }: HeaderProps) {
                             <NavigationMenuLink asChild>
                               <Link
                                 href={link.href}
-                                className={`group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors ${link.href === "/second-brain" ? "bg-purple-500/10 hover:bg-purple-500/20" : "hover:bg-surface-hover"}`}
+                                className="group/item flex items-center gap-2.5 rounded-md px-2 py-2 text-sm transition-colors hover:bg-surface-hover"
                               >
-                                <link.icon className={`h-4 w-4 shrink-0 transition-colors ${link.href === "/second-brain" ? "text-purple-400 group-hover/item:text-purple-300" : "text-muted-foreground group-hover/item:text-foreground"}`} />
+                                <link.icon className="h-4 w-4 shrink-0 transition-colors text-muted-foreground group-hover/item:text-foreground" />
                                 <div>
                                   <div className="font-medium text-foreground leading-tight">{link.label}</div>
                                   <p className="text-xs text-muted-foreground leading-tight">{link.description}</p>
