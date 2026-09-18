@@ -10,7 +10,7 @@
  * транзакцией.
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
  * Отмечает, что за эту задачу списано использование.

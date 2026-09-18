@@ -172,20 +172,32 @@ function ConstructorPageContent() {
 
       const data = await response.json();
 
+      const redirectUrl = requirementsMode === "gost"
+        ? `/result/${data.jobId}`
+        : `/confirm-rules/${data.jobId}`;
+
+      const rememberFlowTime = () => {
+        try {
+          const finalSec = Math.max(1, Math.round((Date.now() - flowStartedAt) / 1000));
+          localStorage.setItem(`dlx_flow_time_${data.jobId}`, String(finalSec));
+        } catch {}
+      };
+
+      // 202: задача принята в очередь воркера, обработки ещё не было.
+      // Дорисовывать прогресс здесь нечего — настоящий показывает /result.
+      if (response.status === 202) {
+        rememberFlowTime();
+        router.push(redirectUrl);
+        return;
+      }
+
       const realPageCount = data?.statistics?.pageCount;
       if (typeof realPageCount === "number" && realPageCount > 0) {
         setSourcePageEstimate(realPageCount);
       }
 
-      const redirectUrl = requirementsMode === "gost"
-        ? `/result/${data.jobId}`
-        : `/confirm-rules/${data.jobId}`;
-
       animatedProgress.complete(() => {
-        try {
-          const finalSec = Math.max(1, Math.round((Date.now() - flowStartedAt) / 1000));
-          localStorage.setItem(`dlx_flow_time_${data.jobId}`, String(finalSec));
-        } catch {}
+        rememberFlowTime();
         router.push(redirectUrl);
       });
     } catch (err) {

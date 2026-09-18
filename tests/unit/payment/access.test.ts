@@ -7,13 +7,13 @@ import { createSupabaseMock } from "../../mocks/supabase";
 import { makeUserAccess, pastDate, futureDate } from "../../mocks/factories";
 
 // Мокируем модуль до импорта тестируемого кода
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/lib/supabase/admin", () => ({
   getSupabaseAdmin: vi.fn(),
 }));
 
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { LAVA_CONFIG } from "@/lib/payment/config";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const mockGetSupabaseAdmin = vi.mocked(getSupabaseAdmin);
 

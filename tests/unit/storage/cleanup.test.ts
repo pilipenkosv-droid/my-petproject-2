@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@/lib/supabase/admin", () => ({
   getSupabaseAdmin: vi.fn(),
 }));
 
@@ -18,6 +18,8 @@ vi.mock("@/lib/storage/file-storage", async (importOriginal) => {
 // runCleanup дёргает ещё три источника — в этом файле они не интересны.
 vi.mock("@/lib/storage/job-store", () => ({
   cleanupOldJobs: vi.fn().mockResolvedValue(0),
+}));
+vi.mock("@/lib/storage/job-stuck", () => ({
   resetStuckJobs: vi.fn().mockResolvedValue(0),
 }));
 vi.mock("@/lib/storage/retention", () => ({
@@ -26,7 +28,7 @@ vi.mock("@/lib/storage/retention", () => ({
 
 import { cleanupOldFiles } from "@/lib/storage/file-storage";
 import { runCleanup } from "@/lib/storage/cleanup";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const mockGetSupabaseAdmin = vi.mocked(getSupabaseAdmin);
 const mockCleanupOldFiles = vi.mocked(cleanupOldFiles);

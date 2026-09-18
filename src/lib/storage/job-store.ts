@@ -5,8 +5,7 @@
  * Работает корректно на Vercel serverless (состояние не теряется).
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { refundUse } from "@/lib/payment/refund";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   DocumentStatistics,
   FormattingRules,
@@ -77,7 +76,7 @@ export interface JobState {
 }
 
 /** DB row → JobState */
-function rowToJob(row: Record<string, unknown>): JobState {
+export function rowToJob(row: Record<string, unknown>): JobState {
   return {
     id: row.id as string,
     status: row.status as JobStatus,
@@ -253,7 +252,13 @@ export async function updateJobProgress(
 }
 
 /**
- * Пометить задачу как завершённую
+ * Пометить задачу как завершённую.
+ *
+ * UPDATE не трогает задачу, уже ушедшую в терминальный статус: сборщик зависших
+ * мог посчитать её потерянной и вернуть списание, пока осиротевший процесс ещё
+ * дорабатывал документ. Перезаписать failed на completed в этом случае — значит
+ * отдать пользователю результат, за который списание уже возвращено.
+ * Строка не обновилась → null, и вызывающий решает, что делать.
  */
 export async function completeJob(
   id: string,
@@ -266,12 +271,29 @@ export async function completeJob(
     hasFullVersion?: boolean;
   }
 ): Promise<JobState | null> {
-  return updateJob(id, {
+  const supabase = getSupabaseAdmin();
+  const row = jobToRow({
     status: "completed",
     progress: 100,
     statusMessage: "Обработка завершена",
     ...result,
   });
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .update(row)
+    .eq("id", id)
+    .neq("status", "failed")
+    .neq("status", "completed")
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("[job-store] completeJob did not update job:", id, error);
+    return null;
+  }
+
+  return rowToJob(data as Record<string, unknown>);
 }
 
 /**
@@ -302,104 +324,6 @@ export async function deleteJob(id: string): Promise<boolean> {
   }
 
   return true;
-}
-
-/** Промежуточные статусы — задача считается зависшей, если долго в одном из них */
-export const STUCK_STATUSES: JobStatus[] = [
-  "pending",
-  "uploading",
-  "extracting_text",
-  "parsing_rules",
-  "analyzing",
-  "formatting",
-];
-
-const STUCK_ERROR_MESSAGE = "Превышено время обработки";
-
-/** Возвращает списанное использование за зависшую задачу (не по вине пользователя). */
-async function refundStuckJob(
-  userId: string | null | undefined,
-  jobId: string
-): Promise<void> {
-  if (!userId) return; // анонимные задачи — с них использование не списывалось
-  try {
-    await refundUse(userId, jobId, STUCK_ERROR_MESSAGE);
-  } catch (refundError) {
-    console.error("[job-store] refund failed for job:", jobId, refundError);
-  }
-}
-
-/**
- * Если задача jobId зависла в промежуточном статусе дольше stuckAfterMs —
- * помечает её failed и возвращает списанное использование.
- * Условие на статус в самом UPDATE делает функцию идемпотентной: повторный
- * вызов для уже обработанной задачи ничего не меняет.
- *
- * Вызывается из GET /api/status/[jobId] (self-heal на чтении) и как строительный
- * блок resetStuckJobs (пакетный предохранитель по cron).
- */
-export async function failIfStuck(
-  jobId: string,
-  stuckAfterMs: number
-): Promise<JobState | null> {
-  const supabase = getSupabaseAdmin();
-  const cutoff = new Date(Date.now() - stuckAfterMs).toISOString();
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .update({
-      status: "failed",
-      error: STUCK_ERROR_MESSAGE,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", jobId)
-    .in("status", STUCK_STATUSES)
-    .lt("updated_at", cutoff)
-    .select()
-    .single();
-
-  if (error || !data) {
-    return null;
-  }
-
-  const job = rowToJob(data as Record<string, unknown>);
-  await refundStuckJob(job.userId, job.id);
-  return job;
-}
-
-/**
- * Маркировать зависшие задачи как failed
- * (промежуточные статусы без обновления дольше stuckAfterMs)
- */
-export async function resetStuckJobs(
-  stuckAfterMs: number = 30 * 60 * 1000
-): Promise<number> {
-  const supabase = getSupabaseAdmin();
-  const cutoff = new Date(Date.now() - stuckAfterMs).toISOString();
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .update({
-      status: "failed",
-      error: STUCK_ERROR_MESSAGE,
-      updated_at: new Date().toISOString(),
-    })
-    .in("status", STUCK_STATUSES)
-    .lt("updated_at", cutoff)
-    .select("id, user_id");
-
-  if (error) {
-    console.error("[job-store] resetStuckJobs error:", error);
-    return 0;
-  }
-
-  const rows = (data ?? []) as Array<{ id: string; user_id: string | null }>;
-
-  for (const row of rows) {
-    await refundStuckJob(row.user_id, row.id);
-  }
-
-  return rows.length;
 }
 
 /**

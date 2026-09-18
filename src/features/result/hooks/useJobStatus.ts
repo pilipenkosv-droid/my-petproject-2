@@ -10,7 +10,7 @@ interface UseJobStatusOptions {
   pollInterval?: number;
   /** Остановить опрос при достижении этих статусов */
   stopOnStatus?: string[];
-  /** Таймаут в мс — остановить polling (по умолчанию 5 минут) */
+  /** Таймаут в мс — остановить polling (по умолчанию 10 минут) */
   timeout?: number;
   /** Максимум последовательных ошибок перед остановкой (по умолчанию 5) */
   maxConsecutiveErrors?: number;
@@ -43,7 +43,7 @@ export function useJobStatus(options: UseJobStatusOptions): JobStatusResult {
     jobId,
     pollInterval = 1000,
     stopOnStatus = ["completed", "failed"],
-    timeout = 5 * 60 * 1000, // 5 минут
+    timeout = 10 * 60 * 1000, // 10 минут: в режиме воркера потолка в 60 с у обработки нет
     maxConsecutiveErrors = 5,
   } = options;
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getJob, failIfStuck, STUCK_STATUSES } from "@/lib/storage/job-store";
+import { getJob } from "@/lib/storage/job-store";
+import { failIfStuck, STUCK_STATUSES } from "@/lib/storage/job-stuck";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { FormattingViolation } from "@/types/formatting-rules";
 

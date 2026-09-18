@@ -2,7 +2,7 @@
  * Управление доступом пользователя (проверка оплаты, списание использований)
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { LAVA_CONFIG, BOT_TRIAL_DAYS, TOOL_USES_PER_MONTH } from "./config";
 
 /**

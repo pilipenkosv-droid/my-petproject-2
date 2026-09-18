@@ -9,7 +9,8 @@ export async function GET() {
   const { count, error } = await admin
     .from("jobs")
     .select("id", { count: "exact", head: true })
-    .eq("status", "completed");
+    .eq("status", "completed")
+    .is("shadow_of", null); // теневые копии не показываем как обработанные документы
 
   if (error) {
     return NextResponse.json({ documentsProcessed: 1200 });

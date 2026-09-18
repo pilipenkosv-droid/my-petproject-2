@@ -36,12 +36,15 @@ export async function GET(request: NextRequest) {
 
   // Параллельные запросы
   const [jobsRes, paymentsRes, accessRes, feedbackRes, downloadsRes] = await Promise.all([
-    admin.from("jobs").select("id,user_id,status,work_type,requirements_mode,has_full_version,yandex_client_id,referrer,created_at").gte("created_at", cutoff).order("created_at", { ascending: false }),
+    admin.from("jobs").select("id,user_id,status,work_type,requirements_mode,has_full_version,yandex_client_id,referrer,created_at").is("shadow_of", null).gte("created_at", cutoff).order("created_at", { ascending: false }),
     admin.from("payments").select("*").order("created_at", { ascending: false }),
     admin.from("user_access").select("*"),
     admin.from("feedback").select("*").order("created_at", { ascending: false }),
     admin.from("download_events").select("*").gte("created_at", cutoff).order("created_at", { ascending: false }),
   ]);
+
+  // Нет колонки shadow_of (миграция 024 не применена) — аналитика молча опустеет.
+  if (jobsRes.error) console.error("[admin/analytics] jobs query failed:", jobsRes.error);
 
   const jobs = jobsRes.data ?? [];
   const payments = paymentsRes.data ?? [];

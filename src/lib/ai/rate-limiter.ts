@@ -5,7 +5,7 @@
  * Состояние хранится в Supabase PostgreSQL для устойчивости на Vercel serverless.
  */
 
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 interface ModelUsage {
   minuteRequests: number;
