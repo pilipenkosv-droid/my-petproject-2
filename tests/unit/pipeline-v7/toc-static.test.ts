@@ -28,7 +28,11 @@ const SECT_PR =
   `<w:pgMar w:top="1134" w:right="567" w:bottom="1134" w:left="1701"/></w:sectPr>`;
 
 const heading = (level: number, text: string) =>
-  p(text, `<w:pStyle w:val="DpxHeading${level}"/>`);
+  p(text, `<w:pStyle w:val="DpxHeading${level}"/><w:outlineLvl w:val="${level - 1}"/>`);
+
+/** Абзац body, которому рестайлер сохранил чужой outlineLvl (keepOutlineLvl). */
+const outlineBody = (level: number, text: string) =>
+  p(text, `<w:pStyle w:val="DpxBody"/><w:outlineLvl w:val="${level - 1}"/>`);
 
 function fixture(): Promise<Buffer> {
   return buildMiniDocx({
@@ -83,7 +87,7 @@ describe("fillTocStatic", () => {
     // Закладка открыта в первом абзаце и закрыта в последнем.
     expect(entries[0]).not.toContain("<w:bookmarkEnd");
     expect(entries[2]).toContain('<w:bookmarkEnd w:id="2"/>');
-    // Стилей TOC1..3 в фикстуре нет — откат на DpxBody.
+    // TOC1..3 рестайлер v7 не объявляет — строки всегда DpxBody.
     expect(xml).not.toContain('w:pStyle w:val="TOC');
   });
 
@@ -105,6 +109,99 @@ describe("fillTocStatic", () => {
     expect(result.filled).toBe(1);
     const xml = await documentXml(result.output);
     expect(xml.match(/<w:t>—<\/w:t>/g)).toHaveLength(2);
+  });
+
+
+  it("не разворачивает шаблоны подстановки и экранирует спецсимволы", async () => {
+    const docx = await buildMiniDocx({
+      body:
+        p("СОДЕРЖАНИЕ", '<w:pStyle w:val="DpxTocTitle"/>') +
+        FIELD_P +
+        heading(1, "Доход $&amp; прибыль") +
+        heading(1, "Рост &lt; 5% &amp; риски") +
+        SECT_PR,
+    });
+    const result = await fillTocStatic(docx, {
+      hasTools: () => true,
+      renderPages: () => ["титул", "СОДЕРЖАНИЕ", "Доход $& прибыль\nРост < 5% & риски"],
+    });
+
+    expect(result.filled).toBe(2);
+    const xml = await documentXml(result.output);
+    expect(xml).toContain("Доход $&amp; прибыль");
+    expect(xml).toContain("Рост &lt; 5% &amp; риски");
+    // Документ остался цельным: одно w:document, ровно одно поле.
+    expect(xml.match(/<w:fldChar w:fldCharType="begin"/g)).toHaveLength(1);
+    expect(xml.match(/<w:body>/g)).toHaveLength(1);
+  });
+
+  it("двухстраничное содержание не крадёт номера страниц", async () => {
+    const docx = await fixture();
+    const pages = [
+      "титул",
+      "СОДЕРЖАНИЕ\nВВЕДЕНИЕ..................... 4\n1 ОБЗОР..................... 5",
+      "1.1 Постановка задачи..................... 5",
+      "ВВЕДЕНИЕ текст",
+      "1 ОБЗОР текст\n1.1 Постановка задачи",
+    ];
+    const result = await fillTocStatic(docx, { hasTools: () => true, renderPages: () => pages });
+
+    const xml = await documentXml(result.output);
+    expect(result.filled).toBe(3);
+    // Страница 2 и 3 — само содержание, заголовки только с четвёртой.
+    expect(xml).toContain("<w:t>4</w:t>");
+    expect(xml.match(/<w:t>5<\/w:t>/g)).toHaveLength(2);
+    expect(xml).not.toContain("<w:t>2</w:t>");
+    expect(xml).not.toContain("<w:t>3</w:t>");
+  });
+
+  it("повторяющиеся заголовки получают разные страницы", async () => {
+    const docx = await buildMiniDocx({
+      body:
+        p("СОДЕРЖАНИЕ", '<w:pStyle w:val="DpxTocTitle"/>') +
+        FIELD_P +
+        heading(1, "ПРИЛОЖЕНИЕ Б") +
+        heading(1, "ПРИЛОЖЕНИЕ Б") +
+        heading(1, "ПРИЛОЖЕНИЕ Б") +
+        SECT_PR,
+    });
+    const result = await fillTocStatic(docx, {
+      hasTools: () => true,
+      renderPages: () => [
+        "титул",
+        "СОДЕРЖАНИЕ",
+        "ПРИЛОЖЕНИЕ Б первое",
+        "ПРИЛОЖЕНИЕ Б второе",
+        "ПРИЛОЖЕНИЕ Б третье",
+      ],
+    });
+
+    expect(result.filled).toBe(3);
+    const xml = await documentXml(result.output);
+    expect(xml).toContain("<w:t>3</w:t>");
+    expect(xml).toContain("<w:t>4</w:t>");
+    expect(xml).toContain("<w:t>5</w:t>");
+  });
+
+  it("берёт абзацы по outlineLvl, а не только по DpxHeading", async () => {
+    const docx = await buildMiniDocx({
+      body:
+        p("СОДЕРЖАНИЕ", '<w:pStyle w:val="DpxTocTitle"/>') +
+        FIELD_P +
+        heading(1, "ВВЕДЕНИЕ") +
+        outlineBody(2, "Сохранённый уровень") +
+        p("Обычный текст", '<w:pStyle w:val="DpxBody"/>') +
+        SECT_PR,
+    });
+    const result = await fillTocStatic(docx, {
+      hasTools: () => true,
+      renderPages: () => ["титул", "СОДЕРЖАНИЕ", "ВВЕДЕНИЕ Сохранённый уровень Обычный текст"],
+    });
+
+    expect(result.filled).toBe(2);
+    const xml = await documentXml(result.output);
+    expect(xml).toContain("Сохранённый уровень");
+    expect(xml).not.toMatch(/<w:t xml:space="preserve">Обычный текст<\/w:t><\/w:r><w:r>[\s\S]*?<w:tab\/>/);
   });
 
   it("без поля TOC документ не трогается", async () => {

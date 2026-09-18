@@ -7,6 +7,11 @@
  *
  * Шаг идёт ПОСЛЕ сохранения и гейта верности: орчестратор и фингерпринт о нём
  * не знают. На Vercel soffice нет — единственная ветка там `no-soffice`.
+ *
+ * `w:dirty` на поле и `w:updateFields` в settings.xml остаются нетронутыми, и
+ * это осознанно: Word при открытии пересчитает поле и соберёт то же самое
+ * содержание, а кэш нужен всем остальным — превью, конвертации в PDF и
+ * редакторам, которые поля не обновляют.
  */
 
 import { execSync } from "child_process";
@@ -17,11 +22,10 @@ import JSZip from "jszip";
 import {
   buildTocParagraphs,
   collectHeadings,
-  findHeadingPage,
   findTocField,
+  resolvePages,
   textWidthTwips,
   type TocEntry,
-  type TocLevel,
 } from "./toc-static-xml";
 
 const RENDER_TIMEOUT_MS = 120_000;
@@ -86,11 +90,6 @@ export function renderPages(docx: Buffer): string[] {
   }
 }
 
-/** TOC1..3 берём, только если такие стили реально объявлены в styles.xml. */
-function styleResolver(stylesXml: string): (level: TocLevel) => string {
-  return (level) => (stylesXml.includes(`w:styleId="TOC${level}"`) ? `TOC${level}` : "DpxBody");
-}
-
 async function fill(docx: Buffer, deps: TocStaticDeps): Promise<TocStaticResult> {
   const zip = await JSZip.loadAsync(docx);
   const docFile = zip.file("word/document.xml");
@@ -105,19 +104,18 @@ async function fill(docx: Buffer, deps: TocStaticDeps): Promise<TocStaticResult>
   const pages = deps.renderPages(docx);
   if (pages.length === 0) return { output: docx, filled: 0, skipped: "no-render" };
 
+  const resolved = resolvePages(headings, pages);
   let filled = 0;
-  const entries: TocEntry[] = headings.map((h) => {
-    const page = findHeadingPage(h.text, pages);
+  const entries: TocEntry[] = headings.map((h, i) => {
+    const page = resolved[i] ?? null;
     if (page !== null) filled += 1;
     return { ...h, page: page === null ? "—" : String(page) };
   });
 
-  const stylesXml = (await zip.file("word/styles.xml")?.async("string")) ?? "";
-  const replacement = buildTocParagraphs(entries, field.parts, {
-    tabPos: textWidthTwips(xml),
-    styleFor: styleResolver(stylesXml),
-  });
-  zip.file("word/document.xml", xml.replace(field.parts.paragraph, replacement));
+  const replacement = buildTocParagraphs(entries, field.parts, { tabPos: textWidthTwips(xml) });
+  // Замена функцией, а не строкой: шаблоны подстановки вида $& в тексте
+  // заголовка иначе развернулись бы прямо в document.xml.
+  zip.file("word/document.xml", xml.replace(field.parts.paragraph, () => replacement));
   const output = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
   return { output, filled };
 }
