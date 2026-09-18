@@ -20,13 +20,19 @@
 | `extract-rules` | `upload`, `guidelines_text` пуст | разбор методички, задача уходит в `awaiting_confirmation` | 8 минут |
 | `confirm-rules` | `upload`, текст методички есть | легаси-цепочка по подтверждённым правилам | 10 минут |
 
-Оба дедлайна ниже хард-таймаута супервизора (15 минут). Второй раз задачу в
-очередь ставит `/api/confirm-rules` после подтверждения правил — `markJobQueued`
+Дедлайн этапа — только верхняя граница: эффективный потолок LLM-разметки блоков
+задаёт `MARKUP_BUDGET_MS`, а длительность одной попытки вызова модели —
+`AI_CALL_TIMEOUT_MS`. Оба дедлайна ниже хард-таймаута супервизора (15 минут).
+
+Второй раз задачу в очередь ставит `/api/confirm-rules` после подтверждения правил — `markJobQueued`
 сбрасывает `worker_id`, `worker_claimed_at`, `worker_heartbeat_at` и `attempts`,
 иначе `claim_next_job` такую строку не увидит.
 
 `statistics.worker` пишется на каждом этапе; на `extract-rules` он дописывается
-к статистике разбора, поля `rules*` не затираются.
+к статистике разбора, поля `rules*` не затираются. По завершении `extract-rules`
+воркер снимает `worker_id`, `worker_claimed_at` и `worker_heartbeat_at`: задача
+уходит ждать пользователя, и застывший heartbeat заставил бы сборщик зависших
+пометить её `failed`.
 
 ## Сборка
 
@@ -54,6 +60,7 @@ WORKER_ID=mac-dev node --env-file=.env.local ops/worker/dist/main.mjs --once --v
 | `SUPABASE_SERVICE_ROLE_KEY` | доступ к очереди и хранилищу (RPC открыты только service_role) |
 | `AI_GATEWAY_API_KEY` | разбор методички и AI-разметка блоков идут через шлюз |
 | `MARKUP_BUDGET_MS` | бюджет LLM-разметки блоков; на сервере `300000` вместо дефолтных 25 с |
+| `AI_CALL_TIMEOUT_MS` | таймаут одной попытки вызова модели; на сервере `240000` вместо дефолтных 50 с |
 | `WORKER_ID` | идентификатор в таблице `workers` (по умолчанию hostname) |
 | `NODE_ENV` | `production` на сервере |
 
