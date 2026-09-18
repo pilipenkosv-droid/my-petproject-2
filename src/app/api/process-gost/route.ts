@@ -11,7 +11,7 @@ import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/ref
 import { type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 import { processGostJob } from "@/lib/processing/gost-job";
 import { getProcessingMode, shouldQueueForWorker } from "@/lib/processing/mode";
-import { createShadowJob } from "@/lib/processing/enqueue";
+import { createShadowJob, markJobQueued } from "@/lib/processing/enqueue";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -117,11 +117,7 @@ export async function POST(request: NextRequest) {
     // Списание уже произошло выше — иначе пользователь без остатка ставил бы
     // в очередь сколько угодно документов.
     if (await shouldQueueForWorker(jobId)) {
-      await updateJob(jobId, {
-        status: "pending",
-        progress: 15,
-        statusMessage: "В очереди на обработку",
-      });
+      await markJobQueued(jobId);
 
       const queued = NextResponse.json(
         { jobId, status: "pending" },

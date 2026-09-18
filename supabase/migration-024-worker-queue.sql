@@ -9,6 +9,10 @@
 --   видно, жив ли процесс, который взял задачу.
 -- attempts — счётчик попыток; временная ошибка возвращает задачу в очередь,
 --   но не бесконечно.
+-- queued_at — момент, когда задача реально готова к захвату: файл лежит в Storage,
+--   списание проведено. createJob вставляет строку в статусе pending ещё до
+--   сохранения файла, поэтому без этого признака воркер мог бы утащить задачу,
+--   у которой ещё нет source_document_id.
 -- shadow_of — id «настоящей» задачи, копией которой является эта. Теневые задачи
 --   считает воркер ради сравнения, пользователю они не видны и не списывают
 --   использований; отчёты фильтруют их по shadow_of IS NULL.
@@ -17,12 +21,13 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS worker_claimed_at TIMESTAMPTZ;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS worker_heartbeat_at TIMESTAMPTZ;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS attempts INT NOT NULL DEFAULT 0;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS shadow_of TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS queued_at TIMESTAMPTZ;
 
 -- Воркер опрашивает очередь каждые 3 секунды. Частичный индекс держит выборку
 -- «самая старая свободная задача» на десятке строк вместо всей таблицы jobs.
 CREATE INDEX IF NOT EXISTS jobs_pending_queue_idx
   ON jobs (created_at)
-  WHERE status = 'pending' AND worker_id IS NULL;
+  WHERE status = 'pending' AND worker_id IS NULL AND queued_at IS NOT NULL;
 
 -- Простаивающий воркер не имеет задачи, в которую писать heartbeat, поэтому
 -- «жив ли сервер» определяется отдельной таблицей: супервизор пингует её всегда.
@@ -53,7 +58,7 @@ BEGIN
       attempts = attempts + 1
   WHERE id = (
     SELECT id FROM jobs
-    WHERE status = 'pending' AND worker_id IS NULL
+    WHERE status = 'pending' AND worker_id IS NULL AND queued_at IS NOT NULL
     ORDER BY created_at
     FOR UPDATE SKIP LOCKED
     LIMIT 1
@@ -85,7 +90,8 @@ END;
 $$;
 
 -- Возврат задачи в очередь: остановка воркера или временная ошибка.
--- Завершённую или проваленную задачу не воскрешаем.
+-- Завершённую или проваленную задачу не воскрешаем. queued_at не трогаем:
+-- задача уже была готова к захвату, и возврат не отменяет этого.
 CREATE OR REPLACE FUNCTION public.release_job(p_job_id TEXT, p_worker_id TEXT)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
