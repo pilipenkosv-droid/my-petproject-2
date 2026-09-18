@@ -252,7 +252,13 @@ export async function updateJobProgress(
 }
 
 /**
- * Пометить задачу как завершённую
+ * Пометить задачу как завершённую.
+ *
+ * UPDATE не трогает задачу, уже ушедшую в терминальный статус: сборщик зависших
+ * мог посчитать её потерянной и вернуть списание, пока осиротевший процесс ещё
+ * дорабатывал документ. Перезаписать failed на completed в этом случае — значит
+ * отдать пользователю результат, за который списание уже возвращено.
+ * Строка не обновилась → null, и вызывающий решает, что делать.
  */
 export async function completeJob(
   id: string,
@@ -265,12 +271,29 @@ export async function completeJob(
     hasFullVersion?: boolean;
   }
 ): Promise<JobState | null> {
-  return updateJob(id, {
+  const supabase = getSupabaseAdmin();
+  const row = jobToRow({
     status: "completed",
     progress: 100,
     statusMessage: "Обработка завершена",
     ...result,
   });
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .update(row)
+    .eq("id", id)
+    .neq("status", "failed")
+    .neq("status", "completed")
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("[job-store] completeJob did not update job:", id, error);
+    return null;
+  }
+
+  return rowToJob(data as Record<string, unknown>);
 }
 
 /**

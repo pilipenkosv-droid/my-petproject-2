@@ -12,7 +12,7 @@ import { getJob, updateJob, updateJobProgress, failJob } from "@/lib/storage/job
 import { getFile } from "@/lib/storage/file-storage";
 import { getUserAccess } from "@/lib/payment/access";
 import { refundUse } from "@/lib/payment/refund";
-import { processGostJob } from "@/lib/processing/gost-job";
+import { processGostJob, JobAlreadyTerminalError } from "@/lib/processing/gost-job";
 import type { AccessType } from "@/lib/pipeline-v6/adapter-legacy";
 import { EXIT_OK, EXIT_PERMANENT, EXIT_TRANSIENT, isTransientError } from "./errors";
 
@@ -123,6 +123,12 @@ async function main(): Promise<void> {
     process.exit(EXIT_OK);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Неизвестная ошибка";
+    // Задачу успел забрать сборщик зависших: статус failed уже стоит, списание
+    // уже возвращено. Трогать статус и возврат второй раз нельзя.
+    if (error instanceof JobAlreadyTerminalError) {
+      log("orphaned", { jobId, error: message });
+      process.exit(EXIT_PERMANENT);
+    }
     if (isTransientError(error)) {
       log("transient", { jobId, error: message });
       process.exit(EXIT_TRANSIENT);

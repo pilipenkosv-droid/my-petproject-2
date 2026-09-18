@@ -13,6 +13,17 @@ import { adaptPipelineV6ToLegacy, type AccessType, type LegacyAdapterResult } fr
 import { shouldUsePipelineV7 } from "@/lib/pipeline-v7/feature-flag";
 import { tryPipelineV7 } from "@/lib/pipeline-v7/try-v7";
 
+/**
+ * Результат не записан: задача уже failed (сборщик зависших успел раньше) или
+ * completed. Терминальная ошибка, но списание уже вернул тот, кто её пометил.
+ */
+export class JobAlreadyTerminalError extends Error {
+  constructor(jobId: string) {
+    super(`Задача ${jobId} уже в терминальном статусе — результат не записан`);
+    this.name = "JobAlreadyTerminalError";
+  }
+}
+
 export type ProgressReporter = (
   status: JobStatus,
   progress: number,
@@ -110,7 +121,7 @@ export async function processGostJob(
     violationsDetected: adapted.violations.length,
   };
 
-  await completeJob(jobId, {
+  const finished = await completeJob(jobId, {
     markedOriginalId: `${jobId}_original`,
     formattedDocumentId: `${jobId}_formatted`,
     violations: adapted.violations,
@@ -118,6 +129,7 @@ export async function processGostJob(
     rules: DEFAULT_GOST_RULES,
     ...(hasFullVersion && { hasFullVersion: true }),
   });
+  if (!finished) throw new JobAlreadyTerminalError(jobId);
 
   return { statistics, violationsCount: adapted.violations.length };
 }
