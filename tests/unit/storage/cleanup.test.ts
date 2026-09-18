@@ -18,6 +18,8 @@ vi.mock("@/lib/storage/file-storage", async (importOriginal) => {
 // runCleanup дёргает ещё три источника — в этом файле они не интересны.
 vi.mock("@/lib/storage/job-store", () => ({
   cleanupOldJobs: vi.fn().mockResolvedValue(0),
+}));
+vi.mock("@/lib/storage/job-stuck", () => ({
   resetStuckJobs: vi.fn().mockResolvedValue(0),
 }));
 vi.mock("@/lib/storage/retention", () => ({

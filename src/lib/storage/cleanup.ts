@@ -6,7 +6,8 @@
  *      tier (1GB) кончается за пару месяцев, как 2026-05-06 и случилось.
  */
 
-import { cleanupOldJobs, resetStuckJobs } from "./job-store";
+import { cleanupOldJobs } from "./job-store";
+import { resetStuckJobs } from "./job-stuck";
 import { cleanupOldFiles } from "./file-storage";
 import { cleanupRetentionTables } from "./retention";
 
