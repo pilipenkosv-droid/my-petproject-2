@@ -23,13 +23,19 @@ const H1 = (t: string) => p(t, `<w:pStyle w:val="Heading1"/>`);
 const filler = (n = 12) =>
   Array.from({ length: n }, (_, i) => p(`Обычное предложение номер ${i + 1} в основном тексте.`)).join("");
 
-/** Title page (2 paragraphs) → heading → body. No TOC, no section break. */
+/**
+ * Title page (3 paragraphs) → three headings → 25 body paragraphs: the sizes
+ * the aux guards ask for before they will insert anything.
+ */
 const BODY =
   p("Министерство образования") +
   p("Курсовая работа") +
+  p("Москва 2026") +
   H1("ВВЕДЕНИЕ") +
   p("Некоторый  текст работы с двойным пробелом.") +
-  filler() +
+  filler(22) +
+  H1("ОСНОВНАЯ ЧАСТЬ") +
+  p("Разбор темы.") +
   H1("ЗАКЛЮЧЕНИЕ") +
   p("Итоги.") +
   SECT;
@@ -69,7 +75,11 @@ describe("aux — locating the title page (D-1)", () => {
       p("", '<w:pageBreakBefore/>') +
       H1("ВВЕДЕНИЕ") +
       p("Текст.") +
-      filler() +
+      filler(22) +
+      H1("ОСНОВНАЯ ЧАСТЬ") +
+      p("Разбор.") +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
       SECT;
     const r = await run(await docx(body));
     expect(r.report.aux.tocSkipped).toBeUndefined();
@@ -84,7 +94,15 @@ describe("aux — locating the title page (D-1)", () => {
   });
 
   it("inserts nothing when no title region can be found", async () => {
-    const body = H1("ВВЕДЕНИЕ") + p("Текст.") + filler() + SECT;
+    const body =
+      H1("ВВЕДЕНИЕ") +
+      p("Текст.") +
+      filler(22) +
+      H1("ОСНОВНАЯ ЧАСТЬ") +
+      p("Разбор.") +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
+      SECT;
     const r = await run(await docx(body));
     expect(r.report.aux.tocSkipped).toBe("no-title-page");
     expect(r.report.aux.tocInserted).toBe(false);
@@ -92,18 +110,23 @@ describe("aux — locating the title page (D-1)", () => {
     expect(await documentXml(r.output!)).not.toContain("СОДЕРЖАНИЕ");
   });
 
-  it("inserts a TOC under a bare СОДЕРЖАНИЕ heading with nothing beneath it (D-6)", async () => {
+  it("adds no TOC above a bare СОДЕРЖАНИЕ heading the student typed (D-6)", async () => {
     const body =
       p("Титульный лист") +
       p("Курсовая работа") +
+      p("Москва 2026") +
       H1("СОДЕРЖАНИЕ") +
       H1("ВВЕДЕНИЕ") +
       p("Текст.") +
-      filler() +
+      filler(22) +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
       SECT;
     const r = await run(await docx(body));
-    expect(r.report.aux.tocInserted).toBe(true);
+    expect(r.report.aux.tocInserted).toBe(false);
+    expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
     expect(r.report.gate.pass).toBe(true);
+    expect((await documentXml(r.output!)).match(/СОДЕРЖАНИЕ/g)).toHaveLength(1);
   });
 });
 
@@ -124,9 +147,10 @@ describe("aux — the page break the section break makes redundant (C-4)", () =>
     const body =
       p("Министерство образования") +
       p("Курсовая работа") +
+      p("Москва 2026") +
       p("ПРОЛОГ", '<w:pageBreakBefore/>') +
       p("Текст.") +
-      filler() +
+      filler(22) +
       SECT;
     const r = await run(await docx(body));
     const xml = await documentXml(r.output!);

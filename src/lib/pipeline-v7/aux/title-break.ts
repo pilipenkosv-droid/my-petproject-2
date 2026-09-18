@@ -15,6 +15,12 @@ import { enumerateSectPr, ensureSectPrChild } from "../docx/sectpr";
 import { W_PPR_ORDER, removeChildren, setChildInOrder } from "../restyle/ooxml-order";
 import type { DocxPackage } from "../docx/package";
 import { mainPart, titleRegionEnd, type MainPart } from "./common";
+import {
+  MIN_TITLE_PARAGRAPHS,
+  headingAfter,
+  titleRegionSize,
+  type TitleBreakSkip,
+} from "./guards";
 
 /** How far past the title page the checker still accepts a section break. */
 const LOOKAHEAD = 5;
@@ -60,8 +66,8 @@ function governingSectPr(part: MainPart, at: number): OrderedXmlNode | undefined
 
 export interface TitleBreakResult {
   inserted: boolean;
-  /** No title page, or a section break was already there. */
-  skipped: "no-title" | "already" | "no-section" | null;
+  /** Why nothing was inserted, when nothing was. */
+  skipped: TitleBreakSkip | null;
   /** A w:pageBreakBefore the restyler had added was taken back off. */
   redundantBreakRemoved: boolean;
 }
@@ -83,7 +89,8 @@ function dropRedundantBreak(part: MainPart, at: number, added: Set<OrderedXmlNod
 export async function insertTitleBreak(
   pkg: DocxPackage,
   roles: Map<OrderedXmlNode, string>,
-  addedPageBreak: Set<OrderedXmlNode> = new Set()
+  addedPageBreak: Set<OrderedXmlNode> = new Set(),
+  tocGuardBlocked = false
 ): Promise<TitleBreakResult> {
   const miss = (skipped: TitleBreakResult["skipped"]): TitleBreakResult => ({
     inserted: false,
@@ -96,6 +103,13 @@ export async function insertTitleBreak(
   if (typeof end !== "number") return miss("no-title");
   const at = end;
   if (alreadyBroken(part, at)) return miss("already");
+  // A one-line "title page" is a stray line: breaking after it pushes the
+  // student's own first page apart for nothing. The same goes for a document
+  // the TOC guard already called a fragment, and for one with no heading left
+  // to separate from the title.
+  if (tocGuardBlocked) return miss("toc-guard");
+  if (titleRegionSize(part, at) < MIN_TITLE_PARAGRAPHS) return miss("title-too-short");
+  if (!headingAfter(part, roles, at)) return miss("no-heading-after");
 
   const governing = governingSectPr(part, at);
   if (!governing) return miss("no-section");

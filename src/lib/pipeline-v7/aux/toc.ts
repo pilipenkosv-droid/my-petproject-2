@@ -26,6 +26,7 @@ import type { DocxPackage } from "../docx/package";
 import { STYLE_IDS, type PackSpec } from "../restyle/spec";
 import { W_SETTINGS_ORDER, setChildInOrder } from "../restyle/ooxml-order";
 import { dirOf, mainPart, markAux, nextBookmarkId, titleRegionEnd } from "./common";
+import type { TocSkip } from "./guards";
 
 const TOC_INSTR = ' TOC \\o "1-3" \\h \\z \\u ';
 const TOC_STYLE = /^(TOC|toc|Оглавление|Содержание)\s?\d$/;
@@ -36,8 +37,8 @@ export interface TocResult {
   /** An existing TOC was found and left in place. */
   existing: boolean;
   updateFields: boolean;
-  /** Nothing was inserted because the title region could not be located. */
-  skipped?: "no-title-page";
+  /** Nothing was inserted, and which of the five reasons it was. */
+  skipped?: TocSkip;
 }
 
 function isTocHeading(block: BlockPrint | undefined): boolean {
@@ -136,16 +137,20 @@ export async function insertToc(
   pkg: DocxPackage,
   spec: PackSpec,
   roles: Map<OrderedXmlNode, string>,
-  existing?: boolean
+  existing?: boolean,
+  contentSkip: TocSkip | null = null
 ): Promise<TocResult> {
   const part = await mainPart(pkg);
   if (!part) return { inserted: false, existing: false, updateFields: false };
-  // Only the document decides this. The classifier's `toc` role fires on a bare
-  // "СОДЕРЖАНИЕ" heading too, and a heading with nothing under it is a promise
-  // of a table of contents, not one.
+  // A real TOC — a field, TOC-styled paragraphs, a pandoc table — is read off
+  // the OOXML and left alone.
   if (existing ?? hasExistingToc(part.nodes)) {
-    return { inserted: false, existing: true, updateFields: false };
+    return { inserted: false, existing: true, updateFields: false, skipped: "existing-toc" };
   }
+  // A bare «СОДЕРЖАНИЕ» heading with nothing under it is not a table of
+  // contents, but it is the student's own: a second one printed above it is
+  // what the 1★ feedback was about. Same for a document with nothing to list.
+  if (contentSkip) return { inserted: false, existing: false, updateFields: false, skipped: contentSkip };
 
   const end = titleRegionEnd(part, roles);
   if (typeof end !== "number") return { inserted: false, existing: false, updateFields: false, skipped: end };
