@@ -927,6 +927,15 @@ export interface DocumentStatistics {
   markupDegradedChunks?: number;
   /** Какой пайплайн сформировал документ. Ставится всегда, начиная с эксперимента v7. */
   pipelineVersion?: "v6" | "v7";
+  /** Телеметрия внешнего воркера — заполняется, только если задачу считал он (ADR-016) */
+  worker?: {
+    workerId: string;
+    queueWaitMs: number;
+    processMs: number;
+    attempts: number;
+    hostname: string;
+    gitSha: string;
+  };
   /** Телеметрия v7 — заполняется только когда pipelineVersion === "v7" */
   v7?: {
     gatePass: boolean;

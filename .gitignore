@@ -78,3 +78,6 @@ supabase/.temp/
 # python
 __pycache__/
 *.pyc
+
+# Сборка воркера (ADR-016) — артефакт, не исходник
+ops/worker/dist/
