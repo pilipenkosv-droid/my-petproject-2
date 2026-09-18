@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   // Параллельные запросы
   const [jobsRes, paymentsRes, accessRes, feedbackRes, downloadsRes] = await Promise.all([
-    admin.from("jobs").select("id,user_id,status,work_type,requirements_mode,has_full_version,yandex_client_id,referrer,created_at").gte("created_at", cutoff).order("created_at", { ascending: false }),
+    admin.from("jobs").select("id,user_id,status,work_type,requirements_mode,has_full_version,yandex_client_id,referrer,created_at").is("shadow_of", null).gte("created_at", cutoff).order("created_at", { ascending: false }),
     admin.from("payments").select("*").order("created_at", { ascending: false }),
     admin.from("user_access").select("*"),
     admin.from("feedback").select("*").order("created_at", { ascending: false }),
