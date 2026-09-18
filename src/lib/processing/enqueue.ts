@@ -20,17 +20,25 @@ export interface ShadowJobInput {
  * Storage, списание проведено». Без него claim_next_job задачу не видит, иначе
  * воркер утащил бы строку, созданную createJob до сохранения файла.
  *
+ * Колонки захвата сбрасываются: одна задача ставится в очередь дважды (разбор
+ * методички, потом форматирование), а claim_next_job берёт только строки с
+ * worker_id IS NULL — иначе второй этап навсегда остался бы в очереди.
+ *
  * Статус и прогресс ставятся тем же UPDATE — одна запись вместо двух.
  */
-export async function markJobQueued(jobId: string): Promise<boolean> {
+export async function markJobQueued(jobId: string, message: string): Promise<boolean> {
   const { error } = await getSupabaseAdmin()
     .from("jobs")
     .update({
       status: "pending",
       progress: 15,
-      status_message: "В очереди на обработку",
+      status_message: message,
       queued_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      worker_id: null,
+      worker_claimed_at: null,
+      worker_heartbeat_at: null,
+      attempts: 0,
     })
     .eq("id", jobId);
 

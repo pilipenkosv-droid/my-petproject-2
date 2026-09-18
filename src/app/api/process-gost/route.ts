@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     // Списание уже произошло выше — иначе пользователь без остатка ставил бы
     // в очередь сколько угодно документов.
     if (await shouldQueueForWorker(jobId)) {
-      await markJobQueued(jobId);
+      await markJobQueued(jobId, "В очереди на обработку");
 
       const queued = NextResponse.json(
         { jobId, status: "pending" },
