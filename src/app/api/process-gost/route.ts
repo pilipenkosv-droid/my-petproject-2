@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
-import { saveFile, saveResultFile, saveFullVersionFile } from "@/lib/storage/file-storage";
-import { createJob, updateJobProgress, updateJob, completeJob, failJob } from "@/lib/storage/job-store";
+import { saveFile } from "@/lib/storage/file-storage";
+import { createJob, updateJobProgress, updateJob, failJob } from "@/lib/storage/job-store";
 import { isValidSourceDocument, getMimeTypeByExtension } from "@/lib/pipeline/text-extractor";
 import { DEFAULT_GOST_RULES } from "@/types/formatting-rules";
 import { checkProcessingAccess } from "@/lib/auth/api-auth";
 import { markTrialUsed } from "@/lib/auth/trial";
 import { getUserAccess, consumeUse } from "@/lib/payment/access";
 import { markUseConsumed, refundUse, compensateConsume } from "@/lib/payment/refund";
-import { runPipelineV6 } from "@/lib/pipeline-v6/orchestrator";
-import { adaptPipelineV6ToLegacy, type AccessType, type LegacyAdapterResult } from "@/lib/pipeline-v6/adapter-legacy";
-import { shouldUsePipelineV7 } from "@/lib/pipeline-v7/feature-flag";
-import { tryPipelineV7 } from "@/lib/pipeline-v7/try-v7";
+import { type AccessType } from "@/lib/pipeline-v6/adapter-legacy";
+import { processGostJob } from "@/lib/processing/gost-job";
 
 export const maxDuration = 60; // Vercel Hobby cap = 60s (было 300 на Pro)
 
@@ -113,80 +111,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await updateJobProgress(jobId, "analyzing", 20, "AI-разметка блоков документа");
-
-    // v6 не эмитит stage-события — шлём опорные тики, чтобы фронт последовательно
-    // зажигал analyzing → formatting так же, как у старого pipeline.
-    const tick50 = setTimeout(() => {
-      updateJobProgress(jobId, "analyzing", 50, "Проверка документа на соответствие ГОСТ").catch(() => {});
-    }, 1500);
-    const tick70 = setTimeout(() => {
-      updateJobProgress(jobId, "formatting", 70, "Применение форматирования по ГОСТ").catch(() => {});
-    }, 4000);
-
-    let adapted: LegacyAdapterResult | undefined;
-    let v7Fallback: string | undefined;
-    try {
-      if (shouldUsePipelineV7(jobId)) {
-        const attempt = await tryPipelineV7(sourceBuffer, jobId, userAccessType);
-        if ("adapted" in attempt) {
-          adapted = attempt.adapted;
-        } else {
-          v7Fallback = attempt.fallback;
-          console.warn("[v7] fallback", v7Fallback);
-        }
-      }
-      if (!adapted) {
-        const pipelineResult = await runPipelineV6(sourceBuffer, {
-          documentId: jobId,
-          templateSlug: "gost-7.32",
-          rewrite: false,
-          fixIterations: 1,
-        });
-        adapted = await adaptPipelineV6ToLegacy(sourceBuffer, pipelineResult, userAccessType);
-        adapted.statistics.pipelineVersion = "v6";
-        if (v7Fallback) adapted.statistics.v7Fallback = v7Fallback;
-      }
-    } finally {
-      clearTimeout(tick50);
-      clearTimeout(tick70);
-    }
-    if (!adapted) throw new Error("Не удалось обработать документ");
-
-    await updateJobProgress(jobId, "formatting", 90, "Сохранение результатов");
-
-    await saveResultFile(jobId, "original", adapted.markedOriginal);
-    await saveResultFile(jobId, "formatted", adapted.formattedDocument);
-
-    let hasFullVersion = false;
-    if (adapted.fullMarkedOriginal && adapted.fullFormattedDocument) {
-      await Promise.all([
-        saveFullVersionFile(jobId, "original", adapted.fullMarkedOriginal),
-        saveFullVersionFile(jobId, "formatted", adapted.fullFormattedDocument),
-      ]);
-      hasFullVersion = true;
-    }
-
-    const statistics = {
-      ...adapted.statistics,
-      fixesApplied: adapted.fixesApplied,
-      violationsDetected: adapted.violations.length,
-    };
-
-    await completeJob(jobId, {
-      markedOriginalId: `${jobId}_original`,
-      formattedDocumentId: `${jobId}_formatted`,
-      violations: adapted.violations,
-      statistics,
-      rules: DEFAULT_GOST_RULES,
-      ...(hasFullVersion && { hasFullVersion: true }),
-    });
+    const { statistics, violationsCount } = await processGostJob(
+      jobId,
+      sourceBuffer,
+      userAccessType
+    );
 
     const response = NextResponse.json({
       jobId,
       status: "completed",
       statistics,
-      violationsCount: adapted.violations.length,
+      violationsCount,
     });
 
     if (isAnonymous) {
