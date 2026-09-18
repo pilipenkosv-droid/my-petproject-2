@@ -94,7 +94,9 @@ describe("схема в запросе", () => {
 
     const root = lastBody().response_format.json_schema.schema;
     expect(root.additionalProperties).toBe(false);
-    expect(root.required.sort()).toEqual(["confidence", "missingRules", "rules", "warnings"]);
+    expect(root.required.sort()).toEqual([
+      "confidence", "missingRules", "provenance", "rules", "warnings",
+    ]);
     // Необязательная секция стала nullable, но осталась в required.
     const rules = root.properties.rules;
     expect(rules.required).toContain("additional");

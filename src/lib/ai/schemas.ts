@@ -150,6 +150,23 @@ export const formattingRulesSchema = z.object({
 export type ParsedFormattingRules = z.infer<typeof formattingRulesSchema>;
 
 /**
+ * Провенанс: какие фрагменты методички породили каждую секцию правил.
+ * Ключи фиксированы (не z.record) — strict-схема OpenAI требует
+ * additionalProperties:false, а свободный словарь под это не приводится.
+ * Заполняется только в режиме ретрива, когда в контексте есть метки [uN].
+ */
+export const provenanceSchema = z.object({
+  document: z.array(z.number().int().min(0)).optional(),
+  text: z.array(z.number().int().min(0)).optional(),
+  headings: z.array(z.number().int().min(0)).optional(),
+  lists: z.array(z.number().int().min(0)).optional(),
+  specialElements: z.array(z.number().int().min(0)).optional(),
+  additional: z.array(z.number().int().min(0)).optional(),
+}).optional();
+
+export type RulesProvenance = NonNullable<z.infer<typeof provenanceSchema>>;
+
+/**
  * Схема ответа для ЗАПРОСА к модели: полная, с обязательными полями.
  * Из неё генерируется JSON Schema (structured output + текст промпта).
  */
@@ -158,6 +175,10 @@ export const aiParsingRequestSchema = z.object({
   confidence: z.number().min(0).max(1).describe("Уверенность в корректности парсинга от 0 до 1"),
   warnings: z.array(z.string()).describe("Предупреждения о неопределённых или неоднозначных требованиях"),
   missingRules: z.array(z.string()).describe("Правила, которые не удалось определить из документа"),
+  provenance: provenanceSchema.describe(
+    "Номера фрагментов [uN] контекста, из которых взята каждая секция правил. " +
+    "Заполнять только если во входном тексте есть метки [uN]"
+  ),
 });
 
 /**
@@ -171,6 +192,7 @@ export const aiParsingResponseSchema = z.object({
   confidence: z.number().min(0).max(1).default(0.5),
   warnings: z.array(z.string()).default([]),
   missingRules: z.array(z.string()).default([]),
+  provenance: provenanceSchema,
 });
 
 export type AIParsingResponse = z.infer<typeof aiParsingResponseSchema>;

@@ -955,4 +955,21 @@ export interface DocumentStatistics {
   rulesDroppedChars?: number;
   /** В каком режиме шлюз принял запрос: json_schema или откат на json_object */
   rulesSchemaMode?: "json_schema" | "json_object" | "none";
+  /** Статистика отбора фрагментов методички; нет — методичка ушла целиком */
+  rulesRetrieval?: RulesRetrievalStatistics;
+  /** Секция правил → номера фрагментов [uN], из которых она взята */
+  rulesProvenance?: Partial<Record<string, number[]>>;
+}
+
+/** Метрики ретрива по методичке (src/lib/ai/guidelines/retrieval.ts). */
+export interface RulesRetrievalStatistics {
+  mode: "rerank" | "embeddings" | "keyword";
+  unitsTotal: number;
+  unitsSelected: number;
+  charsIn: number;
+  charsOut: number;
+  embedMs: number;
+  rerankMs: number;
+  costUsd: number;
+  fallbackReason?: string;
 }
