@@ -53,7 +53,7 @@ export function BotFaq() {
 
         <div className="text-center mt-6">
           <Link
-            href="/faq#bot"
+            href="/faq"
             className="text-primary hover:text-primary/80 text-sm transition-colors"
           >
             Все вопросы и ответы →

@@ -20,6 +20,12 @@ describe("LAVA_CONFIG — конфигурация офферов", () => {
     }
   });
 
+  it("Pro Plus скрыт из продажи, остальные офферы продаются", () => {
+    expect(LAVA_CONFIG.offers.subscriptionPlus.hidden).toBe(true);
+    expect("hidden" in LAVA_CONFIG.offers.oneTime).toBe(false);
+    expect("hidden" in LAVA_CONFIG.offers.subscription).toBe(false);
+  });
+
   it("freeTrialUses больше нуля", () => {
     expect(LAVA_CONFIG.freeTrialUses).toBeGreaterThan(0);
   });

@@ -6,10 +6,9 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Header } from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, GraduationCap, Gift, FileCheck, Bot } from "lucide-react";
+import { Check, Sparkles, Zap, GraduationCap, Gift, FileCheck } from "lucide-react";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
-import { BorderBeam } from "@/components/ui/border-beam";
 
 import { PricingFaq } from "@/components/PricingFaq";
 import { trackEvent } from "@/lib/analytics/events";
@@ -72,25 +71,8 @@ const plans = [
       { text: "Без ограничения по страницам" },
       { text: "Приоритетная обработка" },
     ] as PlanFeature[],
-    accent: false,
-    badge: "Выгоднее в 4 раза",
-  },
-  {
-    id: "subscription_plus" as const,
-    name: "Pro Plus",
-    price: "1 499 ₽",
-    period: "/ месяц",
-    icon: Bot,
-    description: "Pro + ИИ-бот для учёбы в Telegram",
-    features: [
-      { text: "ИИ-бот в Telegram — конспекты голосом, поиск по заметкам", highlight: true, icon: Bot },
-      { text: "Всё из тарифа Pro (10 обработок + 50 AI-операций)", highlight: true },
-      { text: "Спрашивай: /ask что я учил про..." },
-      { text: "Все инструменты прямо в чате" },
-      { text: "Приоритетная обработка" },
-    ] as PlanFeature[],
     accent: true,
-    badge: null,
+    badge: "Выгоднее в 4 раза",
   },
 ];
 
@@ -104,7 +86,6 @@ function PricingContent() {
   // Если есть параметр unlock — пользователь пришёл разблокировать полную версию документа
   const unlockJobId = searchParams.get("unlock");
   const refParam = searchParams.get("ref");
-  const fromBot = refParam === "bot";
 
   const proTracked = useRef(false);
 
@@ -115,12 +96,6 @@ function PricingContent() {
       router.replace(`/payment/success?invoiceId=${pendingInvoice}`);
     }
   }, [router]);
-
-  useEffect(() => {
-    if (fromBot && proCardRef.current) {
-      proCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [fromBot]);
 
   useEffect(() => {
     const el = proCardRef.current;
@@ -140,41 +115,7 @@ function PricingContent() {
     return () => observer.disconnect();
   }, [refParam]);
 
-  const handleTrialActivation = async () => {
-    if (!user) {
-      router.push("/login?redirect=/pricing");
-      return;
-    }
-
-    setLoading("trial_bot");
-    trackEvent("payment_init", { offer_type: "subscription_plus_trial" });
-
-    try {
-      const res = await fetch("/api/bot/trial", { method: "POST" });
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 409) {
-          alert("У тебя уже есть доступ к Diplox Bot");
-        } else {
-          alert(data.error || "Не удалось активировать trial");
-        }
-        return;
-      }
-
-      if (data.botDeepLink) {
-        window.open(data.botDeepLink, "_blank");
-      }
-      router.push("/profile");
-    } catch (error) {
-      console.error("Trial activation error:", error);
-      alert("Ошибка при активации trial");
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handlePurchase = async (offerType: "trial" | "one_time" | "subscription" | "subscription_plus") => {
+  const handlePurchase = async (offerType: "trial" | "one_time" | "subscription") => {
     if (offerType === "trial") {
       router.push(user ? "/create" : "/login?redirect=/create");
       return;
@@ -236,13 +177,6 @@ function PricingContent() {
       />
 
       <main className="mx-auto max-w-4xl px-6 py-12">
-        {/* Баннер бота — когда пришли с /bot */}
-        {fromBot && (
-          <div className="mb-8 p-4 bg-purple-500/10 border border-purple-500/30 text-sm text-on-surface-muted">
-            При оформлении Pro Plus ты автоматически получишь доступ к AI-напарнику и ссылку на бота.
-          </div>
-        )}
-
         {/* Баннер разблокировки полной версии */}
         {unlockJobId && (
           <div className="mb-8 p-6 bg-muted border border-border">
@@ -260,14 +194,14 @@ function PricingContent() {
           </div>
         )}
 
-        {/* Платные тарифы — 3 в ряд */}
-        <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {/* Платные тарифы */}
+        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {plans.filter((p) => p.id !== "trial").map((plan) => {
             const Icon = plan.icon;
             return (
               <Card
                 key={plan.id}
-                ref={plan.id === (fromBot ? "subscription_plus" : "subscription") ? proCardRef : undefined}
+                ref={plan.id === "subscription" ? proCardRef : undefined}
                 className={`relative flex flex-col transition-all ${
                   plan.accent
                     ? "bg-muted shadow-sm border-purple-500/50 ring-1 ring-purple-500/20"
@@ -299,13 +233,11 @@ function PricingContent() {
                     <span className="text-on-surface-subtle ml-1">{plan.period}</span>
                   </div>
 
-                  {/* Экономия — для Pro и Pro Plus */}
-                  {(plan.id === "subscription" || plan.id === "subscription_plus") && (
+                  {/* Экономия — для Pro */}
+                  {plan.id === "subscription" && (
                     <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
                       <Sparkles className="w-3 h-3 shrink-0" />
-                      {plan.id === "subscription_plus"
-                        ? "Всё из Pro + ИИ-бот для учёбы в Telegram"
-                        : "39 ₽/документ вместо 159 ₽ — экономия 75%"}
+                      39 ₽/документ вместо 159 ₽ — экономия 75%
                     </div>
                   )}
 
@@ -330,51 +262,18 @@ function PricingContent() {
                   </ul>
 
                   {/* Кнопка */}
-                  {plan.accent ? (
-                    <div className="space-y-2 w-full">
-                      <div className="relative inline-flex overflow-hidden rounded-lg w-full">
-                        <Button
-                          className="w-full"
-                          size="lg"
-                          onClick={() => handlePurchase(plan.id)}
-                          disabled={loading !== null}
-                        >
-                          {loading === plan.id ? "Перенаправление..." : "Оформить подписку"}
-                        </Button>
-                        {loading !== plan.id && (
-                          <BorderBeam
-                            size={80}
-                            duration={5}
-                            colorFrom="#a855f7"
-                            colorTo="#6366f1"
-                            borderWidth={2}
-                          />
-                        )}
-                      </div>
-                      <Button
-                        className="w-full text-xs"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleTrialActivation()}
-                        disabled={loading !== null}
-                      >
-                        {loading === "trial_bot" ? "Активируем..." : "Попробовать 7 дней бесплатно"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      className="w-full rounded-none"
-                      variant="outline"
-                      onClick={() => handlePurchase(plan.id)}
-                      disabled={loading !== null}
-                    >
-                      {loading === plan.id
-                        ? "Перенаправление..."
-                        : plan.id === "subscription"
-                          ? "Оформить подписку"
-                          : "Купить"}
-                    </Button>
-                  )}
+                  <Button
+                    className="w-full rounded-none"
+                    variant={plan.accent ? "default" : "outline"}
+                    onClick={() => handlePurchase(plan.id)}
+                    disabled={loading !== null}
+                  >
+                    {loading === plan.id
+                      ? "Перенаправление..."
+                      : plan.id === "subscription"
+                        ? "Оформить подписку"
+                        : "Купить"}
+                  </Button>
                 </CardContent>
               </Card>
             );

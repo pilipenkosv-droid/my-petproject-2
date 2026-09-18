@@ -21,7 +21,10 @@ export const LAVA_CONFIG = {
       periodicity: "MONTHLY" as const,
       uses: 10, // 10 обработок в месяц
     },
+    // Продажа остановлена 09.2026: Diplox Bot отключён.
+    // Оффер оставлен, чтобы продления и доступ существующих подписчиков не сломались.
     subscriptionPlus: {
+      hidden: true,
       offerId: "4509a861-05a4-4514-8a77-91b36df99981",
       price: 1499,
       currency: "RUB" as const,
