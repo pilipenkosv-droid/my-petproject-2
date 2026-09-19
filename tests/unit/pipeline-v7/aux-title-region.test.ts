@@ -110,7 +110,7 @@ describe("aux — locating the title page (D-1)", () => {
     expect(await documentXml(r.output!)).not.toContain("СОДЕРЖАНИЕ");
   });
 
-  it("adds no TOC above a bare СОДЕРЖАНИЕ heading the student typed (D-6)", async () => {
+  it("ставит поле под пустой «СОДЕРЖАНИЕ», а не над ним (D-6)", async () => {
     const body =
       p("Титульный лист") +
       p("Курсовая работа") +
@@ -123,8 +123,10 @@ describe("aux — locating the title page (D-1)", () => {
       p("Итоги.") +
       SECT;
     const r = await run(await docx(body));
-    expect(r.report.aux.tocInserted).toBe(false);
-    expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+    // Жалоба D-6 была про второй заголовок поверх своего, а не про
+    // само оглавление: заголовок остаётся ровно один, поле встаёт под ним.
+    expect(r.report.aux.tocInserted).toBe(true);
+    expect(r.report.aux.tocUnderExistingHeading).toBe(true);
     expect(r.report.gate.pass).toBe(true);
     expect((await documentXml(r.output!)).match(/СОДЕРЖАНИЕ/g)).toHaveLength(1);
   });

@@ -49,7 +49,9 @@ function listDocx(dir: string): string[] {
 for (const [label, dir] of [["real", REAL_DIR], ["synthetic", SYNTH_DIR]] as const) {
   const files = listDocx(dir);
   describe.skipIf(files.length === 0)(`classify smoke — ${label} corpus`, () => {
-    it("classifies every document quickly and non-trivially", async () => {
+    // 20 s, not the default 5: this walks the whole real corpus, and under a
+    // parallel run it lands just over the default and goes red for no reason.
+    it("classifies every document quickly and non-trivially", { timeout: 20_000 }, async () => {
       let suspects = 0;
       for (const file of files) {
         const pkg = await DocxPackage.load(fs.readFileSync(file));

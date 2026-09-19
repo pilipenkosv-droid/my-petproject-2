@@ -42,6 +42,12 @@ const BODYISH = new Set(["body", "unknown", "list_item", "bibliography_item"]);
  */
 const TOC_NAME = /^(?:\d+\.?\s+)?(?:СОДЕРЖАНИЕ|ОГЛАВЛЕНИЕ)\s*\.?$/iu;
 
+/**
+ * A lone line under the contents heading that is this short is not an entry —
+ * a stray page number, a dash. It counts as nothing being listed.
+ */
+const STRAY_LINE_CHARS = 10;
+
 /** Below this many headings there is nothing worth listing. */
 const MIN_HEADINGS = 3;
 /** Below this much running text the file is a fragment, not a paper. */
@@ -56,20 +62,59 @@ export interface DocShape {
   bodyish: number;
   /** Paragraphs that are a typed «СОДЕРЖАНИЕ/ОГЛАВЛЕНИЕ», by role or by text. */
   tocHeadings: number;
+  /** The student's own contents line, when there is one to build on. */
+  tocHeadingNode?: OrderedXmlNode;
+  /** Whether anything is actually listed under that line. */
+  tocSectionFilled: boolean;
+}
+
+/**
+ * Whether the student's «СОДЕРЖАНИЕ» line has anything under it.
+ *
+ * The region runs from the line to the next real heading. A table there is a
+ * hand-drawn contents table; `toc`-role paragraphs are typed entries; anything
+ * else counts as a listed line unless it is a single stray short one.
+ */
+function sectionFilled(list: ClassificationResult["list"], from: number): boolean {
+  let lines = 0;
+  let longest = 0;
+  for (let i = from + 1; i < list.length; i++) {
+    const cp = list[i];
+    const text = (cp.text ?? "").trim();
+    if (cp.role.startsWith("heading_L") && !TOC_NAME.test(text)) break;
+    // A table under the heading is the pandoc-style contents block.
+    if (cp.role === "table_cell") return true;
+    if (cp.role === "empty" || text.length === 0) continue;
+    lines += 1;
+    longest = Math.max(longest, text.length);
+    if (lines > 1) return true;
+  }
+  return lines === 1 && longest > STRAY_LINE_CHARS;
 }
 
 export function docShape(classification: ClassificationResult): DocShape {
   let headings = 0;
   let bodyish = 0;
   let tocHeadings = 0;
-  for (const cp of classification.list) {
+  let tocAt = -1;
+  const list = classification.list;
+  for (let i = 0; i < list.length; i++) {
+    const cp = list[i];
+    const named = TOC_NAME.test((cp.text ?? "").trim());
     if (cp.role.startsWith("heading_L")) {
       headings += 1;
-      if (TOC_NAME.test((cp.text ?? "").trim())) tocHeadings += 1;
+      if (named) tocHeadings += 1;
     } else if (cp.role === "toc") tocHeadings += 1;
     else if (BODYISH.has(cp.role)) bodyish += 1;
+    if (tocAt < 0 && named && (cp.role.startsWith("heading_L") || cp.role === "toc")) tocAt = i;
   }
-  return { headings, bodyish, tocHeadings };
+  return {
+    headings,
+    bodyish,
+    tocHeadings,
+    ...(tocAt >= 0 ? { tocHeadingNode: list[tocAt].node } : {}),
+    tocSectionFilled: tocAt >= 0 ? sectionFilled(list, tocAt) : false,
+  };
 }
 
 /**
@@ -81,7 +126,13 @@ export function docShape(classification: ClassificationResult): DocShape {
  * headings and no running text, so it stops at (c) without a rule of its own.
  */
 export function tocContentSkip(shape: DocShape): TocSkip | null {
-  if (shape.tocHeadings > 0) return "toc-heading-present";
+  // A heading with entries under it is the student's own table of contents and
+  // stays untouched (D-1/D-6). A heading with nothing under it is a promise
+  // they never kept: the field goes in below it, and `insertToc` adds no second
+  // heading — see the `tocHeadingNode` path there.
+  if (shape.tocHeadings > 0 && (shape.tocSectionFilled || !shape.tocHeadingNode)) {
+    return "toc-heading-present";
+  }
   if (shape.headings < MIN_HEADINGS) return "too-few-headings";
   if (shape.bodyish < MIN_BODY) return "too-small";
   return null;

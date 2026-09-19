@@ -28,6 +28,13 @@ export const STYLE_IDS = {
   tableCell: "DpxTableCell",
   bibliography: "DpxBibliography",
   tocTitle: "DpxTocTitle",
+  /**
+   * Not a Dpx* id on purpose: the checker recognises a static table of
+   * contents only by `w:pStyle w:val="TOC1..3"` (checker/index.ts, hasStaticToc),
+   * and Word, LibreOffice and Google Docs all treat TOC1 as the built-in
+   * contents style. We define it ourselves, so nothing is left to the editor.
+   */
+  tocEntry: "TOC1",
 } as const;
 
 /** Roles whose pPr the restyler leaves entirely to the student. */

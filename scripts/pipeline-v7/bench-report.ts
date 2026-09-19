@@ -22,6 +22,15 @@ export interface Side {
   failed?: string[];
   /** v7 refused to touch the document (suspect classification). */
   refused?: boolean;
+  /** v7 only: what the aux layer added, and why it did not. */
+  aux?: {
+    tocInserted: boolean;
+    tocExisting: boolean;
+    tocSkipped?: string;
+    titleBreak: boolean;
+    titleBreakSkipped?: string;
+    headings: number;
+  };
   error?: string;
 }
 
@@ -33,6 +42,10 @@ export interface Row {
   legacy?: Side;
   pages: { src: number | null; v7: number | null; v6: number | null };
   sofficeRefusedV7?: boolean;
+  /** `--explain`: failed rule id → structural locators. No real-corpus text. */
+  explain?: Record<string, string[]>;
+  /** `--idempotent`: the same pipeline run again over its own output. */
+  second?: { score: number | null; failed: string[]; gate: boolean | null };
 }
 
 export const median = (xs: number[]): number | null => {
@@ -137,7 +150,7 @@ export function topFailed(rows: Row[]): string[] {
   for (const r of rows) for (const id of r.v7.failed ?? []) counts.set(id, (counts.get(id) ?? 0) + 1);
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 12)
+    .slice(0, 30)
     .map(([id, n]) => `${id} ×${n}`);
 }
 
@@ -150,4 +163,79 @@ export function topViolations(rows: Row[], pick: (r: Row) => Side | undefined): 
     }
   }
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ×${n}`);
+}
+
+/**
+ * `--explain` output grouped by rule, documents nested under it.
+ *
+ * PRIVACY: the lines come from bench-explain, which quotes only the synthetic
+ * corpus; nothing here re-reads a document.
+ */
+export function explainSection(rows: Row[]): string[] {
+  const byRule = new Map<string, string[]>();
+  for (const r of rows) {
+    for (const [rule, lines] of Object.entries(r.explain ?? {})) {
+      const acc = byRule.get(rule) ?? [];
+      acc.push(...lines.map((l) => `  - \`${r.id.slice(0, 22)}\` (${r.set}) ${l}`));
+      byRule.set(rule, acc);
+    }
+  }
+  const out: string[] = [];
+  for (const [rule, lines] of [...byRule.entries()].sort((a, b) => b[1].length - a[1].length)) {
+    out.push("", `### ${rule} — ${lines.length} записей`, ...lines.slice(0, 40));
+    if (lines.length > 40) out.push(`  - … ещё ${lines.length - 40}`);
+  }
+  return out;
+}
+
+/** Distribution of aux skip reasons — why a TOC or a section break was not added. */
+export function auxSection(rows: Row[]): string[] {
+  const count = (pick: (r: Row) => string | undefined) => {
+    const m = new Map<string, string[]>();
+    for (const r of rows) {
+      const key = pick(r) ?? "—";
+      m.set(key, [...(m.get(key) ?? []), `${r.id.slice(0, 12)}/${r.set[0]}`]);
+    }
+    return [...m.entries()].sort((a, b) => b[1].length - a[1].length);
+  };
+  const render = (title: string, entries: [string, string[]][]) => [
+    `- ${title}:`,
+    ...entries.map(([k, ids]) => `  - \`${k}\` ×${ids.length}: ${ids.slice(0, 14).join(", ")}${ids.length > 14 ? " …" : ""}`),
+  ];
+  const withAux = rows.filter((r) => r.v7.aux);
+  return [
+    `- документов с телеметрией aux: ${withAux.length}/${rows.length}`,
+    `- TOC вставлен: ${withAux.filter((r) => r.v7.aux!.tocInserted).length}, ` +
+      `уже был: ${withAux.filter((r) => r.v7.aux!.tocExisting).length}, ` +
+      `разрыв после титула: ${withAux.filter((r) => r.v7.aux!.titleBreak).length}`,
+    ...render("причина пропуска TOC", count((r) => r.v7.aux?.tocSkipped)),
+    ...render("причина пропуска разрыва", count((r) => r.v7.aux?.titleBreakSkipped)),
+    ...render("заголовков нашёл классификатор", count((r) => (r.v7.aux ? String(r.v7.aux.headings) : undefined))),
+  ];
+}
+
+/**
+ * `--idempotent`: what changed when v7 was run over its own output.
+ *
+ * A formatter that keeps editing is a formatter that has not converged — a
+ * student who uploads a corrected file twice must get the same document back.
+ */
+export function idempotencySection(rows: Row[]): string[] {
+  const checked = rows.filter((r) => r.second);
+  if (!checked.length) return ["- не запускалось (нужен флаг --idempotent)"];
+  const drift = checked.filter(
+    (r) =>
+      r.second!.score !== r.v7.score ||
+      r.second!.failed.join("|") !== (r.v7.failed ?? []).join("|")
+  );
+  const gateFail = checked.filter((r) => r.second!.gate === false);
+  return [
+    `- повторный прогон: ${checked.length} документов, расхождений по score/правилам ${drift.length}`,
+    `- гейт на втором прогоне не прошли: ${gateFail.length ? gateFail.map((r) => r.id.slice(0, 12)).join(", ") : "нет"}`,
+    ...drift.map(
+      (r) =>
+        `  - \`${r.id.slice(0, 22)}\` score ${num(r.v7.score)} → ${num(r.second!.score)}; ` +
+        `правила «${(r.v7.failed ?? []).join(",") || "—"}» → «${r.second!.failed.join(",") || "—"}»`
+    ),
+  ];
 }

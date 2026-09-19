@@ -24,6 +24,7 @@ import {
   applyNumberedSignals,
   applySuspect,
   applyTitlePage,
+  applyTocRegion,
   modalSize,
 } from "./passes";
 import {
@@ -170,6 +171,9 @@ export async function classifyDocument(pkg: DocxPackage): Promise<Classification
   for (const [from, to] of docRanges) {
     applyBibliographyRegion(list, from, to);
     applyTitlePage(list, from, to);
+    // After the title page: its end is found by looking for the TOC heading,
+    // which must still be the heading and not an entry when that runs.
+    applyTocRegion(list, from, to);
   }
   applyCoherence(list, warnings);
   const suspect = applySuspect(list, warnings);

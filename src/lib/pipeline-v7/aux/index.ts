@@ -14,16 +14,23 @@ import type { PackSpec } from "../restyle/spec";
 import { roleMap } from "./common";
 import { insertToc } from "./toc";
 import { insertTitleBreak } from "./title-break";
-import { normalizeSpaces } from "./text-norm";
+import { normalizeText } from "./text-norm";
+import { scaleImages } from "./images";
 import { blocksTitleBreak, docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";
 
 export interface AuxStats {
   tocInserted: boolean;
   /** A TOC was already present and left alone. */
   tocExisting: boolean;
+  /** The TOC field went under the student's own heading, without adding one. */
+  tocUnderExistingHeading: boolean;
   updateFields: boolean;
   titleBreak: boolean;
   spacesCollapsed: number;
+  /** Doubled full stops reduced to one (same opt-in as spacesCollapsed). */
+  doubleDotsFixed: number;
+  /** Drawings shrunk to the text column. */
+  imagesScaled: number;
   /** Headings the classifier found (L1+L2+L3) — the TOC guard's main input. */
   headings: number;
   /** Why no TOC was inserted, when none was. */
@@ -35,7 +42,7 @@ export interface AuxStats {
 }
 
 export interface AuxOptions {
-  /** Collapse runs of spaces in body text. Off by default. */
+  /** Collapse space runs and doubled dots in body text. Off by default. */
   textNormalization?: boolean;
   /** Paragraphs the restyler gave a w:pageBreakBefore they did not have. */
   addedPageBreak?: Set<OrderedXmlNode>;
@@ -55,16 +62,25 @@ export async function runAux(
   // The break goes in first: it edits an existing title paragraph, so it reads
   // body indices that the TOC insertion would otherwise have shifted.
   const brk = await insertTitleBreak(pkg, roles, opts.addedPageBreak, blocksTitleBreak(contentSkip));
-  const toc = await insertToc(pkg, spec, roles, opts.existingToc, contentSkip);
-  const spacesCollapsed = opts.textNormalization ? normalizeSpaces(classification) : 0;
-  if (spacesCollapsed > 0) for (const cp of classification.list) pkg.markDirty(cp.part);
+  const toc = await insertToc(pkg, spec, roles, opts.existingToc, contentSkip, shape.tocHeadingNode);
+  const text = opts.textNormalization
+    ? normalizeText(classification)
+    : { spacesCollapsed: 0, doubleDotsFixed: 0 };
+  if (text.spacesCollapsed > 0 || text.doubleDotsFixed > 0) {
+    for (const cp of classification.list) pkg.markDirty(cp.part);
+  }
+
+  const imagesScaled = await scaleImages(pkg);
 
   return {
     tocInserted: toc.inserted,
     tocExisting: toc.existing,
+    tocUnderExistingHeading: toc.underExistingHeading === true,
     updateFields: toc.updateFields,
     titleBreak: brk.inserted,
-    spacesCollapsed,
+    spacesCollapsed: text.spacesCollapsed,
+    doubleDotsFixed: text.doubleDotsFixed,
+    imagesScaled,
     headings: shape.headings,
     tocSkipped: toc.skipped,
     ...(brk.skipped ? { titleBreakSkipped: brk.skipped } : {}),
@@ -74,5 +90,6 @@ export async function runAux(
 
 export { insertToc, hasExistingToc, detectExistingToc } from "./toc";
 export { insertTitleBreak } from "./title-break";
-export { normalizeSpaces } from "./text-norm";
+export { normalizeText, type TextNormStats } from "./text-norm";
+export { scaleImages } from "./images";
 export { docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";

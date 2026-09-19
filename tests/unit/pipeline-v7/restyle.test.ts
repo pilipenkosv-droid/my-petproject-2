@@ -192,11 +192,13 @@ describe("runs", () => {
     expect(val(rPr, "w:sz")).toBe("28");
   });
 
-  it("keeps the colour of a hyperlink run", () => {
+  it("drops the colour of a hyperlink run too", () => {
+    // ГОСТ wants plain black text, and the checker charges for any colour
+    // that is neither auto nor 000000 — a blue link included.
     const p = parseP(`<w:hyperlink r:id="rId5">${RUN}</w:hyperlink>`);
     restyleRuns(p, "body", PACK);
     const rPr = findChild(findChild(findChild(p, "w:hyperlink")!, "w:r")!, "w:rPr")!;
-    expect(val(rPr, "w:color")).toBe("FF0000");
+    expect(val(rPr, "w:color")).toBeUndefined();
   });
 
   it("removes underline and forces bold in a heading", () => {
@@ -222,11 +224,18 @@ describe("runs", () => {
     expect(collectT(p)).toEqual(textBefore);
   });
 
-  it("touches only font and size on a field run", () => {
-    const p = parseP('<w:r><w:rPr><w:color w:val="0000FF"/></w:rPr><w:instrText>PAGE</w:instrText></w:r>');
+  it("touches font, size and colour on a field run, and nothing else", () => {
+    // A field run carries no visible text, so its colour is nothing but a
+    // checker failure; its spacing and character style are left alone.
+    const p = parseP(
+      '<w:r><w:rPr><w:color w:val="0000FF"/><w:spacing w:val="40"/>' +
+        '<w:highlight w:val="yellow"/></w:rPr><w:instrText>PAGE</w:instrText></w:r>'
+    );
     restyleRuns(p, "body", PACK);
     const rPr = findChild(findChild(p, "w:r")!, "w:rPr")!;
-    expect(val(rPr, "w:color")).toBe("0000FF");
+    expect(val(rPr, "w:color")).toBeUndefined();
+    expect(prop(rPr, "w:highlight")).toBeUndefined();
+    expect(val(rPr, "w:spacing")).toBe("40");
     expect(val(rPr, "w:sz")).toBe("28");
   });
 });

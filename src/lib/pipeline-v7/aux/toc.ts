@@ -39,6 +39,12 @@ export interface TocResult {
   updateFields: boolean;
   /** Nothing was inserted, and which of the five reasons it was. */
   skipped?: TocSkip;
+  /**
+   * The field went under the student's own «СОДЕРЖАНИЕ» heading rather than
+   * after the title page, and no heading of ours was added. Reported so
+   * production logs can tell the two insertion paths apart.
+   */
+  underExistingHeading?: boolean;
 }
 
 function isTocHeading(block: BlockPrint | undefined): boolean {
@@ -138,7 +144,9 @@ export async function insertToc(
   spec: PackSpec,
   roles: Map<OrderedXmlNode, string>,
   existing?: boolean,
-  contentSkip: TocSkip | null = null
+  contentSkip: TocSkip | null = null,
+  /** The student's empty «СОДЕРЖАНИЕ» line, when the guard found one. */
+  underHeading?: OrderedXmlNode
 ): Promise<TocResult> {
   const part = await mainPart(pkg);
   if (!part) return { inserted: false, existing: false, updateFields: false };
@@ -151,6 +159,28 @@ export async function insertToc(
   // contents, but it is the student's own: a second one printed above it is
   // what the 1★ feedback was about. Same for a document with nothing to list.
   if (contentSkip) return { inserted: false, existing: false, updateFields: false, skipped: contentSkip };
+
+  // The student wrote the heading and left the page under it blank. Fill it in
+  // where they put it: one field paragraph straight after their line, no
+  // heading of ours, nothing moved.
+  if (underHeading) {
+    const at = part.blocks.indexOf(underHeading);
+    // Their heading sits inside a table or an sdt: there is no body index to
+    // insert after, and guessing one would print the field somewhere else.
+    if (at < 0) {
+      return { inserted: false, existing: false, updateFields: false, skipped: "toc-heading-present" };
+    }
+    const field = fieldParagraph(spec);
+    markAux(field, "toc", 1, nextBookmarkId(part.nodes));
+    part.blocks.splice(at + 1, 0, field);
+    pkg.markDirty(part.name);
+    return {
+      inserted: true,
+      existing: false,
+      updateFields: await setUpdateFields(pkg, part.name),
+      underExistingHeading: true,
+    };
+  }
 
   const end = titleRegionEnd(part, roles);
   if (typeof end !== "number") return { inserted: false, existing: false, updateFields: false, skipped: end };

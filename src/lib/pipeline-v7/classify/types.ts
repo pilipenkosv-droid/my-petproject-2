@@ -61,6 +61,7 @@ export type ClassifySource =
   | "section-re"
   | "numbered-re"
   | "region"
+  | "toc-entry"
   | "titlepage"
   | "omath"
   | "empty"

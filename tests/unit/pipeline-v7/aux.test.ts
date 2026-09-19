@@ -12,7 +12,7 @@ import JSZip from "jszip";
 import { GOST_7_32 } from "@/lib/pipeline-v6/rule-packs/gost-7-32";
 import { runPipelineV7 } from "@/lib/pipeline-v7/orchestrator";
 import { restyleRuns, setHeaderRow } from "@/lib/pipeline-v7/restyle";
-import { normalizeSpaces } from "@/lib/pipeline-v7/aux";
+import { normalizeText } from "@/lib/pipeline-v7/aux";
 import { children, findChild, parseDocxXml, tagName, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import { buildMiniDocx, p, style, W_NS } from "./helpers/mini-docx";
 
@@ -109,6 +109,68 @@ describe("aux — TOC insertion", () => {
     expect(r.report.gate.pass).toBe(true);
   });
 
+  /**
+   * The student typed «СОДЕРЖАНИЕ» and left the page under it blank.
+   *
+   * Commit d7cf44c made any such heading a refusal, after two 1★ reviews about
+   * a contents block printed on top of the student's own text. That went too
+   * far: the word alone is a promise, not a table of contents, and the refusal
+   * cost every document a critical checker rule. The heading now anchors the
+   * insertion instead of blocking it — see ADR-014.
+   */
+  describe("«СОДЕРЖАНИЕ» без содержимого", () => {
+    const withHeading = (under: string) =>
+      p("Титульный лист") +
+      p("Курсовая работа") +
+      p("Москва 2026") +
+      H1("СОДЕРЖАНИЕ") +
+      under +
+      H1("ВВЕДЕНИЕ") +
+      p("Текст работы.") +
+      filler(22) +
+      H1("ОСНОВНАЯ ЧАСТЬ") +
+      p("Разбор темы.") +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
+      SECT;
+
+    const headings = (buf: Buffer) =>
+      (buf.toString("latin1"), null);
+
+    it("вставляет поле под заголовок и не добавляет второго", async () => {
+      void headings;
+      const r = await run(await docx(withHeading("")));
+      expect(r.report.aux.tocInserted).toBe(true);
+      expect(r.report.aux.tocUnderExistingHeading).toBe(true);
+      expect(r.report.aux.tocExisting).toBe(false);
+      expect(r.report.gate.pass).toBe(true);
+
+      const xml = await documentXml(r.output!);
+      expect(xml).toContain('TOC \\o');
+      // Ровно одно «СОДЕРЖАНИЕ» — своё заголовок мы не приписали.
+      expect(xml.match(/СОДЕРЖАНИЕ/g)?.length).toBe(1);
+
+      const nodes = await partOf(r.output!, "word/document.xml");
+      const body = findChild(nodes.find((n) => "w:document" in n)!, "w:body")!;
+      const blocks = children(body).filter((n) => "w:p" in n);
+      const at = blocks.findIndex((n) => JSON.stringify(n).includes("СОДЕРЖАНИЕ"));
+      expect(JSON.stringify(blocks[at + 1])).toContain("instrText");
+    });
+
+    it("считает одинокую короткую строку пустотой", async () => {
+      const r = await run(await docx(withHeading(p("2"))));
+      expect(r.report.aux.tocUnderExistingHeading).toBe(true);
+    });
+
+    it("не трогает заголовок, под которым уже есть перечень", async () => {
+      const listed = p("Введение\t3") + p("1 Основная часть\t5") + p("Заключение\t20");
+      const r = await run(await docx(withHeading(listed)));
+      expect(r.report.aux.tocInserted).toBe(false);
+      expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+      expect(r.report.gate.pass).toBe(true);
+    });
+  });
+
   it("inserts the TOC right after the title page, before the first heading", async () => {
     const r = await run(await docx(BODY));
     const nodes = await partOf(r.output!, "word/document.xml");
@@ -164,7 +226,7 @@ describe("aux — insertion guards", () => {
     expect(r.report.gate.pass).toBe(true);
   });
 
-  it("adds no second TOC when the student typed their own «СОДЕРЖАНИЕ»", async () => {
+  it("филлит пустой «СОДЕРЖАНИЕ» студента, не добавляя второго заголовка", async () => {
     const body =
       p("Министерство образования") +
       p("Курсовая работа") +
@@ -179,8 +241,10 @@ describe("aux — insertion guards", () => {
       p("Итоги.") +
       SECT;
     const r = await run(await docx(body));
-    expect(r.report.aux.tocInserted).toBe(false);
-    expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+    // Заголовок есть, перечня под ним нет: поле ставится под него,
+    // и своё «СОДЕРЖАНИЕ» мы по-прежнему не приписываем.
+    expect(r.report.aux.tocInserted).toBe(true);
+    expect(r.report.aux.tocUnderExistingHeading).toBe(true);
     const xml = await documentXml(r.output!);
     expect(xml.match(/СОДЕРЖАНИЕ/g)).toHaveLength(1);
   });
@@ -313,12 +377,44 @@ describe("aux — underline", () => {
     expect(counters.underlineRemoved).toBe(1);
   });
 
-  it("is kept on a title page and in a TOC entry", () => {
-    for (const role of ["title_page", "toc"] as const) {
-      const node = parseP(UNDERLINED);
-      restyleRuns(node, role, GOST_7_32);
-      expect(uOf(node)).toBeDefined();
+  it("is kept in a TOC entry and dropped on a title page", () => {
+    // Owner's decision, 2026-09-19: ГОСТ forbids underlining and the score the
+    // student is shown is computed without roles, so a title page no longer
+    // buys an exemption. The TOC keeps its own.
+    const toc = parseP(UNDERLINED);
+    restyleRuns(toc, "toc", GOST_7_32);
+    expect(uOf(toc)).toBeDefined();
+
+    const title = parseP(UNDERLINED);
+    restyleRuns(title, "title_page", GOST_7_32);
+    expect(uOf(title)).toBeUndefined();
+  });
+
+  it("drops w:u w:val=\"none\" even in a TOC entry", () => {
+    const node = parseP('<w:r><w:rPr><w:u w:val="none"/></w:rPr><w:t>ВВЕДЕНИЕ</w:t></w:r>');
+    restyleRuns(node, "toc", GOST_7_32);
+    expect(uOf(node)).toBeUndefined();
+  });
+
+  it("keeps the width of a signature line while dropping its underline", () => {
+    for (const blank of ["_________", "     "]) {
+      const node = parseP(`<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${blank}</w:t></w:r>`);
+      restyleRuns(node, "title_page", GOST_7_32);
+      expect(uOf(node)).toBeUndefined();
+      const t = findChild(findChild(node, "w:r")!, "w:t")!;
+      // The characters stay — they are what leaves room for the signature —
+      // and the node now says so, or the serializer would eat the spaces.
+      expect(children(t).find((c) => "#text" in c)).toBeDefined();
+      expect(t[":@"]?.["@_xml:space"]).toBe("preserve");
     }
+  });
+
+  it("a title-page run with real text just loses the underline", () => {
+    const node = parseP('<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>Иванов И. И.</w:t></w:r>');
+    restyleRuns(node, "title_page", GOST_7_32);
+    expect(uOf(node)).toBeUndefined();
+    const t = findChild(findChild(node, "w:r")!, "w:t")!;
+    expect(t[":@"]?.["@_xml:space"]).toBeUndefined();
   });
 });
 
@@ -361,14 +457,14 @@ describe("aux — space collapsing", () => {
       "w:p"
     )!;
     const cp = { node, path: "p", part: "word/document.xml", role: "body" as const, confidence: 1, source: "style" as const };
-    const collapsed = normalizeSpaces({
+    const collapsed = normalizeText({
       byNode: new WeakMap(),
       list: [cp],
       histogram: {} as never,
       warnings: [],
       suspect: false,
     });
-    expect(collapsed).toBe(0);
+    expect(collapsed.spacesCollapsed).toBe(0);
   });
 
   it("passes the gate with the flag on", async () => {
