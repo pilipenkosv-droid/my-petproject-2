@@ -205,9 +205,11 @@ const INDENT: Record<TocLevel, number> = { 1: 0, 2: 220, 3: 440 };
  * N абзацев на месте одного абзаца поля: первый несёт закладку и
  * begin+instr+separate, последний — fldChar end и закрытие закладки.
  *
- * Стиль всегда DpxBody с отступом по уровню: TOC1..3 рестайлер v7 не
- * объявляет, а ссылаться на несуществующий стиль — значит отдать строку на
- * усмотрение редактора.
+ * Стиль TOC1 с отступом по уровню. Раньше здесь стоял DpxBody ровно потому,
+ * что TOC1..3 рестайлер v7 не объявлял, а ссылка на несуществующий стиль
+ * отдаёт строку на усмотрение редактора. Теперь styles-writer определяет TOC1
+ * сам (STYLE_IDS.tocEntry), и причина исчезла; заодно чекер признаёт такой
+ * блок оглавлением (hasStaticToc).
  */
 export function buildTocParagraphs(
   entries: TocEntry[],
@@ -221,7 +223,7 @@ export function buildTocParagraphs(
       const first = i === 0;
       const last = i === entries.length - 1;
       const pPr =
-        `<w:pPr><w:pStyle w:val="DpxBody"/>` +
+        `<w:pPr><w:pStyle w:val="TOC1"/>` +
         `<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="${opts.tabPos}"/></w:tabs>` +
         `<w:ind w:left="${INDENT[e.level]}" w:firstLine="0"/><w:jc w:val="left"/></w:pPr>`;
       return (

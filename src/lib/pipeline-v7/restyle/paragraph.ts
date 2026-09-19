@@ -17,6 +17,8 @@ import type { Role } from "../classify/types";
 import { W_PPR_ORDER, removeChildren, setPropInOrder } from "./ooxml-order";
 import { STYLE_IDS, UNTOUCHED_PPR_ROLES, buildPackSpec, headingLevelOf, type PackSpec } from "./spec";
 import { applyParagraphVisual, roleVisual } from "./visual";
+import { isTocName, normalizeText } from "../classify/patterns";
+import { paragraphText } from "../docx/walk";
 
 export interface RestyleCtx {
   spec: PackSpec;
@@ -68,6 +70,13 @@ export function styleIdFor(role: Role): string | undefined {
   }
 }
 
+/** `w:pStyle w:val="TOC1"` on a contents line, and nothing else. */
+function setTocEntryStyle(pNode: OrderedXmlNode): boolean {
+  if (isTocName(normalizeText(paragraphText(pNode)))) return false;
+  setPropInOrder(ensurePPr(pNode), "w:pStyle", { "w:val": STYLE_IDS.tocEntry }, W_PPR_ORDER);
+  return true;
+}
+
 /**
  * Rewrites one paragraph's pPr for its role. Returns false for the roles whose
  * layout stays the student's — the title page above all.
@@ -78,6 +87,10 @@ export function restyleParagraph(
   pack: RulePack,
   ctx: RestyleCtx = makeCtx(pack)
 ): boolean {
+  // A contents line keeps its own pPr — its tab stops and dot leaders are the
+  // layout — but gains the one style the checker looks for. The heading above
+  // it shares the `toc` role and is left out: it is a heading, not an entry.
+  if (role === "toc") return setTocEntryStyle(pNode);
   if (UNTOUCHED_PPR_ROLES.has(role)) return false;
   const visual = roleVisual(role, ctx.spec);
   const styleId = styleIdFor(role);

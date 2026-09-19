@@ -7,7 +7,7 @@
  * rather than inside them.
  */
 
-import { isBibliographyHeading } from "./patterns";
+import { isBibliographyHeading, isTocEntry, isTocName } from "./patterns";
 import { headingRole, isHeadingRole, type ClassifiedParagraph, type Role } from "./types";
 
 const TITLE_PAGE_CAP = 40;
@@ -42,6 +42,42 @@ export function applyBibliographyRegion(list: ClassifiedParagraph[], from: numbe
     cp.role = "bibliography_item";
     cp.confidence = 0.9;
     cp.source = "region";
+  }
+}
+
+/**
+ * Lines of a table of contents the student typed by hand.
+ *
+ * T0 has no style to go on — the entries are plain paragraphs — so the only
+ * evidence is shape, and shape alone is far too weak to use document-wide. The
+ * region makes it safe: it opens on the «СОДЕРЖАНИЕ» line and closes at the
+ * next real heading, which for a contents page is the first section of the
+ * paper. Only `unknown` and `body` are overridden; anything T0 proved from the
+ * file stands.
+ *
+ * Marking them `toc` is what lets the rest of the pipeline treat the block as
+ * a table of contents: `text-norm` leaves it alone, the underline survives,
+ * `sectionFilled` counts it as listed, and the restyler gives it a TOC1 style
+ * the checker recognises.
+ */
+export function applyTocRegion(list: ClassifiedParagraph[], from: number, to: number): void {
+  const OVERRIDABLE: Role[] = ["unknown", "body"];
+  let open = false;
+  for (let i = from; i < to; i++) {
+    const cp = list[i];
+    const text = cp.text ?? "";
+    if (isTocName(text) && (isHeadingRole(cp.role) || cp.role === "toc")) {
+      open = true;
+      continue;
+    }
+    if (!open) continue;
+    if (isHeadingRole(cp.role) || cp.role === "appendix_heading") break;
+    if (cp.role === "table_cell" || text === "") continue;
+    if (!OVERRIDABLE.includes(cp.role)) continue;
+    if (!isTocEntry(text)) continue;
+    cp.role = "toc";
+    cp.confidence = 0.9;
+    cp.source = "toc-entry";
   }
 }
 

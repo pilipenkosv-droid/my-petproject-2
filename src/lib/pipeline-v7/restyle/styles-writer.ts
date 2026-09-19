@@ -51,6 +51,9 @@ const CANONICAL: CanonicalStyle[] = [
   { id: STYLE_IDS.tableCell, name: "Dpx Table Cell", role: "table_cell" },
   { id: STYLE_IDS.bibliography, name: "Dpx Bibliography", role: "bibliography_item" },
   { id: STYLE_IDS.tocTitle, name: "Dpx TOC Title", role: "heading_L1" },
+  // A contents line: body text, flush left, no first-line indent — the
+  // student's own tab stops and dot leaders carry the layout.
+  { id: STYLE_IDS.tocEntry, name: "toc 1", role: "list_item" },
 ];
 
 /** Built-in ids/names, in the spellings Word, LibreOffice and Google Docs use. */
@@ -128,7 +131,11 @@ export async function upsertCanonicalStyles(
     const v = roleVisual(def.role, spec);
     if (!v) continue;
     const style = findByKeys(root, [normStyleName(def.id)]) ?? appendStyle(root, def.id, def.name);
-    writeVisual(style, def.id === STYLE_IDS.tocTitle ? { ...v, jc: "center", pageBreakBefore: false } : v, spec, true);
+    const overrides: Partial<Record<string, typeof v>> = {
+      [STYLE_IDS.tocTitle]: { ...v, jc: "center", pageBreakBefore: false },
+      [STYLE_IDS.tocEntry]: { ...v, jc: "left" },
+    };
+    writeVisual(style, overrides[def.id] ?? v, spec, true);
     upserted += 1;
   }
 

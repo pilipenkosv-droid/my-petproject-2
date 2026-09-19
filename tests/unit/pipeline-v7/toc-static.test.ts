@@ -87,8 +87,9 @@ describe("fillTocStatic", () => {
     // Закладка открыта в первом абзаце и закрыта в последнем.
     expect(entries[0]).not.toContain("<w:bookmarkEnd");
     expect(entries[2]).toContain('<w:bookmarkEnd w:id="2"/>');
-    // TOC1..3 рестайлер v7 не объявляет — строки всегда DpxBody.
-    expect(xml).not.toContain('w:pStyle w:val="TOC');
+    // С тех пор как styles-writer объявляет TOC1 сам, строки ссылаются на него:
+    // чекер признаёт такой блок оглавлением (hasStaticToc).
+    for (const e of entries) expect(e).toContain('<w:pStyle w:val="TOC1"/>');
   });
 
   it("без soffice возвращает буфер побайтно", async () => {

@@ -56,12 +56,37 @@ const TOO_DEEP_RE = /^\d+\.\d+\.\d+\.\d+/u;
 const CHAPTER_RE = /^(?:ГЛАВА|РАЗДЕЛ)\s+\d+/iu;
 const SENTENCE_TAIL_RE = /[.;,:]$/u;
 
+/** Three dots or more in a row: the leader a student types by hand. */
+const LEADER_DOTS_RE = /\.{3,}/u;
+/** A page number at the end, after a space, a dot or a dash. */
+const TRAILING_PAGE_RE = /[\s.\u2014\u2013-]\d{1,4}$/u;
+
 export const MAX_SECTION_LEN = 80;
 export const MAX_HEADING_LEN = 120;
 
 /** Collapses whitespace so rules see one canonical form of the text. */
 export function normalizeText(raw: string): string {
   return raw.normalize("NFC").replace(/[\s ]+/gu, " ").trim();
+}
+
+/** The contents heading itself, by text. */
+export function isTocName(text: string): boolean {
+  return TOC_NAME_RE.test(text);
+}
+
+/**
+ * A line of a hand-typed table of contents.
+ *
+ * Two shapes, and both only mean this *inside* the region under a
+ * «СОДЕРЖАНИЕ» heading — outside it a sentence ending in a year would match
+ * the second one. Leader dots are the giveaway students type by hand; a
+ * trailing page number is what a tab stop leaves once the tab is normalised
+ * to a space.
+ */
+export function isTocEntry(text: string): boolean {
+  if (text.length === 0 || text.length > MAX_HEADING_LEN * 2) return false;
+  if (LEADER_DOTS_RE.test(text)) return true;
+  return TRAILING_PAGE_RE.test(text);
 }
 
 export function matchCaption(text: string): TextVerdict | undefined {
