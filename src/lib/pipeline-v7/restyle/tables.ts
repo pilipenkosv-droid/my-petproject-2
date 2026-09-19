@@ -123,6 +123,33 @@ export function setHeaderRow(tbl: OrderedXmlNode): boolean {
   return true;
 }
 
+/**
+ * Brings a stated table width back inside the text column.
+ *
+ * Two shapes overflow. A percentage over 5000 (= 100 %) is simply wrong and is
+ * cut to 5000. An absolute width wider than the column is replaced by 100 %,
+ * because the number that would fit depends on the grid this function refuses
+ * to touch — handing the table the column and letting the layout engine divide
+ * it is the one safe answer.
+ *
+ * Nothing is ever widened: a table narrower than the column is a deliberate
+ * inset, exactly as in `ownsItsWidth`.
+ */
+function clampWidth(tblPr: OrderedXmlNode, tblW: OrderedXmlNode, textWidthTw: number): boolean {
+  const type = getAttr(tblW, "w:type");
+  const w = Number(getAttr(tblW, "w:w"));
+  if (!Number.isFinite(w)) return false;
+  if (type === "pct" && w > 5000) {
+    setPropInOrder(tblPr, "w:tblW", { "w:w": "5000", "w:type": "pct" }, W_TBLPR_ORDER);
+    return true;
+  }
+  if (type === "dxa" && w > textWidthTw) {
+    setPropInOrder(tblPr, "w:tblW", { "w:w": "5000", "w:type": "pct" }, W_TBLPR_ORDER);
+    return true;
+  }
+  return false;
+}
+
 export function restyleTable(tbl: OrderedXmlNode, textWidthTw = DEFAULT_TEXT_WIDTH_TW): boolean {
   const tblPr = tblPrOf(tbl);
   const kids = children(tblPr);
@@ -131,6 +158,8 @@ export function restyleTable(tbl: OrderedXmlNode, textWidthTw = DEFAULT_TEXT_WID
   const unstated = !tblW || type === undefined || type === "auto" || type === "nil";
   if (unstated && !ownsItsWidth(tbl, textWidthTw)) {
     setPropInOrder(tblPr, "w:tblW", { "w:w": "5000", "w:type": "pct" }, W_TBLPR_ORDER);
+  } else if (tblW) {
+    clampWidth(tblPr, tblW, textWidthTw);
   }
   if (!kids.some((c) => "w:jc" in c)) {
     setPropInOrder(tblPr, "w:jc", { "w:val": "center" }, W_TBLPR_ORDER);

@@ -15,6 +15,7 @@ import { roleMap } from "./common";
 import { insertToc } from "./toc";
 import { insertTitleBreak } from "./title-break";
 import { normalizeText } from "./text-norm";
+import { scaleImages } from "./images";
 import { blocksTitleBreak, docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";
 
 export interface AuxStats {
@@ -26,6 +27,8 @@ export interface AuxStats {
   spacesCollapsed: number;
   /** Doubled full stops reduced to one (same opt-in as spacesCollapsed). */
   doubleDotsFixed: number;
+  /** Drawings shrunk to the text column. */
+  imagesScaled: number;
   /** Headings the classifier found (L1+L2+L3) — the TOC guard's main input. */
   headings: number;
   /** Why no TOC was inserted, when none was. */
@@ -65,6 +68,8 @@ export async function runAux(
     for (const cp of classification.list) pkg.markDirty(cp.part);
   }
 
+  const imagesScaled = await scaleImages(pkg);
+
   return {
     tocInserted: toc.inserted,
     tocExisting: toc.existing,
@@ -72,6 +77,7 @@ export async function runAux(
     titleBreak: brk.inserted,
     spacesCollapsed: text.spacesCollapsed,
     doubleDotsFixed: text.doubleDotsFixed,
+    imagesScaled,
     headings: shape.headings,
     tocSkipped: toc.skipped,
     ...(brk.skipped ? { titleBreakSkipped: brk.skipped } : {}),
@@ -82,4 +88,5 @@ export async function runAux(
 export { insertToc, hasExistingToc, detectExistingToc } from "./toc";
 export { insertTitleBreak } from "./title-break";
 export { normalizeText, type TextNormStats } from "./text-norm";
+export { scaleImages } from "./images";
 export { docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";
