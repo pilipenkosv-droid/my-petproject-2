@@ -29,6 +29,11 @@
 }
 ```
 
+**Response при `PROCESSING_MODE=worker`:** `202 Accepted` — методичку разбирает VDS-воркер, дальше опрашивать `/api/status/[jobId]` до `awaiting_confirmation`.
+```json
+{ "jobId": "abc123", "status": "pending" }
+```
+
 ---
 
 ### POST /api/confirm-rules
@@ -54,6 +59,20 @@
   "violationsCount": 42
 }
 ```
+
+**Response при `PROCESSING_MODE=worker`:** `202 Accepted` `{ "jobId", "status": "pending" }` — форматирует воркер, результат через `/api/status`.
+
+**Ошибки:** `400` — задача не в статусе `awaiting_confirmation`; `500` — ошибка обработки (задача помечена `failed`).
+
+---
+
+### POST /api/process-gost
+
+Обработка по стандартному ГОСТ без методички (pipeline-v7 с откатом в v6). Списывает использование при постановке задачи.
+
+**Request:** `multipart/form-data` — `sourceDocument` (.docx), `workType`.
+
+**Response:** `200 OK` `{ "jobId", "status": "completed", "statistics", "violationsCount" }` — инлайн; `202 Accepted` `{ "jobId", "status": "pending" }` — при `PROCESSING_MODE=worker` и живом воркере (бакет `WORKER_PERCENT` от jobId). `402` — лимит исчерпан, `403` — доступ заблокирован.
 
 ---
 
@@ -107,6 +126,10 @@
 ```
 
 **Поле `hasFullVersion`:** Флаг наличия полной версии документа для разблокировки (hook-offer). Если `true` — пользователь может разблокировать полную версию после оплаты.
+
+**Статусы:** `pending` (в очереди воркера) → `uploading` / `extracting_text` / `parsing_rules` / `analyzing` / `formatting` → `awaiting_confirmation` (только режим методички) / `completed` / `failed`. Для `awaiting_confirmation` дополнительно отдаётся `confidence`. Чтение статуса лечит зависшие задачи (`failIfStuck`): инлайн — 3 мин без обновлений, под воркером — 10 мин без heartbeat, в очереди — 20 мин.
+
+**`statistics.worker`** (если задачу считал воркер): `{ workerId, hostname, gitSha, queueWaitMs, processMs, attempts }`. **`statistics.v7.tocStatic`** (v7 на воркере): `{ filled, skipped?, ms }` — сколько строк содержания получили номера страниц.
 
 ---
 
@@ -289,6 +312,26 @@ CSAT-отзыв на результат обработки.
 **Response:** `200 OK`
 ```json
 { "success": true }
+```
+
+---
+
+### GET /api/health/worker
+
+Здоровье VDS-воркера (ADR-016). Дёргается кроном на сервере раз в 15 минут.
+
+**Авторизация:** `Authorization: Bearer $CRON_SECRET` или `?secret=$CLEANUP_SECRET`; при незаданных секретах — `401` (в отличие от `/api/cleanup`).
+
+**Response:** `200 OK` при `status: "ok"`, `503` при `degraded` (heartbeat старше 2 мин, самая старая задача в очереди старше 10 мин или воркеров нет).
+```json
+{
+  "status": "ok",
+  "heartbeatAgeSec": 8,
+  "pendingCount": 0,
+  "oldestPendingAgeSec": null,
+  "failed24h": 1,
+  "workers": [{ "id": "vds-1", "hostname": "…", "gitSha": "22fe405", "lastSeenAt": "…" }]
+}
 ```
 
 ---

@@ -1,7 +1,7 @@
 # ADR-016 — перенос обработки документов на VDS: асинхронный воркер
 
 - Дата: 2026-09-18
-- Статус: **proposed** — запуск после деплоя текущих веток (fix rules-extraction, blog nightly, retrieval stage)
+- Статус: **accepted** — фаза 1 (`/api/process-gost`) в проде с 18.09.2026 (PR #38), фаза 2 (методичка + статический TOC v7) с 19.09.2026 (PR #39, #40); `PROCESSING_MODE=worker`, `WORKER_PERCENT=50`
 - Связанные: [ADR-014 — pipeline-v7](014-pipeline-v7-experiment.md), [ADR-015 — ночной конвейер блога](015-blog-nightly-pipeline.md) (тот же сервер), `supabase/migration-023-jobs-use-refund.sql`
 
 ## Контекст
@@ -111,6 +111,21 @@ VDS Timeweb `194.87.43.23` (Ubuntu 24.04, 2 vCPU, 3,9 ГБ RAM, 47 ГБ): Python
 10. Неделя тени, разбор, 10 % → 100 % — 3 ч работы, календарно ~2 недели.
 
 **Итого ~24 часа** разработки, 3–4 дня до теневого прогона плюс две недели наблюдения.
+
+## Реализовано (18–19.09.2026) — отличия от плана
+
+- **Node 22 LTS**, не 20: Node 20 вышел из поддержки 30.04.2026. Сборка `esbuild` (добавлен в devDependencies) в `ops/worker/dist/{main,child}.mjs`, target `node22`.
+- **Таблица `workers`** для признака жизни: простаивающий воркер не имеет задачи, куда писать heartbeat. Супервизор пингует `worker_ping` каждые 10 с; роут и `/api/health/worker` читают `workers.last_seen_at` (порог 2 мин).
+- **Маркер `queued_at`** в `jobs`: `createJob` создаёт строку в `pending` до сохранения файла, и без маркера воркер захватывал задачу раньше роута (найдено ревью). `claim_next_job` берёт только `status='pending' AND worker_id IS NULL AND queued_at IS NOT NULL`.
+- **Reference-doc v6** лежит в `scripts/pipeline-v6/spike-pandoc/reference-gost.docx` и читается от `process.cwd()`; бандл несёт его по тому же пути, юнит запускается с `WorkingDirectory=/opt/diplox-worker`.
+- **Тень** реализована строками `jobs` с `shadow_of` (фильтр `shadow_of IS NULL` в `/api/stats` и `/api/admin/analytics`), но раскатка пошла без неё: владелец включил `PROCESSING_MODE=worker`, `WORKER_PERCENT=50` сразу.
+- **`completeJob` не воскрешает `failed`**: сборщик зависших может провалить задачу и вернуть списание, пока осиротевший ребёнок доделывает документ.
+- **Сборщик зависших** (`src/lib/storage/job-stuck.ts`): инлайн 3 мин от `updated_at`; под воркером 10 мин от `worker_heartbeat_at`; в очереди (`queued_at` задан) 20 мин с сообщением «Очередь перегружена».
+- **Фаза 2A**: `/api/extract-rules` и `/api/confirm-rules` за тем же флагом; задача проходит очередь дважды, `markJobQueued` сбрасывает `worker_id`/`attempts`, после разбора методички воркер снимает признаки захвата. На VDS `MARKUP_BUDGET_MS=300000`, `AI_CALL_TIMEOUT_MS=240000` (таймаут одной попытки шлюза стал настраиваемым). Страница `/confirm-rules/[jobId]` опрашивает статус.
+- **Фаза 2B**: `src/lib/pipeline-v7/aux/toc-static.ts` после сохранения и гейта рендерит docx через soffice (`UpdateFields=true`), читает номера страниц `pdftotext` и пишет их в кэш поля TOC; на Vercel (без soffice) шаг пропускается. Заголовки собираются по `w:outlineLvl`, как их видит само поле.
+- **Порядок выкладки**: воркер (`ops/worker/deploy.sh`) всегда раньше роутов — старый воркер захватывает задачу методички и обрабатывает её как ГОСТ (воспроизведено 18.09).
+- Крон здоровья использует `CRON_SECRET` через `/opt/diplox-cron.sh … auth`; отдельный `WORKER_HEALTH_SECRET` не вводился.
+- Прод-замеры 18–19.09: `/api/process-gost` — 202 за 2–2,5 с, обработка v7 ~1 с; методичка 75 тыс. символов — разбор 52 с на VDS (на Vercel был бы таймаут), форматирование 14 с; TOC v7 — 3,4 с на рендер.
 
 **Только владелец:** SSH на `194.87.43.23`; `apt install`; заполнить `/etc/diplox-worker.env`; `systemctl enable --now diplox-worker`; две строки в `/opt/diplox-cron.sh`; флаг `PROCESSING_MODE` и `WORKER_HEALTH_SECRET` в Vercel.
 
