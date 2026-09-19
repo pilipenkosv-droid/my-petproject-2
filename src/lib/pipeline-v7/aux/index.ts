@@ -14,7 +14,7 @@ import type { PackSpec } from "../restyle/spec";
 import { roleMap } from "./common";
 import { insertToc } from "./toc";
 import { insertTitleBreak } from "./title-break";
-import { normalizeSpaces } from "./text-norm";
+import { normalizeText } from "./text-norm";
 import { blocksTitleBreak, docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";
 
 export interface AuxStats {
@@ -24,6 +24,8 @@ export interface AuxStats {
   updateFields: boolean;
   titleBreak: boolean;
   spacesCollapsed: number;
+  /** Doubled full stops reduced to one (same opt-in as spacesCollapsed). */
+  doubleDotsFixed: number;
   /** Headings the classifier found (L1+L2+L3) — the TOC guard's main input. */
   headings: number;
   /** Why no TOC was inserted, when none was. */
@@ -35,7 +37,7 @@ export interface AuxStats {
 }
 
 export interface AuxOptions {
-  /** Collapse runs of spaces in body text. Off by default. */
+  /** Collapse space runs and doubled dots in body text. Off by default. */
   textNormalization?: boolean;
   /** Paragraphs the restyler gave a w:pageBreakBefore they did not have. */
   addedPageBreak?: Set<OrderedXmlNode>;
@@ -56,15 +58,20 @@ export async function runAux(
   // body indices that the TOC insertion would otherwise have shifted.
   const brk = await insertTitleBreak(pkg, roles, opts.addedPageBreak, blocksTitleBreak(contentSkip));
   const toc = await insertToc(pkg, spec, roles, opts.existingToc, contentSkip);
-  const spacesCollapsed = opts.textNormalization ? normalizeSpaces(classification) : 0;
-  if (spacesCollapsed > 0) for (const cp of classification.list) pkg.markDirty(cp.part);
+  const text = opts.textNormalization
+    ? normalizeText(classification)
+    : { spacesCollapsed: 0, doubleDotsFixed: 0 };
+  if (text.spacesCollapsed > 0 || text.doubleDotsFixed > 0) {
+    for (const cp of classification.list) pkg.markDirty(cp.part);
+  }
 
   return {
     tocInserted: toc.inserted,
     tocExisting: toc.existing,
     updateFields: toc.updateFields,
     titleBreak: brk.inserted,
-    spacesCollapsed,
+    spacesCollapsed: text.spacesCollapsed,
+    doubleDotsFixed: text.doubleDotsFixed,
     headings: shape.headings,
     tocSkipped: toc.skipped,
     ...(brk.skipped ? { titleBreakSkipped: brk.skipped } : {}),
@@ -74,5 +81,5 @@ export async function runAux(
 
 export { insertToc, hasExistingToc, detectExistingToc } from "./toc";
 export { insertTitleBreak } from "./title-break";
-export { normalizeSpaces } from "./text-norm";
+export { normalizeText, type TextNormStats } from "./text-norm";
 export { docShape, tocContentSkip, type TitleBreakSkip, type TocSkip } from "./guards";

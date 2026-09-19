@@ -1,53 +1,165 @@
 /**
- * Collapsing runs of spaces — the one step that touches text, and therefore
- * opt-in.
+ * The two text repairs — collapsing runs of spaces and doubled full stops —
+ * and the only step that touches text, which is why it is opt-in.
  *
- * The rule applies to `w:t` nodes of every role except `toc` and `formula`,
- * and only *within* one text node. Collapsing across runs would join words
- * whose separating space lives in a neighbouring run, and `w:instrText` /
- * `w:delText` are never candidates — they are different tags and the walk
- * simply does not reach them. `toc` is excluded because its cached run is
- * replaced by Word on open anyway, and `formula` because spacing there can be
- * meaningful (e.g. omml fallback text).
+ * Both work on the paragraph's joined text rather than on one `w:t`, because
+ * that is what the checker reads (`getFullText`): a document written in Word
+ * splits a sentence across runs at every spell-check or formatting boundary,
+ * so the second space of a pair routinely lives in the next run. Matching the
+ * checker's view of the paragraph is the whole point — a fix that only looks
+ * inside a single node left most of the real corpus untouched.
  *
- * The fingerprint already collapses whitespace runs (normalizeText), so this
- * mutation is invisible to the gate; `allowTextNormalization` is passed anyway
- * because that is what the change means, not because A4 has to rescue it.
+ * What is never rewritten, even when it sits inside the joined text: hyperlink
+ * display text, deleted text, and field runs (`w:instrText` / `w:fldChar`).
+ * Those either belong to another author's edit or are code Word re-evaluates,
+ * and a space removed there is a broken field, not a cleaner sentence. They
+ * still *count* toward the offsets, so the paragraph text this module sees is
+ * exactly the checker's.
+ *
+ * Roles `toc` and `formula` are skipped whole: a TOC's cached run is replaced
+ * by Word on open anyway, and spacing inside a formula can be meaningful.
+ *
+ * Fidelity: space collapsing is invisible to the fingerprint (`normalizeText`
+ * there already collapses whitespace runs). Dropping a doubled dot is not — it
+ * goes through the A4 allowance, which `looseForm` covers explicitly.
  */
 
-import { children, type OrderedXmlNode } from "@/lib/xml/docx-xml";
-import { walkAll } from "../fingerprint/scan";
+import { children, findChildren, tagName, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import type { ClassificationResult, Role } from "../classify/types";
 
 const EXCLUDED_ROLES: ReadonlySet<Role> = new Set<Role>(["toc", "formula"]);
 
-const RUNS_OF_SPACES = / {2,}/g;
+/** Containers whose text the checker's `getFullText` folds into the paragraph. */
+const WRAPPERS = new Set(["w:hyperlink", "w:ins", "w:del", "w:smartTag"]);
+/** …of which these are read but never rewritten. */
+const READ_ONLY_WRAPPERS = new Set(["w:hyperlink", "w:del"]);
+/** A run holding either of these is a field: its text is code. */
+const FIELD_CHILDREN = new Set(["w:instrText", "w:fldChar"]);
 
-/** Collapses inside one w:t, keeping xml:space where a space survives at an edge. */
-function collapseTextNode(t: OrderedXmlNode): number {
-  let collapsed = 0;
-  for (const child of children(t)) {
-    if (!("#text" in child)) continue;
-    const before = String((child as Record<string, unknown>)["#text"]);
-    const after = before.replace(RUNS_OF_SPACES, " ");
-    if (after === before) continue;
-    collapsed += before.match(RUNS_OF_SPACES)?.length ?? 0;
-    (child as Record<string, unknown>)["#text"] = after;
-    if (/^ | $/.test(after)) {
-      t[":@"] = { ...(t[":@"] ?? {}), "@_xml:space": "preserve" };
-    }
-  }
-  return collapsed;
+const RUNS_OF_SPACES = / {2,}/g;
+/** Exactly two dots — `...` and an ellipsis are legitimate and must survive. */
+const DOUBLE_DOT = /(?<!\.)\.\.(?!\.)/g;
+
+/** One `#text` node of one `w:t`, placed on the paragraph's joined text. */
+interface Segment {
+  holder: Record<string, unknown>;
+  t: OrderedXmlNode;
+  start: number;
+  text: string;
+  /** False for hyperlink, deleted and field text: counted, never rewritten. */
+  writable: boolean;
 }
 
-/** Returns how many runs of spaces were collapsed across the document. */
-export function normalizeSpaces(classification: ClassificationResult): number {
-  let collapsed = 0;
+/** The paragraph as the checker reads it, with every `w:t` still addressable. */
+function segmentsOf(p: OrderedXmlNode): { segments: Segment[]; text: string } {
+  const segments: Segment[] = [];
+  let text = "";
+  const walk = (node: OrderedXmlNode, writable: boolean): void => {
+    for (const child of children(node)) {
+      const tag = tagName(child);
+      if (!tag) continue;
+      if (tag === "w:r") {
+        const field = children(child).some((c) => {
+          const t = tagName(c);
+          return t !== undefined && FIELD_CHILDREN.has(t);
+        });
+        // In document order, so a break or a tab lands between the text around
+        // it. Without them a space before a `w:br` and a space after it read as
+        // one run of two spaces, and collapsing that eats the indent of the
+        // next line. The checker's own getFullText drops breaks and therefore
+        // does see a pair there; this walk deliberately does not follow it.
+        for (const kid of children(child)) {
+          const kidTag = tagName(kid);
+          if (kidTag === "w:br" || kidTag === "w:cr") text += "\n";
+          else if (kidTag === "w:tab") text += "\t";
+          else if (kidTag === "w:t") {
+            for (const holder of children(kid)) {
+              if (!("#text" in holder)) continue;
+              const record = holder as unknown as Record<string, unknown>;
+              const s = String(record["#text"]);
+              segments.push({
+                holder: record,
+                t: kid,
+                start: text.length,
+                text: s,
+                writable: writable && !field,
+              });
+              text += s;
+            }
+          }
+        }
+      } else if (WRAPPERS.has(tag)) {
+        walk(child, writable && !READ_ONLY_WRAPPERS.has(tag));
+      }
+    }
+  };
+  walk(p, true);
+  return { segments, text };
+}
+
+/** Absolute offsets of the characters each match contributes for removal. */
+function offsetsToDrop(text: string, re: RegExp): number[] {
+  const out: number[] = [];
+  for (const m of text.matchAll(re)) {
+    const at = m.index ?? 0;
+    // One of the run survives: the first space, the first dot.
+    for (let i = 1; i < m[0].length; i++) out.push(at + i);
+  }
+  return out;
+}
+
+/**
+ * Deletes the given absolute offsets from the writable segments, back to front
+ * so earlier offsets stay valid. Offsets inside a read-only segment are left in
+ * place — a half-fixed paragraph is better than a broken field.
+ */
+function dropOffsets(segments: Segment[], offsets: number[]): void {
+  if (!offsets.length) return;
+  const wanted = new Set(offsets);
+  for (let i = segments.length - 1; i >= 0; i--) {
+    const seg = segments[i];
+    if (!seg.writable) continue;
+    const local: number[] = [];
+    for (let k = seg.text.length - 1; k >= 0; k--) {
+      if (wanted.has(seg.start + k)) local.push(k);
+    }
+    if (!local.length) continue;
+    let out = seg.text;
+    for (const k of local) out = out.slice(0, k) + out.slice(k + 1);
+    seg.holder["#text"] = out;
+    seg.text = out;
+    // A surviving edge space only stays a space if the node says so.
+    if (/^ | $/.test(out)) {
+      seg.t[":@"] = { ...(seg.t[":@"] ?? {}), "@_xml:space": "preserve" };
+    }
+  }
+}
+
+export interface TextNormStats {
+  /** Runs of spaces collapsed to one. */
+  spacesCollapsed: number;
+  /** Doubled full stops reduced to one. */
+  doubleDotsFixed: number;
+}
+
+/**
+ * Collapses space runs and doubled dots across every eligible paragraph.
+ *
+ * Idempotent: after one pass no writable part of a paragraph's joined text
+ * still matches either pattern, so a second pass finds nothing to drop.
+ */
+export function normalizeText(classification: ClassificationResult): TextNormStats {
+  const stats: TextNormStats = { spacesCollapsed: 0, doubleDotsFixed: 0 };
   for (const cp of classification.list) {
     if (EXCLUDED_ROLES.has(cp.role)) continue;
-    walkAll(cp.node, (node, tag) => {
-      if (tag === "w:t") collapsed += collapseTextNode(node);
-    });
+    const { segments, text } = segmentsOf(cp.node);
+    if (!segments.length) continue;
+    const spaces = offsetsToDrop(text, RUNS_OF_SPACES);
+    const dots = offsetsToDrop(text, DOUBLE_DOT);
+    if (!spaces.length && !dots.length) continue;
+    stats.spacesCollapsed += text.match(RUNS_OF_SPACES)?.length ?? 0;
+    stats.doubleDotsFixed += text.match(DOUBLE_DOT)?.length ?? 0;
+    dropOffsets(segments, [...spaces, ...dots]);
   }
-  return collapsed;
+  return stats;
 }

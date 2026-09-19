@@ -53,7 +53,7 @@ export function formatReportText(report: V7Report): string {
     `дополнения: оглавление ${a.tocInserted ? "вставлено" : a.tocExisting ? "уже было" : "нет"}` +
       `${a.updateFields ? " (+updateFields)" : ""}, разрыв секции ${a.titleBreak ? "да" : "нет"}, ` +
       `шапок таблиц ${a.tblHeaderSet}, снято подчёркиваний ${a.underlineRemoved}, ` +
-      `схлопнуто пробелов ${a.spacesCollapsed}` +
+      `схлопнуто пробелов ${a.spacesCollapsed}, двойных точек ${a.doubleDotsFixed}` +
       (a.tocSkipped ? `, пропущено: ${a.tocSkipped}` : "") +
       (a.redundantBreakRemoved ? ", снят лишний разрыв страницы" : "")
   );

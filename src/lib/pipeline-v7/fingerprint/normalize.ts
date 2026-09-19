@@ -24,11 +24,22 @@ export function normalizeText(raw: string): string {
     .trim();
 }
 
-/** A4 equivalence: quote shapes and digit-range dashes are considered equal. */
+/**
+ * A4 equivalence: quote shapes, digit-range dashes and a doubled full stop are
+ * considered equal.
+ *
+ * The dot is the one that changes meaning rather than shape, and it is here
+ * deliberately: `aux/text-norm.ts` repairs `..` → `.`, which the strict
+ * fingerprint sees as edited text. Collapsing it on BOTH sides makes the
+ * allowance symmetric — the gate stops distinguishing the typo from its fix,
+ * and still refuses any other edit to the same paragraph. `...` and the
+ * ellipsis are untouched, as they are in the repair.
+ */
 export function looseForm(s: string): string {
   return normalizeText(s)
     .replace(/[«»“”„‟"]/g, '"')
-    .replace(/(?<=\d)[-–—](?=\d)/g, "-");
+    .replace(/(?<=\d)[-–—](?=\d)/g, "-")
+    .replace(/(?<!\.)\.\.(?!\.)/g, ".");
 }
 
 export function looseEqual(a: string, b: string): boolean {

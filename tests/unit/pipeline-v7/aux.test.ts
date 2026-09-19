@@ -12,7 +12,7 @@ import JSZip from "jszip";
 import { GOST_7_32 } from "@/lib/pipeline-v6/rule-packs/gost-7-32";
 import { runPipelineV7 } from "@/lib/pipeline-v7/orchestrator";
 import { restyleRuns, setHeaderRow } from "@/lib/pipeline-v7/restyle";
-import { normalizeSpaces } from "@/lib/pipeline-v7/aux";
+import { normalizeText } from "@/lib/pipeline-v7/aux";
 import { children, findChild, parseDocxXml, tagName, type OrderedXmlNode } from "@/lib/xml/docx-xml";
 import { buildMiniDocx, p, style, W_NS } from "./helpers/mini-docx";
 
@@ -361,14 +361,14 @@ describe("aux — space collapsing", () => {
       "w:p"
     )!;
     const cp = { node, path: "p", part: "word/document.xml", role: "body" as const, confidence: 1, source: "style" as const };
-    const collapsed = normalizeSpaces({
+    const collapsed = normalizeText({
       byNode: new WeakMap(),
       list: [cp],
       histogram: {} as never,
       warnings: [],
       suspect: false,
     });
-    expect(collapsed).toBe(0);
+    expect(collapsed.spacesCollapsed).toBe(0);
   });
 
   it("passes the gate with the flag on", async () => {

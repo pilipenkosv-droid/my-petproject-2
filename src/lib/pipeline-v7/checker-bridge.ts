@@ -130,6 +130,7 @@ export const EMPTY_AUX: V7Report["aux"] = {
   updateFields: false,
   titleBreak: false,
   spacesCollapsed: 0,
+  doubleDotsFixed: 0,
   headings: 0,
   redundantBreakRemoved: false,
   tblHeaderSet: 0,
