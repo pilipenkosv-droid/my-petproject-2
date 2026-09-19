@@ -23,6 +23,7 @@ import { evaluateGate } from "../../src/lib/pipeline-v7/fingerprint/gate";
 import { runPipelineV7 } from "../../src/lib/pipeline-v7/orchestrator";
 import { violationSummaries } from "../../src/lib/pipeline-v7/report";
 import { runV6, runLegacy, renderPdf } from "./bench-runners";
+import { explainOutput } from "./bench-explain";
 import {
   criteria,
   mark,
@@ -31,6 +32,8 @@ import {
   summary,
   topFailed,
   topViolations,
+  explainSection,
+  auxSection,
   type Row,
 } from "./bench-report";
 
@@ -69,6 +72,8 @@ interface BenchOpts {
   pdf: boolean;
   outDir: string;
   textNormalization: boolean;
+  /** Print a structural locator for every failed checker rule. */
+  explain: boolean;
 }
 
 async function benchDoc(doc: Doc, o: BenchOpts): Promise<Row> {
@@ -98,7 +103,23 @@ async function benchDoc(doc: Doc, o: BenchOpts): Promise<Row> {
       formatMs: r.report.timings.formatMs,
       failed: r.report.checker.failed,
       refused: r.report.refused !== undefined,
+      aux: {
+        tocInserted: r.report.aux.tocInserted,
+        tocExisting: r.report.aux.tocExisting,
+        ...(r.report.aux.tocSkipped ? { tocSkipped: r.report.aux.tocSkipped } : {}),
+        titleBreak: r.report.aux.titleBreak,
+        ...(r.report.aux.titleBreakSkipped ? { titleBreakSkipped: r.report.aux.titleBreakSkipped } : {}),
+        headings: r.report.aux.headings,
+      },
     };
+    if (o.explain && r.output && r.report.checker.failed.length) {
+      // Facts are re-derived from the output bytes, never taken from the
+      // checker's own examples — those quote the document.
+      row.explain = await explainOutput(r.output, {
+        safeText: doc.set === "synthetic",
+        failed: r.report.checker.failed,
+      });
+    }
     if (pdf) {
       row.pages.src = renderPdf(input, outDir, `${doc.id}-src`);
       const v7buf = r.output ?? null;
@@ -137,6 +158,7 @@ async function main() {
   const idFilter = value("id");
   const compare = (value("compare") ?? "").split(",").filter(Boolean);
   const pdf = args.includes("--pdf");
+  const explain = args.includes("--explain");
   const textNormalization = args.includes("--text-norm");
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
   const outDir = value("out") ?? `/tmp/v7-bench/${stamp}`;
@@ -150,13 +172,18 @@ async function main() {
 
   const rows: Row[] = [];
   for (let i = 0; i < docs.length; i++) {
-    const row = await benchDoc(docs[i], { compare, pdf, outDir, textNormalization });
+    const row = await benchDoc(docs[i], { compare, pdf, outDir, textNormalization, explain });
     rows.push(row);
     console.log(
       `[${i + 1}/${docs.length}] ${row.id.slice(0, 22)} v7=${mark(row.v7.gate)} score=${num(row.v7.score)} ${row.v7.ms}мс` +
         (row.v6 ? ` | v6=${mark(row.v6.gate)} score=${num(row.v6.score)} ${row.v6.ms}мс` : "") +
         (row.legacy ? ` | leg=${mark(row.legacy.gate)} score=${num(row.legacy.score)}` : "")
     );
+    if (explain && row.explain) {
+      for (const [rule, lines] of Object.entries(row.explain)) {
+        for (const line of lines) console.log(`    ${rule} ${line}`);
+      }
+    }
     fs.writeFileSync(path.join(outDir, "report.json"), JSON.stringify({ outDir, rows }, null, 2));
   }
 
@@ -171,8 +198,12 @@ async function main() {
     "## Критерии go/no-go",
     ...criteria(rows).map((l) => `- ${l}`),
     "",
+    "## Телеметрия aux (вставка TOC и разрыва)",
+    ...auxSection(rows),
+    "",
     "## Частые провалы чекера (v7)",
     ...topFailed(rows).map((l) => `- ${l}`),
+    ...(explain ? ["", "## Разбор провалов (--explain)", ...explainSection(rows)] : []),
     "",
     "## Частые нарушения гейта",
     `- v7: ${topViolations(rows, (r) => r.v7).join(", ") || "нет"}`,
