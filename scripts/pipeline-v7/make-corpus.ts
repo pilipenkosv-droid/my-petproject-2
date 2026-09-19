@@ -1,4 +1,4 @@
-// Детерминированно генерирует 12 синтетических .docx (по одному на хазард
+// Детерминированно генерирует 13 синтетических .docx (по одному на хазард
 // живучести контента для OOXML-рестайлера pipeline-v7) в
 // data/corpus/synthetic/ + manifest.json с точными счётчиками маркеров,
 // которые обязан пройти fidelity gate. `--verify` перегенерирует всё в
@@ -19,6 +19,7 @@ import { build as build09 } from "./make-corpus/docs/09-formulas";
 import { build as build10 } from "./make-corpus/docs/10-existing-toc";
 import { build as build11 } from "./make-corpus/docs/11-bibliography-15";
 import { build as build12 } from "./make-corpus/docs/12-no-styles";
+import { build as build13 } from "./make-corpus/docs/13-title-page-break";
 import type { DocBuildResult, ManifestEntry } from "./make-corpus/docs/types";
 
 const BUILDERS: (() => Promise<DocBuildResult>)[] = [
@@ -34,6 +35,7 @@ const BUILDERS: (() => Promise<DocBuildResult>)[] = [
   build10,
   build11,
   build12,
+  build13,
 ];
 
 const OUT_DIR = join(__dirname, "..", "..", "data", "corpus", "synthetic");

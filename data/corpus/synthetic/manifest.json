@@ -101,5 +101,15 @@
       "manual-numbered-markers": 5,
       "manual-dash-markers": 3
     }
+  },
+  {
+    "file": "13-title-page-break.docx",
+    "hazard": "title-page break in first paragraph + handwritten TOC (P0 regression)",
+    "mustSurvive": {
+      "page-break-run": 1,
+      "toc-dot-leaders": 5,
+      "w:numPr": 3,
+      "heading-paragraphs": 4
+    }
   }
 ]
