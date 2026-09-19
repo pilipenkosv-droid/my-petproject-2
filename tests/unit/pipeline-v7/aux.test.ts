@@ -313,12 +313,44 @@ describe("aux — underline", () => {
     expect(counters.underlineRemoved).toBe(1);
   });
 
-  it("is kept on a title page and in a TOC entry", () => {
-    for (const role of ["title_page", "toc"] as const) {
-      const node = parseP(UNDERLINED);
-      restyleRuns(node, role, GOST_7_32);
-      expect(uOf(node)).toBeDefined();
+  it("is kept in a TOC entry and dropped on a title page", () => {
+    // Owner's decision, 2026-09-19: ГОСТ forbids underlining and the score the
+    // student is shown is computed without roles, so a title page no longer
+    // buys an exemption. The TOC keeps its own.
+    const toc = parseP(UNDERLINED);
+    restyleRuns(toc, "toc", GOST_7_32);
+    expect(uOf(toc)).toBeDefined();
+
+    const title = parseP(UNDERLINED);
+    restyleRuns(title, "title_page", GOST_7_32);
+    expect(uOf(title)).toBeUndefined();
+  });
+
+  it("drops w:u w:val=\"none\" even in a TOC entry", () => {
+    const node = parseP('<w:r><w:rPr><w:u w:val="none"/></w:rPr><w:t>ВВЕДЕНИЕ</w:t></w:r>');
+    restyleRuns(node, "toc", GOST_7_32);
+    expect(uOf(node)).toBeUndefined();
+  });
+
+  it("keeps the width of a signature line while dropping its underline", () => {
+    for (const blank of ["_________", "     "]) {
+      const node = parseP(`<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${blank}</w:t></w:r>`);
+      restyleRuns(node, "title_page", GOST_7_32);
+      expect(uOf(node)).toBeUndefined();
+      const t = findChild(findChild(node, "w:r")!, "w:t")!;
+      // The characters stay — they are what leaves room for the signature —
+      // and the node now says so, or the serializer would eat the spaces.
+      expect(children(t).find((c) => "#text" in c)).toBeDefined();
+      expect(t[":@"]?.["@_xml:space"]).toBe("preserve");
     }
+  });
+
+  it("a title-page run with real text just loses the underline", () => {
+    const node = parseP('<w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>Иванов И. И.</w:t></w:r>');
+    restyleRuns(node, "title_page", GOST_7_32);
+    expect(uOf(node)).toBeUndefined();
+    const t = findChild(findChild(node, "w:r")!, "w:t")!;
+    expect(t[":@"]?.["@_xml:space"]).toBeUndefined();
   });
 });
 
