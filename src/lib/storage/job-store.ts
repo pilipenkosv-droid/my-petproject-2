@@ -339,11 +339,22 @@ export async function cleanupOldJobs(
     .from("jobs")
     .delete()
     .lt("created_at", cutoff)
-    .select("id");
+    .select("id, status, shadow_of");
 
   if (error) {
     console.error("[job-store] Failed to cleanup old jobs:", error);
     return 0;
+  }
+
+  // Удалённые completed-задачи уходят в накопительный счётчик лендинга (site_stats),
+  // иначе «документов обработано» показывало бы только последние 30 дней.
+  const archived = (data ?? []).filter((j) => j.status === "completed" && j.shadow_of == null).length;
+  if (archived > 0) {
+    const { error: rpcError } = await supabase.rpc("increment_site_stat", {
+      p_key: "documents_processed_archived",
+      p_delta: archived,
+    });
+    if (rpcError) console.error("[job-store] Failed to archive documents count:", rpcError);
   }
 
   return data?.length ?? 0;
