@@ -77,6 +77,22 @@ function findByKeys(root: OrderedXmlNode, keys: string[]): OrderedXmlNode | unde
   });
 }
 
+/**
+ * A style whose `w:styleId` is exactly `id`, created if absent.
+ *
+ * `findByKeys` also matches on the style's NAME, which is right for aligning
+ * with a built-in but wrong for TOC1: a document that already carries a style
+ * named "toc 1" under some generated id (`11`, `31`) would be matched, nothing
+ * with the id `TOC1` would ever be written, and the paragraphs pointing at
+ * `TOC1` would reference a style that does not exist — left to the editor to
+ * render, which is exactly what we are avoiding. The checker also matches the
+ * id literally (`w:pStyle w:val="TOC[123]"`), so the id has to be real.
+ */
+function findOrCreateById(root: OrderedXmlNode, id: string, name: string): OrderedXmlNode {
+  const existing = styleNodes(root).find((st) => getAttr(st, "w:styleId") === id);
+  return existing ?? appendStyle(root, id, name);
+}
+
 function appendStyle(root: OrderedXmlNode, id: string, name: string): OrderedXmlNode {
   const node = createNode("w:style", { "w:type": "paragraph", "w:styleId": id });
   setPropInOrder(node, "w:name", { "w:val": name }, W_STYLE_ORDER);
@@ -130,7 +146,10 @@ export async function upsertCanonicalStyles(
   for (const def of CANONICAL) {
     const v = roleVisual(def.role, spec);
     if (!v) continue;
-    const style = findByKeys(root, [normStyleName(def.id)]) ?? appendStyle(root, def.id, def.name);
+    const style =
+      def.id === STYLE_IDS.tocEntry
+        ? findOrCreateById(root, def.id, def.name)
+        : (findByKeys(root, [normStyleName(def.id)]) ?? appendStyle(root, def.id, def.name));
     const overrides: Partial<Record<string, typeof v>> = {
       [STYLE_IDS.tocTitle]: { ...v, jc: "center", pageBreakBefore: false },
       [STYLE_IDS.tocEntry]: { ...v, jc: "left" },

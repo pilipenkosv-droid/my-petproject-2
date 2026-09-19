@@ -110,6 +110,41 @@ describe("pipeline — набранное руками оглавление до
     expect(r.report.checker.failed).not.toContain("structure.tocFieldCode");
   });
 
+  it("объявляет стиль с id ровно TOC1, даже если в документе уже есть «toc 1» под другим id", async () => {
+    // Документы Word сплошь и рядом несут стиль с именем «toc 1» под
+    // сгенерированным id (11, 31). Поиск по имени нашёл бы его, стиля с id
+    // TOC1 не появилось бы, и абзацы ссылались бы в пустоту — а чекер
+    // сличает именно id.
+    const foreign =
+      '<w:style w:type="paragraph" w:styleId="11"><w:name w:val="toc 1"/></w:style>' +
+      '<w:style w:type="paragraph" w:styleId="31"><w:name w:val="toc 3"/></w:style>';
+    const r = await runPipelineV7(await buildMiniDocx({ body, styles: STYLES + foreign }), {
+      pack: GOST_7_32,
+      documentId: "toc-entries",
+      returnOnGateFail: true,
+      textNormalization: true,
+    });
+    const styles = await (await JSZip.loadAsync(r.output!)).file("word/styles.xml")!.async("string");
+    expect(styles).toContain('w:styleId="TOC1"');
+    // Чужой стиль остался на месте, его id не переписан.
+    expect(styles).toContain('w:styleId="11"');
+  });
+
+  it("идемпотентен: второй прогон не меняет ни роли, ни оценку", async () => {
+    const input = await buildMiniDocx({ body, styles: STYLES });
+    const opts = {
+      pack: GOST_7_32,
+      documentId: "toc-entries",
+      returnOnGateFail: true,
+      textNormalization: true,
+    };
+    const first = await runPipelineV7(input, opts);
+    const second = await runPipelineV7(first.output!, opts);
+    expect(second.report.classification.histogram.toc).toBe(first.report.classification.histogram.toc);
+    expect(second.report.checker.finalScoreUndef).toBe(first.report.checker.finalScoreUndef);
+    expect(second.report.gate.pass).toBe(true);
+  });
+
   it("текст строк не меняется: роль toc исключена из нормализации", async () => {
     const r = await runPipelineV7(await buildMiniDocx({ body, styles: STYLES }), {
       pack: GOST_7_32,
