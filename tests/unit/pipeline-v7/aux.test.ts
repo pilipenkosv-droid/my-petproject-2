@@ -109,6 +109,68 @@ describe("aux — TOC insertion", () => {
     expect(r.report.gate.pass).toBe(true);
   });
 
+  /**
+   * The student typed «СОДЕРЖАНИЕ» and left the page under it blank.
+   *
+   * Commit d7cf44c made any such heading a refusal, after two 1★ reviews about
+   * a contents block printed on top of the student's own text. That went too
+   * far: the word alone is a promise, not a table of contents, and the refusal
+   * cost every document a critical checker rule. The heading now anchors the
+   * insertion instead of blocking it — see ADR-014.
+   */
+  describe("«СОДЕРЖАНИЕ» без содержимого", () => {
+    const withHeading = (under: string) =>
+      p("Титульный лист") +
+      p("Курсовая работа") +
+      p("Москва 2026") +
+      H1("СОДЕРЖАНИЕ") +
+      under +
+      H1("ВВЕДЕНИЕ") +
+      p("Текст работы.") +
+      filler(22) +
+      H1("ОСНОВНАЯ ЧАСТЬ") +
+      p("Разбор темы.") +
+      H1("ЗАКЛЮЧЕНИЕ") +
+      p("Итоги.") +
+      SECT;
+
+    const headings = (buf: Buffer) =>
+      (buf.toString("latin1"), null);
+
+    it("вставляет поле под заголовок и не добавляет второго", async () => {
+      void headings;
+      const r = await run(await docx(withHeading("")));
+      expect(r.report.aux.tocInserted).toBe(true);
+      expect(r.report.aux.tocUnderExistingHeading).toBe(true);
+      expect(r.report.aux.tocExisting).toBe(false);
+      expect(r.report.gate.pass).toBe(true);
+
+      const xml = await documentXml(r.output!);
+      expect(xml).toContain('TOC \\o');
+      // Ровно одно «СОДЕРЖАНИЕ» — своё заголовок мы не приписали.
+      expect(xml.match(/СОДЕРЖАНИЕ/g)?.length).toBe(1);
+
+      const nodes = await partOf(r.output!, "word/document.xml");
+      const body = findChild(nodes.find((n) => "w:document" in n)!, "w:body")!;
+      const blocks = children(body).filter((n) => "w:p" in n);
+      const at = blocks.findIndex((n) => JSON.stringify(n).includes("СОДЕРЖАНИЕ"));
+      expect(JSON.stringify(blocks[at + 1])).toContain("instrText");
+    });
+
+    it("считает одинокую короткую строку пустотой", async () => {
+      const r = await run(await docx(withHeading(p("2"))));
+      expect(r.report.aux.tocUnderExistingHeading).toBe(true);
+    });
+
+    it("не трогает заголовок, под которым уже есть перечень", async () => {
+      const listed = p("Введение\t3") + p("1 Основная часть\t5") + p("Заключение\t20");
+      const r = await run(await docx(withHeading(listed)));
+      expect(r.report.aux.tocInserted).toBe(false);
+      expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+      expect(r.report.gate.pass).toBe(true);
+    });
+  });
+
   it("inserts the TOC right after the title page, before the first heading", async () => {
     const r = await run(await docx(BODY));
     const nodes = await partOf(r.output!, "word/document.xml");
@@ -164,7 +226,7 @@ describe("aux — insertion guards", () => {
     expect(r.report.gate.pass).toBe(true);
   });
 
-  it("adds no second TOC when the student typed their own «СОДЕРЖАНИЕ»", async () => {
+  it("филлит пустой «СОДЕРЖАНИЕ» студента, не добавляя второго заголовка", async () => {
     const body =
       p("Министерство образования") +
       p("Курсовая работа") +
@@ -179,8 +241,10 @@ describe("aux — insertion guards", () => {
       p("Итоги.") +
       SECT;
     const r = await run(await docx(body));
-    expect(r.report.aux.tocInserted).toBe(false);
-    expect(r.report.aux.tocSkipped).toBe("toc-heading-present");
+    // Заголовок есть, перечня под ним нет: поле ставится под него,
+    // и своё «СОДЕРЖАНИЕ» мы по-прежнему не приписываем.
+    expect(r.report.aux.tocInserted).toBe(true);
+    expect(r.report.aux.tocUnderExistingHeading).toBe(true);
     const xml = await documentXml(r.output!);
     expect(xml.match(/СОДЕРЖАНИЕ/g)).toHaveLength(1);
   });

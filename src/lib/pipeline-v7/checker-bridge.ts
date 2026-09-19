@@ -127,6 +127,7 @@ export function emptyRestyleStats(): RestyleStats {
 export const EMPTY_AUX: V7Report["aux"] = {
   tocInserted: false,
   tocExisting: false,
+  tocUnderExistingHeading: false,
   updateFields: false,
   titleBreak: false,
   spacesCollapsed: 0,

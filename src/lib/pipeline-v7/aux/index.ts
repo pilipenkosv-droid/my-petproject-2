@@ -22,6 +22,8 @@ export interface AuxStats {
   tocInserted: boolean;
   /** A TOC was already present and left alone. */
   tocExisting: boolean;
+  /** The TOC field went under the student's own heading, without adding one. */
+  tocUnderExistingHeading: boolean;
   updateFields: boolean;
   titleBreak: boolean;
   spacesCollapsed: number;
@@ -60,7 +62,7 @@ export async function runAux(
   // The break goes in first: it edits an existing title paragraph, so it reads
   // body indices that the TOC insertion would otherwise have shifted.
   const brk = await insertTitleBreak(pkg, roles, opts.addedPageBreak, blocksTitleBreak(contentSkip));
-  const toc = await insertToc(pkg, spec, roles, opts.existingToc, contentSkip);
+  const toc = await insertToc(pkg, spec, roles, opts.existingToc, contentSkip, shape.tocHeadingNode);
   const text = opts.textNormalization
     ? normalizeText(classification)
     : { spacesCollapsed: 0, doubleDotsFixed: 0 };
@@ -73,6 +75,7 @@ export async function runAux(
   return {
     tocInserted: toc.inserted,
     tocExisting: toc.existing,
+    tocUnderExistingHeading: toc.underExistingHeading === true,
     updateFields: toc.updateFields,
     titleBreak: brk.inserted,
     spacesCollapsed: text.spacesCollapsed,
