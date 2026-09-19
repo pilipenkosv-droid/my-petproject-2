@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Header } from "@/components/Header";
 import { CtaButton } from "@/components/CtaButton";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { countDocumentsProcessed } from "@/lib/storage/documents-processed";
 import { FileText, Sparkles, Download, ArrowRight, BookOpen, SpellCheck, Pencil, ListTree, FileCheck, ShieldCheck } from "lucide-react";
 
 import { HeroSubtitle } from "@/components/HeroSubtitle";
@@ -16,12 +16,7 @@ import { TransformationStory } from "@/components/TransformationStory";
 
 async function getDocumentsProcessed(): Promise<number> {
   try {
-    const admin = getSupabaseAdmin();
-    const { count } = await admin
-      .from("jobs")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "completed");
-    return count ?? 0;
+    return await countDocumentsProcessed();
   } catch {
     return 0;
   }
