@@ -2,8 +2,13 @@
  * Статическое заполнение поля TOC у выхода pipeline-v7 (ADR-016, фаза 2B).
  *
  * Поле вставляется с пустым кэшем и `w:dirty`: до обновления полей в Word
- * содержание пустое. На воркере есть soffice — рендерим документ один раз в
- * PDF с UpdateFields, снимаем номера страниц и записываем строки в кэш поля.
+ * содержание пустое. На воркере есть soffice — рендерим документ в PDF с
+ * UpdateFields, снимаем номера страниц и записываем строки в кэш поля.
+ *
+ * Рендеров два. Первый видит поле как один пустой абзац, поэтому всё, что
+ * ниже содержания, сдвинуто на высоту будущих строк TOC. Второй снимает
+ * номера уже с готового блока; число строк от этого не меняется, так что
+ * одного повтора достаточно для сходимости.
  *
  * Шаг идёт ПОСЛЕ сохранения и гейта верности: орчестратор и фингерпринт о нём
  * не знают. На Vercel soffice нет — единственная ветка там `no-soffice`.
@@ -26,6 +31,7 @@ import {
   resolvePages,
   textWidthTwips,
   type TocEntry,
+  type TocHeading,
 } from "./toc-static-xml";
 
 const RENDER_TIMEOUT_MS = 120_000;
@@ -34,6 +40,8 @@ export interface TocStaticResult {
   output: Buffer;
   filled: number;
   skipped?: string;
+  /** Сколько раз документ рендерился в PDF (обычно 2). */
+  renders?: number;
 }
 
 /** Шов для тестов: рендер подменяется, файловая система не трогается. */
@@ -90,6 +98,18 @@ export function renderPages(docx: Buffer): string[] {
   }
 }
 
+/** Номера страниц для заголовков плюс ключ для сравнения двух проходов. */
+function makeEntries(headings: TocHeading[], pages: string[]) {
+  const resolved = resolvePages(headings, pages);
+  let filled = 0;
+  const entries: TocEntry[] = headings.map((h, i) => {
+    const page = resolved[i] ?? null;
+    if (page !== null) filled += 1;
+    return { ...h, page: page === null ? "—" : String(page) };
+  });
+  return { entries, filled, key: entries.map((e) => e.page).join("|") };
+}
+
 async function fill(docx: Buffer, deps: TocStaticDeps): Promise<TocStaticResult> {
   const zip = await JSZip.loadAsync(docx);
   const docFile = zip.file("word/document.xml");
@@ -102,22 +122,27 @@ async function fill(docx: Buffer, deps: TocStaticDeps): Promise<TocStaticResult>
   if (headings.length === 0) return { output: docx, filled: 0, skipped: "no-headings" };
 
   const pages = deps.renderPages(docx);
-  if (pages.length === 0) return { output: docx, filled: 0, skipped: "no-render" };
+  if (pages.length === 0) return { output: docx, filled: 0, skipped: "no-render", renders: 1 };
 
-  const resolved = resolvePages(headings, pages);
-  let filled = 0;
-  const entries: TocEntry[] = headings.map((h, i) => {
-    const page = resolved[i] ?? null;
-    if (page !== null) filled += 1;
-    return { ...h, page: page === null ? "—" : String(page) };
-  });
+  const tabPos = textWidthTwips(xml);
+  const write = (entries: TocEntry[]): Promise<Buffer> => {
+    const replacement = buildTocParagraphs(entries, field.parts, { tabPos });
+    // Замена функцией, а не строкой: шаблоны подстановки вида $& в тексте
+    // заголовка иначе развернулись бы прямо в document.xml.
+    zip.file("word/document.xml", xml.replace(field.parts.paragraph, () => replacement));
+    return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  };
 
-  const replacement = buildTocParagraphs(entries, field.parts, { tabPos: textWidthTwips(xml) });
-  // Замена функцией, а не строкой: шаблоны подстановки вида $& в тексте
-  // заголовка иначе развернулись бы прямо в document.xml.
-  zip.file("word/document.xml", xml.replace(field.parts.paragraph, () => replacement));
-  const output = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
-  return { output, filled };
+  const first = makeEntries(headings, pages);
+  const output = await write(first.entries);
+
+  // Второй проход: номера снимаются с документа, где содержание уже занимает
+  // свои строки, — иначе всё ниже него уезжает на страницу-другую.
+  const shifted = deps.renderPages(output);
+  if (shifted.length === 0) return { output, filled: first.filled, renders: 2 };
+  const second = makeEntries(headings, shifted);
+  if (second.key === first.key) return { output, filled: first.filled, renders: 2 };
+  return { output: await write(second.entries), filled: second.filled, renders: 2 };
 }
 
 /**

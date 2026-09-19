@@ -205,6 +205,38 @@ describe("fillTocStatic", () => {
     expect(xml).not.toMatch(/<w:t xml:space="preserve">Обычный текст<\/w:t><\/w:r><w:r>[\s\S]*?<w:tab\/>/);
   });
 
+  it("берёт номера со второго рендера: строки TOC сдвигают тело", async () => {
+    const docx = await fixture();
+    // Первый рендер видит поле как один пустой абзац, второй — уже три
+    // строки содержания, из-за которых тело уехало на страницу вперёд.
+    const firstPass = PAGES;
+    const secondPass = [
+      "титул",
+      "СОДЕРЖАНИЕ\nВВЕДЕНИЕ..... 4\n1 ОБЗОР..... 5\n1.1 Постановка задачи..... 5",
+      "ВВЕДЕНИЕ текст",
+      "1 ОБЗОР текст",
+      "1.1 Постановка задачи",
+    ];
+    const seen: string[][] = [];
+    const result = await fillTocStatic(docx, {
+      hasTools: () => true,
+      renderPages: () => {
+        seen.push(seen.length === 0 ? firstPass : secondPass);
+        return seen[seen.length - 1];
+      },
+    });
+
+    expect(seen).toHaveLength(2);
+    expect(result.renders).toBe(2);
+    expect(result.filled).toBe(3);
+
+    const xml = await documentXml(result.output);
+    // Первый проход дал бы 3/4/4; во втором тело уехало вниз — 3/4/5.
+    const nums = [...xml.matchAll(/<w:tab\/><\/w:r><w:r>[\s\S]*?<w:t>(\d+|—)<\/w:t>/g)].map((m) => m[1]);
+    expect(nums).toEqual(["3", "4", "5"]);
+    expect(xml.match(/<w:fldChar w:fldCharType="begin"/g)).toHaveLength(1);
+  });
+
   it("без поля TOC документ не трогается", async () => {
     const docx = await buildMiniDocx({ body: heading(1, "ВВЕДЕНИЕ") + SECT_PR });
     const result = await fillTocStatic(docx, { hasTools: () => true, renderPages: () => PAGES });

@@ -92,7 +92,12 @@ async function fillV7Toc(adapted: LegacyAdapterResult, report: ProgressReporter)
     const full = await fillTocStatic(adapted.fullFormattedDocument);
     adapted.fullFormattedDocument = full.output;
   }
-  v7.tocStatic = { filled: main.filled, ...(main.skipped && { skipped: main.skipped }), ms: Date.now() - started };
+  v7.tocStatic = {
+    filled: main.filled,
+    ...(main.skipped && { skipped: main.skipped }),
+    ...(main.renders && { renders: main.renders }),
+    ms: Date.now() - started,
+  };
 }
 
 export async function processGostJob(
