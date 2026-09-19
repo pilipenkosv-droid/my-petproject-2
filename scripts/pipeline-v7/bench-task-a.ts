@@ -14,8 +14,8 @@ import { DocxPackage } from "@/lib/pipeline-v7/docx/package";
 import { classifyDocument } from "@/lib/pipeline-v7/classify/deterministic";
 import { candidatesForLlm } from "@/lib/pipeline-v7/classify/llm-candidates";
 import { buildUserPrompt, SYSTEM_PROMPT, type CandidateView } from "@/lib/pipeline-v7/classify/prompt";
-import { roleBatchSchema } from "@/lib/pipeline-v7/classify/schema";
-import type { ClassifiedParagraph, ClassificationResult } from "@/lib/pipeline-v7/classify/types";
+import { roleBatchSchema, roleEnum } from "@/lib/pipeline-v7/classify/schema";
+import type { ClassifiedParagraph, ClassificationResult, Role } from "@/lib/pipeline-v7/classify/types";
 import { callGatewayModel, tryParseJson, percentile } from "./bench-gateway";
 
 const REAL_DIR = "data/corpus/real";
@@ -23,6 +23,20 @@ const N_DOCS = 15;
 const MAX_CANDIDATES = 80;
 const MAX_CONTROLS = 20;
 const CONTROL_CONFIDENCE = 0.85;
+
+/**
+ * Control pool must be limited to roles the LLM can actually emit
+ * (`roleEnum` minus `unknown`). T0 also assigns `table_cell`, `note`,
+ * `header_footer`, `formula` and `empty` with confidence 1 (see
+ * `classify/deterministic.ts` `byPosition`/`byMath`), but none of those are
+ * in `roleEnum` (`classify/schema.ts`) — the model is never offered them, so
+ * including them in the control pool made most "controls" unanswerable by
+ * construction. That is the root cause of the 26-34% control accuracy in
+ * the 2026-09-18 run (see docs/bench/2026-09-18-model-bench.md, part 2).
+ */
+const CONTROLLABLE_ROLES: ReadonlySet<Role> = new Set(
+  roleEnum.options.filter((r) => r !== "unknown") as Role[]
+);
 
 const MODELS = [
   "google/gemini-2.5-flash",
@@ -88,7 +102,11 @@ async function selectDocs(): Promise<DocSelection[]> {
     const candidateSet = new Set(candidates);
 
     const controlPool = result.list.filter(
-      (cp) => cp.role !== "unknown" && cp.confidence >= CONTROL_CONFIDENCE && !candidateSet.has(cp) && (cp.text ?? "").trim().length > 0
+      (cp) =>
+        CONTROLLABLE_ROLES.has(cp.role) &&
+        cp.confidence >= CONTROL_CONFIDENCE &&
+        !candidateSet.has(cp) &&
+        (cp.text ?? "").trim().length > 0
     );
     // Deterministic spread across the doc rather than the first N lines.
     const step = Math.max(1, Math.floor(controlPool.length / MAX_CONTROLS));
@@ -153,6 +171,8 @@ interface ModelAgg {
   durations: number[];
   totalCostUSD: number;
   docsCovered: number;
+  /** Control-only confusion matrix: "expected|got" -> count. */
+  confusion: Map<string, number>;
 }
 
 async function main(): Promise<void> {
@@ -176,6 +196,7 @@ async function main(): Promise<void> {
       durations: [],
       totalCostUSD: 0,
       docsCovered: 0,
+      confusion: new Map(),
     };
   }
 
@@ -220,6 +241,8 @@ async function main(): Promise<void> {
         if (got !== undefined) {
           agg.controlTotal++;
           if (got === expected) agg.controlCorrect++;
+          const key = `${expected}|${got}`;
+          agg.confusion.set(key, (agg.confusion.get(key) ?? 0) + 1);
         }
       }
       if (model === BASELINE_MODEL) baselineByDoc.set(doc.file, stat.assignedRoles);
@@ -266,8 +289,26 @@ async function main(): Promise<void> {
     });
   }
   console.table(rows);
+
+  console.log("\n=== Per-role confusion matrix (controls only, expected -> got) ===");
+  const confusionByModel: Record<string, Array<{ expected: string; got: string; count: number }>> = {};
+  for (const model of MODELS) {
+    const a = perModel[model];
+    if (a.confusion.size === 0) continue;
+    console.log(`\n${model}:`);
+    const entries = [...a.confusion.entries()]
+      .map(([key, count]) => {
+        const [expected, got] = key.split("|");
+        return { expected, got, count };
+      })
+      .sort((x, y) => (x.expected === y.expected ? y.count - x.count : x.expected.localeCompare(y.expected)));
+    confusionByModel[model] = entries;
+    console.table(entries);
+  }
+
   writeFileSync("/tmp/diplox-bench-task-a.json", JSON.stringify(rows, null, 2));
-  console.log("Written: /tmp/diplox-bench-task-a.json");
+  writeFileSync("/tmp/diplox-bench-task-a-confusion.json", JSON.stringify(confusionByModel, null, 2));
+  console.log("Written: /tmp/diplox-bench-task-a.json, /tmp/diplox-bench-task-a-confusion.json");
 }
 
 main().catch((err) => {
