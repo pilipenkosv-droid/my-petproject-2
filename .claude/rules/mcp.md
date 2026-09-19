@@ -37,6 +37,7 @@ Always check MCP before asking the user or guessing.
 - Защита от индексации vercel.app обеспечивается 301 redirect в middleware (Google следует редиректу)
 - Перед любыми изменениями в middleware, связанными с Host/redirect — проверить Nginx конфиг через SSH
 - Nginx конфиги: менять ОБА `sites-available` и `sites-enabled` (копия, не симлинк)
+- **fail2ban на VDS** (с 2026-09-19): джейл `nginx-scanners` (`/etc/fail2ban/filter.d/nginx-scanners.conf`, `/etc/fail2ban/jail.d/nginx-scanners.local`) банит на 24ч+ IP сканеров уязвимостей (`/.env`, `/wp-admin`, `phpinfo`…) по `access.log`, 2 совпадения за 10 мин. Причина: Vercel видит весь трафик с IP прокси и после бурстов сканеров ставит 403-challenge на кроны и поисковых ботов. `ignoreip` = 194.87.43.23 (кроны ходят на diplox.online с VDS). Статус/разбан: `fail2ban-client status nginx-scanners`, `fail2ban-client set nginx-scanners unbanip <ip>`. Конфиг nginx не менялся.
 
 ### Инцидент 2026-03-30: потеря конверсии из-за прямого трафика vercel.app
 - После 10:30 MSK 86% трафика стало анонимным (vs 32% до) → 0 покупок за 8 часов
