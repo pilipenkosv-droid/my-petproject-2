@@ -34,6 +34,7 @@ import {
   topViolations,
   explainSection,
   auxSection,
+  idempotencySection,
   type Row,
 } from "./bench-report";
 
@@ -74,6 +75,8 @@ interface BenchOpts {
   textNormalization: boolean;
   /** Print a structural locator for every failed checker rule. */
   explain: boolean;
+  /** Run v7 again over its own output and compare. */
+  idempotent: boolean;
 }
 
 async function benchDoc(doc: Doc, o: BenchOpts): Promise<Row> {
@@ -112,6 +115,21 @@ async function benchDoc(doc: Doc, o: BenchOpts): Promise<Row> {
         headings: r.report.aux.headings,
       },
     };
+    if (o.idempotent && r.output) {
+      // Same options, the pipeline's own output as input: a converged
+      // formatter finds nothing left to change.
+      const again = await runPipelineV7(r.output, {
+        pack: GOST_7_32,
+        documentId: doc.id,
+        returnOnGateFail: true,
+        textNormalization: o.textNormalization,
+      });
+      row.second = {
+        score: again.report.checker.finalScoreUndef,
+        failed: again.report.checker.failed,
+        gate: again.report.gate.pass,
+      };
+    }
     if (o.explain && r.output && r.report.checker.failed.length) {
       // Facts are re-derived from the output bytes, never taken from the
       // checker's own examples — those quote the document.
@@ -159,6 +177,7 @@ async function main() {
   const compare = (value("compare") ?? "").split(",").filter(Boolean);
   const pdf = args.includes("--pdf");
   const explain = args.includes("--explain");
+  const idempotent = args.includes("--idempotent");
   const textNormalization = args.includes("--text-norm");
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/(\d{8})(\d{4})/, "$1-$2");
   const outDir = value("out") ?? `/tmp/v7-bench/${stamp}`;
@@ -172,7 +191,7 @@ async function main() {
 
   const rows: Row[] = [];
   for (let i = 0; i < docs.length; i++) {
-    const row = await benchDoc(docs[i], { compare, pdf, outDir, textNormalization, explain });
+    const row = await benchDoc(docs[i], { compare, pdf, outDir, textNormalization, explain, idempotent });
     rows.push(row);
     console.log(
       `[${i + 1}/${docs.length}] ${row.id.slice(0, 22)} v7=${mark(row.v7.gate)} score=${num(row.v7.score)} ${row.v7.ms}мс` +
@@ -198,6 +217,7 @@ async function main() {
     "## Критерии go/no-go",
     ...criteria(rows).map((l) => `- ${l}`),
     "",
+    ...(idempotent ? ["## Идемпотентность (повторный прогон v7 по своему выходу)", ...idempotencySection(rows), ""] : []),
     "## Телеметрия aux (вставка TOC и разрыва)",
     ...auxSection(rows),
     "",

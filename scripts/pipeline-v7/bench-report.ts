@@ -44,6 +44,8 @@ export interface Row {
   sofficeRefusedV7?: boolean;
   /** `--explain`: failed rule id → structural locators. No real-corpus text. */
   explain?: Record<string, string[]>;
+  /** `--idempotent`: the same pipeline run again over its own output. */
+  second?: { score: number | null; failed: string[]; gate: boolean | null };
 }
 
 export const median = (xs: number[]): number | null => {
@@ -209,5 +211,31 @@ export function auxSection(rows: Row[]): string[] {
     ...render("причина пропуска TOC", count((r) => r.v7.aux?.tocSkipped)),
     ...render("причина пропуска разрыва", count((r) => r.v7.aux?.titleBreakSkipped)),
     ...render("заголовков нашёл классификатор", count((r) => (r.v7.aux ? String(r.v7.aux.headings) : undefined))),
+  ];
+}
+
+/**
+ * `--idempotent`: what changed when v7 was run over its own output.
+ *
+ * A formatter that keeps editing is a formatter that has not converged — a
+ * student who uploads a corrected file twice must get the same document back.
+ */
+export function idempotencySection(rows: Row[]): string[] {
+  const checked = rows.filter((r) => r.second);
+  if (!checked.length) return ["- не запускалось (нужен флаг --idempotent)"];
+  const drift = checked.filter(
+    (r) =>
+      r.second!.score !== r.v7.score ||
+      r.second!.failed.join("|") !== (r.v7.failed ?? []).join("|")
+  );
+  const gateFail = checked.filter((r) => r.second!.gate === false);
+  return [
+    `- повторный прогон: ${checked.length} документов, расхождений по score/правилам ${drift.length}`,
+    `- гейт на втором прогоне не прошли: ${gateFail.length ? gateFail.map((r) => r.id.slice(0, 12)).join(", ") : "нет"}`,
+    ...drift.map(
+      (r) =>
+        `  - \`${r.id.slice(0, 22)}\` score ${num(r.v7.score)} → ${num(r.second!.score)}; ` +
+        `правила «${(r.v7.failed ?? []).join(",") || "—"}» → «${r.second!.failed.join(",") || "—"}»`
+    ),
   ];
 }
