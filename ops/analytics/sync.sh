@@ -27,6 +27,7 @@ STATUS=$(curl -fsS -o "$TMP" -w '%{http_code}' \
 jq . "$TMP" > "$REPO/daily/$DAY.json"
 
 cd "$REPO"
+git pull -q --ff-only
 git add daily
 if git diff --cached --quiet; then
   echo "$(date -u +%FT%TZ) $DAY http $STATUS no changes" >> "$LOG"
