@@ -53,6 +53,14 @@
 6. Сохранение двух файлов: marked original + formatted
 7. Статус → `completed`
 
+### Асинхронная обработка: VDS-воркер (ADR-016)
+
+Vercel режет функцию на 60 секундах, поэтому при `PROCESSING_MODE=worker` роуты `/api/process-gost`, `/api/extract-rules`, `/api/confirm-rules` не считают сами: валидируют доступ и файл, списывают использование (только ГОСТ), ставят задаче `status=pending` + `queued_at` и отвечают `202 { jobId }`. Доля задач — `WORKER_PERCENT` (бакет FNV-1a от jobId); если воркер не пинговал `workers` две минуты — задача идёт инлайн. `PROCESSING_MODE=inline` возвращает старое поведение без деплоя; `shadow` — инлайн плюс теневая копия для воркера.
+
+Воркер (`ops/worker/`, systemd `diplox-worker.service` на Timeweb `194.87.43.23`, Node 22, бандл esbuild): супервизор `main.mjs` забирает задачу через `claim_next_job`, форкает `child.mjs` на один документ, шлёт heartbeat каждые 10 с и убивает ребёнка через 15 минут; ребёнок ветвится по `resolveJobStage(job)`: `gost` → `processGostJob`, `extract-rules` → `processExtractRulesJob` (дедлайн 8 мин), `confirm-rules` → `processConfirmRulesJob` (10 мин). Задача с методичкой проходит очередь дважды с паузой `awaiting_confirmation`. Общая логика роутов и воркера живёт в `src/lib/processing/` без импортов `next/*`; admin-клиент Supabase — `src/lib/supabase/admin.ts`.
+
+На сервере есть soffice, pandoc и pdftotext, поэтому там работают формулы и номера страниц в содержании v6, а для v7 после гейта верности выполняется статический TOC (`src/lib/pipeline-v7/aux/toc-static.ts`: рендер в PDF с `UpdateFields=true`, номера через pdftotext, кэш поля TOC). Наблюдение: `statistics.worker`, `GET /api/health/worker`, `journalctl -u diplox-worker`. Порядок выкладки: `ops/worker/deploy.sh` раньше деплоя роутов.
+
 ### Альтернативный путь: всё в одном (`/api/process`)
 
 Объединяет этапы 1 и 2 в один запрос (без промежуточного подтверждения правил).
@@ -192,7 +200,7 @@ Blog CTA
 | Поле | Тип | Описание |
 |------|-----|----------|
 | id | TEXT PK | ID задачи (nanoid) |
-| status | TEXT | pending / uploading / extracting / awaiting_confirmation / processing / completed / failed |
+| status | TEXT | pending / uploading / extracting_text / parsing_rules / awaiting_confirmation / analyzing / formatting / completed / failed |
 | progress | INTEGER | 0-100 |
 | status_message | TEXT | Описание текущего этапа |
 | source_document_id | TEXT | ID исходного файла в Storage |
@@ -207,6 +215,11 @@ Blog CTA
 | error | TEXT | Сообщение об ошибке |
 | model_id | TEXT | ID AI-модели, обработавшей документ (nullable) |
 | user_id | UUID | FK → auth.users (nullable для анонимных) |
+| use_consumed_at / use_refunded_at | TIMESTAMPTZ | Списание использования и его возврат (миграция 023) |
+| queued_at | TIMESTAMPTZ | Маркер постановки в очередь воркера; без него `claim_next_job` строку не берёт (024) |
+| worker_id / worker_claimed_at / worker_heartbeat_at | TEXT / TIMESTAMPTZ | Кто держит задачу и когда последний раз отмечался (024) |
+| attempts | INT | Число захватов; временная ошибка возвращает задачу в очередь не более двух раз (024) |
+| shadow_of | TEXT | Id исходной задачи для теневых копий; отчёты фильтруют `shadow_of IS NULL` (024) |
 | created_at | TIMESTAMPTZ | Время создания |
 | updated_at | TIMESTAMPTZ | Время обновления |
 
@@ -276,6 +289,19 @@ CSAT-отзывы пользователей.
 | failed_requests | INTEGER | Неудачных запросов за день |
 
 **Row Level Security (RLS):** Обе таблицы защищены RLS с политикой доступа только для service_role.
+
+### Таблица `workers`
+
+Признак жизни VDS-воркера: супервизор пишет `worker_ping` каждые 10 с независимо от наличия задач. Роуты считают воркер живым, если `last_seen_at` моложе 2 минут; иначе обрабатывают инлайн.
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| id | TEXT PK | `WORKER_ID` (`vds-1`) |
+| last_seen_at | TIMESTAMPTZ | Последний пинг |
+| hostname / git_sha | TEXT | Хост и сборка воркера |
+| started_at | TIMESTAMPTZ | Первый пинг после установки |
+
+RPC (только `service_role`): `claim_next_job(p_worker_id)` — атомарный захват через `FOR UPDATE SKIP LOCKED`; `heartbeat_job`, `release_job` (→ `pending`), `worker_ping`.
 
 ### Supabase Storage
 
@@ -368,3 +394,5 @@ CSAT-отзывы пользователей.
 | migration-006-jobs-has-full-version.sql | has_full_version для jobs |
 | migration-007-payments-unlock-job-id.sql | unlock_job_id для payments |
 | migration-018-jobs-model-id.sql | model_id для jobs + индекс |
+| migration-023-jobs-use-refund.sql | use_consumed_at / use_refunded_at, RPC `refund_job_use`, `increment_remaining_uses` |
+| migration-024-worker-queue.sql | Очередь воркера: `queued_at`, `worker_*`, `attempts`, `shadow_of`, таблица `workers`, RPC `claim_next_job` / `heartbeat_job` / `release_job` / `worker_ping` |
