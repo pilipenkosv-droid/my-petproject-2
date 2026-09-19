@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -28,14 +29,28 @@ class ReconError(RuntimeError):
     pass
 
 
-def fetch(url: str, timeout: float = 15.0) -> bytes:
+RETRY_STATUSES = {403, 429, 500, 502, 503, 504}
+RETRY_DELAYS_S = (30.0, 60.0)
+
+
+def fetch(url: str, timeout: float = 15.0, retry: bool = False) -> bytes:
+    """GET; retry=True — для своего сайта: Vercel временами отвечает 403-challenge на IP nginx-прокси."""
     req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+    for attempt, delay in enumerate((*(RETRY_DELAYS_S if retry else ()), None)):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code not in RETRY_STATUSES or delay is None:
+                raise
+            log.warning("fetch %s -> HTTP %s, retry %d in %.0fs", url, e.code, attempt + 1, delay)
+            time.sleep(delay)
+    raise AssertionError("unreachable")
 
 
-def fetch_text(url: str, timeout: float = 15.0, encoding: str = "utf-8") -> str:
-    return fetch(url, timeout).decode(encoding, "replace")
+def fetch_text(url: str, timeout: float = 15.0, encoding: str = "utf-8",
+               retry: bool = False) -> str:
+    return fetch(url, timeout, retry).decode(encoding, "replace")
 
 
 # --- own posts ------------------------------------------------------------
@@ -77,12 +92,12 @@ def collect_site_posts(site_url: str) -> list[dict]:
     """RSS first (has titles), sitemap as a fallback / slug top-up."""
     posts: dict[str, dict] = {}
     try:
-        for p in parse_rss(fetch_text(f"{site_url}/api/rss")):
+        for p in parse_rss(fetch_text(f"{site_url}/api/rss", retry=True)):
             posts[p["slug"]] = p
     except Exception as e:  # noqa: BLE001 - best effort, sitemap may still work
         log.warning("rss failed: %s", e)
     try:
-        for u in parse_sitemap_urls(fetch_text(f"{site_url}/sitemap.xml"), prefix="/blog/"):
+        for u in parse_sitemap_urls(fetch_text(f"{site_url}/sitemap.xml", retry=True), prefix="/blog/"):
             slug = u.rstrip("/").rsplit("/", 1)[-1]
             posts.setdefault(slug, {"slug": slug, "title": slug.replace("-", " "),
                                     "description": "", "keywords": [], "date_published": None})
