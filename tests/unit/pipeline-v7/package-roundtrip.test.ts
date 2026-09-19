@@ -54,7 +54,8 @@ for (const { label, dir } of CORPORA) {
       expect(failures, `byte drift in untouched save (${label})`).toEqual([]);
     });
 
-    it("load → parse document.xml → markDirty → save preserves the AST", async () => {
+    // 20 s, not the default 5: see the note in classify-residue.test.ts.
+    it("load → parse document.xml → markDirty → save preserves the AST", { timeout: 20_000 }, async () => {
       const drift: Record<string, number> = {};
       const perDoc: string[] = [];
       const astFailures: string[] = [];

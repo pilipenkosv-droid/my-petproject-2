@@ -91,15 +91,26 @@ function getFullText(paragraphNode: OrderedXmlNode): string {
   // runs then wrapped runs appended, which misorders the text whenever a
   // hyperlink sits between two plain runs (common for bibliography URLs
   // and cross-references) and produces spurious adjacent-space artefacts.
+  //
+  // A run's separators are emitted as the characters they are: a w:tab as
+  // "\t", a w:br/w:cr as "\n". Dropping them used to butt the text on either
+  // side together, so a line ending in a space followed by a line starting
+  // with one read as a double space — text.multipleSpaces charged for a
+  // layout that has none, and no formatter could fix it without eating the
+  // indent of the next line. Every rule that reads this text treats \t and \n
+  // as whitespace, so trimming and emptiness checks are unaffected.
   const wrappers = new Set(["w:hyperlink", "w:ins", "w:del", "w:smartTag"]);
+  const SEPARATORS: Record<string, string> = { "w:tab": "\t", "w:br": "\n", "w:cr": "\n" };
   let text = "";
   const walk = (node: OrderedXmlNode): void => {
     for (const child of children(node)) {
       const tagKey = Object.keys(child).find((k) => k !== ":@");
       if (!tagKey) continue;
       if (tagKey === "w:r") {
-        for (const t of findChildren(child, "w:t")) {
-          text += getText(t);
+        for (const runChild of children(child)) {
+          const runTag = Object.keys(runChild).find((k) => k !== ":@");
+          if (runTag === "w:t") text += getText(runChild);
+          else if (runTag !== undefined && runTag in SEPARATORS) text += SEPARATORS[runTag];
         }
       } else if (wrappers.has(tagKey)) {
         walk(child);
