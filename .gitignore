@@ -60,6 +60,9 @@ scripts/test-output/
 # Commit only sanitized copies (data/golden/sanitized/) + manifest.sanitized.json.
 data/golden/raw/
 data/golden/manifest.json
+# Role-labelling export (labels-export.ts): contains paragraph text, not just roles.
+# The imported result (data/golden/labels/*.json) has no text and IS committed.
+data/golden/labels-work/
 # Тот же PII/копирайт-риск: реальные пользовательские docx для бенчей.
 data/corpus/
 # Выгрузка методичек из прода: тексты пользователей, в git не место.
