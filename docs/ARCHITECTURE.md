@@ -61,6 +61,8 @@ Vercel режет функцию на 60 секундах, поэтому при
 
 На сервере есть soffice, pandoc и pdftotext, поэтому там работают формулы и номера страниц в содержании v6, а для v7 после гейта верности выполняется статический TOC (`src/lib/pipeline-v7/aux/toc-static.ts`: рендер в PDF с `UpdateFields=true`, номера через pdftotext, кэш поля TOC). Наблюдение: `statistics.worker`, `GET /api/health/worker`, `journalctl -u diplox-worker`. Порядок выкладки: `ops/worker/deploy.sh` раньше деплоя роутов.
 
+Архив аналитики (ADR-018): `src/lib/analytics/` считает дневной агрегат воронки за UTC-сутки (без ПДн), `GET /api/cron/analytics-snapshot` пишет его в таблицу `analytics_daily` и отдаёт крону на VDS, который коммитит `daily/YYYY-MM-DD.json` в приватный репо `diplox-analytics`. Нужно потому, что `jobs`/`download_events`/`page_views` чистятся по TTL.
+
 ### Альтернативный путь: всё в одном (`/api/process`)
 
 Объединяет этапы 1 и 2 в один запрос (без промежуточного подтверждения правил).
